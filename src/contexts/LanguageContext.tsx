@@ -12,6 +12,7 @@ import HomeTranslation from './HomeTranslation';
 import AuthTranslation from './AuthTranslation';
 import LegalTranslation from './LegalTranslation';
 import NotificationTranslation from './NotificationTranslation';
+import VereinTranslation from './VereinTranslation';
 
 interface LanguageContextType {
     language: Language;
@@ -34,6 +35,7 @@ export const translations: Record<Language, Record<string, string>> = supportedL
             ...AuthTranslation[id],
             ...NotificationTranslation[id],
             ...(id === 'de' || id === 'en' ? LegalTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? VereinTranslation[id] : {}),
         };
         return acc;
     },

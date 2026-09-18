@@ -16,48 +16,74 @@
  * hardcodes "this is light-mode gray" -- it says `bg-card`, and this file
  * decides what that means per theme.
  *
- * Ink navy accent -- deep, desaturated navy instead of a bright SaaS blue,
- * reads as serious/enterprise rather than startup. Lightened to a mid
- * slate-blue in dark mode (#64748B vs #1E293B): the near-black light-mode
- * value would nearly disappear against the already-dark #1E1E1E background,
- * same "adjust per theme for contrast" rule as every accent tried so far.
+ * Values below are the "vereinsblau" palette (see src/theme/palettes.ts,
+ * ADR-008, and the company vault's "Product Color - MyVerein" doc) -- this
+ * block is the pre-hydration default every visitor sees before
+ * PaletteProvider.tsx runs, so it must match DEFAULT_PALETTE_ID exactly or
+ * the first paint flashes the wrong colors. Vereinsblau (deep institutional
+ * blue) as primary, Pokal-Gold (amber) as accent -- the first palette in
+ * this registry where primary and accent are deliberately different hues,
+ * see palettes.ts's comment.
  */
 :root {
-  --background: #ffffff;
-  --foreground: #2e3338;
+  --background: #fafaf7;
+  --foreground: #22252b;
 
   --card: #ffffff;
-  --card-foreground: #2e3338;
+  --card-foreground: #22252b;
 
-  --muted: #f1f2f4;
+  --muted: #eef0f2;
   --muted-foreground: #6b7280;
 
-  --border: #e3e4e6;
+  --border: #e2e4e8;
 
-  --primary: #1e293b;
+  --primary: #2c4870;
   --primary-foreground: #ffffff;
 
-  --accent: #1e293b;
+  --accent: #b8860b;
   --accent-foreground: #ffffff;
+
+  /*
+   * Status colors, fixed regardless of the chosen palette -- shouldn't
+   * shift with the accent (same rule the mobile app's colors.ts already
+   * documents). Found while wiring this file: NotificationBell.tsx and
+   * Notifications.tsx already referenced bg-destructive/text-destructive*
+   * classes that had no definition anywhere in this repo (an upstream
+   * template gap, not introduced here) -- fixed alongside adding
+   * success/warning, which club material/beitrag status views need.
+   */
+  --destructive: #b3261e;
+  --destructive-foreground: #ffffff;
+  --success: #3f7a47;
+  --success-foreground: #ffffff;
+  --warning: #9c5f13;
+  --warning-foreground: #ffffff;
 }
 
 .dark {
-  --background: #1e1e1e;
-  --foreground: #dcddde;
+  --background: #16181d;
+  --foreground: #e8e9ec;
 
-  --card: #2a2a2b;
-  --card-foreground: #dcddde;
+  --card: #1e2127;
+  --card-foreground: #e8e9ec;
 
-  --muted: #2a2a2b;
-  --muted-foreground: #9a9a9d;
+  --muted: #282b32;
+  --muted-foreground: #b4b8c0;
 
-  --border: #3a3a3c;
+  --border: #343841;
 
-  --primary: #64748b;
-  --primary-foreground: #ffffff;
+  --primary: #7a9bc7;
+  --primary-foreground: #16181d;
 
-  --accent: #64748b;
-  --accent-foreground: #ffffff;
+  --accent: #e0b84d;
+  --accent-foreground: #16181d;
+
+  --destructive: #e8776c;
+  --destructive-foreground: #16181d;
+  --success: #8fc47c;
+  --success-foreground: #16181d;
+  --warning: #e8b84b;
+  --warning-foreground: #16181d;
 }
 
 @theme inline {
@@ -72,6 +98,12 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }

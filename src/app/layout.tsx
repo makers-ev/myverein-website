@@ -51,6 +51,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const mainLinks = [
+    { name: "nav.verein", href: "/verein" },
     { name: "nav.notifications", href: "/notifications" },
     { name: "nav.settings", href: "/settings" },
   ];
