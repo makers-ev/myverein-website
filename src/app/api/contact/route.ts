@@ -41,7 +41,7 @@ export function validateContactPayload(body: unknown): { data: ContactPayload } 
 // base64 -- the one approach that reliably renders across mail clients
 // without depending on the site being deployed/reachable.
 const LOGO_CID = 'app-logo';
-const LOGO_PATH = path.join(process.cwd(), 'public', 'lpj-its.png');
+const LOGO_PATH = path.join(process.cwd(), 'public', 'myverein-logo.png');
 
 // Generic SMTP transport, independent of anything the backend template's
 // own email.ts might use -- this route sends mail itself. Configure via

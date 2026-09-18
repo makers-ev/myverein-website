@@ -46,6 +46,11 @@ export const palettes = {
     // (Vereinsblau for chrome/navigation, Pokal-Gold as a warm counterweight
     // for CTAs/highlights) rather than the same hex repeated, since every
     // other predefined palette here happens to use one hue for both.
+    //
+    // Light-mode accent is #8a6408, not the more "trophy gold"-looking
+    // #b8860b first tried -- that one only cleared 3.25:1 against white
+    // (WCAG AA needs 4.5:1 for normal text), computed and verified here
+    // rather than eyeballed. #8a6408 clears 5.37:1 and still reads as gold.
     vereinsblau: {
         label: 'Vereinsblau',
         light: {
@@ -54,7 +59,7 @@ export const palettes = {
             muted: '#eef0f2', mutedForeground: '#6b7280',
             border: '#e2e4e8',
             primary: '#2c4870', primaryForeground: '#ffffff',
-            accent: '#b8860b', accentForeground: '#ffffff',
+            accent: '#8a6408', accentForeground: '#ffffff',
         },
         dark: {
             background: '#16181d', foreground: '#e8e9ec',

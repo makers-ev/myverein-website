@@ -154,7 +154,7 @@ export function Footer() {
                 {/* Bottom Bar */}
                 <div className="mt-16 pt-8 sm:mt-20 lg:mt-24 flex flex-col items-center justify-between">
                     <p className="text-xs leading-5 text-muted-foreground">
-                        &copy; {currentYear} LPJ IT-Solutions, {t('footer.rights')}
+                        &copy; {currentYear} MyVerein, {t('footer.rights')}
                     </p>
                 </div>
             </div>
