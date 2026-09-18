@@ -24,6 +24,9 @@ has no local `/api/auth` route and no session store of its own.
 | `/login-signup` | public | Sign in / sign up, with 2FA follow-up, a post-signup "verify your e-mail" prompt, and a self-service "forgot password" flow (`ForgotPasswordPrompt`, toggled from the sign-in form) |
 | `/verify-email` | public | Landing page for the verification e-mail's link |
 | `/reset-password` | public | Landing page for the "forgot password" e-mail's link — Better Auth's `/reset-password/:token` callback redirects here with `?token=...` (valid) or `?error=...` (invalid/expired, same pattern as `/verify-email`); the form calls `authClient.resetPassword({ newPassword, token })`. The e-mail is triggered by `authClient.requestPasswordReset({ email, redirectTo })` from this site's own "forgot password" flow (see `/login-signup`) or from `_template_better-auth-admin`'s user detail page |
+| `/verein` | protected | Tabs: Vereinsinfo (board/departments/documents), Mitglieder (table, role assignment), Abteilungen (create/list). Shows a "join a club" prompt if the caller has no membership yet |
+| `/kalender` | protected | Tabs: Termine (calendar management incl. visibility grants, event creation, RSVP/waitlist, department-color-coded), Treffen (list/detail: agenda/minutes/status editing, invitee management, Terminfindung overlap check, attendance, resolutions) — Vorstands-focused (calendar/meeting administration), any member can read and RSVP |
+| `/verfuegbarkeit` | protected | Self-service: recurring weekly availability (fixed weekday grid) + one-off exceptions |
 | `/settings` | protected | Account settings: appearance (color palette), change-password, 2FA enable/disable, delete account |
 | `/notifications` | protected | Own notifications, Unread/Read tabs, mark read/unread, delete (only where the backend marked it `deletable`) |
 | `/contact` | public | Contact form (bug/feature/general), posts to `POST /api/contact` |
