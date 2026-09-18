@@ -13,6 +13,9 @@ import AuthTranslation from './AuthTranslation';
 import LegalTranslation from './LegalTranslation';
 import NotificationTranslation from './NotificationTranslation';
 import VereinTranslation from './VereinTranslation';
+import KalenderTranslation from './KalenderTranslation';
+import TreffenTranslation from './TreffenTranslation';
+import VerfuegbarkeitTranslation from './VerfuegbarkeitTranslation';
 
 interface LanguageContextType {
     language: Language;
@@ -36,6 +39,9 @@ export const translations: Record<Language, Record<string, string>> = supportedL
             ...NotificationTranslation[id],
             ...(id === 'de' || id === 'en' ? LegalTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? VereinTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? KalenderTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? TreffenTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? VerfuegbarkeitTranslation[id] : {}),
         };
         return acc;
     },
