@@ -1,0 +1,412 @@
+{
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\eslint.config.mjs": {
+    "mtime": 1785356019.5392108,
+    "ast_hash": "6c4307ffa009658f5c97f5629094c0c2",
+    "semantic_hash": "6c4307ffa009658f5c97f5629094c0c2"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\next.config.ts": {
+    "mtime": 1789300000.0338285,
+    "ast_hash": "0268ee4cafa9656d52a11ecb201b472e",
+    "semantic_hash": "0268ee4cafa9656d52a11ecb201b472e"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\package.json": {
+    "mtime": 1786820107.5684557,
+    "ast_hash": "1248211a130e646852bf5cbd92adef68",
+    "semantic_hash": "1248211a130e646852bf5cbd92adef68"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\postcss.config.mjs": {
+    "mtime": 1785356019.5442226,
+    "ast_hash": "481fac0fdecd70e1821cc30b86030c1a",
+    "semantic_hash": "481fac0fdecd70e1821cc30b86030c1a"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\tsconfig.json": {
+    "mtime": 1785356019.5777962,
+    "ast_hash": "0a2f4ed9289b65cd3feb4fb4ab3a4fcd",
+    "semantic_hash": "0a2f4ed9289b65cd3feb4fb4ab3a4fcd"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\proxy.ts": {
+    "mtime": 1788777925.7162974,
+    "ast_hash": "33ac93f52ed705de8cfb8437b93b81b5",
+    "semantic_hash": "33ac93f52ed705de8cfb8437b93b81b5"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\app\\layout.tsx": {
+    "mtime": 1789327928.6621869,
+    "ast_hash": "9aaeb90a4db2e3206d6d51d77691bb98",
+    "semantic_hash": "9aaeb90a4db2e3206d6d51d77691bb98"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\app\\not-found.tsx": {
+    "mtime": 1787218612.3801672,
+    "ast_hash": "ad0db6c346951181924d26511bb1c10e",
+    "semantic_hash": "ad0db6c346951181924d26511bb1c10e"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\app\\page.tsx": {
+    "mtime": 1788780714.2035334,
+    "ast_hash": "605dbaae17a7cf279b12ada66b5f3143",
+    "semantic_hash": "605dbaae17a7cf279b12ada66b5f3143"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\app\\robots.ts": {
+    "mtime": 1788780714.329191,
+    "ast_hash": "1f195ac2d184db7ec2e61d7c13bbce7d",
+    "semantic_hash": "1f195ac2d184db7ec2e61d7c13bbce7d"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\app\\(protected)\\layout.tsx": {
+    "mtime": 1786819740.2861881,
+    "ast_hash": "986a658024191c004ea1f51da27b1742",
+    "semantic_hash": "986a658024191c004ea1f51da27b1742"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\app\\(protected)\\notifications\\page.tsx": {
+    "mtime": 1788780713.7559297,
+    "ast_hash": "efee128cb4103267cb71bf747ca4bc20",
+    "semantic_hash": "efee128cb4103267cb71bf747ca4bc20"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\app\\(protected)\\settings\\page.tsx": {
+    "mtime": 1788780713.806125,
+    "ast_hash": "4ef1f293450c90bf415783afadc2dd6f",
+    "semantic_hash": "4ef1f293450c90bf415783afadc2dd6f"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\app\\api\\contact\\route.test.ts": {
+    "mtime": 1786820128.502874,
+    "ast_hash": "c53b4da1da550b39912d5497781b5295",
+    "semantic_hash": "c53b4da1da550b39912d5497781b5295"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\app\\api\\contact\\route.ts": {
+    "mtime": 1787226330.9734092,
+    "ast_hash": "625741630e5482cc73f6766be221eab0",
+    "semantic_hash": "625741630e5482cc73f6766be221eab0"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\app\\contact\\ContactForm.tsx": {
+    "mtime": 1788780822.2414868,
+    "ast_hash": "779d2da413e929c2fd96d2d951ed9b4f",
+    "semantic_hash": "779d2da413e929c2fd96d2d951ed9b4f"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\app\\contact\\page.tsx": {
+    "mtime": 1788780713.8597536,
+    "ast_hash": "cf43fe286b8b1d82861baf7f2d121669",
+    "semantic_hash": "cf43fe286b8b1d82861baf7f2d121669"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\app\\error\\page.tsx": {
+    "mtime": 1785356019.55074,
+    "ast_hash": "b4cd74abc78ad838ffdbe70e4dcc73d0",
+    "semantic_hash": "b4cd74abc78ad838ffdbe70e4dcc73d0"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\app\\imprint\\page.tsx": {
+    "mtime": 1788780713.9116745,
+    "ast_hash": "19bc66bab08df40ba5eec57f0839fc4d",
+    "semantic_hash": "19bc66bab08df40ba5eec57f0839fc4d"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\app\\login-signup\\LoginSignupForm.tsx": {
+    "mtime": 1787223436.5459266,
+    "ast_hash": "2f4abc528ac6c539cf4565f896d91689",
+    "semantic_hash": "2f4abc528ac6c539cf4565f896d91689"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\app\\login-signup\\page.tsx": {
+    "mtime": 1788780714.0291882,
+    "ast_hash": "e6534a3826788c226a0ed61c9d49bb8c",
+    "semantic_hash": "e6534a3826788c226a0ed61c9d49bb8c"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\app\\pageContent\\Homepage.tsx": {
+    "mtime": 1785361192.3606648,
+    "ast_hash": "38dd0fea3efcbd37a109850c1c6948aa",
+    "semantic_hash": "38dd0fea3efcbd37a109850c1c6948aa"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\app\\pageContent\\Notifications.tsx": {
+    "mtime": 1788980565.8713362,
+    "ast_hash": "594224d4f9a08f69d189f1afa0dee0a0",
+    "semantic_hash": "594224d4f9a08f69d189f1afa0dee0a0"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\app\\pageContent\\Settings.tsx": {
+    "mtime": 1789300000.0353374,
+    "ast_hash": "d88c99eb5f47a2d4df4cb02d32f52e97",
+    "semantic_hash": "d88c99eb5f47a2d4df4cb02d32f52e97"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\app\\privacy\\page.tsx": {
+    "mtime": 1788780714.270424,
+    "ast_hash": "35d521e408263408b25682194dd12275",
+    "semantic_hash": "35d521e408263408b25682194dd12275"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\app\\reset-password\\page.tsx": {
+    "mtime": 1787217680.3933046,
+    "ast_hash": "8b2a41615aa93601b846dc289d1f9354",
+    "semantic_hash": "8b2a41615aa93601b846dc289d1f9354"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\app\\terms\\page.tsx": {
+    "mtime": 1788780714.4620087,
+    "ast_hash": "f21069051b4b0737723b6831dc715eba",
+    "semantic_hash": "f21069051b4b0737723b6831dc715eba"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\app\\verify-email\\page.tsx": {
+    "mtime": 1786197565.8323066,
+    "ast_hash": "11e44bf4e76e0612f04e6261aba003c2",
+    "semantic_hash": "11e44bf4e76e0612f04e6261aba003c2"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\components\\AuthNav.tsx": {
+    "mtime": 1788527158.6526299,
+    "ast_hash": "0178c04926c74f835343b57f072b6a79",
+    "semantic_hash": "0178c04926c74f835343b57f072b6a79"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\components\\CookieConsent.tsx": {
+    "mtime": 1785361198.5658655,
+    "ast_hash": "3b043c0b13122ed81408c51ccb81e92a",
+    "semantic_hash": "3b043c0b13122ed81408c51ccb81e92a"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\components\\Footer.tsx": {
+    "mtime": 1786819589.8572888,
+    "ast_hash": "f14b3f5d212bce7bb33382b50f0403fa",
+    "semantic_hash": "f14b3f5d212bce7bb33382b50f0403fa"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\components\\IntroModal.tsx": {
+    "mtime": 1786819728.7840896,
+    "ast_hash": "b8d674c86cc2f46a58563672e8fdd4a0",
+    "semantic_hash": "b8d674c86cc2f46a58563672e8fdd4a0"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\components\\LegalDocument.tsx": {
+    "mtime": 1788980565.87395,
+    "ast_hash": "3a0c1ad83665e1f7b7b462231824c32a",
+    "semantic_hash": "3a0c1ad83665e1f7b7b462231824c32a"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\components\\Logo.tsx": {
+    "mtime": 1785356019.5652711,
+    "ast_hash": "0026a523ff9cdd7238420bb2718c03c4",
+    "semantic_hash": "0026a523ff9cdd7238420bb2718c03c4"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\components\\Modal.tsx": {
+    "mtime": 1786819717.9287515,
+    "ast_hash": "760635137744e8250cf94825c879e39e",
+    "semantic_hash": "760635137744e8250cf94825c879e39e"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\components\\Navbar.tsx": {
+    "mtime": 1789300000.038072,
+    "ast_hash": "1868e4142e399e24eb63e6cfa29a204a",
+    "semantic_hash": "1868e4142e399e24eb63e6cfa29a204a"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\components\\NotificationBell.tsx": {
+    "mtime": 1788527158.6526299,
+    "ast_hash": "a2dd6549b3d773736956b15641603d6a",
+    "semantic_hash": "a2dd6549b3d773736956b15641603d6a"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\components\\seoJsonLd.tsx": {
+    "mtime": 1788977213.6160715,
+    "ast_hash": "f22a89dde7a78951ff291958350d1182",
+    "semantic_hash": "f22a89dde7a78951ff291958350d1182"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\components\\ThemeProvider.tsx": {
+    "mtime": 1788777933.0035555,
+    "ast_hash": "1aeea1f3c41ddc5977ff68b5e8c1085c",
+    "semantic_hash": "1aeea1f3c41ddc5977ff68b5e8c1085c"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\components\\ThemeToggle.tsx": {
+    "mtime": 1785361200.406062,
+    "ast_hash": "cba83d8c21fa9ed416179c6b00744568",
+    "semantic_hash": "cba83d8c21fa9ed416179c6b00744568"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\contexts\\AuthTranslation.ts": {
+    "mtime": 1788980565.8779573,
+    "ast_hash": "2c14fd797c3e1809a1413850d39e3c43",
+    "semantic_hash": "2c14fd797c3e1809a1413850d39e3c43"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\contexts\\ComponentTranslation.ts": {
+    "mtime": 1789300000.0410728,
+    "ast_hash": "57485404531de01c7c8feeaba5eb435c",
+    "semantic_hash": "57485404531de01c7c8feeaba5eb435c"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\contexts\\HomeTranslation.ts": {
+    "mtime": 1788980565.8824806,
+    "ast_hash": "31a0c8a810d0240c54f6b13c25940448",
+    "semantic_hash": "31a0c8a810d0240c54f6b13c25940448"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\contexts\\LanguageContext.tsx": {
+    "mtime": 1789327928.663186,
+    "ast_hash": "b469063e88a92b444154f21c42485982",
+    "semantic_hash": "b469063e88a92b444154f21c42485982"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\contexts\\LegalTranslation.ts": {
+    "mtime": 1788780798.5499613,
+    "ast_hash": "32f5e4a75568d7666dda0d3757d21191",
+    "semantic_hash": "32f5e4a75568d7666dda0d3757d21191"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\contexts\\NotificationTranslation.ts": {
+    "mtime": 1788980565.8869967,
+    "ast_hash": "1e04a8ec1d19d0331f517b3393ed0ae9",
+    "semantic_hash": "1e04a8ec1d19d0331f517b3393ed0ae9"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\contexts\\PageLayoutTranslation.ts": {
+    "mtime": 1788980565.8879955,
+    "ast_hash": "251baa5a4fb734b836bc729e213e7082",
+    "semantic_hash": "251baa5a4fb734b836bc729e213e7082"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\features\\auth\\components\\EmailVerificationPrompt.tsx": {
+    "mtime": 1786191572.494273,
+    "ast_hash": "2c19217c4e557912b9acc1a6380b5070",
+    "semantic_hash": "2c19217c4e557912b9acc1a6380b5070"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\features\\auth\\components\\ForgotPasswordPrompt.tsx": {
+    "mtime": 1787223371.418563,
+    "ast_hash": "a64ade1550447fa9317d13ec48f6e307",
+    "semantic_hash": "a64ade1550447fa9317d13ec48f6e307"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\features\\auth\\components\\TwoFactorPrompt.tsx": {
+    "mtime": 1785356019.5737891,
+    "ast_hash": "2685289de272de9c1a807ac79ee42b49",
+    "semantic_hash": "2685289de272de9c1a807ac79ee42b49"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\lib\\auth-client.ts": {
+    "mtime": 1786197553.8807106,
+    "ast_hash": "ca3dad88baa8ab562c24b6f0151198c4",
+    "semantic_hash": "ca3dad88baa8ab562c24b6f0151198c4"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\lib\\contactAdminEmailTemplate.ts": {
+    "mtime": 1788780816.353022,
+    "ast_hash": "d5e63563c960c046fa1a88329001b8ee",
+    "semantic_hash": "d5e63563c960c046fa1a88329001b8ee"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\lib\\contactEmailTemplate.ts": {
+    "mtime": 1788780809.4505725,
+    "ast_hash": "33ef3a96f2c69dbe0c9e199b99a2f485",
+    "semantic_hash": "33ef3a96f2c69dbe0c9e199b99a2f485"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\lib\\resolveCallbackUrl.test.ts": {
+    "mtime": 1785361185.3970807,
+    "ast_hash": "c955741a765251eae27d67910a6547c5",
+    "semantic_hash": "c955741a765251eae27d67910a6547c5"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\lib\\resolveCallbackUrl.ts": {
+    "mtime": 1785361179.4513466,
+    "ast_hash": "ec4e2cc1bbc7bd2ba17b3c7426227a21",
+    "semantic_hash": "ec4e2cc1bbc7bd2ba17b3c7426227a21"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\seo\\createJsonLd.ts": {
+    "mtime": 1788778308.8337696,
+    "ast_hash": "ac3b1a183e0c3fb325976c8bdc4f722a",
+    "semantic_hash": "ac3b1a183e0c3fb325976c8bdc4f722a"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\seo\\createSiteMetadata.ts": {
+    "mtime": 1788778588.5013263,
+    "ast_hash": "e23c98dc2f5d7474cb69713f825c224f",
+    "semantic_hash": "e23c98dc2f5d7474cb69713f825c224f"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\CLAUDE.md": {
+    "mtime": 1786304305.929192,
+    "ast_hash": "8e3f657019de84e3bd6e0351e103ffb1",
+    "semantic_hash": "8e3f657019de84e3bd6e0351e103ffb1"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\README.md": {
+    "mtime": 1789327928.6591885,
+    "ast_hash": "00461d978e2ec989e2bb2b4e576487c1",
+    "semantic_hash": "00461d978e2ec989e2bb2b4e576487c1"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\.claude\\agents\\web-dev.md": {
+    "mtime": 1785426356.640254,
+    "ast_hash": "94406f507bdbdd58b08dbf98427cf992",
+    "semantic_hash": "94406f507bdbdd58b08dbf98427cf992"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\.claude\\agents\\web-reviewer.md": {
+    "mtime": 1785426358.329911,
+    "ast_hash": "1b5e36af37c99676ac7e44476d8a3324",
+    "semantic_hash": "1b5e36af37c99676ac7e44476d8a3324"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\.github\\workflows\\ci.yml": {
+    "mtime": 1788781275.288629,
+    "ast_hash": "3a420c2b025cec5b4936f1e9708cb0ef",
+    "semantic_hash": "3a420c2b025cec5b4936f1e9708cb0ef"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\public\\lpj-its.png": {
+    "mtime": 1785356019.5452235,
+    "ast_hash": "7a2cf945bae32844598be39549b8ca24",
+    "semantic_hash": "7a2cf945bae32844598be39549b8ca24"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\public\\lpj-its.svg": {
+    "mtime": 1785356019.5462224,
+    "ast_hash": "69d6fbc5e37c63fd5f3c51d9df0280f3",
+    "semantic_hash": "69d6fbc5e37c63fd5f3c51d9df0280f3"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\lighthouserc.js": {
+    "mtime": 1788779817.3176596,
+    "ast_hash": "a29ebd6c5735be7b0f2112a4560d3432",
+    "semantic_hash": "a29ebd6c5735be7b0f2112a4560d3432"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\project.config.json": {
+    "mtime": 1789327928.6601877,
+    "ast_hash": "3e3ba2bdcd0e1f3ad54204b2402524cc",
+    "semantic_hash": "3e3ba2bdcd0e1f3ad54204b2402524cc"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\app\\apple-icon.tsx": {
+    "mtime": 1788780876.7455733,
+    "ast_hash": "eb0265e62c62f9b70983c1986630bdac",
+    "semantic_hash": "eb0265e62c62f9b70983c1986630bdac"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\app\\icon.tsx": {
+    "mtime": 1788780873.3743463,
+    "ast_hash": "f6d8a48156200e967aa7681dbf27c86a",
+    "semantic_hash": "f6d8a48156200e967aa7681dbf27c86a"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\app\\manifest.ts": {
+    "mtime": 1788780714.0940714,
+    "ast_hash": "677fcc72d65a14a9e465028e27748a3b",
+    "semantic_hash": "677fcc72d65a14a9e465028e27748a3b"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\app\\opengraph-image.tsx": {
+    "mtime": 1788780897.1344123,
+    "ast_hash": "131fc0b575124caefb4d40c50cd43459",
+    "semantic_hash": "131fc0b575124caefb4d40c50cd43459"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\app\\sitemap.ts": {
+    "mtime": 1788780714.3925607,
+    "ast_hash": "c3d30eea6721f8728a82cd80d8c1b56f",
+    "semantic_hash": "c3d30eea6721f8728a82cd80d8c1b56f"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\app\\twitter-image.tsx": {
+    "mtime": 1788778427.3980916,
+    "ast_hash": "8468bf9c91e9b5c0133dea17eade9049",
+    "semantic_hash": "8468bf9c91e9b5c0133dea17eade9049"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\contexts\\languageCookie.ts": {
+    "mtime": 1788777470.6519387,
+    "ast_hash": "f6e91a722ce6ae052e0f602969538922",
+    "semantic_hash": "f6e91a722ce6ae052e0f602969538922"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\seo\\createNoIndexMetadata.ts": {
+    "mtime": 1788778323.2543209,
+    "ast_hash": "9d41a2ac0f0e3194b933442815c0b001",
+    "semantic_hash": "9d41a2ac0f0e3194b933442815c0b001"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\components\\PaletteProvider.tsx": {
+    "mtime": 1789300000.0390718,
+    "ast_hash": "994d8c6da752f6c4010a99a490133158",
+    "semantic_hash": "994d8c6da752f6c4010a99a490133158"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\components\\PaletteSettings.tsx": {
+    "mtime": 1789300000.0400722,
+    "ast_hash": "c4cb6f87b65821c7d75995355fee236a",
+    "semantic_hash": "c4cb6f87b65821c7d75995355fee236a"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\contexts\\acceptLanguage.test.ts": {
+    "mtime": 1789327928.6641877,
+    "ast_hash": "5ba06c43030ab9e1f55cde85cdb033b4",
+    "semantic_hash": "5ba06c43030ab9e1f55cde85cdb033b4"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\contexts\\acceptLanguage.ts": {
+    "mtime": 1789327928.664693,
+    "ast_hash": "d5d1141cc568c71b99ffdd57f2cecbb8",
+    "semantic_hash": "d5d1141cc568c71b99ffdd57f2cecbb8"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\contexts\\LanguageContext.test.ts": {
+    "mtime": 1788980565.8834784,
+    "ast_hash": "a57ee31524c0ffbbca924418597bf238",
+    "semantic_hash": "a57ee31524c0ffbbca924418597bf238"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\contexts\\supportedLanguages.ts": {
+    "mtime": 1788980565.890517,
+    "ast_hash": "4e92b5bf3828ccff8cba2d4ae22a8759",
+    "semantic_hash": "4e92b5bf3828ccff8cba2d4ae22a8759"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\theme\\deriveTokens.ts": {
+    "mtime": 1789300000.0430725,
+    "ast_hash": "abe46d725f308eb5f6f64caaa2614a0c",
+    "semantic_hash": "abe46d725f308eb5f6f64caaa2614a0c"
+  },
+  "C:\\GitHub\\lpj-it-solutions\\mycouple\\better-auth-template-suite\\_template_better-auth-website\\src\\theme\\palettes.ts": {
+    "mtime": 1789300000.0440726,
+    "ast_hash": "b421506f6882f7d6237b24934dadbcbe",
+    "semantic_hash": "b421506f6882f7d6237b24934dadbcbe"
+  }
+}

@@ -1,0 +1,5 @@
+FROM node:22-alpine
+
+# Create consistent user/group for all websites
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs

@@ -1,0 +1,33 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  website:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_BACKEND_URL: http://localhost:3000
+      ALLOWED_HOSTS: localhost:3001
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm run lint
+      - run: npx tsc --noEmit
+      - run: npm run build
+      - run: npm test
+      # Report-only Lighthouse audit (Performance/Accessibility/Best
+      # Practices/SEO) against a real production build (lighthouserc.js
+      # starts/stops `npm run start` itself). `continue-on-error` so a bad
+      # score never blocks CI -- this is observability, not a merge gate.
+      # `uploadArtifacts: true` uploads as a plain, private GitHub Actions
+      # artifact -- NOT `temporaryPublicStorage` (Google's public hosting,
+      # stays off, consistent with the suite's no-external-services
+      # default). A separate manual `actions/upload-artifact` step here
+      # doesn't work: this action's own "Uploading" phase leaves nothing
+      # for it to find afterward, even though it did write the reports.
+      - uses: treosh/lighthouse-ci-action@v12
+        continue-on-error: true
+        with:
+          configPath: "./lighthouserc.js"
+          uploadArtifacts: true
+          artifactName: lighthouse-reports

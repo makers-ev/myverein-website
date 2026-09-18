@@ -1,0 +1,13 @@
+{
+  "title": "Better Auth Website Template",
+  "description": "Next.js website template with Better Auth authentication built in",
+  "url": "https://<url>.com",
+  "logoUrl": "<public-logo-path>",
+  "logoPath": "public/lpj-its.svg",
+  "author": "LPJ IT-Solutions",
+  "authorUrl": "https://github.com/lpj-app",
+  "appName": "<app-name>",
+  "primaryColor": "#1e293b",
+  "defaultLanguage": "en",
+  "keywords": ["auth", "better-auth", "nextjs", "typescript", "react", "authentication", "starter-template"]
+}

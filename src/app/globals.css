@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+/*
+ * Switches Tailwind's `dark:` variant from OS-preference-only
+ * (`prefers-color-scheme`) to class-based, matching the `class="dark"` that
+ * next-themes toggles on <html> (src/components/ThemeProvider.tsx). This is
+ * Tailwind v4's documented way to combine it with a manual light/dark
+ * switch instead of only following the system setting.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Central color source of truth for the whole app -- both themes' values
+ * live here, nowhere else. Semantic names (background/foreground/card/...)
+ * instead of raw hex scattered through components, so a component never
+ * hardcodes "this is light-mode gray" -- it says `bg-card`, and this file
+ * decides what that means per theme.
+ *
+ * Ink navy accent -- deep, desaturated navy instead of a bright SaaS blue,
+ * reads as serious/enterprise rather than startup. Lightened to a mid
+ * slate-blue in dark mode (#64748B vs #1E293B): the near-black light-mode
+ * value would nearly disappear against the already-dark #1E1E1E background,
+ * same "adjust per theme for contrast" rule as every accent tried so far.
+ */
+:root {
+  --background: #ffffff;
+  --foreground: #2e3338;
+
+  --card: #ffffff;
+  --card-foreground: #2e3338;
+
+  --muted: #f1f2f4;
+  --muted-foreground: #6b7280;
+
+  --border: #e3e4e6;
+
+  --primary: #1e293b;
+  --primary-foreground: #ffffff;
+
+  --accent: #1e293b;
+  --accent-foreground: #ffffff;
+}
+
+.dark {
+  --background: #1e1e1e;
+  --foreground: #dcddde;
+
+  --card: #2a2a2b;
+  --card-foreground: #dcddde;
+
+  --muted: #2a2a2b;
+  --muted-foreground: #9a9a9d;
+
+  --border: #3a3a3c;
+
+  --primary: #64748b;
+  --primary-foreground: #ffffff;
+
+  --accent: #64748b;
+  --accent-foreground: #ffffff;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
