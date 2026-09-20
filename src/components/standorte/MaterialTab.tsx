@@ -205,7 +205,7 @@ function ItemList({
                                 <th className="px-3 py-2">{t('standorte.items.table.location')}</th>
                                 <th className="px-3 py-2">{t('standorte.items.table.value')}</th>
                                 <th className="px-3 py-2">{t('standorte.items.table.maintenance')}</th>
-                                <th className="px-3 py-2">{t('standorte.locations.table.actions')}</th>
+                                <th className="px-3 py-2">{t('standorte.items.table.actions')}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -496,6 +496,7 @@ function ItemDetail({
     const [valueEuros, setValueEuros] = useState('');
     const [maintenanceIntervalDays, setMaintenanceIntervalDays] = useState('');
     const [lastMaintenanceAt, setLastMaintenanceAt] = useState('');
+    const [acquiredAt, setAcquiredAt] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [saved, setSaved] = useState(false);
 
@@ -509,6 +510,7 @@ function ItemDetail({
         setValueEuros(data.acquisitionValueCents !== null ? String(data.acquisitionValueCents / 100) : '');
         setMaintenanceIntervalDays(data.maintenanceIntervalDays !== null ? String(data.maintenanceIntervalDays) : '');
         setLastMaintenanceAt(data.lastMaintenanceAt ?? '');
+        setAcquiredAt(data.acquiredAt ?? '');
     }
 
     useEffect(() => {
@@ -531,6 +533,7 @@ function ItemDetail({
                     acquisitionValueCents: valueEuros ? Math.round(Number(valueEuros) * 100) : null,
                     maintenanceIntervalDays: maintenanceIntervalDays ? Number(maintenanceIntervalDays) : null,
                     lastMaintenanceAt: lastMaintenanceAt || null,
+                    acquiredAt: acquiredAt || null,
                 },
             });
             setSaved(true);
@@ -612,6 +615,15 @@ function ItemDetail({
                                 type="date"
                                 value={lastMaintenanceAt}
                                 onChange={(e) => setLastMaintenanceAt(e.target.value)}
+                                className="ml-2 rounded-lg border border-border bg-background px-2 py-1.5 text-sm text-foreground"
+                            />
+                        </label>
+                        <label className="text-xs text-muted-foreground">
+                            {t('standorte.items.new.acquiredAt')}
+                            <input
+                                type="date"
+                                value={acquiredAt}
+                                onChange={(e) => setAcquiredAt(e.target.value)}
                                 className="ml-2 rounded-lg border border-border bg-background px-2 py-1.5 text-sm text-foreground"
                             />
                         </label>
