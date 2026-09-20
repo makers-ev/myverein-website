@@ -6,7 +6,7 @@ import { url } from "../../project.config.json";
 // createNoIndexMetadata) and excluded here; error/reset-password/verify-email
 // are transient auth-flow utility pages with no standalone SEO value.
 export default function sitemap(): MetadataRoute.Sitemap {
-    const routes = ["", "/contact", "/imprint", "/privacy", "/terms", "/login-signup"];
+    const routes = ["", "/contact", "/roadmap", "/changelog", "/imprint", "/privacy", "/terms", "/login-signup"];
 
     return routes.map((route) => ({
         url: `${url}${route}`,

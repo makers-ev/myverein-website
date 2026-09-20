@@ -34,3 +34,11 @@ export const supportedLanguageIds = supportedLanguages.map((l) => l.id) as Langu
 export function isSupportedLanguage(value: unknown): value is Language {
     return typeof value === 'string' && (supportedLanguageIds as string[]).includes(value);
 }
+
+// Some page content (roadmap items, changelog entries) is hardcoded
+// DE/EN-only data rather than a `t()` translation key -- same ADR-009
+// fallback rule as VereinTranslation.ts/LegalTranslation.ts, just indexed
+// directly instead of going through `translations`.
+export function localizeDeEn<T>(record: { de: T; en: T }, language: Language): T {
+    return language === 'de' ? record.de : record.en;
+}

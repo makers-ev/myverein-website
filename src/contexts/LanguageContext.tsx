@@ -17,6 +17,8 @@ import KalenderTranslation from './KalenderTranslation';
 import TreffenTranslation from './TreffenTranslation';
 import VerfuegbarkeitTranslation from './VerfuegbarkeitTranslation';
 import StandorteTranslation from './StandorteTranslation';
+import RoadmapTranslation from './RoadmapTranslation';
+import ChangelogTranslation from './ChangelogTranslation';
 
 interface LanguageContextType {
     language: Language;
@@ -44,6 +46,8 @@ export const translations: Record<Language, Record<string, string>> = supportedL
             ...(id === 'de' || id === 'en' ? TreffenTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? VerfuegbarkeitTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? StandorteTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? RoadmapTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? ChangelogTranslation[id] : {}),
         };
         return acc;
     },
