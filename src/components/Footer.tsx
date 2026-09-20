@@ -20,6 +20,7 @@ export function Footer() {
             { name: t('footer.product.changelog'), href: '/changelog' },
         ],
         company: [
+            { name: t('footer.company.about'), href: '/about' },
             { name: t('footer.company.contact'), href: '/contact' },
         ],
         legal: [

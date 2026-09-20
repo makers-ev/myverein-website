@@ -22,6 +22,7 @@ has no local `/api/auth` route and no session store of its own.
 |---|---|---|
 | `/` | public | Homepage |
 | `/features` | public | Marketing feature overview: what's already built today (`builtFeaturesData.ts`), grouped by feature area, each capability tagged Website / App / Website & App via `PlatformBadge` |
+| `/about` | public | "Über uns": what MyVerein is, the Makers e.V. project context (link to the-makers.space) and the two developers as cards with GitHub links (avatars are static files in `public/about/`, no external requests); texts in `AboutTranslation.ts` (DE/EN) |
 | `/login-signup` | public | Sign in / sign up, with 2FA follow-up, a post-signup "verify your e-mail" prompt, and a self-service "forgot password" flow (`ForgotPasswordPrompt`, toggled from the sign-in form) |
 | `/verify-email` | public | Landing page for the verification e-mail's link |
 | `/reset-password` | public | Landing page for the "forgot password" e-mail's link — Better Auth's `/reset-password/:token` callback redirects here with `?token=...` (valid) or `?error=...` (invalid/expired, same pattern as `/verify-email`); the form calls `authClient.resetPassword({ newPassword, token })`. The e-mail is triggered by `authClient.requestPasswordReset({ email, redirectTo })` from this site's own "forgot password" flow (see `/login-signup`) or from `_template_better-auth-admin`'s user detail page |
