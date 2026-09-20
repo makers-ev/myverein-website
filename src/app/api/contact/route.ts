@@ -5,26 +5,29 @@ import nodemailer from 'nodemailer';
 import { buildAdminNotificationEmail } from '../../../lib/contactAdminEmailTemplate';
 import { buildConfirmationEmail } from '../../../lib/contactEmailTemplate';
 
-export type ContactCategory = 'bug' | 'feature' | 'general';
+export type ContactCategory = 'beta' | 'bug' | 'feature' | 'general';
 
 export interface ContactPayload {
   name: string;
   email: string;
   category: ContactCategory;
   message: string;
+  /** Optional "how did you hear about us" field, only meaningful for the `beta` category. */
+  referral?: string;
 }
 
-const CATEGORIES: ContactCategory[] = ['bug', 'feature', 'general'];
+const CATEGORIES: ContactCategory[] = ['beta', 'bug', 'feature', 'general'];
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
  * Pure validation, no I/O -- unit-testable without mocking nodemailer/env.
  * `honeypot` must arrive empty; a filled-in value means a bot filled out a
- * field real users never see.
+ * field real users never see. `referral` is optional and permissive (no
+ * format requirement) -- it's a free-text "how did you hear about us" note.
  */
 export function validateContactPayload(body: unknown): { data: ContactPayload } | { error: string } {
   if (typeof body !== 'object' || body === null) return { error: 'Invalid request body' };
-  const { name, email, category, message, honeypot } = body as Record<string, unknown>;
+  const { name, email, category, message, referral, honeypot } = body as Record<string, unknown>;
 
   if (typeof honeypot === 'string' && honeypot !== '') return { error: 'Message not sent' };
   if (typeof name !== 'string' || !name.trim()) return { error: 'Name is required' };
@@ -32,9 +35,16 @@ export function validateContactPayload(body: unknown): { data: ContactPayload } 
   if (typeof category !== 'string' || !CATEGORIES.includes(category as ContactCategory)) {
     return { error: 'Invalid category' };
   }
+  const safeCategory = category as ContactCategory;
+  const safeReferral = typeof referral === 'string' && referral.trim() ? referral.trim() : undefined;
+
+  if (safeCategory === 'beta') {
+    return { data: { name: name.trim(), email: email.trim(), category: safeCategory, message: '', referral: safeReferral } };
+  }
+
   if (typeof message !== 'string' || !message.trim()) return { error: 'Message is required' };
 
-  return { data: { name: name.trim(), email: email.trim(), category: category as ContactCategory, message: message.trim() } };
+  return { data: { name: name.trim(), email: email.trim(), category: safeCategory, message: message.trim() } };
 }
 
 // Embedded via `cid:` in both templates rather than a hosted URL or inline

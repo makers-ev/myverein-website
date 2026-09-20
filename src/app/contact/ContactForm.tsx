@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useEffect, useState, FormEvent } from 'react';
 import { Mail, MessageCircle, Send } from 'lucide-react';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 import { appName } from '../../../project.config.json';
 import type { ContactCategory } from '../api/contact/route';
 
-const CATEGORIES: ContactCategory[] = ['bug', 'feature', 'general'];
+const CATEGORIES: ContactCategory[] = ['beta', 'bug', 'feature', 'general'];
 
 // TODO: point this at your real support address before shipping (also used by the mailto fallback below).
 const CONTACT_EMAIL = 'contact@example.com';
@@ -25,11 +25,22 @@ export default function ContactForm() {
   const [email, setEmail] = useState('');
   const [category, setCategory] = useState<ContactCategory>('general');
   const [message, setMessage] = useState('');
+  const [referral, setReferral] = useState('');
   const [honeypot, setHoneypot] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
-  const canSubmit = name.trim() && email.trim() && message.trim();
+  useEffect(() => {
+    // Deep-link support for `/contact#beta` and `/contact#bug` -- shareable
+    // links straight into a given category (used by the homepage's beta CTA
+    // and the roadmap page's bug-report link).
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reacting to the URL hash on mount, not derived render state
+    if (window.location.hash === '#beta') setCategory('beta');
+    else if (window.location.hash === '#bug') setCategory('bug');
+  }, []);
+
+  const isBeta = category === 'beta';
+  const canSubmit = name.trim() && email.trim() && (isBeta ? true : message.trim());
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -42,7 +53,14 @@ export default function ContactForm() {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, category, message, honeypot }),
+        body: JSON.stringify({
+          name,
+          email,
+          category,
+          message: isBeta ? undefined : message,
+          referral: isBeta ? referral.trim() || undefined : undefined,
+          honeypot,
+        }),
       });
       setStatus(res.ok ? 'success' : 'error');
     } catch {
@@ -120,21 +138,39 @@ export default function ContactForm() {
         </div>
       </div>
 
-      <div className="mt-4">
-        <label className="block text-sm font-medium text-foreground">{t('contact.field-message')}</label>
-        <textarea
-          required
-          rows={5}
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
-        />
-      </div>
+      {isBeta ? (
+        <div id="beta" className="mt-4 space-y-4">
+          <p className="text-sm text-muted-foreground">{t('contact.beta-description')}</p>
+          <div>
+            <label className="block text-sm font-medium text-foreground">{t('contact.field-referral')}</label>
+            <input
+              value={referral}
+              onChange={(e) => setReferral(e.target.value)}
+              placeholder={t('contact.beta-referral-placeholder')}
+              className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+        </div>
+      ) : (
+        <div id={category === 'bug' ? 'bug' : undefined} className="mt-4">
+          <label className="block text-sm font-medium text-foreground">{t('contact.field-message')}</label>
+          <textarea
+            required
+            rows={5}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
+      )}
 
       {status === 'error' && (
         <div className="mt-3">
           <p className="text-sm text-red-600">{t('contact.error')}</p>
-          <a href={mailtoFallback(name, email, category, message)} className="mt-1 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:brightness-110">
+          <a
+            href={mailtoFallback(name, email, category, isBeta ? (referral.trim() ? `Referred by: ${referral.trim()}` : '') : message)}
+            className="mt-1 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:brightness-110"
+          >
             <Mail className="h-4 w-4" />
             {t('contact.mailto-fallback')}
           </a>
