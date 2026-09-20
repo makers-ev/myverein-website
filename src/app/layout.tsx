@@ -53,6 +53,7 @@ export default async function RootLayout({
   const mainLinks = [
     { name: "nav.verein", href: "/verein" },
     { name: "nav.kalender", href: "/kalender" },
+    { name: "nav.standorte", href: "/standorte" },
     { name: "nav.verfuegbarkeit", href: "/verfuegbarkeit" },
     { name: "nav.notifications", href: "/notifications" },
     { name: "nav.settings", href: "/settings" },
