@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { Wallet, Clock, IdCard, ShieldCheck, Megaphone, Vote, ClipboardList, Handshake, BarChart3 } from 'lucide-react';
+import { Clock, IdCard, ShieldCheck, Megaphone, Vote, ClipboardList, Handshake, BarChart3 } from 'lucide-react';
 
 export type RoadmapStatus = 'planned' | 'in-progress' | 'done';
 
@@ -35,22 +35,6 @@ export interface RoadmapItem {
  * page groups and sorts entries by `sortKey` automatically.
  */
 export const ROADMAP_ITEMS: RoadmapItem[] = [
-    {
-        id: 'finanzen-sepa',
-        icon: Wallet,
-        type: 'feature',
-        title: {
-            de: 'Finanzen: SEPA-Beitragseinzug',
-            en: 'Finances: SEPA membership-fee collection',
-        },
-        description: {
-            de: 'Automatischer SEPA-Einzug der Mitgliedsbeiträge inklusive Mahnwesen, Kassenbuch-Export und Spendenquittungen, sodass der Kassenwart Zahlungen nicht mehr von Hand abtippt.',
-            en: 'Automatic SEPA collection of membership fees, including reminders, a cashbook export, and donation receipts, so payments no longer have to be tracked by hand.',
-        },
-        status: 'planned',
-        period: 'Später',
-        sortKey: 999001,
-    },
     {
         id: 'zeiterfassung-verguetung',
         icon: Clock,
