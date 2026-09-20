@@ -17,6 +17,7 @@ export function Footer() {
         product: [
             { name: t('footer.product.features'), href: '/features' },
             { name: t('footer.product.pricing'), href: '/pricing' },
+            { name: t('footer.product.roadmap'), href: '/roadmap' },
             { name: t('footer.product.changelog'), href: '/changelog' },
         ],
         company: [
