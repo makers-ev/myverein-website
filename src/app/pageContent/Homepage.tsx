@@ -11,6 +11,7 @@ import {
     GraduationCap,
     Handshake,
     IdCard,
+    LayoutGrid,
     MapPin,
     Megaphone,
     ShieldCheck,
@@ -121,6 +122,16 @@ export default function HomepagePageContent() {
                             <p className="mt-1.5 text-sm text-muted-foreground">{t(`home.card.${slug}.body`)}</p>
                         </div>
                     ))}
+                </div>
+
+                <div className="mt-8 text-center">
+                    <Link
+                        href="/features"
+                        className="inline-flex items-center gap-1.5 font-semibold text-primary hover:brightness-110"
+                    >
+                        <LayoutGrid className="h-4 w-4" />
+                        {t('home.overview-cta')}
+                    </Link>
                 </div>
             </section>
 

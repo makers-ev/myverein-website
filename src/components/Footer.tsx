@@ -16,14 +16,10 @@ export function Footer() {
     const footerLinks = {
         product: [
             { name: t('footer.product.features'), href: '/features' },
-            { name: t('footer.product.pricing'), href: '/pricing' },
             { name: t('footer.product.roadmap'), href: '/roadmap' },
             { name: t('footer.product.changelog'), href: '/changelog' },
         ],
         company: [
-            { name: t('footer.company.about'), href: '/about' },
-            { name: t('footer.company.blog'), href: '/blog' },
-            { name: t('footer.company.careers'), href: '/careers' },
             { name: t('footer.company.contact'), href: '/contact' },
         ],
         legal: [

@@ -55,6 +55,7 @@ export default async function RootLayout({
   // has a club membership, so they live in AuthNav's account dropdown
   // instead of here.
   const mainLinks = [
+    { name: "nav.features", href: "/features" },
     { name: "nav.roadmap", href: "/roadmap" },
     { name: "nav.changelog", href: "/changelog" },
     { name: "nav.contact", href: "/contact" },

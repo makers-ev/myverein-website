@@ -19,6 +19,7 @@ import VerfuegbarkeitTranslation from './VerfuegbarkeitTranslation';
 import StandorteTranslation from './StandorteTranslation';
 import RoadmapTranslation from './RoadmapTranslation';
 import ChangelogTranslation from './ChangelogTranslation';
+import FeaturesTranslation from './FeaturesTranslation';
 
 interface LanguageContextType {
     language: Language;
@@ -48,6 +49,7 @@ export const translations: Record<Language, Record<string, string>> = supportedL
             ...(id === 'de' || id === 'en' ? StandorteTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? RoadmapTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? ChangelogTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? FeaturesTranslation[id] : {}),
         };
         return acc;
     },

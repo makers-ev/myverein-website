@@ -31,6 +31,7 @@ const HomeTranslation: Translation = {
         'home.card.standorte.body': 'Mehrere Standorte mit Adresse, Öffnungszeiten, WLAN-Zugang per QR-Code und Schlüsselinfo, rollenabhängig sichtbar, auch für Gäste.',
         'home.card.vereinsinfo.title': 'Vereinsinfo & Rollenmodell',
         'home.card.vereinsinfo.body': 'Vorstand und Abteilungen mit Ansprechpartnern auf einen Blick, granulare Vereinsrollen statt eines einzigen Admin-Schalters, inklusive Mehrfach-Vereinsmitgliedschaft.',
+        'home.overview-cta': 'Alle Funktionen ansehen',
 
         'home.personas-eyebrow': 'Für wen',
         'home.personas-title': 'Für jeden im Verein die passende Sicht',
@@ -87,6 +88,7 @@ const HomeTranslation: Translation = {
         'home.card.standorte.body': 'Multiple locations with address, opening hours, WiFi access via QR code, and key info, visible based on role, guests included.',
         'home.card.vereinsinfo.title': 'Club info & roles',
         'home.card.vereinsinfo.body': 'Board and departments with contacts at a glance, granular club roles instead of a single admin switch, including multi-club membership.',
+        'home.overview-cta': 'See the full feature list',
 
         'home.personas-eyebrow': "Who it's for",
         'home.personas-title': 'A view that fits everyone in the club',
@@ -143,6 +145,7 @@ const HomeTranslation: Translation = {
         'home.card.standorte.body': 'Plusieurs sites avec adresse, horaires, accès Wi-Fi par QR code et infos sur les clés, visibles selon le rôle, invités compris.',
         'home.card.vereinsinfo.title': 'Infos association & rôles',
         'home.card.vereinsinfo.body': 'Bureau et sections avec contacts en un coup d’œil, des rôles granulaires plutôt qu’un simple interrupteur admin, y compris l’adhésion à plusieurs associations.',
+        'home.overview-cta': 'Voir toutes les fonctionnalités',
 
         'home.personas-eyebrow': 'Pour qui',
         'home.personas-title': 'Une vue adaptée à chacun dans l’association',
@@ -199,6 +202,7 @@ const HomeTranslation: Translation = {
         'home.card.standorte.body': 'Varias sedes con dirección, horarios, acceso WiFi por código QR e info de llaves, visible según el rol, incluidos invitados.',
         'home.card.vereinsinfo.title': 'Info de la asociación y roles',
         'home.card.vereinsinfo.body': 'Junta y secciones con contactos de un vistazo, roles granulares en vez de un único interruptor de administrador, incluida la pertenencia a varias asociaciones.',
+        'home.overview-cta': 'Ver todas las funciones',
 
         'home.personas-eyebrow': 'Para quién',
         'home.personas-title': 'Una vista adecuada para cada persona de la asociación',
@@ -255,6 +259,7 @@ const HomeTranslation: Translation = {
         'home.card.standorte.body': 'Vários locais com endereço, horários, acesso WiFi por código QR e informação de chaves, visível segundo a função, incluindo convidados.',
         'home.card.vereinsinfo.title': 'Info da associação e funções',
         'home.card.vereinsinfo.body': 'Direção e secções com contactos num só olhar, funções granulares em vez de um único interruptor de administrador, incluindo participação em várias associações.',
+        'home.overview-cta': 'Ver todas as funcionalidades',
 
         'home.personas-eyebrow': 'Para quem',
         'home.personas-title': 'Uma vista adequada a cada pessoa na associação',
@@ -311,6 +316,7 @@ const HomeTranslation: Translation = {
         'home.card.standorte.body': 'Più sedi con indirizzo, orari, accesso WiFi tramite QR code e info sulle chiavi, visibili in base al ruolo, ospiti compresi.',
         'home.card.vereinsinfo.title': 'Info associazione e ruoli',
         'home.card.vereinsinfo.body': 'Direttivo e sezioni con referenti a colpo d’occhio, ruoli granulari invece di un unico interruttore admin, inclusa l’iscrizione a più associazioni.',
+        'home.overview-cta': 'Vedi tutte le funzionalità',
 
         'home.personas-eyebrow': 'Per chi',
         'home.personas-title': 'Una vista adatta a ognuno nell’associazione',
@@ -367,6 +373,7 @@ const HomeTranslation: Translation = {
         'home.card.standorte.body': 'Meerdere locaties met adres, openingstijden, wifi-toegang via QR-code en sleutelinfo, zichtbaar op basis van rol, ook voor gasten.',
         'home.card.vereinsinfo.title': 'Verenigingsinfo & rollen',
         'home.card.vereinsinfo.body': 'Bestuur en afdelingen met contactpersonen in één overzicht, granulaire verenigingsrollen in plaats van één enkele beheerdersschakelaar, inclusief lidmaatschap van meerdere verenigingen.',
+        'home.overview-cta': 'Bekijk alle functies',
 
         'home.personas-eyebrow': 'Voor wie',
         'home.personas-title': 'Een passend overzicht voor iedereen in de vereniging',
@@ -423,6 +430,7 @@ const HomeTranslation: Translation = {
         'home.card.standorte.body': 'Wiele lokalizacji z adresem, godzinami otwarcia, dostępem do WiFi przez kod QR i informacją o kluczach, widoczne w zależności od roli, także dla gości.',
         'home.card.vereinsinfo.title': 'Informacje o klubie i role',
         'home.card.vereinsinfo.body': 'Zarząd i sekcje z osobami kontaktowymi na pierwszy rzut oka, szczegółowe role klubowe zamiast jednego przełącznika administratora, w tym wielokrotne członkostwo w klubach.',
+        'home.overview-cta': 'Zobacz wszystkie funkcje',
 
         'home.personas-eyebrow': 'Dla kogo',
         'home.personas-title': 'Odpowiedni widok dla każdego w klubie',
@@ -479,6 +487,7 @@ const HomeTranslation: Translation = {
         'home.card.standorte.body': 'Несколько локаций с адресом, часами работы, доступом к WiFi через QR-код и информацией о ключах, видимость зависит от роли, включая гостей.',
         'home.card.vereinsinfo.title': 'Информация о клубе и роли',
         'home.card.vereinsinfo.body': 'Правление и секции с контактными лицами наглядно, детальные роли клуба вместо одного общего переключателя администратора, включая членство в нескольких клубах.',
+        'home.overview-cta': 'Смотреть все функции',
 
         'home.personas-eyebrow': 'Для кого',
         'home.personas-title': 'Подходящий вид для каждого в клубе',
@@ -535,6 +544,7 @@ const HomeTranslation: Translation = {
         'home.card.standorte.body': '住所、営業時間、QRコードによるWiFiアクセス、鍵情報を含む複数拠点管理を、役割に応じて表示し、ゲストにも対応します。',
         'home.card.vereinsinfo.title': '団体情報と権限モデル',
         'home.card.vereinsinfo.body': '役員・部門とその担当者を一目で確認でき、単一の管理者スイッチではなく細かい団体内権限を採用、複数団体への同時所属にも対応します。',
+        'home.overview-cta': 'すべての機能を見る',
 
         'home.personas-eyebrow': '対象者',
         'home.personas-title': '団体内の誰にも合った表示',
@@ -591,6 +601,7 @@ const HomeTranslation: Translation = {
         'home.card.standorte.body': '多个场地，包含地址、开放时间、通过二维码获取的 WiFi 访问信息和钥匙信息，按角色显示，也支持访客。',
         'home.card.vereinsinfo.title': '社团信息与角色模型',
         'home.card.vereinsinfo.body': '一目了然地查看理事会和各部门及其联系人，细粒度的社团角色而非单一的管理员开关，支持同时加入多个社团。',
+        'home.overview-cta': '查看所有功能',
 
         'home.personas-eyebrow': '适用对象',
         'home.personas-title': '为社团中的每个人提供合适的视图',

@@ -21,6 +21,7 @@ has no local `/api/auth` route and no session store of its own.
 | Route | Access | Content |
 |---|---|---|
 | `/` | public | Homepage |
+| `/features` | public | Marketing feature overview: what's already built today (`builtFeaturesData.ts`), grouped by feature area, each capability tagged Website / App / Website & App via `PlatformBadge` |
 | `/login-signup` | public | Sign in / sign up, with 2FA follow-up, a post-signup "verify your e-mail" prompt, and a self-service "forgot password" flow (`ForgotPasswordPrompt`, toggled from the sign-in form) |
 | `/verify-email` | public | Landing page for the verification e-mail's link |
 | `/reset-password` | public | Landing page for the "forgot password" e-mail's link — Better Auth's `/reset-password/:token` callback redirects here with `?token=...` (valid) or `?error=...` (invalid/expired, same pattern as `/verify-email`); the form calls `authClient.resetPassword({ newPassword, token })`. The e-mail is triggered by `authClient.requestPasswordReset({ email, redirectTo })` from this site's own "forgot password" flow (see `/login-signup`) or from `_template_better-auth-admin`'s user detail page |
