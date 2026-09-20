@@ -53,14 +53,16 @@ export function AuthNav({ appLinks = [] }: { appLinks?: AuthNavAppLink[] }) {
     }
 
     if (!session) {
-        return (
-            <Link
-                href="/login-signup"
-                className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:brightness-110 transition-colors"
-            >
-                {t('auth.nav.signin')}
-            </Link>
-        );
+        // Sign-in button hidden on the public-only site.
+        return null;
+        // return (
+        //     <Link
+        //         href="/login-signup"
+        //         className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:brightness-110 transition-colors"
+        //     >
+        //         {t('auth.nav.signin')}
+        //     </Link>
+        // );
     }
 
     const displayName = session.user.name ?? session.user.email;

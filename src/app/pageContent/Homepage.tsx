@@ -70,12 +70,14 @@ export default function HomepagePageContent() {
                         {t('home.hero-subtitle')}
                     </p>
                     <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+                        {/* Beta signup button hidden on the public-only site.
                         <Link
                             href="/contact#beta"
                             className="rounded-xl bg-primary px-6 py-3 font-semibold text-primary-foreground transition hover:brightness-110"
                         >
                             {t('home.cta-primary')}
                         </Link>
+                        */}
                         <a
                             href="#overview"
                             className="rounded-xl border border-border px-6 py-3 font-semibold text-foreground transition hover:bg-muted"
@@ -189,7 +191,7 @@ export default function HomepagePageContent() {
                 </div>
             </section>
 
-            {/* Closing CTA */}
+            {/* Closing CTA (beta signup) hidden on the public-only site.
             <section className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-6 lg:px-8">
                 <h2 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">{t('home.final-cta-title')}</h2>
                 <p className="mx-auto mt-3 max-w-md text-muted-foreground">{t('home.final-cta-body')}</p>
@@ -200,6 +202,7 @@ export default function HomepagePageContent() {
                     {t('home.cta-primary')}
                 </Link>
             </section>
+            */}
         </div>
     );
 }

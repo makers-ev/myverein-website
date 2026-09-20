@@ -1,7 +1,7 @@
 'use client';
 
-import Link from 'next/link';
-import { Map, CircleDot, Loader, CircleCheck, Bug, Search, Wrench, ArrowRight } from 'lucide-react';
+// import Link from 'next/link';
+import { Map, CircleDot, Loader, CircleCheck, Bug, Search, Wrench /*, ArrowRight */ } from 'lucide-react';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeDeEn } from '@/contexts/supportedLanguages';
@@ -162,6 +162,7 @@ export default function RoadmapPageContent() {
                     </div>
                 )}
 
+                {/* Bug report link hidden on the public-only site (needs Link + ArrowRight imports).
                 <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-dashed border-border p-4">
                     <p className="text-sm text-muted-foreground">{t('roadmap.bugs.report-info')}</p>
                     <Link
@@ -172,6 +173,7 @@ export default function RoadmapPageContent() {
                         <ArrowRight className="h-4 w-4" />
                     </Link>
                 </div>
+                */}
             </section>
         </div>
     );
