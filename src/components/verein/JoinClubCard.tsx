@@ -61,7 +61,7 @@ export default function JoinClubCard({ onJoined }: { onJoined: () => void }) {
             </label>
 
             <p className="mt-4 text-xs font-semibold text-muted-foreground">{t('verein.members.table.category')}</p>
-            <div className="mt-1 flex flex-wrap gap-2" role="radiogroup">
+            <div className="mt-1 flex flex-wrap gap-2" role="radiogroup" aria-label={t('verein.members.table.category')}>
                 {CATEGORIES.map((c) => (
                     <button
                         key={c}

@@ -98,7 +98,7 @@ function CalendarFormModal({
                     <label htmlFor="cal-name" className={labelClass}>
                         {t('kalender.calendars.new.name')} *
                     </label>
-                    <input id="cal-name" type="text" required autoFocus value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
+                    <input id="cal-name" type="text" required autoFocus maxLength={200} value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
                 </div>
                 <div>
                     <label htmlFor="cal-department" className={labelClass}>

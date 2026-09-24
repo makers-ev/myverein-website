@@ -233,7 +233,7 @@ export function EventFormModal({ clubId, calendars, colorFor, event, initialStar
                     <label htmlFor="ev-title" className={labelClass}>
                         {t('kalender.events.new.title')} *
                     </label>
-                    <input id="ev-title" type="text" required autoFocus value={title} onChange={(e) => setTitle(e.target.value)} className={inputClass} />
+                    <input id="ev-title" type="text" required autoFocus maxLength={300} value={title} onChange={(e) => setTitle(e.target.value)} className={inputClass} />
                 </div>
                 <div>
                     <label htmlFor="ev-calendar" className={labelClass}>
@@ -283,7 +283,7 @@ export function EventFormModal({ clubId, calendars, colorFor, event, initialStar
                         <label htmlFor="ev-category" className={labelClass}>
                             {t('kalender.events.new.category')}
                         </label>
-                        <input id="ev-category" type="text" value={category} onChange={(e) => setCategory(e.target.value)} className={inputClass} />
+                        <input id="ev-category" type="text" maxLength={100} value={category} onChange={(e) => setCategory(e.target.value)} className={inputClass} />
                     </div>
                     <div>
                         <label htmlFor="ev-capacity" className={labelClass}>

@@ -39,14 +39,15 @@ export default function MemberEditModal({
         setSaving(true);
         setError(null);
         try {
-            await apiFetch(`/club-members/${member.id}?clubId=${clubId}`, {
+            const res = await apiFetch<{ data?: unknown }>(`/club-members/${member.id}?clubId=${clubId}`, {
                 method: 'PATCH',
                 body: {
                     category,
                     leftAt: leftAt || null,
-                    ...(memberNumber.trim() ? { memberNumber: memberNumber.trim() } : {}),
+                    memberNumber: memberNumber.trim() || null,
                 },
             });
+            if (!res.data) throw new Error('Request failed');
             onSaved();
             onClose();
         } catch (err) {

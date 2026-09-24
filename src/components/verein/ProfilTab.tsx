@@ -42,14 +42,15 @@ export default function ProfilTab({ me, clubId, onSaved }: { me: OwnMembership; 
         setSaving(true);
         setStatus(null);
         try {
-            await apiFetch(`/club-members/me?clubId=${clubId}`, {
+            const res = await apiFetch<{ data?: OwnMembership }>(`/club-members/me?clubId=${clubId}`, {
                 method: 'PATCH',
                 body: {
-                    ...(birthDate ? { birthDate } : {}),
+                    birthDate: birthDate || null,
                     emergencyContactName: contactName.trim(),
                     emergencyContactPhone: contactPhone.trim(),
                 },
             });
+            if (!res.data) throw new Error('Request failed');
             setStatus({ ok: true, text: t('verein.profil.saved') });
             onSaved();
         } catch (err) {
@@ -85,7 +86,7 @@ export default function ProfilTab({ me, clubId, onSaved }: { me: OwnMembership; 
                     </div>
                     <div className="flex justify-between gap-2">
                         <dt className="text-muted-foreground">{t('verein.members.table.joined')}</dt>
-                        <dd className="font-medium text-foreground">{me.joinedAt ? new Date(me.joinedAt).toLocaleDateString('de-DE') : '—'}</dd>
+                        <dd className="font-medium text-foreground">{me.joinedAt ? new Date(`${me.joinedAt}T00:00`).toLocaleDateString('de-DE') : '—'}</dd>
                     </div>
                     {me.memberNumber ? (
                         <div className="flex justify-between gap-2">

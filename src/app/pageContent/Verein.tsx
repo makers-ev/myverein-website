@@ -290,7 +290,7 @@ function MitgliederTab({
                                 />
                             </td>
                             <td className="px-3 py-2 text-muted-foreground">
-                                {m.joinedAt ? new Date(m.joinedAt).toLocaleDateString('de-DE') : '—'}
+                                {m.joinedAt ? new Date(`${m.joinedAt}T00:00`).toLocaleDateString('de-DE') : '—'}
                             </td>
                             {canEditMembers && (
                                 <td className="px-3 py-2 text-right">

@@ -43,7 +43,7 @@ const DEFAULT_ROW: RowState = { available: false, startTime: '18:00', endTime: '
 export default function VerfuegbarkeitPageContent() {
     const { t, language } = useLanguage();
     const [clubs, setClubs] = useState<MyClub[] | null>(null);
-    const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
+    const [slots, setSlots] = useState<AvailabilitySlot[] | null>(null);
     const [exceptions, setExceptions] = useState<AvailabilityException[]>([]);
     const [rows, setRows] = useState<Record<number, RowState>>({});
     const [initialized, setInitialized] = useState(false);
@@ -72,7 +72,7 @@ export default function VerfuegbarkeitPageContent() {
     }, [activeClub?.clubId]);
 
     useEffect(() => {
-        if (!clubs || initialized) return;
+        if (!clubs || slots === null || initialized) return;
         const next: Record<number, RowState> = {};
         for (let day = 0; day < 7; day++) {
             const slot = slots.find((s) => s.weekday === day);
@@ -86,7 +86,7 @@ export default function VerfuegbarkeitPageContent() {
 
     async function upsertSlot(day: number, startTime: string, endTime: string) {
         if (!activeClub) return;
-        const existing = slots.find((s) => s.weekday === day);
+        const existing = slots?.find((s) => s.weekday === day);
         if (existing) {
             await apiFetch(`/availability/slots/${existing.id}?clubId=${activeClub.clubId}`, { method: 'PATCH', body: { startTime, endTime } });
         } else {
@@ -97,7 +97,7 @@ export default function VerfuegbarkeitPageContent() {
 
     async function deleteSlot(day: number) {
         if (!activeClub) return;
-        const existing = slots.find((s) => s.weekday === day);
+        const existing = slots?.find((s) => s.weekday === day);
         if (!existing) return;
         await apiFetch(`/availability/slots/${existing.id}?clubId=${activeClub.clubId}`, { method: 'DELETE' });
         await refresh(activeClub.clubId);
@@ -307,7 +307,7 @@ export default function VerfuegbarkeitPageContent() {
                                     <label htmlFor="exc-note" className={labelClass}>
                                         {t('verfuegbarkeit.exceptions.note')}
                                     </label>
-                                    <input id="exc-note" type="text" value={excNote} onChange={(e) => setExcNote(e.target.value)} className={inputClass} />
+                                    <input id="exc-note" type="text" maxLength={500} value={excNote} onChange={(e) => setExcNote(e.target.value)} className={inputClass} />
                                 </div>
                             </div>
                             <button type="button" onClick={() => void handleAddException()} disabled={!excDate} className={`${primaryBtn} mt-3`}>

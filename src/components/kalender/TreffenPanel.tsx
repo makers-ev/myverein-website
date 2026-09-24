@@ -440,7 +440,16 @@ function MeetingDetail({ clubId, meetingId, t, onBack }: { clubId: string; meeti
                             <button type="button" onClick={() => void handleSaveAgenda()} className={primaryBtn}>
                                 {t('treffen.agenda-minutes.save')}
                             </button>
-                            <button type="button" onClick={() => setEditing(false)} className={secondaryBtn}>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setAgenda(meeting.agenda ?? '');
+                                    setMinutes(meeting.minutes ?? '');
+                                    setStatus(meeting.status);
+                                    setEditing(false);
+                                }}
+                                className={secondaryBtn}
+                            >
                                 {t('treffen.cancel')}
                             </button>
                         </div>
