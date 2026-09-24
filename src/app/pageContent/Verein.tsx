@@ -148,13 +148,20 @@ function MemberRoleCell({
     const [adding, setAdding] = useState(false);
     const [newRole, setNewRole] = useState<(typeof CLUB_ROLE_TYPES)[number]>('beisitzer');
     const [error, setError] = useState<string | null>(null);
+    const [submitting, setSubmitting] = useState(false);
+
+    // Only offer roles the member doesn't hold yet; backend rejects duplicates with 409.
+    const availableRoles = CLUB_ROLE_TYPES.filter((rt) => !member.roles.some((r) => r.roleType === rt));
+    const selectedRole = availableRoles.includes(newRole) ? newRole : availableRoles[0];
 
     async function handleAdd() {
+        if (!selectedRole) return;
         setError(null);
+        setSubmitting(true);
         try {
             await apiFetch(`/club-members/${member.id}/roles?clubId=${clubId}`, {
                 method: 'POST',
-                body: { roleType: newRole },
+                body: { roleType: selectedRole },
             });
             setAdding(false);
             onChange();
@@ -162,6 +169,8 @@ function MemberRoleCell({
             // Same "surface a 403 inline instead of a silent no-op" pattern
             // as AbteilungenTab's create form.
             setError(err instanceof ApiError ? err.message : 'Request failed');
+        } finally {
+            setSubmitting(false);
         }
     }
 
@@ -182,14 +191,14 @@ function MemberRoleCell({
                     <RoleBadge key={r.id} roleType={r.roleType} onRemove={() => void handleRemove(r.id)} />
                 ))}
             </div>
-            {adding ? (
+            {adding && selectedRole ? (
                 <div className="mt-1.5 flex items-center gap-1">
                     <select
-                        value={newRole}
+                        value={selectedRole}
                         onChange={(e) => setNewRole(e.target.value as (typeof CLUB_ROLE_TYPES)[number])}
                         className="rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground focus:border-primary focus:outline-none"
                     >
-                        {CLUB_ROLE_TYPES.map((rt) => (
+                        {availableRoles.map((rt) => (
                             <option key={rt} value={rt}>
                                 {t(`verein.role.${rt}`)}
                             </option>
@@ -197,7 +206,8 @@ function MemberRoleCell({
                     </select>
                     <button
                         onClick={() => void handleAdd()}
-                        className="rounded-md bg-primary px-2 py-1 text-xs font-semibold text-primary-foreground"
+                        disabled={submitting}
+                        className="rounded-md bg-primary px-2 py-1 text-xs font-semibold text-primary-foreground disabled:opacity-50"
                     >
                         {t('verein.roles.add.confirm')}
                     </button>
@@ -206,9 +216,11 @@ function MemberRoleCell({
                     </button>
                 </div>
             ) : (
-                <button onClick={() => setAdding(true)} className="mt-1.5 text-xs font-medium text-primary hover:underline">
-                    {t('verein.roles.add')}
-                </button>
+                availableRoles.length > 0 && (
+                    <button onClick={() => setAdding(true)} className="mt-1.5 text-xs font-medium text-primary hover:underline">
+                        {t('verein.roles.add')}
+                    </button>
+                )
             )}
             {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
         </div>
