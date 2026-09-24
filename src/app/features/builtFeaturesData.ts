@@ -57,11 +57,11 @@ export const BUILT_FEATURE_AREAS: BuiltFeatureArea[] = [
             },
             {
                 label: { de: 'Eigene Kontaktdaten selbst pflegen', en: 'Self-service contact-data updates' },
-                platform: 'app',
+                platform: 'both',
             },
             {
                 label: { de: 'Digitaler Aufnahmeantrag', en: 'Digital membership application' },
-                platform: 'app',
+                platform: 'both',
             },
             {
                 label: { de: 'Vereinsrollen zuweisen', en: 'Assign club roles' },
@@ -111,8 +111,12 @@ export const BUILT_FEATURE_AREAS: BuiltFeatureArea[] = [
                 platform: 'both',
             },
             {
+                label: { de: 'Monatskalender mit Tagesansicht', en: 'Month calendar with day view' },
+                platform: 'both',
+            },
+            {
                 label: { de: 'Termine anlegen & bearbeiten', en: 'Create & edit events' },
-                platform: 'web',
+                platform: 'both',
             },
             {
                 label: { de: 'An-/Abmelden zu Terminen inkl. Warteliste', en: 'RSVP to events, with waitlist support' },
@@ -123,7 +127,7 @@ export const BUILT_FEATURE_AREAS: BuiltFeatureArea[] = [
                     de: 'Kalender mit rollenbasierten Sichtbarkeits-Freigaben',
                     en: 'Calendars with role-based visibility rules',
                 },
-                platform: 'web',
+                platform: 'both',
             },
             {
                 label: { de: 'Sitzungen mit Agenda & Protokoll', en: 'Meetings with agenda & minutes' },
@@ -177,7 +181,7 @@ export const BUILT_FEATURE_AREAS: BuiltFeatureArea[] = [
             },
             {
                 label: { de: 'Inventar anlegen, bearbeiten & löschen', en: 'Add, edit & remove inventory items' },
-                platform: 'web',
+                platform: 'both',
             },
             {
                 label: { de: 'Ausleihe & Rückgabe per Selbstbedienung', en: 'Self-service check-out & return' },
@@ -189,7 +193,7 @@ export const BUILT_FEATURE_AREAS: BuiltFeatureArea[] = [
             },
             {
                 label: { de: 'Schadensmeldungen bearbeiten (Triage)', en: 'Triage damage reports' },
-                platform: 'web',
+                platform: 'both',
             },
             {
                 label: {
@@ -214,7 +218,7 @@ export const BUILT_FEATURE_AREAS: BuiltFeatureArea[] = [
             },
             {
                 label: { de: 'Standorte anlegen, bearbeiten & löschen', en: 'Add, edit & remove locations' },
-                platform: 'web',
+                platform: 'both',
             },
             {
                 label: {
@@ -225,11 +229,11 @@ export const BUILT_FEATURE_AREAS: BuiltFeatureArea[] = [
             },
             {
                 label: { de: 'WLAN-QR-Code zum schnellen Verbinden', en: 'WiFi QR code for quick connecting' },
-                platform: 'app',
+                platform: 'both',
             },
             {
                 label: { de: 'WLAN-Netze & Links verwalten', en: 'Manage WiFi networks & links' },
-                platform: 'web',
+                platform: 'both',
             },
             {
                 label: { de: 'Schlüsselverwaltung', en: 'Key management' },
