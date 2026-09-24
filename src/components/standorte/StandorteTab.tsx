@@ -387,7 +387,7 @@ function WifiFormModal({
             title={network ? t('standorte.wifi.edit.title') : t('standorte.wifi.new.title')}
             submitLabel={network ? t('standorte.wifi.save') : t('standorte.wifi.submit')}
             cancelLabel={t('standorte.wifi.cancel')}
-            canSubmit={!!label.trim() && !!ssid.trim() && !!password.trim()}
+            canSubmit={!!label.trim() && !!ssid.trim()}
             onClose={onClose}
             onSubmit={() =>
                 run(async () => {
@@ -407,7 +407,7 @@ function WifiFormModal({
                     <input type="text" value={ssid} onChange={(e) => setSsid(e.target.value)} required className={inputClass} />
                 </Field>
                 <Field label={t('standorte.wifi.password')}>
-                    <input type="text" value={password} onChange={(e) => setPassword(e.target.value)} required className={`${inputClass} font-mono`} />
+                    <input type="text" value={password} onChange={(e) => setPassword(e.target.value)} className={`${inputClass} font-mono`} />
                 </Field>
             </div>
             <Toggle checked={visibleToGuests} onChange={setVisibleToGuests} label={t('standorte.wifi.visibleToGuests')} />

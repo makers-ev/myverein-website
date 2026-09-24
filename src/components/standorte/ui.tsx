@@ -21,7 +21,9 @@ export function errorMessage(err: unknown): string {
 }
 
 export function formatDate(value: string | null): string {
-    return value ? new Date(value).toLocaleDateString('de-DE') : '—';
+    if (!value) return '—';
+    // Plain `YYYY-MM-DD` would parse as UTC midnight; read it as a local day instead.
+    return new Date(/^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T00:00` : value).toLocaleDateString('de-DE');
 }
 
 export function SectionCard({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {

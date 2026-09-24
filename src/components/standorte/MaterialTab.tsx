@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, ArrowLeft, MapPin, Package, Pencil, Plus, Search, Trash2, Wrench } from 'lucide-react';
 
 import { apiFetch } from '@/lib/api-client';
+import { backendUrl } from '@/lib/auth-client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { Location } from '@/components/standorte/StandorteTab';
 import {
@@ -460,7 +461,7 @@ function DamageReportsSection({ itemId, clubId, canWrite, t }: { itemId: string;
                                         {report.resolvedAt && ` → ${formatDate(report.resolvedAt)}`}
                                     </p>
                                     {report.photoUrl && (
-                                        <a href={report.photoUrl} target="_blank" rel="noreferrer" className="mt-1 inline-block text-xs text-primary hover:underline">
+                                        <a href={`${backendUrl}${report.photoUrl}`} target="_blank" rel="noreferrer" className="mt-1 inline-block text-xs text-primary hover:underline">
                                             {t('standorte.damage-reports.photo')}
                                         </a>
                                     )}
