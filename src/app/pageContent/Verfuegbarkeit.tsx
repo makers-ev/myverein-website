@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Trash2 } from 'lucide-react';
 
 import { apiFetch, ApiError } from '@/lib/api-client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { inputClass, labelClass, primaryBtn } from '@/components/kalender/calendarTypes';
 
 interface MyClub {
     clubId: string;
@@ -39,7 +41,7 @@ interface RowState {
 const DEFAULT_ROW: RowState = { available: false, startTime: '18:00', endTime: '20:00' };
 
 export default function VerfuegbarkeitPageContent() {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const [clubs, setClubs] = useState<MyClub[] | null>(null);
     const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
     const [exceptions, setExceptions] = useState<AvailabilityException[]>([]);
@@ -174,103 +176,150 @@ export default function VerfuegbarkeitPageContent() {
                 </div>
             ) : (
                 <div className="mt-6 space-y-4">
-                    <div className="rounded-xl border border-border bg-card p-4">
-                        {error && <p className="mb-3 text-sm text-destructive">{error}</p>}
-                        <table className="w-full text-sm">
-                            <tbody>
+                    <section className="rounded-xl border border-border bg-card p-4">
+                        <h2 className="text-sm font-bold text-foreground">{t('verfuegbarkeit.weekly.title')}</h2>
+                        <p className="mb-3 mt-0.5 text-xs text-muted-foreground">{t('verfuegbarkeit.weekly.hint')}</p>
+                        {error && (
+                            <p role="alert" className="mb-3 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                                {error}
+                            </p>
+                        )}
+
+                        <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+                            {WEEKDAY_KEYS.map((key, day) => {
+                                const row = rows[day] ?? DEFAULT_ROW;
+                                return (
+                                    <button
+                                        key={key}
+                                        type="button"
+                                        aria-pressed={row.available}
+                                        aria-label={t(`verfuegbarkeit.weekday.${key}`)}
+                                        onClick={() => void handleToggle(day, !row.available)}
+                                        className={`flex min-h-16 flex-col items-center justify-center rounded-lg border px-1 py-2 text-center transition-colors ${
+                                            row.available
+                                                ? 'border-primary bg-primary text-primary-foreground'
+                                                : 'border-border bg-background text-muted-foreground hover:bg-muted'
+                                        }`}
+                                    >
+                                        <span className="text-xs font-bold uppercase sm:text-sm">{t(`verfuegbarkeit.weekday.${key}`).slice(0, 2)}</span>
+                                        <span className="mt-1 hidden text-[10px] tabular-nums sm:block">
+                                            {row.available ? `${row.startTime}–${row.endTime}` : '—'}
+                                        </span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {WEEKDAY_KEYS.some((_, day) => rows[day]?.available) && (
+                            <ul className="mt-4 divide-y divide-border rounded-lg border border-border">
                                 {WEEKDAY_KEYS.map((key, day) => {
-                                    const row = rows[day] ?? DEFAULT_ROW;
+                                    const row = rows[day];
+                                    if (!row?.available) return null;
+                                    const setTime = (field: 'startTime' | 'endTime', value: string) =>
+                                        setRows((prev) => ({ ...prev, [day]: { ...(prev[day] ?? DEFAULT_ROW), [field]: value } }));
                                     return (
-                                        <tr key={key} className="border-b border-border last:border-b-0">
-                                            <td className="w-40 px-2 py-2.5 font-medium text-foreground">{t(`verfuegbarkeit.weekday.${key}`)}</td>
-                                            <td className="px-2 py-2.5">
+                                        <li key={key} className="flex flex-wrap items-center gap-3 px-3 py-2.5">
+                                            <span className="w-28 text-sm font-medium text-foreground">{t(`verfuegbarkeit.weekday.${key}`)}</span>
+                                            <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                                                {t('verfuegbarkeit.start-time')}
                                                 <input
-                                                    type="checkbox"
-                                                    checked={row.available}
-                                                    onChange={(e) => void handleToggle(day, e.target.checked)}
+                                                    type="time"
+                                                    value={row.startTime}
+                                                    onChange={(e) => setTime('startTime', e.target.value)}
+                                                    onBlur={() => void handleTimeBlur(day)}
+                                                    className={`${inputClass} !w-auto !py-1.5`}
                                                 />
-                                            </td>
-                                            <td className="px-2 py-2.5">
-                                                {row.available && (
-                                                    <div className="flex items-center gap-2">
-                                                        <input
-                                                            type="time"
-                                                            value={row.startTime}
-                                                            onChange={(e) => setRows((prev) => ({ ...prev, [day]: { ...(prev[day] ?? DEFAULT_ROW), startTime: e.target.value } }))}
-                                                            onBlur={() => void handleTimeBlur(day)}
-                                                            className="rounded-lg border border-border bg-background px-2 py-1 text-sm text-foreground"
-                                                        />
-                                                        <span className="text-muted-foreground">–</span>
-                                                        <input
-                                                            type="time"
-                                                            value={row.endTime}
-                                                            onChange={(e) => setRows((prev) => ({ ...prev, [day]: { ...(prev[day] ?? DEFAULT_ROW), endTime: e.target.value } }))}
-                                                            onBlur={() => void handleTimeBlur(day)}
-                                                            className="rounded-lg border border-border bg-background px-2 py-1 text-sm text-foreground"
-                                                        />
-                                                    </div>
-                                                )}
-                                            </td>
-                                        </tr>
+                                            </label>
+                                            <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                                                {t('verfuegbarkeit.end-time')}
+                                                <input
+                                                    type="time"
+                                                    value={row.endTime}
+                                                    onChange={(e) => setTime('endTime', e.target.value)}
+                                                    onBlur={() => void handleTimeBlur(day)}
+                                                    className={`${inputClass} !w-auto !py-1.5`}
+                                                />
+                                            </label>
+                                        </li>
                                     );
                                 })}
-                            </tbody>
-                        </table>
-                    </div>
+                            </ul>
+                        )}
+                    </section>
 
-                    <div className="rounded-xl border border-border bg-card p-4">
+                    <section className="rounded-xl border border-border bg-card p-4">
                         <h2 className="mb-3 text-sm font-bold text-foreground">{t('verfuegbarkeit.exceptions.title')}</h2>
 
                         {exceptions.length === 0 ? (
-                            <p className="mb-3 text-sm text-muted-foreground">{t('verfuegbarkeit.exceptions.empty')}</p>
+                            <p className="mb-4 text-sm text-muted-foreground">{t('verfuegbarkeit.exceptions.empty')}</p>
                         ) : (
-                            <ul className="mb-3 space-y-2">
+                            <ul className="mb-4 space-y-2">
                                 {exceptions.map((exc) => (
-                                    <li key={exc.id} className="flex items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm">
-                                        <span className="text-foreground">
-                                            {exc.date} — {t(exc.isAvailable ? 'verfuegbarkeit.exceptions.available' : 'verfuegbarkeit.exceptions.unavailable')}
-                                            {exc.note ? ` (${exc.note})` : ''}
+                                    <li key={exc.id} className="flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-2 text-sm">
+                                        <span className="w-28 font-medium tabular-nums text-foreground">
+                                            {new Date(`${exc.date}T00:00`).toLocaleDateString(language, { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' })}
                                         </span>
-                                        <button onClick={() => void handleDeleteException(exc.id)} className="text-xs text-destructive hover:underline">
-                                            {t('verfuegbarkeit.exceptions.remove')}
+                                        <span
+                                            className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                                                exc.isAvailable ? 'bg-success/15 text-success' : 'bg-destructive/15 text-destructive'
+                                            }`}
+                                        >
+                                            {t(exc.isAvailable ? 'verfuegbarkeit.exceptions.available' : 'verfuegbarkeit.exceptions.unavailable')}
+                                        </span>
+                                        <span className="min-w-0 flex-1 truncate text-muted-foreground">{exc.note}</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => void handleDeleteException(exc.id)}
+                                            aria-label={`${t('verfuegbarkeit.exceptions.remove')}: ${exc.date}`}
+                                            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
                                         </button>
                                     </li>
                                 ))}
                             </ul>
                         )}
 
-                        <div className="flex flex-wrap items-center gap-2">
-                            <input
-                                type="date"
-                                value={excDate}
-                                onChange={(e) => setExcDate(e.target.value)}
-                                className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
-                            />
-                            <select
-                                value={excAvailable ? 'available' : 'unavailable'}
-                                onChange={(e) => setExcAvailable(e.target.value === 'available')}
-                                className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
-                            >
-                                <option value="available">{t('verfuegbarkeit.exceptions.available')}</option>
-                                <option value="unavailable">{t('verfuegbarkeit.exceptions.unavailable')}</option>
-                            </select>
-                            <input
-                                type="text"
-                                value={excNote}
-                                onChange={(e) => setExcNote(e.target.value)}
-                                placeholder={t('verfuegbarkeit.exceptions.note')}
-                                className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-                            />
-                            <button
-                                onClick={() => void handleAddException()}
-                                disabled={!excDate}
-                                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
-                            >
+                        <div className="rounded-lg border border-border p-3">
+                            <p className="mb-3 text-sm font-semibold text-foreground">{t('verfuegbarkeit.exceptions.add')}</p>
+                            <div className="grid gap-3 sm:grid-cols-[auto_auto_1fr]">
+                                <div>
+                                    <label htmlFor="exc-date" className={labelClass}>
+                                        {t('verfuegbarkeit.exceptions.date')} *
+                                    </label>
+                                    <input id="exc-date" type="date" value={excDate} onChange={(e) => setExcDate(e.target.value)} className={inputClass} />
+                                </div>
+                                <div>
+                                    <label htmlFor="exc-status" className={labelClass}>
+                                        {t('verfuegbarkeit.exceptions.status')}
+                                    </label>
+                                    <select
+                                        id="exc-status"
+                                        value={excAvailable ? 'available' : 'unavailable'}
+                                        onChange={(e) => setExcAvailable(e.target.value === 'available')}
+                                        className={inputClass}
+                                    >
+                                        <option value="available">{t('verfuegbarkeit.exceptions.available')}</option>
+                                        <option value="unavailable">{t('verfuegbarkeit.exceptions.unavailable')}</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label htmlFor="exc-note" className={labelClass}>
+                                        {t('verfuegbarkeit.exceptions.note')}
+                                    </label>
+                                    <input id="exc-note" type="text" value={excNote} onChange={(e) => setExcNote(e.target.value)} className={inputClass} />
+                                </div>
+                            </div>
+                            <button type="button" onClick={() => void handleAddException()} disabled={!excDate} className={`${primaryBtn} mt-3`}>
                                 {t('verfuegbarkeit.exceptions.add')}
                             </button>
+                            {excError && (
+                                <p role="alert" className="mt-2 text-sm text-destructive">
+                                    {excError}
+                                </p>
+                            )}
                         </div>
-                        {excError && <p className="mt-2 text-sm text-destructive">{excError}</p>}
-                    </div>
+                    </section>
                 </div>
             )}
         </div>

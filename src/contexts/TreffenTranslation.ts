@@ -59,6 +59,11 @@ const TreffenTranslation: Translation = {
         'treffen.resolutions.result': 'Ergebnis',
         'treffen.resolutions.result.placeholder': 'z. B. angenommen',
         'treffen.resolutions.submit': 'Anlegen',
+        'treffen.cancel': 'Abbrechen',
+        'treffen.scheduled-at.hint': 'Leer lassen, solange der Termin noch gefunden wird.',
+        'treffen.invitees.invite': 'Einladen',
+        'treffen.overlap.candidate': 'Kandidat (Datum und Uhrzeit)',
+        'treffen.attendance.name': 'Name',
     },
     en: {
         'treffen.list.title': 'Meetings',
@@ -115,6 +120,11 @@ const TreffenTranslation: Translation = {
         'treffen.resolutions.result': 'Result',
         'treffen.resolutions.result.placeholder': 'e.g. passed',
         'treffen.resolutions.submit': 'Create',
+        'treffen.cancel': 'Cancel',
+        'treffen.scheduled-at.hint': 'Leave empty while the date is still being found.',
+        'treffen.invitees.invite': 'Invite',
+        'treffen.overlap.candidate': 'Candidate (date and time)',
+        'treffen.attendance.name': 'Name',
     },
 };
 
