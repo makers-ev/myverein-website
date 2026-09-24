@@ -1,10 +1,27 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { AlertTriangle, ArrowLeft, MapPin, Package, Pencil, Plus, Search, Trash2, Wrench } from 'lucide-react';
 
-import { apiFetch, ApiError } from '@/lib/api-client';
+import { apiFetch } from '@/lib/api-client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { Location } from '@/components/standorte/StandorteTab';
+import {
+    Chip,
+    ConfirmModal,
+    EmptyState,
+    Field,
+    FormModal,
+    SectionCard,
+    errorMessage,
+    formatDate,
+    inputClass,
+    primaryButtonClass,
+    run,
+    secondaryButtonClass,
+    type T,
+    type Tone,
+} from '@/components/standorte/ui';
 
 export interface InventoryItem {
     id: string;
@@ -31,10 +48,11 @@ interface InventoryLoan {
     borrowedAt: string;
     dueAt: string | null;
     returnedAt: string | null;
-    // Free text, "ueberfaellig" is a live override computed at read time --
-    // never re-derived here, just displayed (see backend's effectiveLoanStatus).
+    // "ueberfaellig" is a live override computed by the backend, only displayed here.
     status: string;
 }
+
+type DamageStatus = 'gemeldet' | 'in_bearbeitung' | 'behoben';
 
 interface InventoryDamageReport {
     id: string;
@@ -42,7 +60,7 @@ interface InventoryDamageReport {
     reportedBy: string;
     description: string;
     photoUrl: string | null;
-    status: 'gemeldet' | 'in_bearbeitung' | 'behoben';
+    status: DamageStatus;
     createdAt: string;
     resolvedAt: string | null;
 }
@@ -52,36 +70,18 @@ interface ClubMember {
     name: string | null;
 }
 
-// Same local-copy pattern as TreffenPanel.tsx/StandorteTab.tsx.
-function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
-    return (
-        <div className="rounded-xl border border-border bg-card p-4">
-            <h2 className="mb-3 text-sm font-bold text-foreground">{title}</h2>
-            {children}
-        </div>
-    );
-}
+const DAMAGE_STATUSES: DamageStatus[] = ['gemeldet', 'in_bearbeitung', 'behoben'];
+const damageTone: Record<DamageStatus, Tone> = { gemeldet: 'destructive', in_bearbeitung: 'warning', behoben: 'success' };
+const damageText: Record<DamageStatus, string> = { gemeldet: 'text-destructive', in_bearbeitung: 'text-warning', behoben: 'text-success' };
+const loanTone: Record<string, Tone> = { ueberfaellig: 'destructive', ausgeliehen: 'warning', zurueckgegeben: 'success' };
 
-function MaintenanceDueBadge({ t }: { t: (key: string) => string }) {
-    return (
-        <span className="inline-flex items-center rounded-full bg-warning/10 px-2.5 py-0.5 text-xs font-semibold text-warning">
-            {t('standorte.material.badge.maintenanceDue')}
-        </span>
-    );
-}
-
-function OverdueBadge({ t }: { t: (key: string) => string }) {
-    return (
-        <span className="inline-flex items-center rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-semibold text-destructive">
-            {t('standorte.material.badge.overdue')}
-        </span>
-    );
-}
-
-function DamageStatusBadge({ status, t }: { status: InventoryDamageReport['status']; t: (key: string) => string }) {
-    const colorClass =
-        status === 'behoben' ? 'bg-success/10 text-success' : status === 'in_bearbeitung' ? 'bg-primary/10 text-primary' : 'bg-warning/10 text-warning';
-    return <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${colorClass}`}>{t(`standorte.damage-reports.status.${status}`)}</span>;
+// Condition is free text; map common DE/EN words to a colour, unknown stays neutral.
+function conditionTone(condition: string): Tone {
+    const c = condition.toLowerCase();
+    if (/defekt|kaputt|broken|unbrauchbar/.test(c)) return 'destructive';
+    if (/besch|damaged|abgenutzt|worn|mäßig|fair/.test(c)) return 'warning';
+    if (/gut|neu|good|new|sehr/.test(c)) return 'success';
+    return 'muted';
 }
 
 function formatEuros(cents: number | null): string {
@@ -89,19 +89,42 @@ function formatEuros(cents: number | null): string {
     return `${(cents / 100).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
 }
 
-function MaintenanceOverview({ items, t }: { items: InventoryItem[]; t: (key: string) => string }) {
+function ItemChips({ item, t }: { item: InventoryItem; t: T }) {
+    return (
+        <div className="flex flex-wrap gap-1.5">
+            <Chip tone={conditionTone(item.condition)}>{item.condition}</Chip>
+            {item.maintenanceDue && (
+                <Chip tone="warning">
+                    <Wrench className="mr-1 h-3 w-3" />
+                    {t('standorte.material.badge.maintenanceDue')}
+                </Chip>
+            )}
+        </div>
+    );
+}
+
+function MaintenanceOverview({ items, t, onSelect }: { items: InventoryItem[]; t: T; onSelect: (id: string) => void }) {
     const dueItems = items.filter((i) => i.maintenanceDue);
 
     return (
         <SectionCard title={t('standorte.material.overview.title')}>
             {dueItems.length === 0 ? (
-                <p className="text-sm text-muted-foreground">{t('standorte.material.overview.empty')}</p>
+                <p className="flex items-center gap-2 text-sm text-success">
+                    <Wrench className="h-4 w-4" />
+                    {t('standorte.material.overview.empty')}
+                </p>
             ) : (
                 <ul className="flex flex-wrap gap-2">
                     {dueItems.map((item) => (
-                        <li key={item.id} className="flex items-center gap-2 rounded-lg border border-warning/40 bg-warning/5 px-3 py-1.5 text-sm">
-                            <span className="font-medium text-foreground">{item.name}</span>
-                            <MaintenanceDueBadge t={t} />
+                        <li key={item.id}>
+                            <button
+                                onClick={() => onSelect(item.id)}
+                                className="flex items-center gap-2 rounded-lg border border-warning/40 bg-warning/5 px-3 py-1.5 text-sm hover:bg-warning/10"
+                            >
+                                <Wrench className="h-4 w-4 text-warning" />
+                                <span className="font-medium text-foreground">{item.name}</span>
+                                {item.maintenanceDueAt && <span className="text-xs text-muted-foreground">{formatDate(item.maintenanceDueAt)}</span>}
+                            </button>
                         </li>
                     ))}
                 </ul>
@@ -110,10 +133,128 @@ function MaintenanceOverview({ items, t }: { items: InventoryItem[]; t: (key: st
     );
 }
 
+// --- Item create/edit -------------------------------------------------------------
+
+function ItemFormModal({
+    clubId,
+    item,
+    items,
+    locations,
+    t,
+    onClose,
+    onSaved,
+}: {
+    clubId: string;
+    item: InventoryItem | null;
+    items: InventoryItem[];
+    locations: Location[];
+    t: T;
+    onClose: () => void;
+    onSaved: () => void;
+}) {
+    const [name, setName] = useState(item?.name ?? '');
+    const [category, setCategory] = useState(item?.category ?? '');
+    const [condition, setCondition] = useState(item?.condition ?? '');
+    const [locationId, setLocationId] = useState(item?.locationId ?? '');
+    const [valueEuros, setValueEuros] = useState(item?.acquisitionValueCents != null ? String(item.acquisitionValueCents / 100) : '');
+    const [intervalDays, setIntervalDays] = useState(item?.maintenanceIntervalDays != null ? String(item.maintenanceIntervalDays) : '');
+    const [lastMaintenanceAt, setLastMaintenanceAt] = useState(item?.lastMaintenanceAt ?? '');
+    const [acquiredAt, setAcquiredAt] = useState(item?.acquiredAt ?? '');
+
+    const categories = [...new Set(items.map((i) => i.category).filter((c): c is string => !!c))];
+    // Create omits empty fields, edit clears them with null.
+    const empty = item ? null : undefined;
+
+    return (
+        <FormModal
+            open
+            title={item ? t('standorte.items.detail.title') : t('standorte.items.new.title')}
+            submitLabel={item ? t('standorte.items.detail.save') : t('standorte.items.new.submit')}
+            cancelLabel={t('standorte.items.new.cancel')}
+            canSubmit={!!name.trim() && !!condition.trim()}
+            onClose={onClose}
+            onSubmit={() =>
+                run(async () => {
+                    await apiFetch(item ? `/inventory-items/${item.id}?clubId=${clubId}` : `/inventory-items?clubId=${clubId}`, {
+                        method: item ? 'PATCH' : 'POST',
+                        body: {
+                            name: name.trim(),
+                            category: category.trim() || empty,
+                            condition: condition.trim(),
+                            locationId: locationId || empty,
+                            // Euros in the form, integer cents at the API boundary.
+                            acquisitionValueCents: valueEuros ? Math.round(Number(valueEuros) * 100) : empty,
+                            maintenanceIntervalDays: intervalDays ? Number(intervalDays) : empty,
+                            lastMaintenanceAt: lastMaintenanceAt || empty,
+                            acquiredAt: acquiredAt || empty,
+                        },
+                    });
+                    onSaved();
+                })
+            }
+        >
+            <Field label={t('standorte.items.table.name')}>
+                <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className={inputClass} />
+            </Field>
+            <div className="grid gap-4 sm:grid-cols-2">
+                <Field label={t('standorte.items.new.category')}>
+                    <input type="text" list="standorte-categories" value={category} onChange={(e) => setCategory(e.target.value)} className={inputClass} />
+                    <datalist id="standorte-categories">
+                        {categories.map((c) => (
+                            <option key={c} value={c} />
+                        ))}
+                    </datalist>
+                </Field>
+                <Field label={t('standorte.items.table.condition')}>
+                    <input
+                        type="text"
+                        list="standorte-conditions"
+                        value={condition}
+                        onChange={(e) => setCondition(e.target.value)}
+                        required
+                        placeholder={t('standorte.items.new.condition')}
+                        className={inputClass}
+                    />
+                    <datalist id="standorte-conditions">
+                        {['gut', 'beschädigt', 'defekt'].map((c) => (
+                            <option key={c} value={c} />
+                        ))}
+                    </datalist>
+                </Field>
+                <Field label={t('standorte.items.table.location')}>
+                    <select value={locationId} onChange={(e) => setLocationId(e.target.value)} className={inputClass}>
+                        <option value="">{t('standorte.items.new.location.none')}</option>
+                        {locations.map((loc) => (
+                            <option key={loc.id} value={loc.id}>
+                                {loc.name}
+                            </option>
+                        ))}
+                    </select>
+                </Field>
+                <Field label={t('standorte.items.new.value')}>
+                    <input type="number" step="0.01" min="0" value={valueEuros} onChange={(e) => setValueEuros(e.target.value)} className={inputClass} />
+                </Field>
+                <Field label={t('standorte.items.new.acquiredAt')}>
+                    <input type="date" value={acquiredAt} onChange={(e) => setAcquiredAt(e.target.value)} className={inputClass} />
+                </Field>
+                <Field label={t('standorte.items.new.maintenanceInterval')}>
+                    <input type="number" min="1" step="1" value={intervalDays} onChange={(e) => setIntervalDays(e.target.value)} className={inputClass} />
+                </Field>
+                <Field label={t('standorte.items.new.lastMaintenance')}>
+                    <input type="date" value={lastMaintenanceAt} onChange={(e) => setLastMaintenanceAt(e.target.value)} className={inputClass} />
+                </Field>
+            </div>
+        </FormModal>
+    );
+}
+
+// --- Item list ------------------------------------------------------------------------
+
 function ItemList({
     clubId,
     items,
     locations,
+    canWrite,
     t,
     onChange,
     onSelect,
@@ -121,227 +262,110 @@ function ItemList({
     clubId: string;
     items: InventoryItem[];
     locations: Location[];
-    t: (key: string) => string;
+    canWrite: boolean;
+    t: T;
     onChange: () => void;
     onSelect: (id: string) => void;
 }) {
     const [showCreate, setShowCreate] = useState(false);
-    const [name, setName] = useState('');
-    const [category, setCategory] = useState('');
-    const [condition, setCondition] = useState('');
-    const [locationId, setLocationId] = useState('');
-    const [valueEuros, setValueEuros] = useState('');
-    const [maintenanceIntervalDays, setMaintenanceIntervalDays] = useState('');
-    const [lastMaintenanceAt, setLastMaintenanceAt] = useState('');
-    const [acquiredAt, setAcquiredAt] = useState('');
-    const [error, setError] = useState<string | null>(null);
-    const [submitting, setSubmitting] = useState(false);
+    const [query, setQuery] = useState('');
+    const [category, setCategory] = useState<string | null>(null);
 
-    const locationName = (id: string | null) => (id ? locations.find((l) => l.id === id)?.name ?? id : t('standorte.items.no-location'));
+    const categories = useMemo(() => [...new Set(items.map((i) => i.category).filter((c): c is string => !!c))].sort(), [items]);
+    const locationName = (id: string | null) => (id ? (locations.find((l) => l.id === id)?.name ?? null) : null);
 
-    async function handleCreate(e: React.FormEvent) {
-        e.preventDefault();
-        if (!name.trim() || !condition.trim()) return;
-        setSubmitting(true);
-        setError(null);
-        try {
-            await apiFetch(`/inventory-items?clubId=${clubId}`, {
-                method: 'POST',
-                body: {
-                    name: name.trim(),
-                    category: category.trim() || undefined,
-                    condition: condition.trim(),
-                    locationId: locationId || undefined,
-                    // Integer cents at the API boundary -- this repo's inputs
-                    // are whole-currency-unit euros, the backend stores cents.
-                    acquisitionValueCents: valueEuros ? Math.round(Number(valueEuros) * 100) : undefined,
-                    maintenanceIntervalDays: maintenanceIntervalDays ? Number(maintenanceIntervalDays) : undefined,
-                    lastMaintenanceAt: lastMaintenanceAt || undefined,
-                    acquiredAt: acquiredAt || undefined,
-                },
-            });
-            setName('');
-            setCategory('');
-            setCondition('');
-            setLocationId('');
-            setValueEuros('');
-            setMaintenanceIntervalDays('');
-            setLastMaintenanceAt('');
-            setAcquiredAt('');
-            setShowCreate(false);
-            onChange();
-        } catch (err) {
-            setError(err instanceof ApiError ? err.message : 'Request failed');
-        } finally {
-            setSubmitting(false);
-        }
-    }
+    const q = query.trim().toLowerCase();
+    const visible = items.filter(
+        (i) => (category === null || i.category === category) && (!q || i.name.toLowerCase().includes(q) || i.category?.toLowerCase().includes(q)),
+    );
 
-    async function handleDelete(id: string) {
-        if (!confirm(t('standorte.items.delete.confirm'))) return;
-        setError(null);
-        try {
-            await apiFetch(`/inventory-items/${id}?clubId=${clubId}`, { method: 'DELETE' });
-            onChange();
-        } catch (err) {
-            setError(err instanceof ApiError ? err.message : 'Request failed');
-        }
-    }
+    const chipClass = (active: boolean) =>
+        `rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+            active ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background text-muted-foreground hover:text-foreground'
+        }`;
 
     return (
-        <SectionCard title={t('standorte.tab.material')}>
-            {error && <p className="mb-2 text-sm text-destructive">{error}</p>}
+        <div className="space-y-4">
+            <div className="flex flex-col gap-2 sm:flex-row">
+                <div className="relative flex-1">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                        type="search"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder={t('standorte.items.search')}
+                        className={`${inputClass} pl-9`}
+                    />
+                </div>
+                {canWrite && (
+                    <button onClick={() => setShowCreate(true)} className={`${primaryButtonClass} justify-center`}>
+                        <Plus className="h-4 w-4" />
+                        {t('standorte.items.new')}
+                    </button>
+                )}
+            </div>
 
-            {items.length === 0 ? (
-                <p className="mb-3 text-sm text-muted-foreground">{t('standorte.items.empty')}</p>
-            ) : (
-                <div className="mb-3 overflow-x-auto rounded-xl border border-border">
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="border-b border-border bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
-                                <th className="px-3 py-2">{t('standorte.items.table.name')}</th>
-                                <th className="px-3 py-2">{t('standorte.items.table.category')}</th>
-                                <th className="px-3 py-2">{t('standorte.items.table.condition')}</th>
-                                <th className="px-3 py-2">{t('standorte.items.table.location')}</th>
-                                <th className="px-3 py-2">{t('standorte.items.table.value')}</th>
-                                <th className="px-3 py-2">{t('standorte.items.table.maintenance')}</th>
-                                <th className="px-3 py-2">{t('standorte.items.table.actions')}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {items.map((item) => (
-                                <tr key={item.id} className="border-b border-border last:border-b-0">
-                                    <td className="px-3 py-2 font-medium text-foreground">{item.name}</td>
-                                    <td className="px-3 py-2 text-muted-foreground">{item.category ?? '—'}</td>
-                                    <td className="px-3 py-2 text-muted-foreground">{item.condition}</td>
-                                    <td className="px-3 py-2 text-muted-foreground">{locationName(item.locationId)}</td>
-                                    <td className="px-3 py-2 text-muted-foreground">{formatEuros(item.acquisitionValueCents)}</td>
-                                    <td className="px-3 py-2">{item.maintenanceDue && <MaintenanceDueBadge t={t} />}</td>
-                                    <td className="px-3 py-2">
-                                        <div className="flex items-center gap-2">
-                                            <button onClick={() => onSelect(item.id)} className="text-xs font-medium text-primary hover:underline">
-                                                {t('standorte.items.select')}
-                                            </button>
-                                            <button onClick={() => void handleDelete(item.id)} className="text-xs font-medium text-destructive hover:underline">
-                                                {t('standorte.items.delete')}
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+            {categories.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                    <button onClick={() => setCategory(null)} className={chipClass(category === null)}>
+                        {t('standorte.items.filter.all')}
+                    </button>
+                    {categories.map((c) => (
+                        <button key={c} onClick={() => setCategory(c)} className={chipClass(category === c)}>
+                            {c}
+                        </button>
+                    ))}
                 </div>
             )}
 
-            {showCreate ? (
-                <form onSubmit={(e) => void handleCreate(e)} className="space-y-2 rounded-lg border border-border p-3">
-                    <div className="flex flex-wrap gap-2">
-                        <input
-                            type="text"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            placeholder={t('standorte.items.new.name')}
-                            className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-                        />
-                        <input
-                            type="text"
-                            value={category}
-                            onChange={(e) => setCategory(e.target.value)}
-                            placeholder={t('standorte.items.new.category')}
-                            className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-                        />
-                        <input
-                            type="text"
-                            value={condition}
-                            onChange={(e) => setCondition(e.target.value)}
-                            placeholder={t('standorte.items.new.condition')}
-                            className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-                        />
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                        <select
-                            value={locationId}
-                            onChange={(e) => setLocationId(e.target.value)}
-                            className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
-                        >
-                            <option value="">{t('standorte.items.new.location.none')}</option>
-                            {locations.map((loc) => (
-                                <option key={loc.id} value={loc.id}>
-                                    {loc.name}
-                                </option>
-                            ))}
-                        </select>
-                        <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={valueEuros}
-                            onChange={(e) => setValueEuros(e.target.value)}
-                            placeholder={t('standorte.items.new.value')}
-                            className="w-40 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-                        />
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                        <input
-                            type="number"
-                            min="1"
-                            value={maintenanceIntervalDays}
-                            onChange={(e) => setMaintenanceIntervalDays(e.target.value)}
-                            placeholder={t('standorte.items.new.maintenanceInterval')}
-                            className="w-48 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-                        />
-                        <label className="text-xs text-muted-foreground">
-                            {t('standorte.items.new.lastMaintenance')}
-                            <input
-                                type="date"
-                                value={lastMaintenanceAt}
-                                onChange={(e) => setLastMaintenanceAt(e.target.value)}
-                                className="ml-2 rounded-lg border border-border bg-background px-2 py-1.5 text-sm text-foreground"
-                            />
-                        </label>
-                        <label className="text-xs text-muted-foreground">
-                            {t('standorte.items.new.acquiredAt')}
-                            <input
-                                type="date"
-                                value={acquiredAt}
-                                onChange={(e) => setAcquiredAt(e.target.value)}
-                                className="ml-2 rounded-lg border border-border bg-background px-2 py-1.5 text-sm text-foreground"
-                            />
-                        </label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <button
-                            type="submit"
-                            disabled={submitting || !name.trim() || !condition.trim()}
-                            className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
-                        >
-                            {t('standorte.items.new.submit')}
-                        </button>
-                        <button type="button" onClick={() => setShowCreate(false)} className="text-sm text-muted-foreground hover:text-foreground">
-                            {t('standorte.items.new.cancel')}
-                        </button>
-                    </div>
-                </form>
+            {items.length === 0 ? (
+                <EmptyState icon={<Package className="h-8 w-8" />} text={t('standorte.items.empty')} />
+            ) : visible.length === 0 ? (
+                <EmptyState icon={<Search className="h-8 w-8" />} text={t('standorte.items.no-match')} />
             ) : (
-                <button onClick={() => setShowCreate(true)} className="text-sm font-medium text-primary hover:underline">
-                    {t('standorte.items.new')}
-                </button>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {visible.map((item) => (
+                        <button
+                            key={item.id}
+                            onClick={() => onSelect(item.id)}
+                            className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4 text-left transition-colors hover:border-primary"
+                        >
+                            <div className="min-w-0">
+                                <h3 className="truncate font-semibold text-foreground">{item.name}</h3>
+                                {item.category && <p className="text-xs text-muted-foreground">{item.category}</p>}
+                            </div>
+                            <ItemChips item={item} t={t} />
+                            <div className="mt-auto flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                                <span className="flex min-w-0 items-center gap-1">
+                                    {locationName(item.locationId) && (
+                                        <>
+                                            <MapPin className="h-3.5 w-3.5 shrink-0" />
+                                            <span className="truncate">{locationName(item.locationId)}</span>
+                                        </>
+                                    )}
+                                </span>
+                                {item.acquisitionValueCents !== null && <span className="shrink-0">{formatEuros(item.acquisitionValueCents)}</span>}
+                            </div>
+                        </button>
+                    ))}
+                </div>
             )}
-        </SectionCard>
+
+            {showCreate && (
+                <ItemFormModal clubId={clubId} item={null} items={items} locations={locations} t={t} onClose={() => setShowCreate(false)} onSaved={onChange} />
+            )}
+        </div>
     );
 }
 
-function LoansSection({ itemId, clubId, t }: { itemId: string; clubId: string; t: (key: string) => string }) {
+// --- Loans & damage reports -----------------------------------------------------------
+
+function LoansSection({ itemId, clubId, t }: { itemId: string; clubId: string; t: T }) {
     const [loans, setLoans] = useState<InventoryLoan[] | null>(null);
     const [members, setMembers] = useState<ClubMember[]>([]);
 
     useEffect(() => {
-        // setLoans/setMembers run inside the .then() callback, not
-        // synchronously in the effect body, so this doesn't need the
-        // react-hooks/set-state-in-effect disable comment other effects in
-        // this file need (see Verein.tsx's initial /my-clubs fetch for the
-        // same distinction).
+        // State is set in the .then() callback, so no set-state-in-effect disable is needed.
         void Promise.all([
             apiFetch<{ data: InventoryLoan[] }>(`/inventory-items/${itemId}/loans?clubId=${clubId}`),
             apiFetch<{ data: ClubMember[] }>(`/club-members?clubId=${clubId}`),
@@ -354,20 +378,14 @@ function LoansSection({ itemId, clubId, t }: { itemId: string; clubId: string; t
 
     const nameFor = (memberId: string) => members.find((m) => m.id === memberId)?.name ?? memberId;
 
-    if (loans === null) {
-        return (
-            <SectionCard title={t('standorte.loans.title')}>
-                <p className="text-sm text-muted-foreground">…</p>
-            </SectionCard>
-        );
-    }
-
     return (
         <SectionCard title={t('standorte.loans.title')}>
-            {loans.length === 0 ? (
-                <p className="text-sm text-muted-foreground">{t('standorte.loans.empty')}</p>
+            {loans === null ? (
+                <p className="text-sm text-muted-foreground">…</p>
+            ) : loans.length === 0 ? (
+                <EmptyState icon={<Package className="h-6 w-6" />} text={t('standorte.loans.empty')} />
             ) : (
-                <div className="overflow-x-auto rounded-xl border border-border">
+                <div className="overflow-x-auto rounded-lg border border-border">
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="border-b border-border bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
@@ -379,24 +397,17 @@ function LoansSection({ itemId, clubId, t }: { itemId: string; clubId: string; t
                             </tr>
                         </thead>
                         <tbody>
-                            {loans.map((loan) => {
-                                const overdue = loan.status === 'ueberfaellig';
-                                return (
-                                    <tr key={loan.id} className={`border-b border-border last:border-b-0 ${overdue ? 'bg-destructive/5' : ''}`}>
-                                        <td className="px-3 py-2 text-foreground">{nameFor(loan.memberId)}</td>
-                                        <td className="px-3 py-2 text-muted-foreground">{new Date(loan.borrowedAt).toLocaleDateString('de-DE')}</td>
-                                        <td className="px-3 py-2 text-muted-foreground">{loan.dueAt ? new Date(loan.dueAt).toLocaleDateString('de-DE') : '—'}</td>
-                                        <td className="px-3 py-2 text-muted-foreground">{loan.returnedAt ? new Date(loan.returnedAt).toLocaleDateString('de-DE') : '—'}</td>
-                                        <td className="px-3 py-2">
-                                            {overdue ? (
-                                                <OverdueBadge t={t} />
-                                            ) : (
-                                                <span className="text-xs text-muted-foreground">{t(`standorte.loans.status.${loan.status}`)}</span>
-                                            )}
-                                        </td>
-                                    </tr>
-                                );
-                            })}
+                            {loans.map((loan) => (
+                                <tr key={loan.id} className={`border-b border-border last:border-b-0 ${loan.status === 'ueberfaellig' ? 'bg-destructive/5' : ''}`}>
+                                    <td className="whitespace-nowrap px-3 py-2 text-foreground">{nameFor(loan.memberId)}</td>
+                                    <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">{formatDate(loan.borrowedAt)}</td>
+                                    <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">{formatDate(loan.dueAt)}</td>
+                                    <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">{formatDate(loan.returnedAt)}</td>
+                                    <td className="px-3 py-2">
+                                        <Chip tone={loanTone[loan.status] ?? 'muted'}>{t(`standorte.loans.status.${loan.status}`)}</Chip>
+                                    </td>
+                                </tr>
+                            ))}
                         </tbody>
                     </table>
                 </div>
@@ -405,7 +416,7 @@ function LoansSection({ itemId, clubId, t }: { itemId: string; clubId: string; t
     );
 }
 
-function DamageReportsSection({ itemId, clubId, t }: { itemId: string; clubId: string; t: (key: string) => string }) {
+function DamageReportsSection({ itemId, clubId, canWrite, t }: { itemId: string; clubId: string; canWrite: boolean; t: T }) {
     const [reports, setReports] = useState<InventoryDamageReport[] | null>(null);
     const [error, setError] = useState<string | null>(null);
 
@@ -420,50 +431,61 @@ function DamageReportsSection({ itemId, clubId, t }: { itemId: string; clubId: s
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [itemId]);
 
-    async function handleTriage(reportId: string, nextStatus: 'in_bearbeitung' | 'behoben') {
+    async function handleTriage(reportId: string, status: DamageStatus) {
         setError(null);
         try {
-            await apiFetch(`/inventory-items/${itemId}/damage-reports/${reportId}?clubId=${clubId}`, {
-                method: 'PATCH',
-                body: { status: nextStatus },
-            });
+            await apiFetch(`/inventory-items/${itemId}/damage-reports/${reportId}?clubId=${clubId}`, { method: 'PATCH', body: { status } });
             await load();
         } catch (err) {
-            setError(err instanceof ApiError ? err.message : 'Request failed');
+            setError(errorMessage(err));
         }
-    }
-
-    if (reports === null) {
-        return (
-            <SectionCard title={t('standorte.damage-reports.title')}>
-                <p className="text-sm text-muted-foreground">…</p>
-            </SectionCard>
-        );
     }
 
     return (
         <SectionCard title={t('standorte.damage-reports.title')}>
             {error && <p className="mb-2 text-sm text-destructive">{error}</p>}
-            {reports.length === 0 ? (
-                <p className="text-sm text-muted-foreground">{t('standorte.damage-reports.empty')}</p>
+            {reports === null ? (
+                <p className="text-sm text-muted-foreground">…</p>
+            ) : reports.length === 0 ? (
+                <EmptyState icon={<AlertTriangle className="h-6 w-6" />} text={t('standorte.damage-reports.empty')} />
             ) : (
-                <ul className="space-y-2">
+                <ul className="space-y-3">
                     {reports.map((report) => (
-                        <li key={report.id} className="rounded-lg border border-border bg-background px-3 py-2 text-sm">
-                            <div className="flex items-center justify-between gap-2">
-                                <div>
-                                    <p className="text-foreground">{report.description}</p>
-                                    <p className="text-xs text-muted-foreground">{new Date(report.createdAt).toLocaleDateString('de-DE')}</p>
+                        <li key={report.id} className="rounded-lg border border-border bg-background p-3 text-sm">
+                            <div className="flex flex-wrap items-start justify-between gap-2">
+                                <div className="min-w-0">
+                                    <p className="whitespace-pre-line text-foreground">{report.description}</p>
+                                    <p className="mt-1 text-xs text-muted-foreground">
+                                        {formatDate(report.createdAt)}
+                                        {report.resolvedAt && ` → ${formatDate(report.resolvedAt)}`}
+                                    </p>
+                                    {report.photoUrl && (
+                                        <a href={report.photoUrl} target="_blank" rel="noreferrer" className="mt-1 inline-block text-xs text-primary hover:underline">
+                                            {t('standorte.damage-reports.photo')}
+                                        </a>
+                                    )}
                                 </div>
-                                <DamageStatusBadge status={report.status} t={t} />
+                                {!canWrite && <Chip tone={damageTone[report.status]}>{t(`standorte.damage-reports.status.${report.status}`)}</Chip>}
                             </div>
-                            {report.status !== 'behoben' && (
-                                <button
-                                    onClick={() => void handleTriage(report.id, report.status === 'gemeldet' ? 'in_bearbeitung' : 'behoben')}
-                                    className="mt-2 text-xs font-medium text-primary hover:underline"
-                                >
-                                    {t(`standorte.damage-reports.triage.${report.status}`)}
-                                </button>
+                            {canWrite && (
+                                <div role="radiogroup" aria-label={t('standorte.loans.table.status')} className="mt-3 flex w-full rounded-lg bg-muted p-1 sm:w-auto sm:inline-flex">
+                                    {DAMAGE_STATUSES.map((status) => {
+                                        const active = report.status === status;
+                                        return (
+                                            <button
+                                                key={status}
+                                                role="radio"
+                                                aria-checked={active}
+                                                onClick={() => !active && void handleTriage(report.id, status)}
+                                                className={`flex-1 rounded-md px-3 py-1 text-xs font-semibold transition-colors ${
+                                                    active ? `bg-card shadow-sm ${damageText[status]}` : 'text-muted-foreground hover:text-foreground'
+                                                }`}
+                                            >
+                                                {t(`standorte.damage-reports.status.${status}`)}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
                             )}
                         </li>
                     ))}
@@ -473,44 +495,34 @@ function DamageReportsSection({ itemId, clubId, t }: { itemId: string; clubId: s
     );
 }
 
+// --- Item detail ---------------------------------------------------------------------
+
 function ItemDetail({
     clubId,
     itemId,
+    items,
     locations,
+    canWrite,
     t,
     onBack,
     onItemsChanged,
 }: {
     clubId: string;
     itemId: string;
+    items: InventoryItem[];
     locations: Location[];
-    t: (key: string) => string;
+    canWrite: boolean;
+    t: T;
     onBack: () => void;
     onItemsChanged: () => void;
 }) {
     const [item, setItem] = useState<InventoryItem | null>(null);
-    const [name, setName] = useState('');
-    const [category, setCategory] = useState('');
-    const [condition, setCondition] = useState('');
-    const [locationId, setLocationId] = useState('');
-    const [valueEuros, setValueEuros] = useState('');
-    const [maintenanceIntervalDays, setMaintenanceIntervalDays] = useState('');
-    const [lastMaintenanceAt, setLastMaintenanceAt] = useState('');
-    const [acquiredAt, setAcquiredAt] = useState('');
-    const [error, setError] = useState<string | null>(null);
-    const [saved, setSaved] = useState(false);
+    const [editing, setEditing] = useState(false);
+    const [deleting, setDeleting] = useState(false);
 
     async function load() {
         const { data } = await apiFetch<{ data: InventoryItem }>(`/inventory-items/${itemId}?clubId=${clubId}`);
         setItem(data);
-        setName(data.name);
-        setCategory(data.category ?? '');
-        setCondition(data.condition);
-        setLocationId(data.locationId ?? '');
-        setValueEuros(data.acquisitionValueCents !== null ? String(data.acquisitionValueCents / 100) : '');
-        setMaintenanceIntervalDays(data.maintenanceIntervalDays !== null ? String(data.maintenanceIntervalDays) : '');
-        setLastMaintenanceAt(data.lastMaintenanceAt ?? '');
-        setAcquiredAt(data.acquiredAt ?? '');
     }
 
     useEffect(() => {
@@ -519,142 +531,91 @@ function ItemDetail({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [itemId]);
 
-    async function handleSave() {
-        setError(null);
-        setSaved(false);
-        try {
-            await apiFetch(`/inventory-items/${itemId}?clubId=${clubId}`, {
-                method: 'PATCH',
-                body: {
-                    name: name.trim(),
-                    category: category.trim() || null,
-                    condition: condition.trim(),
-                    locationId: locationId || null,
-                    acquisitionValueCents: valueEuros ? Math.round(Number(valueEuros) * 100) : null,
-                    maintenanceIntervalDays: maintenanceIntervalDays ? Number(maintenanceIntervalDays) : null,
-                    lastMaintenanceAt: lastMaintenanceAt || null,
-                    acquiredAt: acquiredAt || null,
-                },
-            });
-            setSaved(true);
-            await load();
-            onItemsChanged();
-        } catch (err) {
-            setError(err instanceof ApiError ? err.message : 'Request failed');
-        }
-    }
-
     if (!item) return <p className="text-sm text-muted-foreground">…</p>;
+
+    const facts: [string, string][] = [
+        [t('standorte.items.table.category'), item.category ?? '—'],
+        [t('standorte.items.table.location'), locations.find((l) => l.id === item.locationId)?.name ?? '—'],
+        [t('standorte.items.table.value'), formatEuros(item.acquisitionValueCents)],
+        [t('standorte.items.new.acquiredAt'), formatDate(item.acquiredAt)],
+        [t('standorte.items.new.maintenanceInterval'), item.maintenanceIntervalDays !== null ? String(item.maintenanceIntervalDays) : '—'],
+        [t('standorte.items.new.lastMaintenance'), formatDate(item.lastMaintenanceAt)],
+        [t('standorte.items.detail.maintenanceDueAt'), formatDate(item.maintenanceDueAt)],
+    ];
 
     return (
         <div className="space-y-4">
-            <button onClick={onBack} className="text-sm font-medium text-primary hover:underline">
+            <button onClick={onBack} className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+                <ArrowLeft className="h-4 w-4" />
                 {t('standorte.items.back')}
             </button>
 
-            <SectionCard title={t('standorte.items.detail.title')}>
-                <div className="space-y-2">
-                    <div className="flex flex-wrap gap-2">
-                        <input
-                            type="text"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            placeholder={t('standorte.items.new.name')}
-                            className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-                        />
-                        <input
-                            type="text"
-                            value={category}
-                            onChange={(e) => setCategory(e.target.value)}
-                            placeholder={t('standorte.items.new.category')}
-                            className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-                        />
-                        <input
-                            type="text"
-                            value={condition}
-                            onChange={(e) => setCondition(e.target.value)}
-                            placeholder={t('standorte.items.new.condition')}
-                            className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-                        />
+            <div className="space-y-4 rounded-xl border border-border bg-card p-4">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div className="space-y-2">
+                        <h2 className="text-xl font-bold text-foreground">{item.name}</h2>
+                        <ItemChips item={item} t={t} />
                     </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                        <select
-                            value={locationId}
-                            onChange={(e) => setLocationId(e.target.value)}
-                            className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
-                        >
-                            <option value="">{t('standorte.items.new.location.none')}</option>
-                            {locations.map((loc) => (
-                                <option key={loc.id} value={loc.id}>
-                                    {loc.name}
-                                </option>
-                            ))}
-                        </select>
-                        <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={valueEuros}
-                            onChange={(e) => setValueEuros(e.target.value)}
-                            placeholder={t('standorte.items.new.value')}
-                            className="w-40 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-                        />
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                        <input
-                            type="number"
-                            min="1"
-                            value={maintenanceIntervalDays}
-                            onChange={(e) => setMaintenanceIntervalDays(e.target.value)}
-                            placeholder={t('standorte.items.new.maintenanceInterval')}
-                            className="w-48 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-                        />
-                        <label className="text-xs text-muted-foreground">
-                            {t('standorte.items.new.lastMaintenance')}
-                            <input
-                                type="date"
-                                value={lastMaintenanceAt}
-                                onChange={(e) => setLastMaintenanceAt(e.target.value)}
-                                className="ml-2 rounded-lg border border-border bg-background px-2 py-1.5 text-sm text-foreground"
-                            />
-                        </label>
-                        <label className="text-xs text-muted-foreground">
-                            {t('standorte.items.new.acquiredAt')}
-                            <input
-                                type="date"
-                                value={acquiredAt}
-                                onChange={(e) => setAcquiredAt(e.target.value)}
-                                className="ml-2 rounded-lg border border-border bg-background px-2 py-1.5 text-sm text-foreground"
-                            />
-                        </label>
-                    </div>
-
-                    {item.maintenanceDue && (
-                        <div className="flex items-center gap-2">
-                            <MaintenanceDueBadge t={t} />
-                            {item.maintenanceDueAt && (
-                                <span className="text-xs text-muted-foreground">
-                                    {t('standorte.items.detail.maintenanceDueAt')}: {new Date(item.maintenanceDueAt).toLocaleDateString('de-DE')}
-                                </span>
-                            )}
+                    {canWrite && (
+                        <div className="flex gap-2">
+                            <button onClick={() => setEditing(true)} className={secondaryButtonClass}>
+                                <Pencil className="h-4 w-4" />
+                                {t('standorte.items.edit')}
+                            </button>
+                            <button onClick={() => setDeleting(true)} className={`${secondaryButtonClass} text-destructive hover:bg-destructive/10`}>
+                                <Trash2 className="h-4 w-4" />
+                                {t('standorte.items.delete')}
+                            </button>
                         </div>
                     )}
-
-                    <button onClick={() => void handleSave()} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
-                        {t('standorte.items.detail.save')}
-                    </button>
-                    {error && <p className="text-sm text-destructive">{error}</p>}
-                    {saved && !error && <p className="text-xs text-success">{t('standorte.items.detail.saved')}</p>}
                 </div>
-            </SectionCard>
+                <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {facts.map(([label, value]) => (
+                        <div key={label}>
+                            <dt className="text-xs text-muted-foreground">{label}</dt>
+                            <dd className="text-sm font-medium text-foreground">{value}</dd>
+                        </div>
+                    ))}
+                </dl>
+            </div>
 
-            <DamageReportsSection itemId={itemId} clubId={clubId} t={t} />
+            <DamageReportsSection itemId={itemId} clubId={clubId} canWrite={canWrite} t={t} />
             <LoansSection itemId={itemId} clubId={clubId} t={t} />
+
+            {editing && (
+                <ItemFormModal
+                    clubId={clubId}
+                    item={item}
+                    items={items}
+                    locations={locations}
+                    t={t}
+                    onClose={() => setEditing(false)}
+                    onSaved={() => {
+                        void load();
+                        onItemsChanged();
+                    }}
+                />
+            )}
+            <ConfirmModal
+                open={deleting}
+                title={t('standorte.items.delete')}
+                message={t('standorte.items.delete.confirm')}
+                confirmLabel={t('standorte.items.delete')}
+                cancelLabel={t('standorte.items.new.cancel')}
+                onClose={() => setDeleting(false)}
+                onConfirm={() =>
+                    run(async () => {
+                        await apiFetch(`/inventory-items/${itemId}?clubId=${clubId}`, { method: 'DELETE' });
+                        onItemsChanged();
+                        onBack();
+                    })
+                }
+            />
         </div>
     );
 }
 
-export default function MaterialTab({ clubId, locations }: { clubId: string; locations: Location[] }) {
+export default function MaterialTab({ clubId, locations, canWrite }: { clubId: string; locations: Location[]; canWrite: boolean }) {
     const { t } = useLanguage();
     const [items, setItems] = useState<InventoryItem[] | null>(null);
     const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -674,19 +635,22 @@ export default function MaterialTab({ clubId, locations }: { clubId: string; loc
 
     return (
         <div className="space-y-4">
-            <MaintenanceOverview items={items} t={t} />
+            <MaintenanceOverview items={items} t={t} onSelect={setSelectedId} />
 
             {selectedId ? (
                 <ItemDetail
+                    key={selectedId}
                     clubId={clubId}
                     itemId={selectedId}
+                    items={items}
                     locations={locations}
+                    canWrite={canWrite}
                     t={t}
                     onBack={() => setSelectedId(null)}
                     onItemsChanged={() => void loadItems()}
                 />
             ) : (
-                <ItemList clubId={clubId} items={items} locations={locations} t={t} onChange={() => void loadItems()} onSelect={setSelectedId} />
+                <ItemList clubId={clubId} items={items} locations={locations} canWrite={canWrite} t={t} onChange={() => void loadItems()} onSelect={setSelectedId} />
             )}
         </div>
     );

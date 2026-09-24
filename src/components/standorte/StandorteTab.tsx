@@ -1,9 +1,29 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
+import { ArrowLeft, Check, Clock, Copy, ExternalLink, KeyRound, Link as LinkIcon, MapPin, Pencil, Plus, QrCode, Trash2, User, Wifi } from 'lucide-react';
 
-import { apiFetch, ApiError } from '@/lib/api-client';
+import { apiFetch } from '@/lib/api-client';
+import { buildWifiQrPayload } from '@/lib/wifiQr';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Modal } from '@/components/Modal';
+import {
+    Chip,
+    ConfirmModal,
+    EmptyState,
+    Field,
+    FormModal,
+    SectionCard,
+    Toggle,
+    errorMessage,
+    iconButtonClass,
+    inputClass,
+    primaryButtonClass,
+    run,
+    secondaryButtonClass,
+    type T,
+} from '@/components/standorte/ui';
 
 export interface Location {
     id: string;
@@ -55,158 +75,183 @@ interface ClubMember {
     name: string | null;
 }
 
-// Same local-copy pattern as TreffenPanel.tsx -- each sub-panel file defines
-// its own SectionCard instead of importing one from pageContent/Verein.tsx.
-function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+function LocationPhoto({ url, className }: { url: string | null; className: string }) {
+    if (!url) {
+        return (
+            <div className={`flex items-center justify-center bg-muted text-muted-foreground ${className}`}>
+                <MapPin className="h-8 w-8" />
+            </div>
+        );
+    }
+    // eslint-disable-next-line @next/next/no-img-element -- arbitrary external URLs, next/image would need remotePatterns.
+    return <img src={url} alt="" className={`object-cover ${className}`} />;
+}
+
+function InfoRow({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
     return (
-        <div className="rounded-xl border border-border bg-card p-4">
-            <h2 className="mb-3 text-sm font-bold text-foreground">{title}</h2>
-            {children}
-        </div>
+        <p className="flex items-start gap-2 text-sm text-muted-foreground">
+            <span className="mt-0.5 shrink-0">{icon}</span>
+            <span className="min-w-0 break-words">{children}</span>
+        </p>
     );
 }
 
-function LocationList({
+function CopyButton({ value, t }: { value: string; t: T }) {
+    const [copied, setCopied] = useState(false);
+
+    async function copy() {
+        await navigator.clipboard.writeText(value);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+    }
+
+    return (
+        <button type="button" onClick={() => void copy()} className={iconButtonClass} aria-label={t('standorte.wifi.copy')} title={t('standorte.wifi.copy')}>
+            {copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
+        </button>
+    );
+}
+
+// --- Location create/edit ------------------------------------------------------
+
+type LocationDraft = Record<'name' | 'address' | 'openingHours' | 'contactPerson' | 'photoUrl' | 'accessNote', string>;
+
+function LocationFormModal({ clubId, location, t, onClose, onSaved }: { clubId: string; location: Location | null; t: T; onClose: () => void; onSaved: () => void }) {
+    const [draft, setDraft] = useState<LocationDraft>({
+        name: location?.name ?? '',
+        address: location?.address ?? '',
+        openingHours: location?.openingHours ?? '',
+        contactPerson: location?.contactPerson ?? '',
+        photoUrl: location?.photoUrl ?? '',
+        accessNote: location?.accessNote ?? '',
+    });
+    const set = (key: keyof LocationDraft) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setDraft({ ...draft, [key]: e.target.value });
+
+    // Create omits empty fields, edit clears them with null.
+    const empty = location ? null : undefined;
+    const body = {
+        name: draft.name.trim(),
+        address: draft.address.trim() || empty,
+        openingHours: draft.openingHours.trim() || empty,
+        contactPerson: draft.contactPerson.trim() || empty,
+        photoUrl: draft.photoUrl.trim() || empty,
+        accessNote: draft.accessNote.trim() || empty,
+    };
+
+    return (
+        <FormModal
+            open
+            title={location ? t('standorte.locations.detail.title') : t('standorte.locations.new.title')}
+            submitLabel={location ? t('standorte.locations.detail.save') : t('standorte.locations.new.submit')}
+            cancelLabel={t('standorte.locations.new.cancel')}
+            canSubmit={!!draft.name.trim()}
+            onClose={onClose}
+            onSubmit={() =>
+                run(async () => {
+                    await apiFetch(location ? `/locations/${location.id}?clubId=${clubId}` : `/locations?clubId=${clubId}`, {
+                        method: location ? 'PATCH' : 'POST',
+                        body,
+                    });
+                    onSaved();
+                })
+            }
+        >
+            <Field label={t('standorte.locations.detail.name')}>
+                <input type="text" value={draft.name} onChange={set('name')} required className={inputClass} />
+            </Field>
+            <Field label={t('standorte.locations.detail.address')}>
+                <input type="text" value={draft.address} onChange={set('address')} className={inputClass} />
+            </Field>
+            <div className="grid gap-4 sm:grid-cols-2">
+                <Field label={t('standorte.locations.detail.openingHours')}>
+                    <input type="text" value={draft.openingHours} onChange={set('openingHours')} className={inputClass} />
+                </Field>
+                <Field label={t('standorte.locations.detail.contactPerson')}>
+                    <input type="text" value={draft.contactPerson} onChange={set('contactPerson')} className={inputClass} />
+                </Field>
+            </div>
+            <Field label={t('standorte.locations.detail.photoUrl')}>
+                <input type="url" value={draft.photoUrl} onChange={set('photoUrl')} placeholder="https://…" className={inputClass} />
+            </Field>
+            <Field label={t('standorte.locations.detail.accessNote')}>
+                <textarea value={draft.accessNote} onChange={set('accessNote')} rows={3} className={inputClass} />
+            </Field>
+        </FormModal>
+    );
+}
+
+// --- Location grid ---------------------------------------------------------------
+
+function LocationGrid({
     clubId,
     locations,
+    canWrite,
     t,
     onChange,
     onSelect,
 }: {
     clubId: string;
     locations: Location[];
-    t: (key: string) => string;
+    canWrite: boolean;
+    t: T;
     onChange: () => void;
     onSelect: (id: string) => void;
 }) {
     const [showCreate, setShowCreate] = useState(false);
-    const [name, setName] = useState('');
-    const [address, setAddress] = useState('');
-    const [error, setError] = useState<string | null>(null);
-    const [submitting, setSubmitting] = useState(false);
-
-    async function handleCreate(e: React.FormEvent) {
-        e.preventDefault();
-        if (!name.trim()) return;
-        setSubmitting(true);
-        setError(null);
-        try {
-            await apiFetch(`/locations?clubId=${clubId}`, {
-                method: 'POST',
-                body: { name: name.trim(), address: address.trim() || undefined },
-            });
-            setName('');
-            setAddress('');
-            setShowCreate(false);
-            onChange();
-        } catch (err) {
-            // ForbiddenError surfaces here for a caller without
-            // locations:write -- shown inline instead of a silent no-op,
-            // same convention as AbteilungenTab's create form.
-            setError(err instanceof ApiError ? err.message : 'Request failed');
-        } finally {
-            setSubmitting(false);
-        }
-    }
-
-    async function handleDelete(id: string) {
-        if (!confirm(t('standorte.locations.delete.confirm'))) return;
-        setError(null);
-        try {
-            await apiFetch(`/locations/${id}?clubId=${clubId}`, { method: 'DELETE' });
-            onChange();
-        } catch (err) {
-            setError(err instanceof ApiError ? err.message : 'Request failed');
-        }
-    }
 
     return (
-        <SectionCard title={t('standorte.tab.standorte')}>
-            {error && <p className="mb-2 text-sm text-destructive">{error}</p>}
-
-            {locations.length === 0 ? (
-                <p className="mb-3 text-sm text-muted-foreground">{t('standorte.locations.empty')}</p>
-            ) : (
-                <div className="mb-3 overflow-x-auto rounded-xl border border-border">
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="border-b border-border bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
-                                <th className="px-3 py-2">{t('standorte.locations.table.name')}</th>
-                                <th className="px-3 py-2">{t('standorte.locations.table.address')}</th>
-                                <th className="px-3 py-2">{t('standorte.locations.table.contact')}</th>
-                                <th className="px-3 py-2">{t('standorte.locations.table.actions')}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {locations.map((loc) => (
-                                <tr key={loc.id} className="border-b border-border last:border-b-0">
-                                    <td className="px-3 py-2 font-medium text-foreground">{loc.name}</td>
-                                    <td className="px-3 py-2 text-muted-foreground">{loc.address ?? '—'}</td>
-                                    <td className="px-3 py-2 text-muted-foreground">{loc.contactPerson ?? '—'}</td>
-                                    <td className="px-3 py-2">
-                                        <div className="flex items-center gap-2">
-                                            <button onClick={() => onSelect(loc.id)} className="text-xs font-medium text-primary hover:underline">
-                                                {t('standorte.locations.select')}
-                                            </button>
-                                            <button onClick={() => void handleDelete(loc.id)} className="text-xs font-medium text-destructive hover:underline">
-                                                {t('standorte.locations.delete')}
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+        <div className="space-y-4">
+            {canWrite && (
+                <div className="flex justify-end">
+                    <button onClick={() => setShowCreate(true)} className={primaryButtonClass}>
+                        <Plus className="h-4 w-4" />
+                        {t('standorte.locations.new')}
+                    </button>
                 </div>
             )}
 
-            {showCreate ? (
-                <form onSubmit={(e) => void handleCreate(e)} className="flex flex-wrap items-center gap-2">
-                    <input
-                        type="text"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder={t('standorte.locations.new.name')}
-                        className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-                    />
-                    <input
-                        type="text"
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
-                        placeholder={t('standorte.locations.new.address')}
-                        className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-                    />
-                    <button
-                        type="submit"
-                        disabled={submitting || !name.trim()}
-                        className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
-                    >
-                        {t('standorte.locations.new.submit')}
-                    </button>
-                    <button type="button" onClick={() => setShowCreate(false)} className="text-sm text-muted-foreground hover:text-foreground">
-                        {t('standorte.locations.new.cancel')}
-                    </button>
-                </form>
+            {locations.length === 0 ? (
+                <EmptyState icon={<MapPin className="h-8 w-8" />} text={t('standorte.locations.empty')} />
             ) : (
-                <button onClick={() => setShowCreate(true)} className="text-sm font-medium text-primary hover:underline">
-                    {t('standorte.locations.new')}
-                </button>
+                <div className="grid gap-4 sm:grid-cols-2">
+                    {locations.map((loc) => (
+                        <button
+                            key={loc.id}
+                            onClick={() => onSelect(loc.id)}
+                            className="overflow-hidden rounded-xl border border-border bg-card text-left transition-colors hover:border-primary"
+                        >
+                            <LocationPhoto url={loc.photoUrl} className="h-36 w-full" />
+                            <div className="space-y-1.5 p-4">
+                                <h3 className="font-semibold text-foreground">{loc.name}</h3>
+                                {loc.address && <InfoRow icon={<MapPin className="h-4 w-4" />}>{loc.address}</InfoRow>}
+                                {loc.openingHours && <InfoRow icon={<Clock className="h-4 w-4" />}>{loc.openingHours}</InfoRow>}
+                                {loc.contactPerson && <InfoRow icon={<User className="h-4 w-4" />}>{loc.contactPerson}</InfoRow>}
+                            </div>
+                        </button>
+                    ))}
+                </div>
             )}
-        </SectionCard>
+
+            {showCreate && <LocationFormModal clubId={clubId} location={null} t={t} onClose={() => setShowCreate(false)} onSaved={onChange} />}
+        </div>
     );
 }
+
+// --- Key holders -------------------------------------------------------------------
 
 function KeyHoldersSection({
     location,
     members,
     clubId,
+    canWrite,
     t,
     onChange,
 }: {
     location: LocationDetailData;
     members: ClubMember[];
     clubId: string;
-    t: (key: string) => string;
+    canWrite: boolean;
+    t: T;
     onChange: () => void;
 }) {
     const [newMemberId, setNewMemberId] = useState('');
@@ -223,7 +268,7 @@ function KeyHoldersSection({
             setNewMemberId('');
             onChange();
         } catch (err) {
-            setError(err instanceof ApiError ? err.message : 'Request failed');
+            setError(errorMessage(err));
         }
     }
 
@@ -233,7 +278,7 @@ function KeyHoldersSection({
             await apiFetch(`/locations/${location.id}/key-holders/${memberId}?clubId=${clubId}`, { method: 'DELETE' });
             onChange();
         } catch (err) {
-            setError(err instanceof ApiError ? err.message : 'Request failed');
+            setError(errorMessage(err));
         }
     }
 
@@ -241,53 +286,142 @@ function KeyHoldersSection({
         <SectionCard title={t('standorte.keyholders.title')}>
             {error && <p className="mb-2 text-sm text-destructive">{error}</p>}
             {location.keyHolders.length === 0 ? (
-                <p className="mb-2 text-sm text-muted-foreground">{t('standorte.keyholders.empty')}</p>
+                <EmptyState icon={<KeyRound className="h-6 w-6" />} text={t('standorte.keyholders.empty')} />
             ) : (
-                <ul className="mb-2 space-y-1">
+                <ul className="flex flex-wrap gap-2">
                     {location.keyHolders.map((kh) => (
-                        <li key={kh.id} className="flex items-center justify-between text-sm">
-                            <span className="text-foreground">{nameFor(kh.memberId)}</span>
-                            <button onClick={() => void handleRemove(kh.memberId)} className="text-xs text-destructive hover:underline">
-                                {t('standorte.keyholders.remove')}
-                            </button>
+                        <li key={kh.id} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background py-1 pl-3 pr-1.5 text-sm text-foreground">
+                            <KeyRound className="h-3.5 w-3.5 text-muted-foreground" />
+                            {nameFor(kh.memberId)}
+                            {canWrite && (
+                                <button
+                                    onClick={() => void handleRemove(kh.memberId)}
+                                    className="rounded-full p-0.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                                    aria-label={t('standorte.keyholders.remove')}
+                                    title={t('standorte.keyholders.remove')}
+                                >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                            )}
                         </li>
                     ))}
                 </ul>
             )}
-            <div className="flex items-center gap-2">
-                <select
-                    value={newMemberId}
-                    onChange={(e) => setNewMemberId(e.target.value)}
-                    className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
-                >
-                    <option value="">{t('standorte.keyholders.select')}</option>
-                    {availableMembers.map((m) => (
-                        <option key={m.id} value={m.id}>
-                            {m.name ?? m.id}
-                        </option>
-                    ))}
-                </select>
-                <button
-                    onClick={() => void handleAdd()}
-                    disabled={!newMemberId}
-                    className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-50"
-                >
-                    {t('standorte.keyholders.add')}
-                </button>
-            </div>
+            {canWrite && (
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                    <select value={newMemberId} onChange={(e) => setNewMemberId(e.target.value)} className={`${inputClass} sm:flex-1`}>
+                        <option value="">{t('standorte.keyholders.select')}</option>
+                        {availableMembers.map((m) => (
+                            <option key={m.id} value={m.id}>
+                                {m.name ?? m.id}
+                            </option>
+                        ))}
+                    </select>
+                    <button onClick={() => void handleAdd()} disabled={!newMemberId} className={primaryButtonClass}>
+                        <Plus className="h-4 w-4" />
+                        {t('standorte.keyholders.add')}
+                    </button>
+                </div>
+            )}
         </SectionCard>
     );
 }
 
-function WifiSection({ locationId, clubId, t }: { locationId: string; clubId: string; t: (key: string) => string }) {
+// --- WiFi ---------------------------------------------------------------------------
+
+function WifiQrModal({ network, t, onClose }: { network: WifiNetwork; t: T; onClose: () => void }) {
+    return (
+        <Modal open onClose={onClose} title={network.label}>
+            <div className="flex flex-col items-center gap-4">
+                {/* White quiet zone keeps the code scannable in dark mode. */}
+                <div className="rounded-xl bg-white p-4">
+                    <QRCodeSVG value={buildWifiQrPayload(network.ssid, network.password)} size={240} marginSize={0} />
+                </div>
+                <p className="text-center text-xs text-muted-foreground">{t('standorte.wifi.qr.hint')}</p>
+                <dl className="w-full space-y-2 text-sm">
+                    <div className="flex items-center justify-between gap-2 rounded-lg bg-muted/50 px-3 py-2">
+                        <dt className="text-muted-foreground">{t('standorte.wifi.ssid')}</dt>
+                        <dd className="flex min-w-0 items-center gap-1 font-medium text-foreground">
+                            <span className="truncate">{network.ssid}</span>
+                            <CopyButton value={network.ssid} t={t} />
+                        </dd>
+                    </div>
+                    {network.password && (
+                        <div className="flex items-center justify-between gap-2 rounded-lg bg-muted/50 px-3 py-2">
+                            <dt className="text-muted-foreground">{t('standorte.wifi.password')}</dt>
+                            <dd className="flex min-w-0 items-center gap-1 font-mono text-foreground">
+                                <span className="truncate">{network.password}</span>
+                                <CopyButton value={network.password} t={t} />
+                            </dd>
+                        </div>
+                    )}
+                </dl>
+            </div>
+        </Modal>
+    );
+}
+
+function WifiFormModal({
+    locationId,
+    clubId,
+    network,
+    t,
+    onClose,
+    onSaved,
+}: {
+    locationId: string;
+    clubId: string;
+    network: WifiNetwork | null;
+    t: T;
+    onClose: () => void;
+    onSaved: () => Promise<void>;
+}) {
+    const [label, setLabel] = useState(network?.label ?? '');
+    const [ssid, setSsid] = useState(network?.ssid ?? '');
+    const [password, setPassword] = useState(network?.password ?? '');
+    const [visibleToGuests, setVisibleToGuests] = useState(network?.visibleToGuests ?? false);
+
+    return (
+        <FormModal
+            open
+            title={network ? t('standorte.wifi.edit.title') : t('standorte.wifi.new.title')}
+            submitLabel={network ? t('standorte.wifi.save') : t('standorte.wifi.submit')}
+            cancelLabel={t('standorte.wifi.cancel')}
+            canSubmit={!!label.trim() && !!ssid.trim() && !!password.trim()}
+            onClose={onClose}
+            onSubmit={() =>
+                run(async () => {
+                    await apiFetch(network ? `/locations/${locationId}/wifi/${network.id}?clubId=${clubId}` : `/locations/${locationId}/wifi?clubId=${clubId}`, {
+                        method: network ? 'PATCH' : 'POST',
+                        body: { label: label.trim(), ssid: ssid.trim(), password: password.trim(), visibleToGuests },
+                    });
+                    await onSaved();
+                })
+            }
+        >
+            <Field label={t('standorte.wifi.label')}>
+                <input type="text" value={label} onChange={(e) => setLabel(e.target.value)} required className={inputClass} />
+            </Field>
+            <div className="grid gap-4 sm:grid-cols-2">
+                <Field label={t('standorte.wifi.ssid')}>
+                    <input type="text" value={ssid} onChange={(e) => setSsid(e.target.value)} required className={inputClass} />
+                </Field>
+                <Field label={t('standorte.wifi.password')}>
+                    <input type="text" value={password} onChange={(e) => setPassword(e.target.value)} required className={`${inputClass} font-mono`} />
+                </Field>
+            </div>
+            <Toggle checked={visibleToGuests} onChange={setVisibleToGuests} label={t('standorte.wifi.visibleToGuests')} />
+            <p className="text-xs text-muted-foreground">{t('standorte.wifi.hint')}</p>
+        </FormModal>
+    );
+}
+
+function WifiSection({ locationId, clubId, canWrite, t }: { locationId: string; clubId: string; canWrite: boolean; t: T }) {
     const [networks, setNetworks] = useState<WifiNetwork[] | null>(null);
-    const [showCreate, setShowCreate] = useState(false);
-    const [editingId, setEditingId] = useState<string | null>(null);
-    const [label, setLabel] = useState('');
-    const [ssid, setSsid] = useState('');
-    const [password, setPassword] = useState('');
-    const [visibleToGuests, setVisibleToGuests] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    // undefined = closed, null = create, network = edit
+    const [editing, setEditing] = useState<WifiNetwork | null | undefined>(undefined);
+    const [deleting, setDeleting] = useState<WifiNetwork | null>(null);
+    const [qrFor, setQrFor] = useState<WifiNetwork | null>(null);
 
     async function load() {
         const { data } = await apiFetch<{ data: WifiNetwork[] }>(`/locations/${locationId}/wifi?clubId=${clubId}`);
@@ -300,171 +434,152 @@ function WifiSection({ locationId, clubId, t }: { locationId: string; clubId: st
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [locationId]);
 
-    function resetForm() {
-        setLabel('');
-        setSsid('');
-        setPassword('');
-        setVisibleToGuests(false);
-        setShowCreate(false);
-        setEditingId(null);
-    }
-
-    async function handleCreate(e: React.FormEvent) {
-        e.preventDefault();
-        if (!label.trim() || !ssid.trim() || !password.trim()) return;
-        setError(null);
-        try {
-            await apiFetch(`/locations/${locationId}/wifi?clubId=${clubId}`, {
-                method: 'POST',
-                body: { label: label.trim(), ssid: ssid.trim(), password: password.trim(), visibleToGuests },
-            });
-            resetForm();
-            await load();
-        } catch (err) {
-            setError(err instanceof ApiError ? err.message : 'Request failed');
-        }
-    }
-
-    function startEdit(network: WifiNetwork) {
-        setEditingId(network.id);
-        setLabel(network.label);
-        setSsid(network.ssid);
-        setPassword(network.password);
-        setVisibleToGuests(network.visibleToGuests);
-        setShowCreate(false);
-    }
-
-    async function handleSaveEdit(e: React.FormEvent) {
-        e.preventDefault();
-        if (!editingId) return;
-        setError(null);
-        try {
-            await apiFetch(`/locations/${locationId}/wifi/${editingId}?clubId=${clubId}`, {
-                method: 'PATCH',
-                body: { label: label.trim(), ssid: ssid.trim(), password: password.trim(), visibleToGuests },
-            });
-            resetForm();
-            await load();
-        } catch (err) {
-            setError(err instanceof ApiError ? err.message : 'Request failed');
-        }
-    }
-
-    async function handleDelete(id: string) {
-        if (!confirm(t('standorte.wifi.delete.confirm'))) return;
-        setError(null);
-        try {
-            await apiFetch(`/locations/${locationId}/wifi/${id}?clubId=${clubId}`, { method: 'DELETE' });
-            await load();
-        } catch (err) {
-            setError(err instanceof ApiError ? err.message : 'Request failed');
-        }
-    }
-
-    if (networks === null) {
-        return (
-            <SectionCard title={t('standorte.wifi.title')}>
-                <p className="text-sm text-muted-foreground">…</p>
-            </SectionCard>
-        );
-    }
-
-    const formOpen = showCreate || editingId !== null;
-
     return (
-        <SectionCard title={t('standorte.wifi.title')}>
-            <p className="mb-3 text-xs text-muted-foreground">{t('standorte.wifi.hint')}</p>
-            {error && <p className="mb-2 text-sm text-destructive">{error}</p>}
-
-            {networks.length === 0 ? (
-                <p className="mb-3 text-sm text-muted-foreground">{t('standorte.wifi.empty')}</p>
+        <SectionCard
+            title={t('standorte.wifi.title')}
+            action={
+                canWrite && (
+                    <button onClick={() => setEditing(null)} className={secondaryButtonClass}>
+                        <Plus className="h-4 w-4" />
+                        {t('standorte.wifi.new')}
+                    </button>
+                )
+            }
+        >
+            {networks === null ? (
+                <p className="text-sm text-muted-foreground">…</p>
+            ) : networks.length === 0 ? (
+                <EmptyState icon={<Wifi className="h-6 w-6" />} text={t('standorte.wifi.empty')} />
             ) : (
-                <ul className="mb-3 space-y-2">
+                <ul className="grid gap-3 sm:grid-cols-2">
                     {networks.map((net) => (
-                        <li key={net.id} className="rounded-lg border border-border bg-background px-3 py-2 text-sm">
-                            <div className="flex items-center justify-between gap-2">
-                                <div>
-                                    <p className="font-medium text-foreground">
-                                        {net.label} {net.visibleToGuests && <span className="ml-1 text-xs text-muted-foreground">({t('standorte.wifi.visibleToGuests')})</span>}
+                        <li key={net.id} className="rounded-lg border border-border bg-background p-3">
+                            <div className="flex items-start justify-between gap-2">
+                                <div className="min-w-0">
+                                    <p className="flex items-center gap-2 font-medium text-foreground">
+                                        <Wifi className="h-4 w-4 shrink-0 text-primary" />
+                                        <span className="truncate">{net.label}</span>
                                     </p>
-                                    <p className="text-xs text-muted-foreground">
-                                        {net.ssid} — {net.password}
-                                    </p>
+                                    {canWrite && net.visibleToGuests && (
+                                        <div className="mt-1">
+                                            <Chip tone="primary">{t('standorte.wifi.visibleToGuests')}</Chip>
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <button onClick={() => startEdit(net)} className="text-xs font-medium text-primary hover:underline">
-                                        {t('standorte.wifi.edit')}
-                                    </button>
-                                    <button onClick={() => void handleDelete(net.id)} className="text-xs font-medium text-destructive hover:underline">
-                                        {t('standorte.wifi.delete')}
-                                    </button>
-                                </div>
+                                {canWrite && (
+                                    <div className="flex shrink-0">
+                                        <button onClick={() => setEditing(net)} className={iconButtonClass} aria-label={t('standorte.wifi.edit')} title={t('standorte.wifi.edit')}>
+                                            <Pencil className="h-4 w-4" />
+                                        </button>
+                                        <button onClick={() => setDeleting(net)} className={iconButtonClass} aria-label={t('standorte.wifi.delete')} title={t('standorte.wifi.delete')}>
+                                            <Trash2 className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                )}
                             </div>
+                            <dl className="mt-2 space-y-1 text-sm">
+                                <div className="flex items-center justify-between gap-2">
+                                    <dt className="text-muted-foreground">{t('standorte.wifi.ssid')}</dt>
+                                    <dd className="truncate text-foreground">{net.ssid}</dd>
+                                </div>
+                                <div className="flex items-center justify-between gap-2">
+                                    <dt className="text-muted-foreground">{t('standorte.wifi.password')}</dt>
+                                    <dd className="flex min-w-0 items-center gap-1 font-mono text-foreground">
+                                        <span className="truncate">{net.password}</span>
+                                        <CopyButton value={net.password} t={t} />
+                                    </dd>
+                                </div>
+                            </dl>
+                            <button onClick={() => setQrFor(net)} className={`${secondaryButtonClass} mt-3 w-full justify-center`}>
+                                <QrCode className="h-4 w-4" />
+                                {t('standorte.wifi.qr')}
+                            </button>
                         </li>
                     ))}
                 </ul>
             )}
 
-            {formOpen ? (
-                <form onSubmit={(e) => void (editingId ? handleSaveEdit(e) : handleCreate(e))} className="space-y-2 rounded-lg border border-border p-3">
-                    <div className="flex flex-wrap gap-2">
-                        <input
-                            type="text"
-                            value={label}
-                            onChange={(e) => setLabel(e.target.value)}
-                            placeholder={t('standorte.wifi.label')}
-                            className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-                        />
-                        <input
-                            type="text"
-                            value={ssid}
-                            onChange={(e) => setSsid(e.target.value)}
-                            placeholder={t('standorte.wifi.ssid')}
-                            className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-                        />
-                        <input
-                            type="text"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder={t('standorte.wifi.password')}
-                            className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-                        />
-                    </div>
-                    <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <input type="checkbox" checked={visibleToGuests} onChange={(e) => setVisibleToGuests(e.target.checked)} />
-                        {t('standorte.wifi.visibleToGuests')}
-                    </label>
-                    <div className="flex items-center gap-2">
-                        <button
-                            type="submit"
-                            disabled={!label.trim() || !ssid.trim() || !password.trim()}
-                            className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
-                        >
-                            {editingId ? t('standorte.wifi.save') : t('standorte.wifi.submit')}
-                        </button>
-                        <button type="button" onClick={resetForm} className="text-sm text-muted-foreground hover:text-foreground">
-                            {t('standorte.wifi.cancel')}
-                        </button>
-                    </div>
-                </form>
-            ) : (
-                <button onClick={() => setShowCreate(true)} className="text-sm font-medium text-primary hover:underline">
-                    {t('standorte.wifi.new')}
-                </button>
+            {editing !== undefined && (
+                <WifiFormModal locationId={locationId} clubId={clubId} network={editing} t={t} onClose={() => setEditing(undefined)} onSaved={load} />
             )}
+            {qrFor && <WifiQrModal network={qrFor} t={t} onClose={() => setQrFor(null)} />}
+            <ConfirmModal
+                open={deleting !== null}
+                title={t('standorte.wifi.delete')}
+                message={t('standorte.wifi.delete.confirm')}
+                confirmLabel={t('standorte.wifi.delete')}
+                cancelLabel={t('standorte.wifi.cancel')}
+                onClose={() => setDeleting(null)}
+                onConfirm={() =>
+                    run(async () => {
+                        await apiFetch(`/locations/${locationId}/wifi/${deleting!.id}?clubId=${clubId}`, { method: 'DELETE' });
+                        await load();
+                    })
+                }
+            />
         </SectionCard>
     );
 }
 
-function LinksSection({ locationId, clubId, t }: { locationId: string; clubId: string; t: (key: string) => string }) {
+// --- Links --------------------------------------------------------------------------
+
+function LinkFormModal({
+    locationId,
+    clubId,
+    link,
+    t,
+    onClose,
+    onSaved,
+}: {
+    locationId: string;
+    clubId: string;
+    link: LocationLink | null;
+    t: T;
+    onClose: () => void;
+    onSaved: () => Promise<void>;
+}) {
+    const [title, setTitle] = useState(link?.title ?? '');
+    const [url, setUrl] = useState(link?.url ?? '');
+    const [icon, setIcon] = useState(link?.icon ?? '');
+    const [visibleToGuests, setVisibleToGuests] = useState(link?.visibleToGuests ?? false);
+
+    return (
+        <FormModal
+            open
+            title={link ? t('standorte.links.edit.title') : t('standorte.links.new.title')}
+            submitLabel={link ? t('standorte.links.save') : t('standorte.links.submit')}
+            cancelLabel={t('standorte.links.cancel')}
+            canSubmit={!!title.trim() && !!url.trim()}
+            onClose={onClose}
+            onSubmit={() =>
+                run(async () => {
+                    await apiFetch(link ? `/locations/${locationId}/links/${link.id}?clubId=${clubId}` : `/locations/${locationId}/links?clubId=${clubId}`, {
+                        method: link ? 'PATCH' : 'POST',
+                        body: { title: title.trim(), url: url.trim(), icon: icon.trim() || (link ? null : undefined), visibleToGuests },
+                    });
+                    await onSaved();
+                })
+            }
+        >
+            <Field label={t('standorte.links.link.title')}>
+                <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className={inputClass} />
+            </Field>
+            <Field label={t('standorte.links.link.url')}>
+                <input type="url" value={url} onChange={(e) => setUrl(e.target.value)} required placeholder="https://…" className={inputClass} />
+            </Field>
+            <Field label={t('standorte.links.link.icon')}>
+                <input type="text" value={icon} onChange={(e) => setIcon(e.target.value)} className={inputClass} />
+            </Field>
+            <Toggle checked={visibleToGuests} onChange={setVisibleToGuests} label={t('standorte.links.visibleToGuests')} />
+        </FormModal>
+    );
+}
+
+function LinksSection({ locationId, clubId, canWrite, t }: { locationId: string; clubId: string; canWrite: boolean; t: T }) {
     const [links, setLinks] = useState<LocationLink[] | null>(null);
-    const [showCreate, setShowCreate] = useState(false);
-    const [editingId, setEditingId] = useState<string | null>(null);
-    const [linkTitle, setLinkTitle] = useState('');
-    const [url, setUrl] = useState('');
-    const [icon, setIcon] = useState('');
-    const [visibleToGuests, setVisibleToGuests] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    // undefined = closed, null = create, link = edit
+    const [editing, setEditing] = useState<LocationLink | null | undefined>(undefined);
+    const [deleting, setDeleting] = useState<LocationLink | null>(null);
 
     async function load() {
         const { data } = await apiFetch<{ data: LocationLink[] }>(`/locations/${locationId}/links?clubId=${clubId}`);
@@ -477,165 +592,79 @@ function LinksSection({ locationId, clubId, t }: { locationId: string; clubId: s
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [locationId]);
 
-    function resetForm() {
-        setLinkTitle('');
-        setUrl('');
-        setIcon('');
-        setVisibleToGuests(false);
-        setShowCreate(false);
-        setEditingId(null);
-    }
-
-    async function handleCreate(e: React.FormEvent) {
-        e.preventDefault();
-        if (!linkTitle.trim() || !url.trim()) return;
-        setError(null);
-        try {
-            await apiFetch(`/locations/${locationId}/links?clubId=${clubId}`, {
-                method: 'POST',
-                body: { title: linkTitle.trim(), url: url.trim(), icon: icon.trim() || undefined, visibleToGuests },
-            });
-            resetForm();
-            await load();
-        } catch (err) {
-            setError(err instanceof ApiError ? err.message : 'Request failed');
-        }
-    }
-
-    function startEdit(link: LocationLink) {
-        setEditingId(link.id);
-        setLinkTitle(link.title);
-        setUrl(link.url);
-        setIcon(link.icon ?? '');
-        setVisibleToGuests(link.visibleToGuests);
-        setShowCreate(false);
-    }
-
-    async function handleSaveEdit(e: React.FormEvent) {
-        e.preventDefault();
-        if (!editingId) return;
-        setError(null);
-        try {
-            await apiFetch(`/locations/${locationId}/links/${editingId}?clubId=${clubId}`, {
-                method: 'PATCH',
-                body: { title: linkTitle.trim(), url: url.trim(), icon: icon.trim() || null, visibleToGuests },
-            });
-            resetForm();
-            await load();
-        } catch (err) {
-            setError(err instanceof ApiError ? err.message : 'Request failed');
-        }
-    }
-
-    async function handleDelete(id: string) {
-        if (!confirm(t('standorte.links.delete.confirm'))) return;
-        setError(null);
-        try {
-            await apiFetch(`/locations/${locationId}/links/${id}?clubId=${clubId}`, { method: 'DELETE' });
-            await load();
-        } catch (err) {
-            setError(err instanceof ApiError ? err.message : 'Request failed');
-        }
-    }
-
-    if (links === null) {
-        return (
-            <SectionCard title={t('standorte.links.title')}>
-                <p className="text-sm text-muted-foreground">…</p>
-            </SectionCard>
-        );
-    }
-
-    const formOpen = showCreate || editingId !== null;
-
     return (
-        <SectionCard title={t('standorte.links.title')}>
-            {error && <p className="mb-2 text-sm text-destructive">{error}</p>}
-
-            {links.length === 0 ? (
-                <p className="mb-3 text-sm text-muted-foreground">{t('standorte.links.empty')}</p>
+        <SectionCard
+            title={t('standorte.links.title')}
+            action={
+                canWrite && (
+                    <button onClick={() => setEditing(null)} className={secondaryButtonClass}>
+                        <Plus className="h-4 w-4" />
+                        {t('standorte.links.new')}
+                    </button>
+                )
+            }
+        >
+            {links === null ? (
+                <p className="text-sm text-muted-foreground">…</p>
+            ) : links.length === 0 ? (
+                <EmptyState icon={<LinkIcon className="h-6 w-6" />} text={t('standorte.links.empty')} />
             ) : (
-                <ul className="mb-3 space-y-2">
+                <ul className="divide-y divide-border">
                     {links.map((link) => (
-                        <li key={link.id} className="rounded-lg border border-border bg-background px-3 py-2 text-sm">
-                            <div className="flex items-center justify-between gap-2">
-                                <div>
-                                    <p className="font-medium text-foreground">
-                                        {link.title} {link.visibleToGuests && <span className="ml-1 text-xs text-muted-foreground">({t('standorte.links.visibleToGuests')})</span>}
-                                    </p>
-                                    <a href={link.url} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">
-                                        {link.url}
-                                    </a>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <button onClick={() => startEdit(link)} className="text-xs font-medium text-primary hover:underline">
-                                        {t('standorte.links.edit')}
-                                    </button>
-                                    <button onClick={() => void handleDelete(link.id)} className="text-xs font-medium text-destructive hover:underline">
-                                        {t('standorte.links.delete')}
-                                    </button>
-                                </div>
+                        <li key={link.id} className="flex items-center justify-between gap-2 py-2">
+                            <a href={link.url} target="_blank" rel="noreferrer" className="group flex min-w-0 items-center gap-2">
+                                <span className="shrink-0 text-lg leading-none">{link.icon || <ExternalLink className="h-4 w-4 text-primary" />}</span>
+                                <span className="min-w-0">
+                                    <span className="block truncate text-sm font-medium text-foreground group-hover:text-primary">{link.title}</span>
+                                    <span className="block truncate text-xs text-muted-foreground">{link.url}</span>
+                                </span>
+                            </a>
+                            <div className="flex shrink-0 items-center gap-1">
+                                {canWrite && link.visibleToGuests && <Chip tone="primary">{t('standorte.links.visibleToGuests')}</Chip>}
+                                {canWrite && (
+                                    <>
+                                        <button onClick={() => setEditing(link)} className={iconButtonClass} aria-label={t('standorte.links.edit')} title={t('standorte.links.edit')}>
+                                            <Pencil className="h-4 w-4" />
+                                        </button>
+                                        <button onClick={() => setDeleting(link)} className={iconButtonClass} aria-label={t('standorte.links.delete')} title={t('standorte.links.delete')}>
+                                            <Trash2 className="h-4 w-4" />
+                                        </button>
+                                    </>
+                                )}
                             </div>
                         </li>
                     ))}
                 </ul>
             )}
 
-            {formOpen ? (
-                <form onSubmit={(e) => void (editingId ? handleSaveEdit(e) : handleCreate(e))} className="space-y-2 rounded-lg border border-border p-3">
-                    <div className="flex flex-wrap gap-2">
-                        <input
-                            type="text"
-                            value={linkTitle}
-                            onChange={(e) => setLinkTitle(e.target.value)}
-                            placeholder={t('standorte.links.link.title')}
-                            className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-                        />
-                        <input
-                            type="text"
-                            value={url}
-                            onChange={(e) => setUrl(e.target.value)}
-                            placeholder={t('standorte.links.link.url')}
-                            className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-                        />
-                        <input
-                            type="text"
-                            value={icon}
-                            onChange={(e) => setIcon(e.target.value)}
-                            placeholder={t('standorte.links.link.icon')}
-                            className="w-32 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-                        />
-                    </div>
-                    <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <input type="checkbox" checked={visibleToGuests} onChange={(e) => setVisibleToGuests(e.target.checked)} />
-                        {t('standorte.links.visibleToGuests')}
-                    </label>
-                    <div className="flex items-center gap-2">
-                        <button
-                            type="submit"
-                            disabled={!linkTitle.trim() || !url.trim()}
-                            className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
-                        >
-                            {editingId ? t('standorte.links.save') : t('standorte.links.submit')}
-                        </button>
-                        <button type="button" onClick={resetForm} className="text-sm text-muted-foreground hover:text-foreground">
-                            {t('standorte.links.cancel')}
-                        </button>
-                    </div>
-                </form>
-            ) : (
-                <button onClick={() => setShowCreate(true)} className="text-sm font-medium text-primary hover:underline">
-                    {t('standorte.links.new')}
-                </button>
+            {editing !== undefined && (
+                <LinkFormModal locationId={locationId} clubId={clubId} link={editing} t={t} onClose={() => setEditing(undefined)} onSaved={load} />
             )}
+            <ConfirmModal
+                open={deleting !== null}
+                title={t('standorte.links.delete')}
+                message={t('standorte.links.delete.confirm')}
+                confirmLabel={t('standorte.links.delete')}
+                cancelLabel={t('standorte.links.cancel')}
+                onClose={() => setDeleting(null)}
+                onConfirm={() =>
+                    run(async () => {
+                        await apiFetch(`/locations/${locationId}/links/${deleting!.id}?clubId=${clubId}`, { method: 'DELETE' });
+                        await load();
+                    })
+                }
+            />
         </SectionCard>
     );
 }
+
+// --- Location detail ---------------------------------------------------------------
 
 function LocationDetail({
     clubId,
     locationId,
     members,
+    canWrite,
     t,
     onBack,
     onLocationsChanged,
@@ -643,29 +672,18 @@ function LocationDetail({
     clubId: string;
     locationId: string;
     members: ClubMember[];
-    t: (key: string) => string;
+    canWrite: boolean;
+    t: T;
     onBack: () => void;
     onLocationsChanged: () => void;
 }) {
     const [location, setLocation] = useState<LocationDetailData | null>(null);
-    const [name, setName] = useState('');
-    const [address, setAddress] = useState('');
-    const [openingHours, setOpeningHours] = useState('');
-    const [contactPerson, setContactPerson] = useState('');
-    const [accessNote, setAccessNote] = useState('');
-    const [photoUrl, setPhotoUrl] = useState('');
-    const [error, setError] = useState<string | null>(null);
-    const [saved, setSaved] = useState(false);
+    const [editing, setEditing] = useState(false);
+    const [deleting, setDeleting] = useState(false);
 
     async function load() {
         const { data } = await apiFetch<{ data: LocationDetailData }>(`/locations/${locationId}?clubId=${clubId}`);
         setLocation(data);
-        setName(data.name);
-        setAddress(data.address ?? '');
-        setOpeningHours(data.openingHours ?? '');
-        setContactPerson(data.contactPerson ?? '');
-        setAccessNote(data.accessNote ?? '');
-        setPhotoUrl(data.photoUrl ?? '');
     }
 
     useEffect(() => {
@@ -674,96 +692,81 @@ function LocationDetail({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [locationId]);
 
-    async function handleSave() {
-        setError(null);
-        setSaved(false);
-        try {
-            await apiFetch(`/locations/${locationId}?clubId=${clubId}`, {
-                method: 'PATCH',
-                body: {
-                    name: name.trim(),
-                    address: address.trim() || null,
-                    openingHours: openingHours.trim() || null,
-                    contactPerson: contactPerson.trim() || null,
-                    accessNote: accessNote.trim() || null,
-                    photoUrl: photoUrl.trim() || null,
-                },
-            });
-            setSaved(true);
-            await load();
-            onLocationsChanged();
-        } catch (err) {
-            setError(err instanceof ApiError ? err.message : 'Request failed');
-        }
-    }
-
     if (!location) return <p className="text-sm text-muted-foreground">…</p>;
 
     return (
         <div className="space-y-4">
-            <button onClick={onBack} className="text-sm font-medium text-primary hover:underline">
+            <button onClick={onBack} className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+                <ArrowLeft className="h-4 w-4" />
                 {t('standorte.locations.back')}
             </button>
 
-            <SectionCard title={t('standorte.locations.detail.title')}>
-                <div className="space-y-2">
-                    <div className="flex flex-wrap gap-2">
-                        <input
-                            type="text"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            placeholder={t('standorte.locations.detail.name')}
-                            className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-                        />
-                        <input
-                            type="text"
-                            value={address}
-                            onChange={(e) => setAddress(e.target.value)}
-                            placeholder={t('standorte.locations.detail.address')}
-                            className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-                        />
+            <div className="overflow-hidden rounded-xl border border-border bg-card">
+                {location.photoUrl && <LocationPhoto url={location.photoUrl} className="h-48 w-full sm:h-64" />}
+                <div className="space-y-3 p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                        <h2 className="text-xl font-bold text-foreground">{location.name}</h2>
+                        {canWrite && (
+                            <div className="flex gap-2">
+                                <button onClick={() => setEditing(true)} className={secondaryButtonClass}>
+                                    <Pencil className="h-4 w-4" />
+                                    {t('standorte.locations.edit')}
+                                </button>
+                                <button
+                                    onClick={() => setDeleting(true)}
+                                    className={`${secondaryButtonClass} text-destructive hover:bg-destructive/10`}
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                    {t('standorte.locations.delete')}
+                                </button>
+                            </div>
+                        )}
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                        <input
-                            type="text"
-                            value={openingHours}
-                            onChange={(e) => setOpeningHours(e.target.value)}
-                            placeholder={t('standorte.locations.detail.openingHours')}
-                            className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-                        />
-                        <input
-                            type="text"
-                            value={contactPerson}
-                            onChange={(e) => setContactPerson(e.target.value)}
-                            placeholder={t('standorte.locations.detail.contactPerson')}
-                            className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-                        />
+                    <div className="grid gap-2 sm:grid-cols-2">
+                        {location.address && <InfoRow icon={<MapPin className="h-4 w-4" />}>{location.address}</InfoRow>}
+                        {location.openingHours && <InfoRow icon={<Clock className="h-4 w-4" />}>{location.openingHours}</InfoRow>}
+                        {location.contactPerson && <InfoRow icon={<User className="h-4 w-4" />}>{location.contactPerson}</InfoRow>}
                     </div>
-                    <input
-                        type="text"
-                        value={photoUrl}
-                        onChange={(e) => setPhotoUrl(e.target.value)}
-                        placeholder={t('standorte.locations.detail.photoUrl')}
-                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-                    />
-                    <textarea
-                        value={accessNote}
-                        onChange={(e) => setAccessNote(e.target.value)}
-                        placeholder={t('standorte.locations.detail.accessNote')}
-                        rows={2}
-                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
-                    />
-                    <button onClick={() => void handleSave()} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
-                        {t('standorte.locations.detail.save')}
-                    </button>
-                    {error && <p className="text-sm text-destructive">{error}</p>}
-                    {saved && !error && <p className="text-xs text-success">{t('standorte.locations.detail.saved')}</p>}
+                    {location.accessNote && (
+                        <div className="rounded-lg bg-muted/50 p-3">
+                            <p className="text-xs font-medium text-muted-foreground">{t('standorte.locations.detail.accessNote')}</p>
+                            <p className="mt-1 whitespace-pre-line text-sm text-foreground">{location.accessNote}</p>
+                        </div>
+                    )}
                 </div>
-            </SectionCard>
+            </div>
 
-            <KeyHoldersSection location={location} members={members} clubId={clubId} t={t} onChange={() => void load()} />
-            <WifiSection locationId={locationId} clubId={clubId} t={t} />
-            <LinksSection locationId={locationId} clubId={clubId} t={t} />
+            <WifiSection locationId={locationId} clubId={clubId} canWrite={canWrite} t={t} />
+            <KeyHoldersSection location={location} members={members} clubId={clubId} canWrite={canWrite} t={t} onChange={() => void load()} />
+            <LinksSection locationId={locationId} clubId={clubId} canWrite={canWrite} t={t} />
+
+            {editing && (
+                <LocationFormModal
+                    clubId={clubId}
+                    location={location}
+                    t={t}
+                    onClose={() => setEditing(false)}
+                    onSaved={() => {
+                        void load();
+                        onLocationsChanged();
+                    }}
+                />
+            )}
+            <ConfirmModal
+                open={deleting}
+                title={t('standorte.locations.delete')}
+                message={t('standorte.locations.delete.confirm')}
+                confirmLabel={t('standorte.locations.delete')}
+                cancelLabel={t('standorte.locations.new.cancel')}
+                onClose={() => setDeleting(false)}
+                onConfirm={() =>
+                    run(async () => {
+                        await apiFetch(`/locations/${locationId}?clubId=${clubId}`, { method: 'DELETE' });
+                        onLocationsChanged();
+                        onBack();
+                    })
+                }
+            />
         </div>
     );
 }
@@ -771,13 +774,14 @@ function LocationDetail({
 export default function StandorteTab({
     clubId,
     locations,
+    canWrite,
     onLocationsChanged,
 }: {
     clubId: string;
-    // Cross-tab data (MaterialTab's location dropdown needs it too) --
-    // fetched once at the page level (pageContent/Standorte.tsx) and passed
-    // down, rather than this tab duplicating the same /locations fetch.
+    // Fetched once in pageContent/Standorte.tsx, MaterialTab needs it too.
     locations: Location[];
+    // locations:write -- hides management UI only, the backend enforces it.
+    canWrite: boolean;
     onLocationsChanged: () => void;
 }) {
     const { t } = useLanguage();
@@ -793,11 +797,12 @@ export default function StandorteTab({
             clubId={clubId}
             locationId={selectedId}
             members={members}
+            canWrite={canWrite}
             t={t}
             onBack={() => setSelectedId(null)}
             onLocationsChanged={onLocationsChanged}
         />
     ) : (
-        <LocationList clubId={clubId} locations={locations} t={t} onChange={onLocationsChanged} onSelect={setSelectedId} />
+        <LocationGrid clubId={clubId} locations={locations} canWrite={canWrite} t={t} onChange={onLocationsChanged} onSelect={setSelectedId} />
     );
 }
