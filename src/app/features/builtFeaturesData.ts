@@ -56,7 +56,7 @@ export const BUILT_FEATURE_AREAS: BuiltFeatureArea[] = [
                 platform: 'web',
             },
             {
-                label: { de: 'Eigene Kontaktdaten selbst pflegen', en: 'Self-service contact-data updates' },
+                label: { de: 'Geburtsdatum & Notfallkontakt selbst pflegen', en: 'Maintain your own birth date & emergency contact' },
                 platform: 'both',
             },
             {
@@ -91,8 +91,8 @@ export const BUILT_FEATURE_AREAS: BuiltFeatureArea[] = [
             },
             {
                 label: {
-                    de: 'Vereinsdokumente einsehen (Satzung, Leitbild, ...)',
-                    en: 'Browse club documents (bylaws, mission statement, ...)',
+                    de: 'Titel der Vereinsdokumente einsehen (Satzung, Leitbild, ...)',
+                    en: 'See club document titles (bylaws, mission statement, ...)',
                 },
                 platform: 'both',
             },

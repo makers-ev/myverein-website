@@ -10,7 +10,8 @@ type Translation = {
 const FeaturesTranslation: Translation = {
     de: {
         'features.title': 'Funktionen',
-        'features.intro': 'Das ist keine Zukunftsmusik: Diese Funktionen sind heute schon einsatzbereit, aufgeteilt nach Website und App.',
+        'features.intro': 'Das sind die Funktionen, die heute schon nutzbar sind, aufgeteilt nach Website und App.',
+        'features.filter-all': 'Alle',
         'features.platform.web': 'Website',
         'features.platform.app': 'App',
         'features.platform.both': 'Website & App',
@@ -19,7 +20,8 @@ const FeaturesTranslation: Translation = {
     },
     en: {
         'features.title': 'Features',
-        'features.intro': "This isn't a future promise: these features are ready to use today, broken down by Website and App.",
+        'features.intro': 'These are the features you can use today, broken down by Website and App.',
+        'features.filter-all': 'All',
         'features.platform.web': 'Website',
         'features.platform.app': 'App',
         'features.platform.both': 'Website & App',
