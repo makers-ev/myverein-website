@@ -24,6 +24,9 @@ const VerfuegbarkeitTranslation: Translation = {
         'verfuegbarkeit.exceptions.note': 'Notiz (optional)',
         'verfuegbarkeit.exceptions.empty': 'Noch keine Ausnahmen erfasst.',
         'verfuegbarkeit.exceptions.remove': 'Entfernen',
+        'verfuegbarkeit.exceptions.status': 'Status',
+        'verfuegbarkeit.weekly.title': 'Wöchentliche Verfügbarkeit',
+        'verfuegbarkeit.weekly.hint': 'Tippe auf einen Wochentag, um ihn ein- oder auszuschalten, und lege darunter die Uhrzeit fest.',
     },
     en: {
         'nav.verfuegbarkeit': 'Availability',
@@ -45,6 +48,9 @@ const VerfuegbarkeitTranslation: Translation = {
         'verfuegbarkeit.exceptions.note': 'Note (optional)',
         'verfuegbarkeit.exceptions.empty': 'No exceptions yet.',
         'verfuegbarkeit.exceptions.remove': 'Remove',
+        'verfuegbarkeit.exceptions.status': 'Status',
+        'verfuegbarkeit.weekly.title': 'Weekly availability',
+        'verfuegbarkeit.weekly.hint': 'Tap a weekday to switch it on or off, then set the times below.',
     },
 };
 

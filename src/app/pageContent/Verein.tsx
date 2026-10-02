@@ -2,8 +2,13 @@
 
 import { useEffect, useState } from 'react';
 
+import { Pencil } from 'lucide-react';
+
 import { apiFetch, ApiError } from '@/lib/api-client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import JoinClubCard from '@/components/verein/JoinClubCard';
+import MemberEditModal from '@/components/verein/MemberEditModal';
+import ProfilTab, { type OwnMembership } from '@/components/verein/ProfilTab';
 
 interface MyClub {
     clubId: string;
@@ -53,10 +58,12 @@ interface ClubMember {
     email: string | null;
     category: string | null;
     joinedAt: string | null;
+    leftAt: string | null;
+    memberNumber?: string | null;
     roles: ClubMemberRole[];
 }
 
-type Tab = 'info' | 'mitglieder' | 'abteilungen';
+type Tab = 'info' | 'profil' | 'mitglieder' | 'abteilungen';
 
 // Mirrors the backend's CLUB_ROLE_TYPES (src/lib/club-permissions.ts) --
 // kept in sync by hand, same as the verein.role.* translation keys already
@@ -137,24 +144,33 @@ function VereinsinfoTab({ info, t }: { info: ClubInfo; t: (key: string) => strin
 function MemberRoleCell({
     member,
     clubId,
+    canEdit,
     t,
     onChange,
 }: {
     member: ClubMember;
     clubId: string;
+    canEdit: boolean;
     t: (key: string) => string;
     onChange: () => void;
 }) {
     const [adding, setAdding] = useState(false);
     const [newRole, setNewRole] = useState<(typeof CLUB_ROLE_TYPES)[number]>('beisitzer');
     const [error, setError] = useState<string | null>(null);
+    const [submitting, setSubmitting] = useState(false);
+
+    // Only offer roles the member doesn't hold yet; backend rejects duplicates with 409.
+    const availableRoles = CLUB_ROLE_TYPES.filter((rt) => !member.roles.some((r) => r.roleType === rt));
+    const selectedRole = availableRoles.includes(newRole) ? newRole : availableRoles[0];
 
     async function handleAdd() {
+        if (!selectedRole) return;
         setError(null);
+        setSubmitting(true);
         try {
             await apiFetch(`/club-members/${member.id}/roles?clubId=${clubId}`, {
                 method: 'POST',
-                body: { roleType: newRole },
+                body: { roleType: selectedRole },
             });
             setAdding(false);
             onChange();
@@ -162,6 +178,8 @@ function MemberRoleCell({
             // Same "surface a 403 inline instead of a silent no-op" pattern
             // as AbteilungenTab's create form.
             setError(err instanceof ApiError ? err.message : 'Request failed');
+        } finally {
+            setSubmitting(false);
         }
     }
 
@@ -179,17 +197,17 @@ function MemberRoleCell({
         <div>
             <div className="flex flex-wrap gap-1">
                 {member.roles.map((r) => (
-                    <RoleBadge key={r.id} roleType={r.roleType} onRemove={() => void handleRemove(r.id)} />
+                    <RoleBadge key={r.id} roleType={r.roleType} onRemove={canEdit ? () => void handleRemove(r.id) : undefined} />
                 ))}
             </div>
-            {adding ? (
+            {!canEdit ? null : adding && selectedRole ? (
                 <div className="mt-1.5 flex items-center gap-1">
                     <select
-                        value={newRole}
+                        value={selectedRole}
                         onChange={(e) => setNewRole(e.target.value as (typeof CLUB_ROLE_TYPES)[number])}
                         className="rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground focus:border-primary focus:outline-none"
                     >
-                        {CLUB_ROLE_TYPES.map((rt) => (
+                        {availableRoles.map((rt) => (
                             <option key={rt} value={rt}>
                                 {t(`verein.role.${rt}`)}
                             </option>
@@ -197,7 +215,8 @@ function MemberRoleCell({
                     </select>
                     <button
                         onClick={() => void handleAdd()}
-                        className="rounded-md bg-primary px-2 py-1 text-xs font-semibold text-primary-foreground"
+                        disabled={submitting}
+                        className="rounded-md bg-primary px-2 py-1 text-xs font-semibold text-primary-foreground disabled:opacity-50"
                     >
                         {t('verein.roles.add.confirm')}
                     </button>
@@ -206,9 +225,11 @@ function MemberRoleCell({
                     </button>
                 </div>
             ) : (
-                <button onClick={() => setAdding(true)} className="mt-1.5 text-xs font-medium text-primary hover:underline">
-                    {t('verein.roles.add')}
-                </button>
+                availableRoles.length > 0 && (
+                    <button onClick={() => setAdding(true)} className="mt-1.5 text-xs font-medium text-primary hover:underline">
+                        {t('verein.roles.add')}
+                    </button>
+                )
             )}
             {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
         </div>
@@ -218,14 +239,19 @@ function MemberRoleCell({
 function MitgliederTab({
     members,
     clubId,
+    permissions,
     t,
     onChange,
 }: {
     members: ClubMember[];
     clubId: string;
+    permissions: string[];
     t: (key: string) => string;
     onChange: () => void;
 }) {
+    const [editing, setEditing] = useState<ClubMember | null>(null);
+    const canEditMembers = permissions.includes('members:write');
+
     if (members.length === 0) {
         return <p className="text-sm text-muted-foreground">{t('verein.members.empty')}</p>;
     }
@@ -239,25 +265,49 @@ function MitgliederTab({
                         <th className="px-3 py-2">{t('verein.members.table.category')}</th>
                         <th className="px-3 py-2">{t('verein.members.table.roles')}</th>
                         <th className="px-3 py-2">{t('verein.members.table.joined')}</th>
+                        {canEditMembers && <th className="px-3 py-2" />}
                     </tr>
                 </thead>
                 <tbody>
                     {members.map((m) => (
-                        <tr key={m.id} className="border-b border-border last:border-b-0 align-top">
-                            <td className="px-3 py-2 text-foreground">{m.name ?? '—'}</td>
+                        <tr key={m.id} className={`border-b border-border last:border-b-0 align-top ${m.leftAt ? 'opacity-60' : ''}`}>
+                            <td className="px-3 py-2 text-foreground">
+                                {m.name ?? '—'}
+                                {m.leftAt && (
+                                    <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">{t('verein.members.left')}</span>
+                                )}
+                            </td>
                             <td className="px-3 py-2 text-muted-foreground">
                                 {m.category ? t(`verein.category.${m.category}`) : '—'}
                             </td>
                             <td className="px-3 py-2">
-                                <MemberRoleCell member={m} clubId={clubId} t={t} onChange={onChange} />
+                                <MemberRoleCell
+                                    member={m}
+                                    clubId={clubId}
+                                    canEdit={permissions.includes('roles:write')}
+                                    t={t}
+                                    onChange={onChange}
+                                />
                             </td>
                             <td className="px-3 py-2 text-muted-foreground">
-                                {m.joinedAt ? new Date(m.joinedAt).toLocaleDateString('de-DE') : '—'}
+                                {m.joinedAt ? new Date(`${m.joinedAt}T00:00`).toLocaleDateString('de-DE') : '—'}
                             </td>
+                            {canEditMembers && (
+                                <td className="px-3 py-2 text-right">
+                                    <button
+                                        onClick={() => setEditing(m)}
+                                        className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                                        aria-label={t('verein.members.edit')}
+                                    >
+                                        <Pencil className="h-4 w-4" />
+                                    </button>
+                                </td>
+                            )}
                         </tr>
                     ))}
                 </tbody>
             </table>
+            {editing && <MemberEditModal member={editing} clubId={clubId} onClose={() => setEditing(null)} onSaved={onChange} />}
         </div>
     );
 }
@@ -265,11 +315,13 @@ function MitgliederTab({
 function AbteilungenTab({
     departments,
     clubId,
+    canEdit,
     t,
     onChange,
 }: {
     departments: Department[];
     clubId: string;
+    canEdit: boolean;
     t: (key: string) => string;
     onChange: () => void;
 }) {
@@ -298,22 +350,24 @@ function AbteilungenTab({
 
     return (
         <div className="space-y-4">
-            <form onSubmit={(e) => void handleCreate(e)} className="flex gap-2">
-                <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder={t('verein.departments.new.placeholder')}
-                    className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-                />
-                <button
-                    type="submit"
-                    disabled={submitting || !name.trim()}
-                    className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
-                >
-                    {t('verein.departments.new.submit')}
-                </button>
-            </form>
+            {canEdit && (
+                <form onSubmit={(e) => void handleCreate(e)} className="flex gap-2">
+                    <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder={t('verein.departments.new.placeholder')}
+                        className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                    />
+                    <button
+                        type="submit"
+                        disabled={submitting || !name.trim()}
+                        className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+                    >
+                        {t('verein.departments.new.submit')}
+                    </button>
+                </form>
+            )}
             {error && <p className="text-sm text-destructive">{error}</p>}
 
             {departments.length === 0 ? (
@@ -336,24 +390,27 @@ export default function VereinPageContent() {
     const [clubs, setClubs] = useState<MyClub[] | null>(null);
     const [info, setInfo] = useState<ClubInfo | null>(null);
     const [members, setMembers] = useState<ClubMember[] | null>(null);
+    const [me, setMe] = useState<OwnMembership | null>(null);
     const [tab, setTab] = useState<Tab>('info');
 
     const activeClub = clubs?.[0] ?? null;
 
-    useEffect(() => {
-        // setClubs runs inside the .then() callback, not synchronously in
-        // the effect body, so this doesn't need the same disable comment
-        // the synchronous refreshClubData effect below does.
+    function loadClubs() {
         void apiFetch<{ data: MyClub[] }>('/my-clubs').then(({ data }) => setClubs(data));
-    }, []);
+    }
+
+    // setClubs runs inside the .then() callback, not synchronously in the effect body.
+    useEffect(loadClubs, []);
 
     async function refreshClubData(clubId: string) {
-        const [infoRes, membersRes] = await Promise.all([
+        const [infoRes, membersRes, meRes] = await Promise.all([
             apiFetch<{ data: ClubInfo }>(`/club-info?clubId=${clubId}`),
             apiFetch<{ data: ClubMember[] }>(`/club-members?clubId=${clubId}`),
+            apiFetch<{ data: OwnMembership }>(`/club-members/me?clubId=${clubId}`),
         ]);
         setInfo(infoRes.data);
         setMembers(membersRes.data);
+        setMe(meRes.data);
     }
 
     useEffect(() => {
@@ -372,14 +429,11 @@ export default function VereinPageContent() {
             {clubs === null ? (
                 <p className="mt-6 text-sm text-muted-foreground">…</p>
             ) : !activeClub ? (
-                <div className="mt-6 rounded-xl border border-border bg-card p-4">
-                    <p className="text-sm font-semibold text-foreground">{t('verein.no-club.title')}</p>
-                    <p className="mt-1 text-sm text-muted-foreground">{t('verein.no-club.body')}</p>
-                </div>
+                <JoinClubCard onJoined={loadClubs} />
             ) : (
                 <>
                     <div className="mt-6 flex gap-2 border-b border-border">
-                        {(['info', 'mitglieder', 'abteilungen'] as const).map((value) => (
+                        {(['info', 'profil', 'mitglieder', 'abteilungen'] as const).map((value) => (
                             <button
                                 key={value}
                                 onClick={() => setTab(value)}
@@ -394,11 +448,18 @@ export default function VereinPageContent() {
 
                     <div className="mt-4">
                         {tab === 'info' && (info ? <VereinsinfoTab info={info} t={t} /> : <p className="text-sm text-muted-foreground">…</p>)}
+                        {tab === 'profil' &&
+                            (me ? (
+                                <ProfilTab me={me} clubId={activeClub.clubId} onSaved={() => void refreshClubData(activeClub.clubId)} />
+                            ) : (
+                                <p className="text-sm text-muted-foreground">…</p>
+                            ))}
                         {tab === 'mitglieder' &&
                             (members ? (
                                 <MitgliederTab
                                     members={members}
                                     clubId={activeClub.clubId}
+                                    permissions={me?.permissions ?? []}
                                     t={t}
                                     onChange={() => void refreshClubData(activeClub.clubId)}
                                 />
@@ -410,6 +471,7 @@ export default function VereinPageContent() {
                                 <AbteilungenTab
                                     departments={info.departments}
                                     clubId={activeClub.clubId}
+                                    canEdit={!!me?.permissions.includes('departments:write')}
                                     t={t}
                                     onChange={() => void refreshClubData(activeClub.clubId)}
                                 />
