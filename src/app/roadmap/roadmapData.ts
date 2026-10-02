@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { Clock, IdCard, ShieldCheck, Megaphone, Vote, ClipboardList, Handshake, BarChart3 } from 'lucide-react';
+import { Clock, IdCard, ShieldCheck, Megaphone, Vote, ClipboardList, Handshake, BarChart3, FolderOpen } from 'lucide-react';
 
 export type RoadmapStatus = 'planned' | 'in-progress' | 'done';
 
@@ -162,5 +162,21 @@ export const ROADMAP_ITEMS: RoadmapItem[] = [
         status: 'planned',
         period: 'Später',
         sortKey: 999009,
+    },
+    {
+        id: 'dokumentenablage',
+        icon: FolderOpen,
+        type: 'feature',
+        title: {
+            de: 'Persönliche Dokumentenablage',
+            en: 'Personal document vault',
+        },
+        description: {
+            de: 'Jedes Mitglied hat eine eigene Ablage, etwa mit dem eigenen Aufnahmeantrag. Dokumente und Berichte werden mit dem Vereinslogo als PDF erzeugt und stehen zum Download bereit.',
+            en: 'Every member gets a personal document area, e.g. their own membership application. Documents and reports are generated as PDFs with the club logo, ready to download.',
+        },
+        status: 'planned',
+        period: 'Später',
+        sortKey: 999010,
     },
 ];

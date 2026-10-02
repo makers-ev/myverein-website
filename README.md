@@ -20,7 +20,7 @@ has no local `/api/auth` route and no session store of its own.
 
 | Route | Access | Content |
 |---|---|---|
-| `/` | public | Homepage |
+| `/` | public | Homepage: left-aligned hero with a decorative bento of static club-UI mock tiles, plus bento overviews of the modules and audiences and a closing CTA; texts in `HomeTranslation.ts` |
 | `/features` | public | Marketing feature overview: what's already built today (`builtFeaturesData.ts`), grouped by feature area, each capability tagged Website / App / Website & App via `PlatformBadge` |
 | `/about` | public | "Über uns": what MyVerein is, the Makers e.V. project context (link to the-makers.space) and the two developers as cards with GitHub links (avatars are static files in `public/about/`, no external requests); texts in `AboutTranslation.ts` (DE/EN) |
 | `/login-signup` | public | Sign in / sign up, with 2FA follow-up, a post-signup "verify your e-mail" prompt, and a self-service "forgot password" flow (`ForgotPasswordPrompt`, toggled from the sign-in form) |

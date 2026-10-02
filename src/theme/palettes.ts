@@ -56,7 +56,7 @@ export const palettes = {
         light: {
             background: '#fafaf7', foreground: '#22252b',
             card: '#ffffff', cardForeground: '#22252b',
-            muted: '#eef0f2', mutedForeground: '#6b7280',
+            muted: '#eef0f2', mutedForeground: '#5b6472',
             border: '#e2e4e8',
             primary: '#2c4870', primaryForeground: '#ffffff',
             accent: '#8a6408', accentForeground: '#ffffff',

@@ -1,277 +1,226 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
     Boxes,
     Building2,
     CalendarDays,
-    ChevronDown,
     Clock,
-    FileCheck,
     GraduationCap,
     Handshake,
-    IdCard,
+    KeyRound,
     LayoutGrid,
     MapPin,
-    Megaphone,
     ShieldCheck,
-    Sparkles,
     UserCheck,
     Users,
+    Wifi,
+    Wrench,
 } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 import Reveal from '@/components/Reveal';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { supportedLanguages } from '@/contexts/supportedLanguages';
 
+// `span` is the tile's column span in a 6-column grid (lg and up).
 const OVERVIEW_CARDS = [
-    { slug: 'mitglieder', icon: Users },
-    { slug: 'kalender', icon: CalendarDays },
-    { slug: 'verfuegbarkeit', icon: Clock },
-    { slug: 'material', icon: Boxes },
-    { slug: 'standorte', icon: MapPin },
-    { slug: 'vereinsinfo', icon: Building2 },
+    { slug: 'mitglieder', icon: Users, span: 'lg:col-span-4', big: true },
+    { slug: 'kalender', icon: CalendarDays, span: 'lg:col-span-2' },
+    { slug: 'verfuegbarkeit', icon: Clock, span: 'lg:col-span-2' },
+    { slug: 'material', icon: Boxes, span: 'lg:col-span-2' },
+    { slug: 'standorte', icon: MapPin, span: 'lg:col-span-2' },
+    { slug: 'vereinsinfo', icon: Building2, span: 'sm:col-span-2 lg:col-span-6', big: true },
 ] as const;
 
 const PERSONA_CARDS = [
-    { slug: 'mitglieder', icon: UserCheck },
-    { slug: 'vorstand', icon: ShieldCheck },
-    { slug: 'abteilungsleitung', icon: GraduationCap },
-    { slug: 'erziehungsberechtigte', icon: Users },
-    { slug: 'externe', icon: Handshake },
+    { slug: 'mitglieder', icon: UserCheck, span: 'lg:col-span-2' },
+    { slug: 'vorstand', icon: ShieldCheck, span: 'lg:col-span-4', big: true },
+    { slug: 'abteilungsleitung', icon: GraduationCap, span: 'lg:col-span-2' },
+    { slug: 'erziehungsberechtigte', icon: Users, span: 'lg:col-span-2' },
+    { slug: 'externe', icon: Handshake, span: 'sm:col-span-2 lg:col-span-2' },
 ] as const;
 
-const STATS = [
-    { id: 'modules', value: OVERVIEW_CARDS.length },
-    { id: 'languages', value: supportedLanguages.length },
-    { id: 'platforms', value: 2 },
-    { id: 'roles', value: PERSONA_CARDS.length },
-] as const;
+const focusRing = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary';
 
-const NEXT_CARDS = [
-    { slug: 'zeiterfassung', icon: Clock },
-    { slug: 'mitgliedsausweis', icon: IdCard },
-    { slug: 'dsgvo', icon: FileCheck },
-    { slug: 'kommunikation', icon: Megaphone },
-] as const;
+function MockTile({ className = '', label, icon, children }: { className?: string; label: string; icon: ReactNode; children: ReactNode }) {
+    return (
+        <div className={`rounded-2xl border border-border bg-card p-4 ${className}`}>
+            <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
+                {icon}
+                {label}
+            </div>
+            {children}
+        </div>
+    );
+}
 
-/** Counts 0 -> `to` once on mount. */
-function CountUp({ to }: { to: number }) {
-    const [n, setN] = useState(0);
-    useEffect(() => {
-        const start = performance.now();
-        let raf = requestAnimationFrame(function tick(now) {
-            const p = Math.min((now - start) / 1200, 1);
-            setN(Math.round(to * (1 - (1 - p) ** 3)));
-            if (p < 1) raf = requestAnimationFrame(tick);
-        });
-        return () => cancelAnimationFrame(raf);
-    }, [to]);
-    return <>{n}</>;
+function Chip({ children, tone = 'plain' }: { children: ReactNode; tone?: 'plain' | 'primary' | 'accent' }) {
+    const tones = {
+        plain: 'border-border bg-card text-foreground',
+        primary: 'border-primary/30 bg-primary/10 text-foreground',
+        accent: 'border-accent/40 bg-accent/10 text-foreground',
+    };
+    return <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${tones[tone]}`}>{children}</span>;
+}
+
+function HeroMock() {
+    const { t } = useLanguage();
+    const icon = 'h-3.5 w-3.5 text-primary';
+    const members = [
+        { name: 'Jana Keller', role: 'role-board', tone: 'primary' },
+        { name: 'Tim Brandt', role: 'role-lead', tone: 'accent' },
+        { name: 'Mehmet Yilmaz', role: 'role-member', tone: 'plain' },
+    ] as const;
+    return (
+        <>
+            <p className="sr-only">{t('home.mock.sr')}</p>
+            <div aria-hidden className="grid grid-cols-2 gap-3">
+                <MockTile className="col-span-2" label={t('home.mock.event')} icon={<CalendarDays className={icon} />}>
+                    <div className="mt-3 text-base font-bold text-foreground">{t('home.mock.event-title')}</div>
+                    <div className="text-sm tabular-nums text-muted-foreground">{t('home.mock.event-when')}</div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                        <Chip tone="primary">{t('home.mock.rsvp-yes')} · Jana</Chip>
+                        <Chip tone="primary">{t('home.mock.rsvp-yes')} · Tim</Chip>
+                        <Chip>{t('home.mock.rsvp-maybe')} · Mehmet</Chip>
+                    </div>
+                </MockTile>
+
+                <MockTile className="row-span-2" label={t('home.mock.members')} icon={<Users className={icon} />}>
+                    <ul className="mt-3 space-y-3">
+                        {members.map((m) => (
+                            <li key={m.name} className="text-sm">
+                                <div className="font-medium text-foreground">{m.name}</div>
+                                <div className="mt-1">
+                                    <Chip tone={m.tone}>{t(`home.mock.${m.role}`)}</Chip>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                </MockTile>
+
+                <MockTile label={t('home.mock.location')} icon={<MapPin className={icon} />}>
+                    <div className="mt-3 text-sm font-bold text-foreground">{t('home.mock.location-name')}</div>
+                    <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <KeyRound className="h-3.5 w-3.5" />
+                        {t('home.mock.keyholder')}: Tim Brandt
+                    </div>
+                    <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Wifi className="h-3.5 w-3.5" />
+                        Verein-Gast
+                    </div>
+                </MockTile>
+
+                <MockTile label={t('home.mock.material')} icon={<Boxes className={icon} />}>
+                    <div className="mt-3 text-sm font-bold text-foreground">{t('home.mock.item')}</div>
+                    <div className="text-xs tabular-nums text-muted-foreground">{t('home.mock.loaned')}</div>
+                    <div className="mt-2 flex items-center gap-1.5 text-xs font-medium text-accent">
+                        <Wrench className="h-3.5 w-3.5" />
+                        {t('home.mock.maintenance')}
+                    </div>
+                </MockTile>
+            </div>
+        </>
+    );
 }
 
 export default function HomepagePageContent() {
     const { t } = useLanguage();
-    const [isVisible, setIsVisible] = useState(false);
-    const [activeStat, setActiveStat] = useState<(typeof STATS)[number]['id'] | null>(null);
-
-    useEffect(() => {
-        // Triggers the CSS fade-in transition below on next paint after mount --
-        // not syncing with an external system, so this is the documented
-        // "trigger an animation" exception to react-hooks/set-state-in-effect.
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setIsVisible(true);
-    }, []);
 
     return (
         <div>
             {/* Hero */}
-            <section className="mx-auto max-w-5xl px-4 pt-8 sm:px-6 sm:pt-12 lg:px-8">
-                <div className="relative overflow-hidden rounded-3xl bg-primary/10 px-6 pb-12 pt-14 text-center sm:px-12 sm:pt-20 lg:pt-24">
-                <div aria-hidden className="animate-drift absolute -right-16 -top-16 h-64 w-64 rounded-full bg-primary/15" />
-                <div aria-hidden className="animate-drift absolute -bottom-20 -left-12 h-52 w-52 rounded-full bg-accent/15 [animation-delay:-7s]" />
-                <div className="relative">
-                <div className={`transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-                    <h1 className="text-4xl font-extrabold leading-[1.05] tracking-tight text-foreground sm:text-6xl">
+            <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-12 sm:px-6 sm:py-16 lg:grid-cols-12 lg:gap-12 lg:px-8 lg:py-20">
+                <div className="lg:col-span-5">
+                    <h1 className="text-[clamp(2.25rem,6vw,3.75rem)] font-extrabold leading-[1.05] tracking-tight text-foreground">
                         {t('home.hero-title')}
                     </h1>
-                    <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+                    <p className="mt-5 max-w-md text-lg leading-relaxed text-muted-foreground">
                         {t('home.hero-subtitle')}
                     </p>
-                    <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+                    <div className="mt-8 flex flex-wrap items-center gap-3">
                         <Link
                             href="/contact#beta"
-                            className="btn-shimmer rounded-xl bg-primary px-6 py-3 font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition hover:-translate-y-0.5 hover:brightness-110"
+                            className={`rounded-xl bg-primary px-6 py-3 font-bold text-primary-foreground transition hover:brightness-110 ${focusRing}`}
                         >
                             {t('home.cta-primary')}
                         </Link>
                         <a
                             href="#overview"
-                            className="rounded-xl border border-border px-6 py-3 font-semibold text-foreground transition hover:bg-muted"
+                            className={`rounded-xl border border-border px-6 py-3 font-bold text-foreground transition hover:bg-muted ${focusRing}`}
                         >
                             {t('home.cta-secondary')}
                         </a>
                     </div>
                 </div>
-                </div>
+                <div className="lg:col-span-7">
+                    <HeroMock />
                 </div>
             </section>
 
-            {/* In-page navigation */}
-            <nav
-                aria-label="Section navigation"
-                className="sticky top-16 z-30 border-y border-border bg-background/90 backdrop-blur-md"
-            >
-                <div className="mx-auto flex max-w-6xl gap-6 overflow-x-auto px-4 py-3 text-sm font-medium text-muted-foreground sm:px-6 lg:px-8">
-                    <a href="#overview" className="shrink-0 whitespace-nowrap transition-colors hover:text-foreground">
-                        {t('home.pagenav-overview')}
-                    </a>
-                    <a href="#fuer-wen" className="shrink-0 whitespace-nowrap transition-colors hover:text-foreground">
-                        {t('home.pagenav-fuer-wen')}
-                    </a>
-                    <a href="#roadmap-teaser" className="shrink-0 whitespace-nowrap transition-colors hover:text-foreground">
-                        {t('home.pagenav-next')}
-                    </a>
-                </div>
-            </nav>
-
-
-            {/* Stats -- click one to see what it means */}
-            <Reveal>
-                <div className="mx-auto max-w-5xl px-4 pt-14 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-2 gap-4 text-center md:grid-cols-4">
-                        {STATS.map(({ id, value }) => {
-                            const active = activeStat === id;
-                            return (
-                                <button
-                                    key={id}
-                                    type="button"
-                                    aria-expanded={active}
-                                    onClick={() => setActiveStat(active ? null : id)}
-                                    className={`rounded-2xl border px-3 py-4 transition hover:-translate-y-0.5 ${active ? 'border-primary/40 bg-primary/10' : 'border-transparent hover:bg-muted/60'}`}
-                                >
-                                    <div className="bg-gradient-to-br from-primary to-accent bg-clip-text text-4xl font-extrabold text-transparent">
-                                        <CountUp to={value} />
-                                    </div>
-                                    <div className="mt-1 inline-flex items-center gap-1 text-sm text-muted-foreground">
-                                        {t(`home.stat.${id}`)}
-                                        <ChevronDown className={`h-3.5 w-3.5 transition-transform ${active ? 'rotate-180' : ''}`} />
-                                    </div>
-                                </button>
-                            );
-                        })}
-                    </div>
-                    {activeStat && (
-                        <p key={activeStat} className="animate-fade mx-auto mt-4 max-w-2xl rounded-2xl border border-border bg-card px-5 py-4 text-center text-sm text-muted-foreground">
-                            {t(`home.stat.${activeStat}.desc`)}
-                        </p>
-                    )}
-                </div>
-            </Reveal>
-
-            {/* Functionality overview */}
-            <section id="overview" className="scroll-mt-28 mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
-                <Reveal className="mx-auto max-w-2xl text-center"><div>
-                    <span className="text-xs font-bold uppercase tracking-wider text-primary">{t('home.overview-eyebrow')}</span>
-                    <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">{t('home.overview-title')}</h2>
-                    <p className="mt-4 text-muted-foreground">{t('home.overview-subtitle')}</p>
-                </div>
+            {/* Modules bento */}
+            <section id="overview" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-14 sm:px-6 sm:py-16 lg:px-8">
+                <Reveal className="max-w-2xl">
+                    <h2 className="text-[clamp(1.5rem,3vw,1.875rem)] font-extrabold leading-tight tracking-tight text-foreground">{t('home.overview-title')}</h2>
+                    <p className="mt-3 text-muted-foreground">{t('home.overview-subtitle')}</p>
                 </Reveal>
 
-                <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {OVERVIEW_CARDS.map(({ slug, icon: Icon }, i) => (
-                        <Reveal key={slug} delay={i * 80} className="h-full">
-                        <div className="group h-full rounded-2xl border border-border bg-card p-5 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-md">
-                            <div className="inline-flex rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 p-2.5 transition duration-300 group-hover:rotate-6 group-hover:scale-110">
-                                <Icon className="h-5 w-5 text-primary" />
+                <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+                    {OVERVIEW_CARDS.map((card) => {
+                        const { slug, icon: Icon, span } = card;
+                        const big = 'big' in card;
+                        return (
+                            <div key={slug} className={`rounded-2xl border border-border p-5 sm:p-6 ${big ? 'bg-muted' : 'bg-card'} ${span}`}>
+                                <Icon className="h-5 w-5 text-primary" aria-hidden />
+                                <h3 className={`mt-4 font-bold text-card-foreground ${big ? 'text-xl' : 'text-base'}`}>{t(`home.card.${slug}.title`)}</h3>
+                                <p className={`mt-2 text-sm leading-relaxed ${big ? 'max-w-xl text-foreground/80' : 'text-muted-foreground'}`}>{t(`home.card.${slug}.body`)}</p>
                             </div>
-                            <h3 className="mt-3 font-bold text-card-foreground">{t(`home.card.${slug}.title`)}</h3>
-                            <p className="mt-1.5 text-sm text-muted-foreground">{t(`home.card.${slug}.body`)}</p>
-                        </div>
-                        </Reveal>
-                    ))}
+                        );
+                    })}
                 </div>
 
-                <div className="mt-8 text-center">
+                <div className="mt-6">
                     <Link
                         href="/features"
-                        className="inline-flex items-center gap-1.5 font-semibold text-primary hover:brightness-110"
+                        className={`inline-flex items-center gap-1.5 rounded font-bold text-primary hover:brightness-110 ${focusRing}`}
                     >
-                        <LayoutGrid className="h-4 w-4" />
+                        <LayoutGrid className="h-4 w-4" aria-hidden />
                         {t('home.overview-cta')}
                     </Link>
                 </div>
             </section>
 
-            {/* Target audience / "für wen" */}
-            <section id="fuer-wen" className="scroll-mt-28 border-y border-border bg-muted/30 py-16 sm:py-20">
-                <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-                    <Reveal className="mx-auto max-w-2xl text-center"><div>
-                        <span className="text-xs font-bold uppercase tracking-wider text-primary">{t('home.personas-eyebrow')}</span>
-                        <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">{t('home.personas-title')}</h2>
-                        <p className="mt-4 text-muted-foreground">{t('home.personas-subtitle')}</p>
-                    </div>
-                    </Reveal>
-
-                    <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-                        {PERSONA_CARDS.map(({ slug, icon: Icon }, i) => (
-                            <Reveal key={slug} delay={i * 80} className="h-full">
-                            <div className="group h-full rounded-2xl border border-border bg-card p-5 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-md">
-                                <div className="inline-flex rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 p-2.5 transition duration-300 group-hover:rotate-6 group-hover:scale-110">
-                                    <Icon className="h-5 w-5 text-primary" />
-                                </div>
-                                <h3 className="mt-3 font-bold text-card-foreground">{t(`home.persona.${slug}.title`)}</h3>
-                                <p className="mt-1.5 text-sm text-muted-foreground">{t(`home.persona.${slug}.body`)}</p>
-                            </div>
-                        </Reveal>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* "Was als Nächstes kommt" teaser */}
-            <section id="roadmap-teaser" className="scroll-mt-28 mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
-                <Reveal className="mx-auto max-w-2xl text-center"><div>
-                    <span className="text-xs font-bold uppercase tracking-wider text-primary">{t('home.next-eyebrow')}</span>
-                    <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">{t('home.next-title')}</h2>
-                    <p className="mt-4 text-muted-foreground">{t('home.next-subtitle')}</p>
-                </div>
+            {/* Personas bento */}
+            <section id="fuer-wen" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-14 sm:px-6 sm:py-16 lg:px-8">
+                <Reveal className="max-w-2xl">
+                    <h2 className="text-[clamp(1.5rem,3vw,1.875rem)] font-extrabold leading-tight tracking-tight text-foreground">{t('home.personas-title')}</h2>
+                    <p className="mt-3 text-muted-foreground">{t('home.personas-subtitle')}</p>
                 </Reveal>
 
-                <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    {NEXT_CARDS.map(({ slug, icon: Icon }, i) => (
-                        <Reveal key={slug} delay={i * 80} className="h-full">
-                        <div className="h-full rounded-2xl border border-dashed border-primary/30 bg-primary/5 p-5">
-                            <div className="inline-flex rounded-xl bg-primary/15 p-2.5">
-                                <Icon className="h-5 w-5 text-primary" />
+                <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+                    {PERSONA_CARDS.map((card) => {
+                        const { slug, icon: Icon, span } = card;
+                        const big = 'big' in card;
+                        return (
+                            <div key={slug} className={`rounded-2xl border border-border p-5 sm:p-6 ${big ? 'bg-muted' : 'bg-card'} ${span}`}>
+                                <Icon className="h-5 w-5 text-primary" aria-hidden />
+                                <h3 className={`mt-4 font-bold text-card-foreground ${big ? 'text-xl' : 'text-base'}`}>{t(`home.persona.${slug}.title`)}</h3>
+                                <p className={`mt-2 text-sm leading-relaxed ${big ? 'max-w-xl text-foreground/80' : 'text-muted-foreground'}`}>{t(`home.persona.${slug}.body`)}</p>
                             </div>
-                            <h3 className="mt-3 font-bold text-card-foreground">{t(`home.next.${slug}.title`)}</h3>
-                            <p className="mt-1.5 text-sm text-muted-foreground">{t(`home.next.${slug}.body`)}</p>
-                        </div>
-                    </Reveal>
-                    ))}
-                </div>
-
-                <div className="mt-8 text-center">
-                    <Link
-                        href="/roadmap"
-                        className="inline-flex items-center gap-1.5 font-semibold text-primary hover:brightness-110"
-                    >
-                        <Sparkles className="h-4 w-4" />
-                        {t('home.next-cta')}
-                    </Link>
+                        );
+                    })}
                 </div>
             </section>
 
             {/* Closing CTA */}
-            <section className="mx-auto max-w-5xl px-4 pb-20 sm:px-6 lg:px-8">
-                <div className="rounded-3xl bg-primary px-6 py-14 text-center text-primary-foreground sm:px-12">
-                    <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl">{t('home.final-cta-title')}</h2>
-                    <p className="mx-auto mt-3 max-w-md opacity-90">{t('home.final-cta-body')}</p>
+            <section className="mx-auto max-w-6xl px-4 pb-20 pt-6 sm:px-6 lg:px-8">
+                <div className="flex flex-col items-start justify-between gap-6 rounded-2xl border border-border bg-muted p-6 sm:flex-row sm:items-center sm:p-8">
+                    <div className="max-w-xl">
+                        <h2 className="text-[clamp(1.5rem,3vw,1.875rem)] font-extrabold leading-tight tracking-tight text-foreground">{t('home.final-cta-title')}</h2>
+                        <p className="mt-2 text-foreground/80">{t('home.final-cta-body')}</p>
+                    </div>
                     <Link
                         href="/contact#beta"
-                        className="btn-shimmer mt-7 inline-block rounded-xl bg-background px-7 py-3 font-semibold text-foreground transition hover:brightness-95"
+                        className={`shrink-0 rounded-xl bg-primary px-6 py-3 font-bold text-primary-foreground transition hover:brightness-110 ${focusRing}`}
                     >
                         {t('home.cta-primary')}
                     </Link>
