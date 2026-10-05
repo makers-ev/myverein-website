@@ -14,7 +14,7 @@ const CATEGORIES = ['aktiv', 'passiv', 'foerdernd', 'jugend'] as const;
  * "pending" notice instead of entering the club area. `onRefresh` lets the user re-check
  * their membership (e.g. after the board approved in the meantime).
  */
-export default function JoinClubCard({ onRefresh }: { onRefresh: () => void }) {
+export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefresh: () => void; className?: string }) {
     const { t } = useLanguage();
     const [slug, setSlug] = useState('');
     const [category, setCategory] = useState<(typeof CATEGORIES)[number]>('aktiv');
@@ -47,7 +47,7 @@ export default function JoinClubCard({ onRefresh }: { onRefresh: () => void }) {
 
     if (pending) {
         return (
-            <div className="mt-6 rounded-xl border border-border bg-card p-5" role="status">
+            <div className={`${className} rounded-xl border border-border bg-card p-5`} role="status">
                 <div className="flex items-start gap-3">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15">
                         <Clock className="h-5 w-5 text-primary" />
@@ -80,7 +80,7 @@ export default function JoinClubCard({ onRefresh }: { onRefresh: () => void }) {
     }
 
     return (
-        <form onSubmit={(e) => void handleSubmit(e)} className="mt-6 rounded-xl border border-border bg-card p-5">
+        <form onSubmit={(e) => void handleSubmit(e)} className={`${className} rounded-xl border border-border bg-card p-5`}>
             <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15">
                     <UserPlus className="h-5 w-5 text-primary" />

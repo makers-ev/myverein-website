@@ -7,7 +7,7 @@ import { Pencil } from 'lucide-react';
 import { apiFetch, ApiError } from '@/lib/api-client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ApplicationsPanel, { type ClubApplication } from '@/components/verein/ApplicationsPanel';
-import JoinClubCard from '@/components/verein/JoinClubCard';
+import NoClubSection from '@/components/verein/NoClubSection';
 import MemberEditModal from '@/components/verein/MemberEditModal';
 import ProfilTab, { type OwnMembership } from '@/components/verein/ProfilTab';
 
@@ -445,7 +445,7 @@ export default function VereinPageContent() {
             {clubs === null ? (
                 <p className="mt-6 text-sm text-muted-foreground">…</p>
             ) : !activeClub ? (
-                <JoinClubCard onRefresh={loadClubs} />
+                <NoClubSection onRefreshClubs={loadClubs} />
             ) : (
                 <>
                     <div className="mt-6 flex gap-2 border-b border-border">
