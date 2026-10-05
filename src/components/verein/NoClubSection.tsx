@@ -8,7 +8,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import ClubRegistrationWizard from '@/components/verein/ClubRegistrationWizard';
 import JoinClubCard from '@/components/verein/JoinClubCard';
 import RegistrationStatusCard from '@/components/verein/RegistrationStatusCard';
-import type { ClubRegistration } from '@/components/verein/clubRegistration';
+import type { ClubRegistration, RegistrationNotice } from '@/components/verein/clubRegistration';
 
 /**
  * "No club" state of /verein: join by club code (JoinClubCard) next to "Verein gruenden"
@@ -21,6 +21,7 @@ export default function NoClubSection({ onRefreshClubs }: { onRefreshClubs: () =
     const [registrations, setRegistrations] = useState<ClubRegistration[] | null>(null);
     const [loadError, setLoadError] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
+    const [notice, setNotice] = useState<RegistrationNotice | null>(null);
     // `null` = overview; otherwise the wizard is open, with the registration to continue (or none).
     const [wizard, setWizard] = useState<{ initial: ClubRegistration | null } | null>(null);
 
@@ -55,9 +56,27 @@ export default function NoClubSection({ onRefreshClubs }: { onRefreshClubs: () =
     }
 
     // Used by the wizard after submit and when POST answered 409 (an open registration already exists).
-    async function handleWizardDone() {
+    async function handleWizardDone(wizardNotice?: RegistrationNotice) {
+        setNotice(wizardNotice ?? null);
         await loadMine();
         setWizard(null);
+    }
+
+    // Leaving the wizard keeps the server-side draft -- reload so "continue draft" shows up.
+    function handleWizardCancel() {
+        setWizard(null);
+        void loadMine();
+    }
+
+    function openWizard(initial: ClubRegistration | null) {
+        setNotice(null);
+        setWizard({ initial });
+    }
+
+    // The club may not appear in /my-clubs immediately; if this component is still mounted afterwards, say so.
+    function handleOpenClub() {
+        setNotice('recheck');
+        onRefreshClubs();
     }
 
     if (registrations === null) {
@@ -65,7 +84,7 @@ export default function NoClubSection({ onRefreshClubs }: { onRefreshClubs: () =
     }
 
     if (wizard) {
-        return <ClubRegistrationWizard initial={wizard.initial} onCancel={() => setWizard(null)} onDone={handleWizardDone} />;
+        return <ClubRegistrationWizard initial={wizard.initial} onCancel={handleWizardCancel} onDone={handleWizardDone} />;
     }
 
     const latest = registrations[0] ?? null;
@@ -83,51 +102,46 @@ export default function NoClubSection({ onRefreshClubs }: { onRefreshClubs: () =
                 </div>
             )}
 
-            {statusView?.status === 'approved' ? (
-                <RegistrationStatusCard
-                    registration={statusView}
-                    refreshing={refreshing}
-                    onEdit={() => setWizard({ initial: statusView })}
-                    onNew={() => setWizard({ initial: null })}
-                    onRefresh={() => void handleRefresh()}
-                    onOpenClub={onRefreshClubs}
-                />
-            ) : (
-                <div className="grid items-start gap-4 md:grid-cols-2">
-                    <JoinClubCard onRefresh={onRefreshClubs} className="mt-6" />
-                    {statusView ? (
-                        <RegistrationStatusCard
-                            registration={statusView}
-                            refreshing={refreshing}
-                            onEdit={() => setWizard({ initial: statusView })}
-                            onNew={() => setWizard({ initial: null })}
-                            onRefresh={() => void handleRefresh()}
-                            onOpenClub={onRefreshClubs}
-                        />
-                    ) : (
-                        <div className="mt-6 rounded-xl border border-border bg-card p-5">
-                            <div className="flex items-start gap-3">
-                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15">
-                                    <Building2 className="h-5 w-5 text-primary" />
-                                </div>
-                                <div>
-                                    <p className="font-semibold text-foreground">{t('verein.create.card.title')}</p>
-                                    <p className="mt-1 text-sm text-muted-foreground">
-                                        {draft ? t('verein.create.card.resume.body', { name: draft.clubName }) : t('verein.create.card.body')}
-                                    </p>
-                                </div>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => setWizard({ initial: draft })}
-                                className="mt-4 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
-                            >
-                                {t(draft ? 'verein.create.card.resume' : 'verein.create.card.start')}
-                            </button>
-                        </div>
-                    )}
-                </div>
+            {notice && (
+                <p className="mt-6 rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm text-foreground" role="status">
+                    {t(`verein.create.notice.${notice}`)}
+                </p>
             )}
+
+            <div className="grid items-start gap-4 md:grid-cols-2">
+                <JoinClubCard onRefresh={onRefreshClubs} className="mt-6" />
+                {statusView ? (
+                    <RegistrationStatusCard
+                        registration={statusView}
+                        refreshing={refreshing}
+                        onEdit={() => openWizard(statusView)}
+                        onNew={() => openWizard(null)}
+                        onRefresh={() => void handleRefresh()}
+                        onOpenClub={handleOpenClub}
+                    />
+                ) : (
+                    <div className="mt-6 rounded-xl border border-border bg-card p-5">
+                        <div className="flex items-start gap-3">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15">
+                                <Building2 className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                                <p className="font-semibold text-foreground">{t('verein.create.card.title')}</p>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    {draft ? t('verein.create.card.resume.body', { name: draft.clubName }) : t('verein.create.card.body')}
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => openWizard(draft)}
+                            className="mt-4 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+                        >
+                            {t(draft ? 'verein.create.card.resume' : 'verein.create.card.start')}
+                        </button>
+                    </div>
+                )}
+            </div>
         </>
     );
 }

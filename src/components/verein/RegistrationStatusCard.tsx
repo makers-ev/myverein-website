@@ -29,7 +29,7 @@ export default function RegistrationStatusCard({
     onOpenClub: () => void;
     className?: string;
 }) {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const name = registration.clubName;
     const status = registration.status;
 
@@ -48,7 +48,7 @@ export default function RegistrationStatusCard({
                     <p className="mt-1 text-sm text-muted-foreground">{t(`verein.create.status.${status}.body`, { name })}</p>
                     {registration.submittedAt && status === 'pending' && (
                         <p className="mt-1 text-xs text-muted-foreground">
-                            {t('verein.create.status.submittedAt')} {new Date(registration.submittedAt).toLocaleDateString('de-DE')}
+                            {t('verein.create.status.submittedAt')} {new Date(registration.submittedAt).toLocaleDateString(language)}
                         </p>
                     )}
 

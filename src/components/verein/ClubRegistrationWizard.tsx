@@ -10,13 +10,17 @@ import {
     CLAIMED_ROLES,
     DOCUMENT_KINDS,
     LEGAL_FORMS,
+    LIMITS,
+    QUALIFYING_KINDS,
     MAX_DOCUMENTS,
     MAX_DOCUMENT_BYTES,
     inputClass,
+    isHttpUrl,
     type ClaimedRole,
     type ClubRegistration,
     type DocumentKind,
     type LegalForm,
+    type RegistrationNotice,
     type RegistrationDocument,
 } from '@/components/verein/clubRegistration';
 
@@ -37,16 +41,13 @@ function formatSize(bytes: number): string {
     return bytes >= 1024 * 1024 ? `${(bytes / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
 }
 
-function errorMessage(err: unknown): string {
-    return err instanceof ApiError ? err.message : 'Request failed';
-}
-
 /**
  * Wizard "Verein gruenden": 1 Vereinsdaten -> 2 Nachweise -> 3 Pruefen & absenden.
  * The draft lives on the server: step 1 creates it (POST /club-registrations, or PATCHes an
  * existing draft/needs_info registration), step 2 uploads/deletes documents, step 3 PATCHes the
  * claimed role if changed and submits. The slug is never asked for -- it is generated on approval.
- * `onDone` fires after a successful submit or when the server reports an already open registration (409).
+ * `onDone` fires after a successful submit or when the server reports a conflict (409: open registration
+ * exists / registration no longer editable) -- with a `notice` in the latter case.
  */
 export default function ClubRegistrationWizard({
     initial,
@@ -55,7 +56,7 @@ export default function ClubRegistrationWizard({
 }: {
     initial: ClubRegistration | null;
     onCancel: () => void;
-    onDone: () => Promise<void> | void;
+    onDone: (notice?: RegistrationNotice) => Promise<void> | void;
 }) {
     const { t } = useLanguage();
     const [reg, setReg] = useState<ClubRegistration | null>(initial);
@@ -82,6 +83,25 @@ export default function ClubRegistrationWizard({
     const [error, setError] = useState<string | null>(null);
 
     const isEv = legalForm === 'e_v';
+    const qualifying = QUALIFYING_KINDS[legalForm];
+    const qualifyingText = qualifying.map((k) => t(`verein.create.docs.kind.${k}`)).join(', ');
+
+    // Backend messages are English; ApiError text is only shown for cases without a dedicated key.
+    function errorMessage(err: unknown): string {
+        return err instanceof ApiError && err.message ? err.message : t('verein.create.err.generic');
+    }
+
+    // Upload errors (422/413/415) come with raw English backend messages -> map to translated keys.
+    function uploadErrorMessage(err: unknown): string {
+        if (!(err instanceof ApiError)) return t('verein.create.upload.err.generic');
+        const m = err.message;
+        if (err.status === 413 || /exceeds maximum size/i.test(m)) return t('verein.create.upload.err.size');
+        if (err.status === 415 || /unsupported content type|does not match/i.test(m)) return t('verein.create.upload.err.type');
+        if (/at most \d+ documents/i.test(m)) return t('verein.create.upload.err.count', { max: MAX_DOCUMENTS });
+        if (/empty/i.test(m)) return t('verein.create.upload.err.empty');
+        if (err.status === 429) return t('verein.create.upload.err.rate');
+        return t('verein.create.upload.err.generic');
+    }
     const documents = reg?.documents ?? [];
     const fileSlotsLeft = MAX_DOCUMENTS - documents.length - queue.length;
 
@@ -115,6 +135,22 @@ export default function ClubRegistrationWizard({
             setError(t(missingBase ? 'verein.create.err.required' : 'verein.create.err.register'));
             return;
         }
+        const inRange = (v: string, min: number, max: number) => v.trim().length >= min && v.trim().length <= max;
+        if (
+            !inRange(clubName, LIMITS.clubName.min, LIMITS.clubName.max) ||
+            !inRange(postalCode, LIMITS.postalCode.min, LIMITS.postalCode.max) ||
+            !inRange(street, 1, LIMITS.street.max) ||
+            !inRange(city, 1, LIMITS.city.max) ||
+            registerCourt.trim().length > LIMITS.registerCourt.max ||
+            registerNumber.trim().length > LIMITS.registerNumber.max
+        ) {
+            setError(t('verein.create.err.limits'));
+            return;
+        }
+        if (websiteUrl.trim() && (websiteUrl.trim().length > LIMITS.websiteUrl.max || !isHttpUrl(websiteUrl.trim()))) {
+            setError(t('verein.create.err.website'));
+            return;
+        }
         setBusy(true);
         try {
             if (reg) {
@@ -132,9 +168,10 @@ export default function ClubRegistrationWizard({
             }
             setStep(2);
         } catch (err) {
-            // 409 = the user already has an open registration -> hand over to the parent, which reloads /mine.
+            // 409 on POST = the user already has an open registration; on PATCH = it is no longer editable.
+            // Either way hand over to the parent, which reloads /mine and tells the user.
             if (err instanceof ApiError && err.status === 409) {
-                await Promise.resolve(onDone()).catch(() => {});
+                await Promise.resolve(onDone(reg ? 'locked' : 'open')).catch(() => {});
                 return;
             }
             setError(errorMessage(err));
@@ -164,7 +201,7 @@ export default function ClubRegistrationWizard({
                 break;
             } else {
                 slots -= 1;
-                accepted.push({ id: nextQueueId.current++, file, kind: isEv ? 'registerauszug' : 'satzung', status: 'idle' });
+                accepted.push({ id: nextQueueId.current++, file, kind: qualifying[0] ?? 'sonstiges', status: 'idle' });
             }
         }
         if (accepted.length > 0) setQueue((q) => [...q, ...accepted]);
@@ -194,7 +231,12 @@ export default function ClubRegistrationWizard({
                 setReg((r) => (r ? { ...r, documents: [...r.documents, data.document] } : r));
                 setQueue((q) => q.filter((x) => x.id !== item.id));
             } catch (err) {
-                patchQueueItem(item.id, { status: 'error', error: errorMessage(err) });
+                if (err instanceof ApiError && err.status === 409) {
+                    setUploading(false);
+                    await Promise.resolve(onDone('locked')).catch(() => {});
+                    return;
+                }
+                patchQueueItem(item.id, { status: 'error', error: uploadErrorMessage(err) });
             }
         }
         setUploading(false);
@@ -208,6 +250,10 @@ export default function ClubRegistrationWizard({
             await apiFetch(`/club-registrations/${reg.id}/documents/${docId}`, { method: 'DELETE' });
             setReg((r) => (r ? { ...r, documents: r.documents.filter((d) => d.id !== docId) } : r));
         } catch (err) {
+            if (err instanceof ApiError && err.status === 409) {
+                await Promise.resolve(onDone('locked')).catch(() => {});
+                return;
+            }
             setError(errorMessage(err));
         } finally {
             setDeletingId(null);
@@ -220,8 +266,8 @@ export default function ClubRegistrationWizard({
             setError(t('verein.create.docs.err.queued'));
             return;
         }
-        if (documents.length === 0) {
-            setError(t('verein.create.docs.err.none'));
+        if (!documents.some((d) => qualifying.includes(d.kind))) {
+            setError(t(documents.length === 0 ? 'verein.create.docs.err.none' : 'verein.create.docs.err.qualifying', { kinds: qualifyingText }));
             return;
         }
         setStep(3);
@@ -247,9 +293,20 @@ export default function ClubRegistrationWizard({
             }
             await apiFetch<{ data: { registration: ClubRegistration } }>(`/club-registrations/${reg.id}/submit`, { method: 'POST' });
         } catch (err) {
-            if (err instanceof ApiError && err.status === 422) setError(t('verein.create.err.noDocs'));
-            else if (err instanceof ApiError && err.status === 409) setError(t('verein.create.err.exists'));
-            else setError(errorMessage(err));
+            if (err instanceof ApiError && err.status === 422) {
+                // 422 covers every validation failure; only the missing-proof one has a dedicated text.
+                setError(/proof document/i.test(err.message) ? t('verein.create.docs.err.qualifying', { kinds: qualifyingText }) : t('verein.create.err.invalid'));
+            } else if (err instanceof ApiError && err.status === 409) {
+                if (/already exists/i.test(err.message)) {
+                    // Duplicate of an approved club.
+                    setError(t('verein.create.err.exists'));
+                } else {
+                    // Already submitted / no longer editable: reload the real state instead of showing a wrong reason.
+                    setBusy(false);
+                    await Promise.resolve(onDone('locked')).catch(() => {});
+                    return;
+                }
+            } else setError(errorMessage(err));
             setBusy(false);
             return;
         }
@@ -305,7 +362,7 @@ export default function ClubRegistrationWizard({
                 <form onSubmit={(e) => void handleSaveStep1(e)} className="mt-5 space-y-4">
                     <label className="block text-xs font-semibold text-muted-foreground">
                         {t('verein.create.field.name')}
-                        <input value={clubName} onChange={(e) => setClubName(e.target.value)} required maxLength={200} className={inputClass} />
+                        <input value={clubName} onChange={(e) => setClubName(e.target.value)} required minLength={LIMITS.clubName.min} maxLength={LIMITS.clubName.max} className={inputClass} />
                     </label>
 
                     <div>
@@ -336,7 +393,8 @@ export default function ClubRegistrationWizard({
                                     value={registerCourt}
                                     onChange={(e) => setRegisterCourt(e.target.value)}
                                     required
-                                    placeholder="z. B. Amtsgericht München"
+                                    maxLength={LIMITS.registerCourt.max}
+                                    placeholder={t('verein.create.field.registerCourt.placeholder')}
                                     className={inputClass}
                                 />
                             </label>
@@ -346,6 +404,7 @@ export default function ClubRegistrationWizard({
                                     value={registerNumber}
                                     onChange={(e) => setRegisterNumber(e.target.value)}
                                     required
+                                    maxLength={LIMITS.registerNumber.max}
                                     placeholder="VR 12345"
                                     className={inputClass}
                                 />
@@ -355,21 +414,21 @@ export default function ClubRegistrationWizard({
 
                     <label className="block text-xs font-semibold text-muted-foreground">
                         {t('verein.create.field.street')}
-                        <input value={street} onChange={(e) => setStreet(e.target.value)} required autoComplete="street-address" className={inputClass} />
+                        <input value={street} onChange={(e) => setStreet(e.target.value)} required maxLength={LIMITS.street.max} autoComplete="street-address" className={inputClass} />
                     </label>
                     <div className="grid gap-4 sm:grid-cols-3">
                         <label className="block text-xs font-semibold text-muted-foreground">
                             {t('verein.create.field.postalCode')}
-                            <input value={postalCode} onChange={(e) => setPostalCode(e.target.value)} required autoComplete="postal-code" className={inputClass} />
+                            <input value={postalCode} onChange={(e) => setPostalCode(e.target.value)} required minLength={LIMITS.postalCode.min} maxLength={LIMITS.postalCode.max} autoComplete="postal-code" className={inputClass} />
                         </label>
                         <label className="block text-xs font-semibold text-muted-foreground sm:col-span-2">
                             {t('verein.create.field.city')}
-                            <input value={city} onChange={(e) => setCity(e.target.value)} required autoComplete="address-level2" className={inputClass} />
+                            <input value={city} onChange={(e) => setCity(e.target.value)} required maxLength={LIMITS.city.max} autoComplete="address-level2" className={inputClass} />
                         </label>
                     </div>
                     <label className="block text-xs font-semibold text-muted-foreground">
                         {t('verein.create.field.website')} ({t('verein.join.optional')})
-                        <input type="url" value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} placeholder="https://" className={inputClass} />
+                        <input type="url" maxLength={LIMITS.websiteUrl.max} value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} placeholder="https://" className={inputClass} />
                     </label>
 
                     <p className="rounded-lg bg-muted/50 px-3 py-2 text-xs text-muted-foreground">{t('verein.create.slug.hint')}</p>
@@ -391,6 +450,7 @@ export default function ClubRegistrationWizard({
                 <div className="mt-5">
                     <h3 className="text-sm font-bold text-foreground">{t('verein.create.docs.title')}</h3>
                     <p className="mt-1 text-sm text-muted-foreground">{t('verein.create.docs.hint', { max: MAX_DOCUMENTS })}</p>
+                    <p className="mt-1 text-sm text-foreground">{t('verein.create.docs.qualifying', { kinds: qualifyingText })}</p>
                     <p className="mt-1 text-xs text-muted-foreground">{t('verein.create.docs.private')}</p>
 
                     {documents.length === 0 ? (
