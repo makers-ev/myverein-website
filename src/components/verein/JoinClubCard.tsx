@@ -1,21 +1,27 @@
 'use client';
 
 import { useState } from 'react';
-import { UserPlus } from 'lucide-react';
+import { Clock, UserPlus } from 'lucide-react';
 
 import { apiFetch, ApiError } from '@/lib/api-client';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const CATEGORIES = ['aktiv', 'passiv', 'foerdernd', 'jugend'] as const;
 
-/** Digitaler Aufnahmeantrag: POST /club-members/apply by club slug, membership is granted immediately. */
-export default function JoinClubCard({ onJoined }: { onJoined: () => void }) {
+/**
+ * Digitaler Aufnahmeantrag: POST /club-members/apply by club slug. The applicant is NOT a member
+ * afterwards -- the board has to approve the application first, so this card switches to a
+ * "pending" notice instead of entering the club area. `onRefresh` lets the user re-check
+ * their membership (e.g. after the board approved in the meantime).
+ */
+export default function JoinClubCard({ onRefresh }: { onRefresh: () => void }) {
     const { t } = useLanguage();
     const [slug, setSlug] = useState('');
     const [category, setCategory] = useState<(typeof CATEGORIES)[number]>('aktiv');
     const [birthDate, setBirthDate] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [pending, setPending] = useState<'submitted' | 'exists' | null>(null);
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -27,14 +33,50 @@ export default function JoinClubCard({ onJoined }: { onJoined: () => void }) {
                 method: 'POST',
                 body: { clubSlug: slug.trim().toLowerCase(), category, ...(birthDate ? { birthDate } : {}) },
             });
-            onJoined();
+            setPending('submitted');
         } catch (err) {
             if (err instanceof ApiError && err.status === 404) setError(t('verein.join.notFound'));
-            else if (err instanceof ApiError && err.status === 409) setError(t('verein.join.already'));
+            // 409 = already a member OR an application is already open; the user sees this card
+            // only without a membership in their own clubs, so show it as a friendly pending notice.
+            else if (err instanceof ApiError && err.status === 409) setPending('exists');
             else setError(err instanceof ApiError ? err.message : 'Request failed');
         } finally {
             setSubmitting(false);
         }
+    }
+
+    if (pending) {
+        return (
+            <div className="mt-6 rounded-xl border border-border bg-card p-5" role="status">
+                <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15">
+                        <Clock className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                        <p className="font-semibold text-foreground">{t('verein.join.pending.title')}</p>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            {t(pending === 'submitted' ? 'verein.join.pending.body' : 'verein.join.pending.exists')}
+                        </p>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                            <button
+                                type="button"
+                                onClick={onRefresh}
+                                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+                            >
+                                {t('verein.join.pending.refresh')}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setPending(null)}
+                                className="rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-muted"
+                            >
+                                {t('verein.join.pending.another')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     return (

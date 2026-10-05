@@ -6,6 +6,7 @@ import { Pencil } from 'lucide-react';
 
 import { apiFetch, ApiError } from '@/lib/api-client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import ApplicationsPanel, { type ClubApplication } from '@/components/verein/ApplicationsPanel';
 import JoinClubCard from '@/components/verein/JoinClubCard';
 import MemberEditModal from '@/components/verein/MemberEditModal';
 import ProfilTab, { type OwnMembership } from '@/components/verein/ProfilTab';
@@ -392,6 +393,8 @@ export default function VereinPageContent() {
     const [members, setMembers] = useState<ClubMember[] | null>(null);
     const [me, setMe] = useState<OwnMembership | null>(null);
     const [tab, setTab] = useState<Tab>('info');
+    const [applications, setApplications] = useState<ClubApplication[] | null>(null);
+    const [applicationsError, setApplicationsError] = useState(false);
 
     const activeClub = clubs?.[0] ?? null;
 
@@ -411,6 +414,19 @@ export default function VereinPageContent() {
         setInfo(infoRes.data);
         setMembers(membersRes.data);
         setMe(meRes.data);
+        // Open applications are only readable with members:write.
+        if (meRes.data.permissions.includes('members:write')) {
+            try {
+                const appsRes = await apiFetch<{ data: ClubApplication[] }>(`/club-applications?clubId=${clubId}`);
+                setApplications(appsRes.data);
+                setApplicationsError(false);
+            } catch {
+                setApplicationsError(true);
+            }
+        } else {
+            setApplications(null);
+            setApplicationsError(false);
+        }
     }
 
     useEffect(() => {
@@ -429,7 +445,7 @@ export default function VereinPageContent() {
             {clubs === null ? (
                 <p className="mt-6 text-sm text-muted-foreground">…</p>
             ) : !activeClub ? (
-                <JoinClubCard onJoined={loadClubs} />
+                <JoinClubCard onRefresh={loadClubs} />
             ) : (
                 <>
                     <div className="mt-6 flex gap-2 border-b border-border">
@@ -442,6 +458,11 @@ export default function VereinPageContent() {
                                 }`}
                             >
                                 {t(`verein.tab.${value}`)}
+                                {value === 'mitglieder' && applications && applications.length > 0 && (
+                                    <span className="ml-1.5 rounded-full bg-primary px-1.5 py-0.5 text-xs font-semibold text-primary-foreground">
+                                        {applications.length}
+                                    </span>
+                                )}
                             </button>
                         ))}
                     </div>
@@ -454,6 +475,14 @@ export default function VereinPageContent() {
                             ) : (
                                 <p className="text-sm text-muted-foreground">…</p>
                             ))}
+                        {tab === 'mitglieder' && me?.permissions.includes('members:write') && (
+                            <ApplicationsPanel
+                                applications={applications}
+                                loadError={applicationsError}
+                                clubId={activeClub.clubId}
+                                onDecided={() => refreshClubData(activeClub.clubId)}
+                            />
+                        )}
                         {tab === 'mitglieder' &&
                             (members ? (
                                 <MitgliederTab
