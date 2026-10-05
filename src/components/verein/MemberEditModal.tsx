@@ -101,8 +101,10 @@ export default function MemberEditModal({
                         value={memberNumber}
                         maxLength={50}
                         onChange={(e) => setMemberNumber(e.target.value)}
-                        className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                        placeholder={t('verein.members.memberNumber.placeholder')}
+                        className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
                     />
+                    <span className="mt-1 block text-xs font-normal text-muted-foreground">{t('verein.members.memberNumber.hint')}</span>
                 </label>
             )}
 
