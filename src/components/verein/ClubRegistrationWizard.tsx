@@ -93,14 +93,14 @@ export default function ClubRegistrationWizard({
 
     // Upload errors (422/413/415) come with raw English backend messages -> map to translated keys.
     function uploadErrorMessage(err: unknown): string {
-        if (!(err instanceof ApiError)) return t('verein.create.upload.err.generic');
+        if (!(err instanceof ApiError)) return t('verein.create.upload.err.network');
         const m = err.message;
         if (err.status === 413 || /exceeds maximum size/i.test(m)) return t('verein.create.upload.err.size');
         if (err.status === 415 || /unsupported content type|does not match/i.test(m)) return t('verein.create.upload.err.type');
         if (/at most \d+ documents/i.test(m)) return t('verein.create.upload.err.count', { max: MAX_DOCUMENTS });
         if (/empty/i.test(m)) return t('verein.create.upload.err.empty');
         if (err.status === 429) return t('verein.create.upload.err.rate');
-        return t('verein.create.upload.err.generic');
+        return t('verein.create.upload.err.generic', { status: err.status });
     }
     const documents = reg?.documents ?? [];
     const fileSlotsLeft = MAX_DOCUMENTS - documents.length - queue.length;
