@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { ArrowLeft, Check, Clock, Copy, ExternalLink, KeyRound, Link as LinkIcon, MapPin, Pencil, Plus, QrCode, Trash2, User, Wifi } from 'lucide-react';
 
+import { loadAccountMembers, type AccountMember } from '@/lib/clubMembers';
 import { apiFetch } from '@/lib/api-client';
 import { buildWifiQrPayload } from '@/lib/wifiQr';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -68,11 +69,6 @@ interface LocationLink {
     icon: string | null;
     visibleToGuests: boolean;
     createdAt: string;
-}
-
-interface ClubMember {
-    id: string;
-    name: string | null;
 }
 
 function LocationPhoto({ url, className }: { url: string | null; className: string }) {
@@ -248,7 +244,7 @@ function KeyHoldersSection({
     onChange,
 }: {
     location: LocationDetailData;
-    members: ClubMember[];
+    members: AccountMember[];
     clubId: string;
     canWrite: boolean;
     t: T;
@@ -257,7 +253,7 @@ function KeyHoldersSection({
     const [newMemberId, setNewMemberId] = useState('');
     const [error, setError] = useState<string | null>(null);
 
-    const nameFor = (memberId: string) => members.find((m) => m.id === memberId)?.name ?? memberId;
+    const nameFor = (memberId: string) => members.find((m) => m.id === memberId)?.name ?? '—';
     const availableMembers = members.filter((m) => !location.keyHolders.some((kh) => kh.memberId === m.id));
 
     async function handleAdd() {
@@ -671,7 +667,7 @@ function LocationDetail({
 }: {
     clubId: string;
     locationId: string;
-    members: ClubMember[];
+    members: AccountMember[];
     canWrite: boolean;
     t: T;
     onBack: () => void;
@@ -785,11 +781,17 @@ export default function StandorteTab({
     onLocationsChanged: () => void;
 }) {
     const { t } = useLanguage();
-    const [members, setMembers] = useState<ClubMember[]>([]);
+    const [members, setMembers] = useState<AccountMember[]>([]);
     const [selectedId, setSelectedId] = useState<string | null>(null);
 
     useEffect(() => {
-        void apiFetch<{ data: ClubMember[] }>(`/club-members?clubId=${clubId}`).then(({ data }) => setMembers(data));
+        let cancelled = false;
+        void loadAccountMembers(clubId, () => cancelled).then((list) => {
+            if (!cancelled) setMembers(list);
+        });
+        return () => {
+            cancelled = true;
+        };
     }, [clubId]);
 
     return selectedId ? (

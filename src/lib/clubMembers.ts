@@ -1,4 +1,4 @@
-import { ApiError } from './api-client';
+import { ApiError, apiFetch } from './api-client';
 
 /** Stored/effective member statuses (backend `MEMBER_STATUSES`, Wave 7 B5). */
 export const MEMBER_STATUSES = ['interessent', 'probe', 'aktiv', 'ruhend', 'ausgetreten', 'ausgeschlossen', 'verstorben'] as const;
@@ -248,3 +248,39 @@ export const primaryButtonClass =
 
 export const secondaryButtonClass =
     'rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-muted disabled:opacity-50';
+
+/** A club member who has a login account, keyed by the Better Auth `member.id` (what loans, key holders, invitees use). */
+export interface AccountMember {
+    /** Better Auth `member.id` -- NOT `club_members.id`. */
+    id: string;
+    name: string | null;
+}
+
+const DIRECTORY_PAGE_SIZE = 100;
+const DIRECTORY_MAX = 5000;
+
+/**
+ * Loads all members with an account (`hasAccount` + `memberId`) by walking the paged `GET /club-members`
+ * (pageSize 100, at most 5000 entries). Features bound to a login (key holders, loans, meeting invitees) store the
+ * account id, so they must use `memberId`, not the club-member `id`. `isCancelled` aborts between pages.
+ * Never throws: a caller without list permission (403, e.g. guests) simply gets an empty directory, and names
+ * then stay unknown.
+ */
+export async function loadAccountMembers(clubId: string, isCancelled: () => boolean = () => false): Promise<AccountMember[]> {
+    const result: AccountMember[] = [];
+    try {
+        for (let page = 1; result.length < DIRECTORY_MAX; page++) {
+            const res = await apiFetch<{ data: ClubMember[]; total: number }>(
+                `/club-members?clubId=${clubId}&page=${page}&pageSize=${DIRECTORY_PAGE_SIZE}&sort=name`,
+            );
+            if (isCancelled()) return [];
+            for (const m of res.data) {
+                if (m.hasAccount && m.memberId && !isLeftStatus(m.effectiveStatus)) result.push({ id: m.memberId, name: m.name });
+            }
+            if (res.data.length < DIRECTORY_PAGE_SIZE || page * DIRECTORY_PAGE_SIZE >= res.total) break;
+        }
+    } catch {
+        return result;
+    }
+    return result;
+}

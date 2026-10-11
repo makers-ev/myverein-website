@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, ArrowLeft, MapPin, Package, Pencil, Plus, Search, Trash2, Wrench } from 'lucide-react';
 
+import { loadAccountMembers, type AccountMember } from '@/lib/clubMembers';
 import { apiFetch } from '@/lib/api-client';
 import { backendUrl } from '@/lib/auth-client';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -64,11 +65,6 @@ interface InventoryDamageReport {
     status: DamageStatus;
     createdAt: string;
     resolvedAt: string | null;
-}
-
-interface ClubMember {
-    id: string;
-    name: string | null;
 }
 
 const DAMAGE_STATUSES: DamageStatus[] = ['gemeldet', 'in_bearbeitung', 'behoben'];
@@ -363,21 +359,21 @@ function ItemList({
 
 function LoansSection({ itemId, clubId, t }: { itemId: string; clubId: string; t: T }) {
     const [loans, setLoans] = useState<InventoryLoan[] | null>(null);
-    const [members, setMembers] = useState<ClubMember[]>([]);
+    const [members, setMembers] = useState<AccountMember[]>([]);
 
     useEffect(() => {
         // State is set in the .then() callback, so no set-state-in-effect disable is needed.
         void Promise.all([
             apiFetch<{ data: InventoryLoan[] }>(`/inventory-items/${itemId}/loans?clubId=${clubId}`),
-            apiFetch<{ data: ClubMember[] }>(`/club-members?clubId=${clubId}`),
-        ]).then(([loansRes, membersRes]) => {
+            loadAccountMembers(clubId),
+        ]).then(([loansRes, membersList]) => {
             setLoans(loansRes.data);
-            setMembers(membersRes.data);
+            setMembers(membersList);
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [itemId]);
 
-    const nameFor = (memberId: string) => members.find((m) => m.id === memberId)?.name ?? memberId;
+    const nameFor = (memberId: string) => members.find((m) => m.id === memberId)?.name ?? '—';
 
     return (
         <SectionCard title={t('standorte.loans.title')}>

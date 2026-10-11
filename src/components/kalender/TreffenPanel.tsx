@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, CalendarClock, Plus, X } from 'lucide-react';
 
+import { loadAccountMembers, type AccountMember } from '@/lib/clubMembers';
 import { apiFetch, ApiError } from '@/lib/api-client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Modal } from '@/components/Modal';
@@ -24,11 +25,6 @@ interface MeetingInvitee {
     meetingId: string;
     memberId: string;
     response: string;
-}
-
-interface ClubMember {
-    id: string;
-    name: string | null;
 }
 
 interface MeetingResolution {
@@ -240,19 +236,19 @@ function MeetingList({ clubId, t, canWrite, onSelect }: { clubId: string; t: TFn
 function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: string; meetingId: string; t: TFn; canWrite: boolean; onBack: () => void }) {
     const [meeting, setMeeting] = useState<Meeting | null>(null);
     const [invitees, setInvitees] = useState<MeetingInvitee[]>([]);
-    const [members, setMembers] = useState<ClubMember[]>([]);
+    const [members, setMembers] = useState<AccountMember[]>([]);
     const [resolutions, setResolutions] = useState<MeetingResolution[]>([]);
 
     async function load() {
         const [meetingRes, inviteesRes, membersRes, resolutionsRes] = await Promise.all([
             apiFetch<{ data: Meeting }>(`/meetings/${meetingId}?clubId=${clubId}`),
             apiFetch<{ data: MeetingInvitee[] }>(`/meetings/${meetingId}/invitees?clubId=${clubId}`),
-            apiFetch<{ data: ClubMember[] }>(`/club-members?clubId=${clubId}`),
+            loadAccountMembers(clubId),
             apiFetch<{ data: MeetingResolution[] }>(`/meetings/${meetingId}/resolutions?clubId=${clubId}`),
         ]);
         setMeeting(meetingRes.data);
         setInvitees(inviteesRes.data);
-        setMembers(membersRes.data);
+        setMembers(membersRes);
         setResolutions(resolutionsRes.data);
     }
 
@@ -262,7 +258,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [meetingId]);
 
-    const nameFor = (memberId: string) => members.find((m) => m.id === memberId)?.name ?? memberId;
+    const nameFor = (memberId: string) => members.find((m) => m.id === memberId)?.name ?? '—';
 
     // --- Agenda/Protokoll + Status ---
     const [editing, setEditing] = useState(false);
