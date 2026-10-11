@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { AlertTriangle, CheckCircle2, Download, FileUp, Loader2 } from 'lucide-react';
 
 import { Modal } from '@/components/Modal';
@@ -8,19 +8,23 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api-client';
 import { inputClass, memberErrorKey, primaryButtonClass, secondaryButtonClass, type MemberCategory } from '@/lib/clubMembers';
 import {
+    canMapHeader,
+    decodeCsvBytes,
+    effectiveField,
     fetchCsvBlob,
+    headerConflicts,
     IMPORT_FIELDS,
     IMPORT_MAX_BYTES,
     IMPORT_MAX_ROWS,
+    importVoidCode,
+    isRateLimited,
     issueCounts,
     mappingChanged,
     mappingConflicts,
     mappingPayload,
     problemRows,
     saveBlob,
-    stripBom,
-    utf8Size,
-    effectiveField,
+    type ImportColumn,
     type ImportCommit,
     type ImportDryRun,
     type ImportRow,
@@ -56,8 +60,13 @@ export default function MemberImportDialog({
     const [phase, setPhase] = useState<Phase>('pick');
     const [csv, setCsv] = useState<string | null>(null);
     const [fileName, setFileName] = useState('');
-    const [overrides, setOverrides] = useState<MappingOverrides>({});
-    const [appliedOverrides, setAppliedOverrides] = useState<MappingOverrides>({});
+    // Automatic detection of the first dry run (the baseline the "Automatisch" labels and the overrides refer to).
+    const [baseColumns, setBaseColumns] = useState<ImportColumn[]>([]);
+    const [overrides, setOverrides] = useState<MappingOverrides>([]);
+    const [appliedOverrides, setAppliedOverrides] = useState<MappingOverrides>([]);
+    const [rateLimited, setRateLimited] = useState(false);
+    const resultRef = useRef<HTMLDivElement>(null);
+    const templateAbort = useRef<AbortController | null>(null);
     const [defaultCategoryKey, setDefaultCategoryKey] = useState('');
     const [appliedCategory, setAppliedCategory] = useState('');
     const [report, setReport] = useState<ImportDryRun | null>(null);
@@ -72,19 +81,30 @@ export default function MemberImportDialog({
     const showReport = !!report && (phase === 'report' || phase === 'committing' || phase === 'checking');
     const activeCategories = categories.filter((c) => !c.archived);
 
+    // Leaving the dialog (or the page) cancels a running template download.
+    useEffect(() => () => templateAbort.current?.abort(), []);
+
+    // After the import the result is announced; move focus there, the confirm button it came from is gone.
+    useEffect(() => {
+        if (phase === 'done') resultRef.current?.focus();
+    }, [phase]);
+
     function fail(err: unknown) {
         setError(t(memberErrorKey(err)));
+        setRateLimited(isRateLimited(err));
     }
 
-    async function dryRun(text: string, mapping: MappingOverrides, category: string, keepReport: boolean) {
+    async function dryRun(text: string, mapping: MappingOverrides, category: string, keepReport: boolean, columns: ImportColumn[]) {
         setPhase('checking');
         setError(null);
+        setRateLimited(false);
         try {
             const res = await apiFetch<{ data: ImportDryRun }>(`/club-members/import?clubId=${clubId}`, {
                 method: 'POST',
-                body: { csv: text, dryRun: true, mapping: mappingPayload(mapping), defaultCategoryKey: category || undefined },
+                body: { csv: text, dryRun: true, mapping: mappingPayload(columns, mapping), defaultCategoryKey: category || undefined },
             });
             setReport(res.data);
+            if (!keepReport) setBaseColumns(res.data.columns);
             setAppliedOverrides(mapping);
             setAppliedCategory(category);
             setOnlyProblems(res.data.summary.errors + res.data.summary.duplicates > 0);
@@ -99,29 +119,31 @@ export default function MemberImportDialog({
 
     async function onFile(file: File | undefined) {
         if (!file) return;
+        // Reset first, so the same file can be picked again after fixing it, whatever the checks below say.
+        if (fileRef.current) fileRef.current.value = '';
         setError(null);
+        setRateLimited(false);
         if (file.size > IMPORT_MAX_BYTES) {
             setError(t('verein.err.csvTooLarge'));
             return;
         }
-        let text: string;
+        let decoded: ReturnType<typeof decodeCsvBytes>;
         try {
-            text = stripBom(await file.text());
+            decoded = decodeCsvBytes(await file.arrayBuffer());
         } catch {
             setError(t('verein.import.err.read'));
             return;
         }
-        if (utf8Size(text) > IMPORT_MAX_BYTES) {
-            setError(t('verein.err.csvTooLarge'));
+        if ('error' in decoded) {
+            setError(decoded.error === 'too_large' ? t('verein.err.csvTooLarge') : t('verein.import.err.encoding'));
             return;
         }
-        // Allow picking the same file again after fixing it.
-        if (fileRef.current) fileRef.current.value = '';
-        setCsv(text);
+        setCsv(decoded.text);
         setFileName(file.name);
-        setOverrides({});
+        setOverrides([]);
+        setBaseColumns([]);
         setReport(null);
-        await dryRun(text, {}, defaultCategoryKey, false);
+        await dryRun(decoded.text, [], defaultCategoryKey, false, []);
     }
 
     async function commit() {
@@ -131,7 +153,7 @@ export default function MemberImportDialog({
         try {
             const res = await apiFetch<{ data: ImportCommit }>(`/club-members/import?clubId=${clubId}`, {
                 method: 'POST',
-                body: { csv, dryRun: false, confirmToken: report.confirmToken, mapping: mappingPayload(appliedOverrides), defaultCategoryKey: appliedCategory || undefined },
+                body: { csv, dryRun: false, confirmToken: report.confirmToken, mapping: mappingPayload(baseColumns, appliedOverrides), defaultCategoryKey: appliedCategory || undefined },
             });
             setResult(res.data);
             setCsv(null);
@@ -140,20 +162,32 @@ export default function MemberImportDialog({
             onImported();
         } catch (err) {
             fail(err);
-            setPhase('report');
+            if (importVoidCode(err)) {
+                // The report and its single-use token are void: the file has to be checked again.
+                setReport(null);
+                setPhase('pick');
+                // Already imported (e.g. in another tab): the list is out of date.
+                if (importVoidCode(err) === 'import_already_applied') onImported();
+            } else {
+                setPhase('report');
+            }
         }
     }
 
     async function downloadTemplate() {
+        templateAbort.current?.abort();
+        const controller = new AbortController();
+        templateAbort.current = controller;
         setDownloading(true);
         setError(null);
+        setRateLimited(false);
         try {
-            const { blob, filename } = await fetchCsvBlob(`/club-members/import-template?clubId=${clubId}`, 'mitglieder-vorlage.csv');
-            saveBlob(blob, filename);
+            const { blob, filename } = await fetchCsvBlob(`/club-members/import-template?clubId=${clubId}`, 'mitglieder-vorlage.csv', controller.signal);
+            if (!controller.signal.aborted) saveBlob(blob, filename);
         } catch (err) {
-            fail(err);
+            if (!controller.signal.aborted) fail(err);
         } finally {
-            setDownloading(false);
+            if (!controller.signal.aborted) setDownloading(false);
         }
     }
 
@@ -162,14 +196,17 @@ export default function MemberImportDialog({
         setCsv(null);
         setReport(null);
         setResult(null);
-        setOverrides({});
-        setAppliedOverrides({});
+        setOverrides([]);
+        setAppliedOverrides([]);
+        setBaseColumns([]);
         setError(null);
+        setRateLimited(false);
         if (fileRef.current) fileRef.current.value = '';
     }
 
-    const conflicts = report ? mappingConflicts(report.columns, overrides) : [];
-    const stale = !!report && (mappingChanged(appliedOverrides, overrides) || appliedCategory !== defaultCategoryKey);
+    const conflicts = mappingConflicts(baseColumns, overrides);
+    const headerClashes = headerConflicts(baseColumns, overrides);
+    const stale = !!report && (mappingChanged(baseColumns, appliedOverrides, overrides) || appliedCategory !== defaultCategoryKey);
     const fieldLabel = (field: string | null) => (field ? t(`verein.import.field.${field}`) : t('verein.import.field.none'));
 
     const rows = report ? (onlyProblems ? problemRows(report.rows) : report.rows) : [];
@@ -212,8 +249,8 @@ export default function MemberImportDialog({
                 {stale ? (
                     <button
                         type="button"
-                        onClick={() => csv && void dryRun(csv, overrides, defaultCategoryKey, true)}
-                        disabled={busy || conflicts.length > 0}
+                        onClick={() => csv && void dryRun(csv, overrides, defaultCategoryKey, true, baseColumns)}
+                        disabled={busy || conflicts.length > 0 || headerClashes.length > 0}
                         className={primaryButtonClass}
                     >
                         {t('verein.import.recheck')}
@@ -257,7 +294,10 @@ export default function MemberImportDialog({
                 {error && (
                     <p role="alert" className="flex items-start gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
                         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                        {error}
+                        <span>
+                            {error}
+                            {rateLimited && <span className="mt-1 block text-xs">{t('verein.import.rateLimit')}</span>}
+                        </span>
                     </p>
                 )}
 
@@ -278,6 +318,11 @@ export default function MemberImportDialog({
                             />
                         </div>
                         {categoryField}
+                        {csv && phase === 'pick' && (
+                            <button type="button" onClick={() => void dryRun(csv, overrides, defaultCategoryKey, false, baseColumns)} className={secondaryButtonClass}>
+                                {t('verein.import.recheck')}
+                            </button>
+                        )}
                         {phase === 'checking' && (
                             <p role="status" className="flex items-center gap-2 text-sm text-muted-foreground">
                                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -325,24 +370,22 @@ export default function MemberImportDialog({
                             <p className="mt-2 text-xs text-muted-foreground">{t('verein.import.mapping.hint')}</p>
                             <div className="mt-2">{categoryField}</div>
                             <ul className="mt-2 space-y-2">
-                                {report.columns.map((col, i) => {
+                                {baseColumns.map((col, i) => {
                                     const selectId = `${fileId}-map-${i}`;
-                                    const value = Object.prototype.hasOwnProperty.call(overrides, col.header) ? overrides[col.header]! : '';
+                                    const mappable = canMapHeader(col.header);
                                     return (
-                                        <li key={`${i}-${col.header}`} className="grid items-center gap-2 sm:grid-cols-2">
+                                        <li key={i} className="grid items-center gap-2 sm:grid-cols-2">
                                             <label htmlFor={selectId} className="min-w-0 break-words text-sm text-foreground">
-                                                {col.header || t('verein.import.mapping.unnamed')}
+                                                {col.header ? (mappable ? col.header : `${col.header.slice(0, 60)}…`) : t('verein.import.mapping.unnamed')}
                                             </label>
                                             <select
                                                 id={selectId}
-                                                value={value}
-                                                disabled={busy}
-                                                onChange={(e) => setOverrides((o) => ({ ...o, [col.header]: e.target.value }))}
+                                                value={mappable ? (overrides[i] ?? '') : ''}
+                                                disabled={busy || !mappable}
+                                                onChange={(e) => setOverrides((o) => Object.assign([...o], { [i]: e.target.value }))}
                                                 className={inputClass}
                                             >
-                                                <option value="">
-                                                    {t('verein.import.mapping.auto', { field: fieldLabel(col.field) })}
-                                                </option>
+                                                <option value="">{t('verein.import.mapping.auto', { field: fieldLabel(col.field) })}</option>
                                                 <option value="ignore">{t('verein.import.mapping.ignore')}</option>
                                                 {IMPORT_FIELDS.map((f) => (
                                                     <option key={f} value={f}>
@@ -350,10 +393,16 @@ export default function MemberImportDialog({
                                                     </option>
                                                 ))}
                                             </select>
+                                            {!mappable && <p className="text-xs text-muted-foreground sm:col-span-2">{t('verein.import.mapping.tooLong')}</p>}
                                         </li>
                                     );
                                 })}
                             </ul>
+                            {headerClashes.length > 0 && (
+                                <p role="alert" className="mt-2 text-xs text-destructive">
+                                    {t('verein.import.mapping.headerClash')}
+                                </p>
+                            )}
                             {conflicts.length > 0 && (
                                 <p role="alert" className="mt-2 text-xs text-destructive">
                                     {t('verein.import.mapping.conflict', { fields: conflicts.map((f) => fieldLabel(f)).join(', ') })}
@@ -361,8 +410,8 @@ export default function MemberImportDialog({
                             )}
                             <p className="mt-2 text-xs text-muted-foreground">
                                 {t('verein.import.mapping.effective', {
-                                    list: report.columns
-                                        .map((c) => effectiveField(c, appliedOverrides))
+                                    list: baseColumns
+                                        .map((c, i) => effectiveField(c, appliedOverrides[i]))
                                         .filter((f): f is string => !!f)
                                         .map((f) => fieldLabel(f))
                                         .join(', ') || '—',
@@ -426,7 +475,7 @@ export default function MemberImportDialog({
                 )}
 
                 {phase === 'done' && result && (
-                    <div className="space-y-3" role="status">
+                    <div ref={resultRef} tabIndex={-1} className="space-y-3 outline-none" role="status">
                         <p className="flex items-center gap-2 text-base font-semibold text-success">
                             <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
                             {t('verein.import.done.title', { count: result.created })}
@@ -447,9 +496,10 @@ export default function MemberImportDialog({
 function SummaryTile({ label, value, tone }: { label: string; value: number; tone: 'muted' | 'success' | 'warning' | 'destructive' }) {
     const toneClass = { muted: 'text-foreground', success: 'text-success', warning: 'text-warning', destructive: 'text-destructive' }[tone];
     return (
-        <div className="rounded-lg border border-border bg-background p-3 text-center">
-            <dd className={`text-xl font-bold ${toneClass}`}>{value}</dd>
+        // Label first in the DOM (dt before dd), shown below the number.
+        <div className="flex flex-col-reverse rounded-lg border border-border bg-background p-3 text-center">
             <dt className="text-xs text-muted-foreground">{label}</dt>
+            <dd className={`text-xl font-bold ${toneClass}`}>{value}</dd>
         </div>
     );
 }

@@ -33,6 +33,7 @@ describe('memberErrorKey', () => {
         expect(memberErrorKey(new ApiError(422, 'VALIDATION_ERROR', 'x', { code: 'unknown_column' }))).toBe('verein.err.exportColumn');
         expect(memberErrorKey(new ApiError(409, 'CONFLICT', 'Member already holds a key for this location'))).toBe('verein.err.keyAlreadyIssued');
         expect(memberErrorKey(new ApiError(422, 'VALIDATION_ERROR', "A password is required unless security is 'open'"))).toBe('verein.err.wifiPasswordRequired');
+        expect(memberErrorKey(new ApiError(422, 'VALIDATION_ERROR', 'x', { code: 'export_too_large' }))).toBe('verein.err.exportTooLarge');
         expect(memberErrorKey(new ApiError(429, 'RATE_LIMITED', 'x'))).toBe('verein.err.rateLimit');
     });
 

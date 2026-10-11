@@ -1,13 +1,22 @@
-// Standard WiFi QR payload: `WIFI:S:<ssid>;T:WPA;P:<password>;;`.
-// `;`, `,`, `"`, `:` and `\` are backslash-escaped so they can't terminate a field early.
+// Fallback builder, mirrors the backend's `src/lib/wifi-qr.ts` (the backend's `qrPayload` is authoritative):
+// `WIFI:T:<WPA|WEP|SAE|nopass>;S:<ssid>;P:<password>;;`, WPA3 announced as `SAE`.
+// `;`, `,`, `"`, `:` and `\` are backslash-escaped so they can't terminate a field early, and an all-hex value is
+// quoted because scanners would otherwise read it as a raw hex key/SSID.
 function escapeWifiField(value: string): string {
-    return value.replace(/([\\;,":])/g, '\\$1');
+    const escaped = value.replace(/([\\;,":])/g, '\\$1');
+    return /^[0-9a-fA-F]+$/.test(value) ? `"${escaped}"` : escaped;
 }
 
-/** Builds a scannable WiFi QR payload; an empty password yields an open (`T:nopass`) network. */
-export function buildWifiQrPayload(ssid: string, password: string): string {
-    if (!password) return `WIFI:S:${escapeWifiField(ssid)};T:nopass;;`;
-    return `WIFI:S:${escapeWifiField(ssid)};T:WPA;P:${escapeWifiField(password)};;`;
+/**
+ * Builds a scannable WiFi QR payload. Without an explicit `security` an empty password yields an open (`nopass`)
+ * network and anything else WPA, like the backend does for legacy rows.
+ */
+export function buildWifiQrPayload(ssid: string, password: string, security?: WifiSecurity): string {
+    const type = security ?? (password ? 'wpa' : 'open');
+    const s = escapeWifiField(ssid);
+    if (type === 'open') return `WIFI:T:nopass;S:${s};;`;
+    const t = type === 'wep' ? 'WEP' : type === 'wpa3' ? 'SAE' : 'WPA';
+    return `WIFI:T:${t};S:${s};P:${escapeWifiField(password)};;`;
 }
 
 /** WLAN security types (backend `WifiSecurity`, Wave 7 B14). */
@@ -38,6 +47,6 @@ export function wifiPasswordFor(security: WifiSecurity, password: string): strin
 }
 
 /** QR string for a network: the backend's `qrPayload` is authoritative; the local builder is only the fallback for older responses. */
-export function wifiQrValue(network: { ssid: string; password: string; qrPayload?: unknown }): string {
-    return typeof network.qrPayload === 'string' && network.qrPayload.startsWith('WIFI:') ? network.qrPayload : buildWifiQrPayload(network.ssid, network.password);
+export function wifiQrValue(network: { ssid: string; password: string; security?: unknown; qrPayload?: unknown }): string {
+    return typeof network.qrPayload === 'string' && network.qrPayload.startsWith('WIFI:') ? network.qrPayload : buildWifiQrPayload(network.ssid, network.password, securityOf(network));
 }

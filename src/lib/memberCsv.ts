@@ -122,21 +122,39 @@ export function issueCounts(rows: readonly Pick<ImportRow, 'issues'>[]): { code:
     return [...counts.entries()].map(([code, count]) => ({ code, count })).sort((a, b) => b.count - a.count || a.code.localeCompare(b.code));
 }
 
-/** Column-mapping overrides: header -> field key, `'ignore'`, or `''` (= keep the automatic detection). */
-export type MappingOverrides = Record<string, string>;
-
 /**
- * Body value for `mapping`: only the headers the user actually changed. `undefined` when nothing was changed, so the
- * backend keeps detecting. Built with `Object.fromEntries` (own keys only, a header like `__proto__` stays harmless).
+ * Column-mapping overrides, one entry per file column (by position, so columns with the same heading stay separate):
+ * a field key, `'ignore'`, or `''`/missing (= keep the automatic detection).
  */
-export function mappingPayload(overrides: MappingOverrides): Record<string, string> | undefined {
-    const entries = Object.entries(overrides).filter(([, value]) => value === 'ignore' || isImportField(value));
-    return entries.length === 0 ? undefined : Object.fromEntries(entries);
+export type MappingOverrides = readonly string[];
+
+/** The backend limits a mapping key (the heading) to 200 characters; longer headings cannot be mapped explicitly. */
+export const MAX_MAPPING_HEADER = 200;
+
+export function canMapHeader(header: string): boolean {
+    return header.length <= MAX_MAPPING_HEADER;
 }
 
-/** Field a column ends up as after the overrides: `null` = ignored. */
-export function effectiveField(column: ImportColumn, overrides: MappingOverrides): string | null {
-    const override = Object.prototype.hasOwnProperty.call(overrides, column.header) ? overrides[column.header] : '';
+function validOverride(value: string | undefined): value is string {
+    return value === 'ignore' || isImportField(value);
+}
+
+/**
+ * Body value for `mapping`: heading -> field for the columns the user actually changed (the backend keys by heading
+ * text, the first override of a heading wins). `undefined` when nothing was changed, so the backend keeps detecting.
+ * Built with `Object.fromEntries` (own keys only, a heading like `__proto__` stays harmless).
+ */
+export function mappingPayload(columns: readonly ImportColumn[], overrides: MappingOverrides): Record<string, string> | undefined {
+    const entries = new Map<string, string>();
+    columns.forEach((column, i) => {
+        const value = overrides[i];
+        if (validOverride(value) && canMapHeader(column.header) && !entries.has(column.header)) entries.set(column.header, value);
+    });
+    return entries.size === 0 ? undefined : Object.fromEntries(entries);
+}
+
+/** Field a column ends up as after its override: `null` = ignored. `column` must be the automatic baseline. */
+export function effectiveField(column: ImportColumn, override: string | undefined): string | null {
     if (override === 'ignore') return null;
     if (override && isImportField(override)) return override;
     return column.field;
@@ -145,16 +163,59 @@ export function effectiveField(column: ImportColumn, overrides: MappingOverrides
 /** Fields that more than one column would fill (the backend would not know which one wins): shown as a warning. */
 export function mappingConflicts(columns: readonly ImportColumn[], overrides: MappingOverrides): string[] {
     const seen = new Map<string, number>();
-    for (const column of columns) {
-        const field = effectiveField(column, overrides);
+    columns.forEach((column, i) => {
+        const field = effectiveField(column, overrides[i]);
         if (field) seen.set(field, (seen.get(field) ?? 0) + 1);
-    }
+    });
     return [...seen.entries()].filter(([, n]) => n > 1).map(([field]) => field);
 }
 
+/** Headings that occur several times with different overrides (the backend maps by heading text, so this cannot be expressed). */
+export function headerConflicts(columns: readonly ImportColumn[], overrides: MappingOverrides): string[] {
+    const first = new Map<string, string>();
+    const bad = new Set<string>();
+    columns.forEach((column, i) => {
+        const value = validOverride(overrides[i]) ? overrides[i]! : '';
+        if (!first.has(column.header)) first.set(column.header, value);
+        else if (first.get(column.header) !== value) bad.add(column.header);
+    });
+    return [...bad];
+}
+
 /** True when the overrides differ from what the last dry run used (so the report is outdated and must be re-run). */
-export function mappingChanged(applied: MappingOverrides, current: MappingOverrides): boolean {
-    return JSON.stringify(mappingPayload(applied) ?? null) !== JSON.stringify(mappingPayload(current) ?? null);
+export function mappingChanged(columns: readonly ImportColumn[], applied: MappingOverrides, current: MappingOverrides): boolean {
+    return JSON.stringify(mappingPayload(columns, applied) ?? null) !== JSON.stringify(mappingPayload(columns, current) ?? null);
+}
+
+/** Commit failures after which the dry-run report and its token are void and the file has to be checked again. */
+const VOID_REPORT_CODES = ['import_has_errors', 'import_nothing_to_do', 'import_not_confirmed', 'import_already_applied'] as const;
+
+export function importVoidCode(err: unknown): (typeof VOID_REPORT_CODES)[number] | null {
+    if (!(err instanceof ApiError)) return null;
+    const code = (err.details as { code?: unknown } | undefined)?.code;
+    return (VOID_REPORT_CODES as readonly unknown[]).includes(code) ? (code as (typeof VOID_REPORT_CODES)[number]) : null;
+}
+
+/** True for the shared per-user rate limit of template/import/export (429). */
+export function isRateLimited(err: unknown): boolean {
+    return err instanceof ApiError && err.status === 429;
+}
+
+/**
+ * Decodes the raw bytes of a picked file. Only UTF-8 is accepted (with or without BOM): an Excel "CSV (Trennzeichen-
+ * getrennt)" file is Windows-1252 and would silently turn umlauts into garbage, so it is refused with a hint to save as
+ * "CSV UTF-8". UTF-16 and binary files are refused too.
+ */
+export function decodeCsvBytes(buffer: ArrayBuffer): { text: string } | { error: 'encoding' | 'too_large' } {
+    if (buffer.byteLength > IMPORT_MAX_BYTES) return { error: 'too_large' };
+    const bytes = new Uint8Array(buffer);
+    if (bytes.length >= 2 && ((bytes[0] === 0xff && bytes[1] === 0xfe) || (bytes[0] === 0xfe && bytes[1] === 0xff))) return { error: 'encoding' };
+    try {
+        const text = stripBom(new TextDecoder('utf-8', { fatal: true }).decode(buffer));
+        return text.includes('\u0000') ? { error: 'encoding' } : { text };
+    } catch {
+        return { error: 'encoding' };
+    }
 }
 
 // --- Export ---------------------------------------------------------------------------------
@@ -242,10 +303,10 @@ export function filenameFromDisposition(header: string | null, fallback: string)
  * Downloads a CSV from the backend as a blob (`fetch` with the session cookie; `authClient.$fetch` would parse the body
  * as JSON). A failed request is turned into the same `ApiError` as `apiFetch` so `errorMessage` works unchanged.
  */
-export async function fetchCsvBlob(path: string, fallbackName: string): Promise<{ blob: Blob; filename: string }> {
+export async function fetchCsvBlob(path: string, fallbackName: string, signal?: AbortSignal): Promise<{ blob: Blob; filename: string }> {
     let res: Response;
     try {
-        res = await fetch(`${backendUrl}${path}`, { credentials: 'include', headers: { Accept: 'text/csv' } });
+        res = await fetch(`${backendUrl}${path}`, { credentials: 'include', headers: { Accept: 'text/csv' }, signal });
     } catch {
         // Network failure: not an ApiError, memberErrorKey maps it to the "no connection" text.
         throw new TypeError('network');

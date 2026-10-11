@@ -755,6 +755,11 @@ const VereinTranslation: Translation = {
         'verein.err.keyAlreadyIssued': 'Diese Person hat bereits einen Schlüssel für diesen Standort.',
         'verein.err.keyMemberInvalid': 'Diese Person ist kein Mitglied des Vereins.',
         'verein.err.wifiPasswordRequired': 'Für dieses WLAN ist ein Passwort nötig (außer bei „Offen“).',
+        'verein.import.err.encoding': 'Die Datei ist nicht UTF-8-kodiert (Umlaute würden falsch gelesen). Bitte speichere sie in Excel als „CSV UTF-8 (durch Trennzeichen getrennt)“ und wähle sie erneut aus.',
+        'verein.import.rateLimit': 'Vorlage, Import-Prüfung und Export teilen sich ein Limit von 10 Anfragen pro Minute. Warte kurz und versuche es dann erneut.',
+        'verein.import.mapping.tooLong': 'Diese Überschrift ist zu lang, um sie zuzuordnen. Kürze sie in deiner Tabelle.',
+        'verein.import.mapping.headerClash': 'Spalten mit gleicher Überschrift können nur gleich zugeordnet werden. Gib ihnen in deiner Tabelle verschiedene Überschriften.',
+        'verein.err.exportTooLarge': 'Der Export ist zu groß (höchstens 50.000 Mitglieder). Grenze ihn mit Filtern ein.',
     },
     en: {
         'verein.photo.err.dimensions': 'The image has too many pixels (8000 px per edge and 40 megapixels at most). Please choose a smaller image.',
@@ -1502,6 +1507,11 @@ const VereinTranslation: Translation = {
         'verein.err.keyAlreadyIssued': 'This person already holds a key for this location.',
         'verein.err.keyMemberInvalid': 'This person is not a member of the club.',
         'verein.err.wifiPasswordRequired': 'This network needs a password (except for “Open”).',
+        'verein.import.err.encoding': 'The file is not UTF-8 encoded (umlauts would be read wrongly). Please save it from Excel as “CSV UTF-8 (comma delimited)” and choose it again.',
+        'verein.import.rateLimit': 'Template, import check and export share a limit of 10 requests per minute. Wait a moment and try again.',
+        'verein.import.mapping.tooLong': 'This heading is too long to map. Shorten it in your spreadsheet.',
+        'verein.import.mapping.headerClash': 'Columns with the same heading can only be mapped the same way. Give them different headings in your spreadsheet.',
+        'verein.err.exportTooLarge': 'The export is too large (50,000 members at most). Narrow it down with filters.',
     },
 };
 

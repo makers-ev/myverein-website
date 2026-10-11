@@ -2,16 +2,27 @@ import { describe, expect, it } from 'vitest';
 import { buildWifiQrPayload, securityOf, wifiNeedsPassword, wifiPasswordFor, wifiQrValue } from './wifiQr';
 
 describe('buildWifiQrPayload', () => {
-    it('builds a WPA payload', () => {
-        expect(buildWifiQrPayload('Club', 'secret')).toBe('WIFI:S:Club;T:WPA;P:secret;;');
+    it('builds a WPA payload in the backend field order', () => {
+        expect(buildWifiQrPayload('Club', 'secret')).toBe('WIFI:T:WPA;S:Club;P:secret;;');
+    });
+
+    it('announces WPA3 as SAE and WEP as WEP', () => {
+        expect(buildWifiQrPayload('Club', 'secret', 'wpa3')).toBe('WIFI:T:SAE;S:Club;P:secret;;');
+        expect(buildWifiQrPayload('Club', 'secret', 'wep')).toBe('WIFI:T:WEP;S:Club;P:secret;;');
     });
 
     it('escapes special characters', () => {
-        expect(buildWifiQrPayload('a;b,c', 'p"q:r\\s')).toBe('WIFI:S:a\\;b\\,c;T:WPA;P:p\\"q\\:r\\\\s;;');
+        expect(buildWifiQrPayload('a;b,c', 'p"q:r\\s')).toBe('WIFI:T:WPA;S:a\\;b\\,c;P:p\\"q\\:r\\\\s;;');
     });
 
-    it('uses nopass for an empty password', () => {
-        expect(buildWifiQrPayload('Open', '')).toBe('WIFI:S:Open;T:nopass;;');
+    it('quotes all-hex values', () => {
+        expect(buildWifiQrPayload('Club', 'deadBEEF')).toBe('WIFI:T:WPA;S:Club;P:"deadBEEF";;');
+        expect(buildWifiQrPayload('cafe', 'secret')).toBe('WIFI:T:WPA;S:"cafe";P:secret;;');
+    });
+
+    it('uses nopass for open networks and never includes a password', () => {
+        expect(buildWifiQrPayload('Open', '')).toBe('WIFI:T:nopass;S:Open;;');
+        expect(buildWifiQrPayload('Open', 'ignored', 'open')).toBe('WIFI:T:nopass;S:Open;;');
     });
 });
 
@@ -30,8 +41,9 @@ describe('wifi security helpers', () => {
     });
 
     it('prefers the backend QR payload', () => {
-        expect(wifiQrValue({ ssid: 'a', password: 'b', qrPayload: 'WIFI:T:SAE;S:a;P:b;;' })).toBe('WIFI:T:SAE;S:a;P:b;;');
-        expect(wifiQrValue({ ssid: 'a', password: 'b', qrPayload: 'http://evil' })).toBe('WIFI:S:a;T:WPA;P:b;;');
-        expect(wifiQrValue({ ssid: 'a', password: 'b' })).toBe('WIFI:S:a;T:WPA;P:b;;');
+        expect(wifiQrValue({ ssid: 'net', password: 'pw', qrPayload: 'WIFI:T:SAE;S:net;P:pw;;' })).toBe('WIFI:T:SAE;S:net;P:pw;;');
+        expect(wifiQrValue({ ssid: 'net', password: 'pw', qrPayload: 'http://evil' })).toBe('WIFI:T:WPA;S:net;P:pw;;');
+        expect(wifiQrValue({ ssid: 'net', password: 'pw' })).toBe('WIFI:T:WPA;S:net;P:pw;;');
+        expect(wifiQrValue({ ssid: 'net', password: 'pw', security: 'wpa3' })).toBe('WIFI:T:SAE;S:net;P:pw;;');
     });
 });

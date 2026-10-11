@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, CheckCircle2, Download, Loader2, Lock } from 'lucide-react';
 
 import { Modal } from '@/components/Modal';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { inputClass, MEMBER_STATUSES, memberErrorKey, primaryButtonClass, secondaryButtonClass, todayIso, type MemberCategory } from '@/lib/clubMembers';
-import { buildExportQuery, defaultExportColumns, EXPORT_COLUMNS, fetchCsvBlob, saveBlob, selectableColumns, toggleExportColumn } from '@/lib/memberCsv';
+import { buildExportQuery, defaultExportColumns, EXPORT_COLUMNS, fetchCsvBlob, isRateLimited, saveBlob, selectableColumns, toggleExportColumn } from '@/lib/memberCsv';
 
 /**
  * CSV export of the member list (Wave 7 W6) for `members:write` or `members:read_sensitive`. Sensitive columns are shown
@@ -37,24 +37,36 @@ export default function MemberExportDialog({
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [done, setDone] = useState(false);
+    const [rateLimited, setRateLimited] = useState(false);
+    const abortRef = useRef<AbortController | null>(null);
+
+    // Leaving the dialog (or the page) cancels a running download: no late file save, no state update after unmount.
+    useEffect(() => () => abortRef.current?.abort(), []);
 
     const allowed = selectableColumns(canSensitive);
     const allSelected = columns.length === allowed.length;
 
     async function download() {
         if (busy || columns.length === 0) return;
+        abortRef.current?.abort();
+        const controller = new AbortController();
+        abortRef.current = controller;
         setBusy(true);
         setError(null);
         setDone(false);
+        setRateLimited(false);
         try {
             const query = buildExportQuery(clubId, columns, { status, category, departmentId, includeFormer }, canSensitive);
-            const { blob, filename } = await fetchCsvBlob(`/club-members/export?${query}`, `mitglieder-${todayIso()}.csv`);
+            const { blob, filename } = await fetchCsvBlob(`/club-members/export?${query}`, `mitglieder-${todayIso()}.csv`, controller.signal);
+            if (controller.signal.aborted) return;
             saveBlob(blob, filename);
             setDone(true);
         } catch (err) {
+            if (controller.signal.aborted) return;
             setError(t(memberErrorKey(err)));
+            setRateLimited(isRateLimited(err));
         } finally {
-            setBusy(false);
+            if (!controller.signal.aborted) setBusy(false);
         }
     }
 
@@ -82,7 +94,10 @@ export default function MemberExportDialog({
                 {error && (
                     <p role="alert" className="flex items-start gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
                         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                        {error}
+                        <span>
+                            {error}
+                            {rateLimited && <span className="mt-1 block text-xs">{t('verein.import.rateLimit')}</span>}
+                        </span>
                     </p>
                 )}
                 {done && (

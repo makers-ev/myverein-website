@@ -251,7 +251,7 @@ function ReturnKeyModal({
     );
 }
 
-type HistoryState = { key: string; res: KeyHistoryResponse; error?: undefined } | { key: string; error: unknown; res?: undefined };
+type HistoryState = ({ key: string; res: KeyHistoryResponse; error?: undefined } | { key: string; error: unknown; res?: undefined }) & { locationId: string };
 
 function KeyHistorySection({ locationId, clubId, version, t }: { locationId: string; clubId: string; version: number; t: T }) {
     const { language } = useLanguage();
@@ -268,21 +268,23 @@ function KeyHistorySection({ locationId, clubId, version, t }: { locationId: str
         let cancelled = false;
         apiFetch<KeyHistoryResponse>(`/locations/${locationId}/key-history?${query}`)
             .then((res) => {
-                if (!cancelled) setState({ key: requestKey, res });
+                if (!cancelled) setState({ key: requestKey, locationId, res });
             })
             .catch((error) => {
-                if (!cancelled) setState({ key: requestKey, error });
+                if (!cancelled) setState({ key: requestKey, locationId, error });
             });
         return () => {
             cancelled = true;
         };
     }, [locationId, query, requestKey]);
 
-    const loading = state?.key !== requestKey;
-    const res = state?.res ?? null;
-    const failed = !loading && state?.error !== undefined;
+    // Never show rows of another location: an answer is only used for the location it was fetched for.
+    const own = state?.locationId === locationId ? state : null;
+    const loading = own?.key !== requestKey;
+    const res = own?.res ?? null;
+    const failed = !loading && own?.error !== undefined;
     // 403: the role may not see key history at all -- hide the section instead of showing an error.
-    if (failed && state?.error instanceof ApiError && state.error.status === 403) return null;
+    if (failed && own?.error instanceof ApiError && own.error.status === 403) return null;
 
     const pages = res ? pageCount(res.total, res.pageSize || KEY_HISTORY_PAGE_SIZE) : 1;
     const filterable = members.filter((m) => m.name);
@@ -311,7 +313,7 @@ function KeyHistorySection({ locationId, clubId, version, t }: { locationId: str
         >
             {failed ? (
                 <div role="alert" className="space-y-2 text-sm">
-                    <p className="text-destructive">{errorMessage(state?.error, t)}</p>
+                    <p className="text-destructive">{errorMessage(own?.error, t)}</p>
                     <button type="button" onClick={() => setRetry((n) => n + 1)} className={secondaryButtonClass}>
                         {t('standorte.keys.history.retry')}
                     </button>

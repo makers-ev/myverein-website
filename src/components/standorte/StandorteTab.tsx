@@ -685,7 +685,7 @@ function LocationDetail({
             </div>
 
             <WifiSection locationId={locationId} clubId={clubId} canWrite={canWrite} t={t} />
-            {!location.accessRestricted && <KeyManagement location={location} clubId={clubId} canWrite={canWrite} t={t} onChange={() => void load()} />}
+            {!location.accessRestricted && <KeyManagement key={location.id} location={location} clubId={clubId} canWrite={canWrite} t={t} onChange={() => void load()} />}
             <LinksSection locationId={locationId} clubId={clubId} canWrite={canWrite} t={t} />
 
             {editing && (

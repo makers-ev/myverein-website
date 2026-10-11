@@ -1,11 +1,28 @@
 import { describe, expect, it, vi } from 'vitest';
 
 // api-client/auth-client pull in the Better Auth client (env); the pure helpers need neither.
-vi.mock('./api-client', () => ({ ApiError: class ApiError extends Error {} }));
+vi.mock('./api-client', () => ({
+    ApiError: class ApiError extends Error {
+        constructor(
+            readonly status: number,
+            readonly code: string,
+            message: string,
+            readonly details?: unknown,
+        ) {
+            super(message);
+        }
+    },
+}));
 vi.mock('./auth-client', () => ({ backendUrl: 'http://backend.test' }));
 
+import { ApiError } from './api-client';
 import {
     buildExportQuery,
+    decodeCsvBytes,
+    headerConflicts,
+    importVoidCode,
+    isRateLimited,
+    canMapHeader,
     defaultExportColumns,
     effectiveField,
     EXPORT_COLUMNS,
@@ -59,31 +76,70 @@ describe('column mapping', () => {
         { header: 'Nachname', field: 'lastName' },
         { header: 'Familienname', field: null },
         { header: 'Ort', field: 'city' },
+        { header: 'Ort', field: null },
     ];
 
-    it('sends only real overrides', () => {
-        expect(mappingPayload({})).toBeUndefined();
-        expect(mappingPayload({ Familienname: '' })).toBeUndefined();
-        expect(mappingPayload({ Familienname: 'lastName', Ort: 'ignore', Foo: 'notAField' })).toEqual({ Familienname: 'lastName', Ort: 'ignore' });
-        const hostile = mappingPayload({ ['__proto__']: 'city' });
+    it('sends only real overrides, keyed by heading', () => {
+        expect(mappingPayload(columns, [])).toBeUndefined();
+        expect(mappingPayload(columns, ['', '', ''])).toBeUndefined();
+        expect(mappingPayload(columns, ['', 'lastName', 'ignore', '', ])).toEqual({ Familienname: 'lastName', Ort: 'ignore' });
+        expect(mappingPayload(columns, ['bogus'])).toBeUndefined();
+        const hostile = mappingPayload([{ header: '__proto__', field: null }], ['city']);
         expect(Object.keys(hostile ?? {})).toEqual(['__proto__']);
     });
 
-    it('resolves the effective field of a column', () => {
-        expect(effectiveField(columns[0]!, {})).toBe('lastName');
-        expect(effectiveField(columns[1]!, { Familienname: 'lastName' })).toBe('lastName');
-        expect(effectiveField(columns[2]!, { Ort: 'ignore' })).toBeNull();
+    it('does not send headings the backend would reject', () => {
+        const long = 'x'.repeat(201);
+        expect(canMapHeader(long)).toBe(false);
+        expect(mappingPayload([{ header: long, field: null }], ['city'])).toBeUndefined();
+    });
+
+    it('resolves the effective field against the automatic baseline', () => {
+        expect(effectiveField(columns[0]!, undefined)).toBe('lastName');
+        expect(effectiveField(columns[1]!, 'lastName')).toBe('lastName');
+        expect(effectiveField(columns[2]!, 'ignore')).toBeNull();
     });
 
     it('reports fields filled by more than one column', () => {
-        expect(mappingConflicts(columns, {})).toEqual([]);
-        expect(mappingConflicts(columns, { Familienname: 'lastName' })).toEqual(['lastName']);
-        expect(mappingConflicts(columns, { Nachname: 'ignore', Familienname: 'lastName' })).toEqual([]);
+        expect(mappingConflicts(columns, [])).toEqual([]);
+        expect(mappingConflicts(columns, ['', 'lastName'])).toEqual(['lastName']);
+        expect(mappingConflicts(columns, ['ignore', 'lastName'])).toEqual([]);
+    });
+
+    it('flags equal headings with different overrides', () => {
+        expect(headerConflicts(columns, ['', '', 'city', 'ignore'])).toEqual(['Ort']);
+        expect(headerConflicts(columns, ['', '', 'city', 'city'])).toEqual([]);
     });
 
     it('detects a changed mapping', () => {
-        expect(mappingChanged({}, { Ort: '' })).toBe(false);
-        expect(mappingChanged({}, { Ort: 'ignore' })).toBe(true);
+        expect(mappingChanged(columns, [], ['', ''])).toBe(false);
+        expect(mappingChanged(columns, [], ['', '', 'ignore'])).toBe(true);
+    });
+});
+
+describe('commit failures and decoding', () => {
+    it('recognises the errors that void a dry-run report', () => {
+        expect(importVoidCode(new ApiError(422, 'X', 'm', { code: 'import_has_errors' }))).toBe('import_has_errors');
+        expect(importVoidCode(new ApiError(409, 'X', 'm', { code: 'import_already_applied' }))).toBe('import_already_applied');
+        expect(importVoidCode(new ApiError(422, 'X', 'm', { code: 'csv_empty' }))).toBeNull();
+        expect(importVoidCode(new Error('x'))).toBeNull();
+        expect(isRateLimited(new ApiError(429, 'X', 'm'))).toBe(true);
+        expect(isRateLimited(new ApiError(422, 'X', 'm'))).toBe(false);
+    });
+
+    it('accepts UTF-8 with or without BOM', () => {
+        const enc = new TextEncoder();
+        expect(decodeCsvBytes(enc.encode('Name;Ort\nJürgen;Köln').buffer as ArrayBuffer)).toEqual({ text: 'Name;Ort\nJürgen;Köln' });
+        const withBom = new Uint8Array([0xef, 0xbb, 0xbf, ...enc.encode('Name')]);
+        expect(decodeCsvBytes(withBom.buffer)).toEqual({ text: 'Name' });
+    });
+
+    it('refuses Windows-1252, UTF-16 and oversized files', () => {
+        // "Müller" in Windows-1252: 0xFC is not valid UTF-8.
+        expect(decodeCsvBytes(new Uint8Array([0x4d, 0xfc, 0x6c, 0x6c, 0x65, 0x72]).buffer)).toEqual({ error: 'encoding' });
+        expect(decodeCsvBytes(new Uint8Array([0xff, 0xfe, 0x4e, 0x00]).buffer)).toEqual({ error: 'encoding' });
+        expect(decodeCsvBytes(new Uint8Array([0x4e, 0x00, 0x61]).buffer)).toEqual({ error: 'encoding' });
+        expect(decodeCsvBytes(new ArrayBuffer(1_048_577))).toEqual({ error: 'too_large' });
     });
 });
 

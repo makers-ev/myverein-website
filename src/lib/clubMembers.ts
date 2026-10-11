@@ -215,6 +215,8 @@ export function memberErrorKey(err: unknown): string {
             return 'verein.err.mergeNotSupported';
         case 'account_has_open_items':
             return 'verein.err.accountOpenItems';
+        case 'export_too_large':
+            return 'verein.err.exportTooLarge';
         case 'unknown_column':
             return 'verein.err.exportColumn';
         // Wave 7 W6: CSV import file-level problems and the confirmation flow.
