@@ -987,7 +987,7 @@ const VereinTranslation: Translation = {
         'verein.status.reason.required': 'Reason (required)',
         'verein.status.reason.hint': 'The reason is stored in the history and only visible to authorized board members.',
         'verein.status.submit': 'Change status',
-        'verein.status.submit.schedule': 'Schedule exit',
+        'verein.status.submit.schedule': 'Record exit',
         'verein.status.err.date': 'Please enter a date.',
         'verein.err.network': 'No connection to the server. Please check your connection and try again.',
         'verein.err.forbidden': 'You do not have permission to do this.',

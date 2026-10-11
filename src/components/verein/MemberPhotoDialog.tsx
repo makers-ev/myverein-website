@@ -28,10 +28,22 @@ const PREVIEW_SIZE = 256;
  */
 export default function MemberPhotoDialog({
     title,
+    hint,
+    round = true,
+    maxBytes,
+    outputSize,
     onClose,
     onSave,
 }: {
     title: string;
+    /** Replaces the profile-photo hint text (already translated). */
+    hint?: string;
+    /** Round preview (profile photo, default) or a rounded square (e.g. location photo). */
+    round?: boolean;
+    /** Size limit of the picked file (default: profile photo limit). */
+    maxBytes?: number;
+    /** Edge length of the uploaded JPEG (default: profile photo size). */
+    outputSize?: number;
     onClose: () => void;
     /** Uploads the JPEG; resolves on success (the dialog closes), rejects with an `Error` carrying the user-facing text. */
     onSave: (jpeg: Blob) => Promise<void>;
@@ -66,9 +78,9 @@ export default function MemberPhotoDialog({
         e.target.value = '';
         if (!file) return;
         setError(null);
-        const problem = checkPhotoFile(file);
+        const problem = checkPhotoFile(file, maxBytes);
         if (problem) {
-            setError(t(photoProblemKey(problem)));
+            setError(problem === 'size' && maxBytes ? t('media.err.size', { mb: Math.round(maxBytes / (1024 * 1024)) }) : t(photoProblemKey(problem)));
             return;
         }
         const seq = ++decodeSeq.current;
@@ -94,7 +106,7 @@ export default function MemberPhotoDialog({
         setBusy(true);
         setError(null);
         try {
-            const jpeg = await renderCropToJpeg(bitmap, crop);
+            const jpeg = await renderCropToJpeg(bitmap, crop, outputSize);
             await onSave(jpeg);
             onClose();
         } catch (err) {
@@ -122,7 +134,7 @@ export default function MemberPhotoDialog({
                 </div>
             }
         >
-            <p className="text-sm text-muted-foreground">{t('verein.photo.hint')}</p>
+            <p className="text-sm text-muted-foreground">{hint ?? t('verein.photo.hint')}</p>
 
             <div className="mt-4 flex flex-col items-center gap-4">
                 {bitmap ? (
@@ -130,10 +142,10 @@ export default function MemberPhotoDialog({
                         ref={canvasRef}
                         role="img"
                         aria-label={t('verein.photo.preview')}
-                        className="h-48 w-48 rounded-full border border-border bg-muted"
+                        className={`h-48 w-48 border border-border bg-muted ${round ? 'rounded-full' : 'rounded-xl'}`}
                     />
                 ) : (
-                    <div className="flex h-48 w-48 items-center justify-center rounded-full border border-dashed border-border text-muted-foreground">
+                    <div className={`flex h-48 w-48 items-center justify-center border border-dashed border-border text-muted-foreground ${round ? 'rounded-full' : 'rounded-xl'}`}>
                         <ImagePlus className="h-10 w-10" aria-hidden="true" />
                     </div>
                 )}

@@ -10,10 +10,10 @@ export const PHOTO_OUTPUT_SIZE = 512;
 export type PhotoFileProblem = 'empty' | 'type' | 'size';
 
 /** Client-side pre-check of a picked file; the backend re-checks magic bytes and size. `null` = acceptable. */
-export function checkPhotoFile(file: { type: string; size: number }): PhotoFileProblem | null {
+export function checkPhotoFile(file: { type: string; size: number }, maxBytes: number = PHOTO_MAX_BYTES): PhotoFileProblem | null {
     if (file.size <= 0) return 'empty';
     if (!(PHOTO_MIME_TYPES as readonly string[]).includes(file.type)) return 'type';
-    if (file.size > PHOTO_MAX_BYTES) return 'size';
+    if (file.size > maxBytes) return 'size';
     return null;
 }
 

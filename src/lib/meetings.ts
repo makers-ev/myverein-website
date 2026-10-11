@@ -114,3 +114,28 @@ export function statusForSchedule(currentStatus: string, newScheduledAt: string 
 }
 
 export type RsvpResponse = 'zugesagt' | 'abgesagt';
+
+export interface ResolutionFields {
+    description: string;
+    votesFor: number;
+    votesAgainst: number;
+    votesAbstain: number;
+    result: string;
+}
+
+/** Only the fields that differ from the stored resolution (the backend wants at least one besides the note). */
+export function resolutionChanges(
+    r: ResolutionFields,
+    draft: { description: string; votesFor: string; votesAgainst: string; votesAbstain: string; result: string },
+): Partial<ResolutionFields> {
+    const out: Partial<ResolutionFields> = {};
+    const description = draft.description.trim();
+    const result = draft.result.trim();
+    if (description && description !== r.description) out.description = description;
+    if (result && result !== r.result) out.result = result;
+    for (const key of ['votesFor', 'votesAgainst', 'votesAbstain'] as const) {
+        const n = Math.max(0, Math.floor(Number(draft[key]) || 0));
+        if (n !== r[key]) out[key] = n;
+    }
+    return out;
+}

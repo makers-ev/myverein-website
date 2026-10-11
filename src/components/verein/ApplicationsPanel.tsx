@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { memberErrorKey } from '@/lib/clubMembers';
 import { apiFetch, ApiError } from '@/lib/api-client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import LoadingText from '@/components/LoadingText';
 
 export interface ClubApplication {
     id: string;
@@ -73,7 +74,7 @@ export default function ApplicationsPanel({
             {loadError ? (
                 <p className="text-sm text-destructive">{t('verein.applications.error')}</p>
             ) : applications === null ? (
-                <p className="text-sm text-muted-foreground">…</p>
+                <LoadingText />
             ) : applications.length === 0 ? (
                 <p className="text-sm text-muted-foreground">{t('verein.applications.empty')}</p>
             ) : (

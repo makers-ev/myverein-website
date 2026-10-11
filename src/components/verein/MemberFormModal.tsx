@@ -25,6 +25,7 @@ import {
     type MemberCategory,
     type StatusHistoryEntry,
 } from '@/lib/clubMembers';
+import LoadingText from '@/components/LoadingText';
 
 interface DepartmentOption {
     id: string;
@@ -103,7 +104,7 @@ function HistoryList({ entries, categories, loading, error }: { entries: StatusH
     const { t, language } = useLanguage();
     const categoryName = (id: string | null) => (id ? (categories.find((c) => c.id === id)?.name ?? t('verein.history.categoryUnknown')) : '—');
 
-    if (loading) return <p className="text-sm text-muted-foreground">…</p>;
+    if (loading) return <LoadingText />;
     if (error) return <p className="text-sm text-destructive">{error}</p>;
     if (!entries || entries.length === 0) return <p className="text-sm text-muted-foreground">{t('verein.history.empty')}</p>;
     return (

@@ -9,6 +9,7 @@ import ClubRegistrationWizard from '@/components/verein/ClubRegistrationWizard';
 import JoinClubCard from '@/components/verein/JoinClubCard';
 import RegistrationStatusCard from '@/components/verein/RegistrationStatusCard';
 import type { ClubRegistration, RegistrationNotice } from '@/components/verein/clubRegistration';
+import LoadingText from '@/components/LoadingText';
 
 /**
  * "No club" state of /verein: join by club code (JoinClubCard) next to "Verein gruenden"
@@ -80,7 +81,7 @@ export default function NoClubSection({ onRefreshClubs }: { onRefreshClubs: () =
     }
 
     if (registrations === null) {
-        return <p className="mt-6 text-sm text-muted-foreground">…</p>;
+        return <LoadingText className="mt-6" />;
     }
 
     if (wizard) {

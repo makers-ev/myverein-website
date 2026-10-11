@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildAttendancePatch, effectiveAttendance, formatMeetingDateTime, fromDatetimeLocal, meetingTypeKey, statusForSchedule, toDatetimeLocal, type AttendanceRow } from './meetings';
+import { buildAttendancePatch, effectiveAttendance, formatMeetingDateTime, fromDatetimeLocal, meetingTypeKey, resolutionChanges, statusForSchedule, toDatetimeLocal, type AttendanceRow } from './meetings';
 
 const stored: AttendanceRow[] = [
     { memberId: 'a', present: true, hasVotingRight: true, proxyForMemberId: null },
@@ -83,5 +83,16 @@ describe('datetime-local conversion', () => {
         expect(toDatetimeLocal(null)).toBe('');
         expect(toDatetimeLocal('nope')).toBe('');
         expect(fromDatetimeLocal('')).toBeNull();
+    });
+});
+
+describe('resolutionChanges', () => {
+    const r = { description: 'Budget', votesFor: 5, votesAgainst: 1, votesAbstain: 0, result: 'angenommen' };
+    it('returns only changed fields', () => {
+        expect(resolutionChanges(r, { description: 'Budget', votesFor: '6', votesAgainst: '1', votesAbstain: '0', result: ' angenommen ' })).toEqual({ votesFor: 6 });
+    });
+    it('returns nothing when unchanged and never sends negative or blank values', () => {
+        expect(resolutionChanges(r, { description: 'Budget', votesFor: '5', votesAgainst: '1', votesAbstain: '0', result: 'angenommen' })).toEqual({});
+        expect(resolutionChanges(r, { description: '  ', votesFor: '-3', votesAgainst: '1', votesAbstain: '', result: '' })).toEqual({ votesFor: 0 });
     });
 });

@@ -16,6 +16,8 @@ import MemberList from '@/components/verein/MemberList';
 import MemberAvatar from '@/components/verein/MemberAvatar';
 import RoleBadge from '@/components/verein/RoleBadge';
 import ProfilTab, { type OwnMembership } from '@/components/verein/ProfilTab';
+import LoadingText from '@/components/LoadingText';
+import LoadError from '@/components/LoadError';
 
 interface MyClub {
     clubId: string;
@@ -178,6 +180,7 @@ function AbteilungenTab({
 export default function VereinPageContent() {
     const { t } = useLanguage();
     const [clubs, setClubs] = useState<MyClub[] | null>(null);
+    const [clubsError, setClubsError] = useState(false);
     const [info, setInfo] = useState<ClubInfo | null>(null);
     const [me, setMe] = useState<OwnMembership | null>(null);
     const [tab, setTab] = useState<Tab>('info');
@@ -203,7 +206,12 @@ export default function VereinPageContent() {
     });
 
     function loadClubs() {
-        void apiFetch<{ data: MyClub[] }>('/my-clubs').then(({ data }) => setClubs(data));
+        apiFetch<{ data: MyClub[] }>('/my-clubs')
+            .then(({ data }) => {
+                setClubs(data);
+                setClubsError(false);
+            })
+            .catch(() => setClubsError(true));
     }
 
     // setClubs runs inside the .then() callback, not synchronously in the effect body.
@@ -262,8 +270,10 @@ export default function VereinPageContent() {
                 {activeClub?.clubName ?? t('verein.page.title')}
             </h1>
 
-            {clubs === null ? (
-                <p className="mt-6 text-sm text-muted-foreground">…</p>
+            {clubsError ? (
+                <LoadError className="mt-6" onRetry={loadClubs} />
+            ) : clubs === null ? (
+                <LoadingText className="mt-6" />
             ) : !activeClub ? (
                 <NoClubSection onRefreshClubs={loadClubs} />
             ) : (
@@ -293,12 +303,12 @@ export default function VereinPageContent() {
                     </div>
 
                     <div className="mt-4">
-                        {currentTab === 'info' && (info ? <VereinsinfoTab info={info} t={t} onPhotoExpired={refetchBoardPhotos} /> : <p className="text-sm text-muted-foreground">…</p>)}
+                        {currentTab === 'info' && (info ? <VereinsinfoTab info={info} t={t} onPhotoExpired={refetchBoardPhotos} /> : <LoadingText />)}
                         {currentTab === 'profil' &&
                             (me ? (
                                 <ProfilTab me={me} clubId={activeClub.clubId} onSaved={() => void refreshClubData(activeClub.clubId)} onPhotoExpired={refetchOwnPhoto} />
                             ) : (
-                                <p className="text-sm text-muted-foreground">…</p>
+                                <LoadingText />
                             ))}
                         {currentTab === 'mitglieder' && permissions.includes('members:write') && (
                             <ApplicationsPanel
@@ -317,7 +327,7 @@ export default function VereinPageContent() {
                                     reloadToken={membersReload}
                                 />
                             ) : (
-                                <p className="text-sm text-muted-foreground">…</p>
+                                <LoadingText />
                             ))}
                         {currentTab === 'austritte' && permissions.includes('members:write') && (
                             <ExitQueuePanel
@@ -338,7 +348,7 @@ export default function VereinPageContent() {
                                     onChange={() => void refreshClubData(activeClub.clubId)}
                                 />
                             ) : (
-                                <p className="text-sm text-muted-foreground">…</p>
+                                <LoadingText />
                             ))}
                         {currentTab === 'kennzahlen' && <ClubStatsPanel clubId={activeClub.clubId} />}
                         {currentTab === 'einstellungen' && (

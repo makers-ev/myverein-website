@@ -7,6 +7,8 @@ import { isGuestRole } from '@/lib/loans';
 import { useLanguage } from '@/contexts/LanguageContext';
 import StandorteTab, { type Location } from '@/components/standorte/StandorteTab';
 import MaterialTab from '@/components/standorte/MaterialTab';
+import LoadingText from '@/components/LoadingText';
+import LoadError from '@/components/LoadError';
 
 interface MyClub {
     clubId: string;
@@ -21,6 +23,7 @@ export default function StandortePageContent() {
     const { t } = useLanguage();
     const [clubs, setClubs] = useState<MyClub[] | null>(null);
     const [locations, setLocations] = useState<Location[] | null>(null);
+    const [loadError, setLoadError] = useState(false);
     const [tab, setTab] = useState<Tab>('standorte');
     const [permissions, setPermissions] = useState<string[]>([]);
     // Better Auth member id of the caller (what loans record as borrower).
@@ -29,13 +32,27 @@ export default function StandortePageContent() {
 
     const activeClub = clubs?.[0] ?? null;
 
-    useEffect(() => {
-        void apiFetch<{ data: MyClub[] }>('/my-clubs').then(({ data }) => setClubs(data));
-    }, []);
+    function loadClubs() {
+        apiFetch<{ data: MyClub[] }>('/my-clubs')
+            .then(({ data }) => {
+                setClubs(data);
+                setLoadError(false);
+            })
+            .catch(() => setLoadError(true));
+    }
+
+    // setClubs/setLoadError run inside promise callbacks, not synchronously in the effect body.
+    useEffect(loadClubs, []);
 
     async function refreshLocations(clubId: string) {
-        const { data } = await apiFetch<{ data: Location[] }>(`/locations?clubId=${clubId}`);
-        setLocations(data);
+        try {
+            const { data } = await apiFetch<{ data: Location[] }>(`/locations?clubId=${clubId}`);
+            setLocations(data);
+            setLoadError(false);
+        } catch {
+            // Keep a list that is already shown; only the very first load turns into the error state.
+            if (locations === null) setLoadError(true);
+        }
     }
 
     useEffect(() => {
@@ -61,8 +78,10 @@ export default function StandortePageContent() {
         <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
             <h1 className="text-2xl font-bold text-foreground">{t('standorte.page.title')}</h1>
 
-            {clubs === null ? (
-                <p className="mt-6 text-sm text-muted-foreground">…</p>
+            {loadError ? (
+                <LoadError className="mt-6" onRetry={() => (activeClub ? void refreshLocations(activeClub.clubId) : loadClubs())} />
+            ) : clubs === null ? (
+                <LoadingText className="mt-6" />
             ) : !activeClub ? (
                 <div className="mt-6 rounded-xl border border-border bg-card p-4">
                     <p className="text-sm font-semibold text-foreground">{t('verein.no-club.title')}</p>
@@ -74,6 +93,8 @@ export default function StandortePageContent() {
                         {(['standorte', 'material'] as const).map((value) => (
                             <button
                                 key={value}
+                                type="button"
+                                aria-pressed={tab === value}
                                 onClick={() => setTab(value)}
                                 className={`border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
                                     tab === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -86,7 +107,7 @@ export default function StandortePageContent() {
 
                     <div className="mt-4">
                         {locations === null ? (
-                            <p className="text-sm text-muted-foreground">…</p>
+                            <LoadingText />
                         ) : (
                             <>
                                 {tab === 'standorte' && (

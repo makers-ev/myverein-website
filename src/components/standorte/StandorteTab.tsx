@@ -1,20 +1,24 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { ArrowLeft, Check, Clock, Copy, ExternalLink, Link as LinkIcon, MapPin, Pencil, Plus, QrCode, Trash2, User, Wifi } from 'lucide-react';
+import { ArrowLeft, Camera, Check, Clock, Copy, ExternalLink, Link as LinkIcon, MapPin, Pencil, Plus, QrCode, Trash2, User, Wifi } from 'lucide-react';
 
-import { apiFetch } from '@/lib/api-client';
+import { ApiError, apiFetch } from '@/lib/api-client';
+import { LOCATION_PHOTO_OUTPUT_SIZE, MEDIA_IMAGE_MAX_BYTES, mediaErrorKey, uploadMediaImage } from '@/lib/mediaUpload';
+import { useThrottledCallback } from '@/lib/useThrottledCallback';
 import { LOCATION_VISIBILITIES, visibilityOf, type LocationVisibility } from '@/lib/locationVisibility';
 import { securityOf, WIFI_SECURITIES, wifiNeedsPassword, wifiPasswordFor, wifiQrValue, type WifiSecurity } from '@/lib/wifiQr';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Modal } from '@/components/Modal';
+import MemberPhotoDialog from '@/components/verein/MemberPhotoDialog';
 import KeyManagement, { type LocationKeyHolder } from '@/components/standorte/KeyManagement';
 import {
     Chip,
     ConfirmModal,
     EmptyState,
     Field,
+    errorMessage,
     FormModal,
     SectionCard,
     iconButtonClass,
@@ -24,6 +28,8 @@ import {
     secondaryButtonClass,
     type T,
 } from '@/components/standorte/ui';
+import LoadingText from '@/components/LoadingText';
+import LoadError from '@/components/LoadError';
 
 export interface Location {
     id: string;
@@ -72,18 +78,40 @@ interface LocationLink {
     createdAt: string;
 }
 
-function LocationPhoto({ url, className }: { url: string | null; className: string }) {
-    // A signed URL can have expired or the file may be gone: fall back to the placeholder instead of a broken image.
+function LocationPhoto({ url, className, onExpired }: { url: string | null; className: string; onExpired?: () => void }) {
+    // A signed URL can have expired or the file may be gone: fall back to the placeholder instead of a broken image and
+    // ask the parent (throttled there) to refetch the resource that carried the URL.
     const [failedUrl, setFailedUrl] = useState<string | null>(null);
+    const refetched = useRef(false);
     if (!url || failedUrl === url) {
         return (
             <div className={`flex items-center justify-center bg-muted text-muted-foreground ${className}`}>
-                <MapPin className="h-8 w-8" />
+                <MapPin className="h-8 w-8" aria-hidden="true" />
             </div>
         );
     }
-    // eslint-disable-next-line @next/next/no-img-element -- arbitrary external URLs, next/image would need remotePatterns.
-    return <img src={url} alt="" onError={() => setFailedUrl(url)} className={`object-cover ${className}`} />;
+    return (
+        // Signed media URL on the backend origin (CSP img-src); next/image would proxy it through this server.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+            src={url}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            referrerPolicy="no-referrer"
+            onLoad={() => {
+                refetched.current = false;
+            }}
+            onError={() => {
+                setFailedUrl(url);
+                if (!refetched.current) {
+                    refetched.current = true;
+                    onExpired?.();
+                }
+            }}
+            className={`object-cover ${className}`}
+        />
+    );
 }
 
 function InfoRow({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
@@ -116,7 +144,6 @@ function CopyButton({ value, t }: { value: string; t: T }) {
 type LocationDraft = Record<'name' | 'address' | 'openingHours' | 'contactPerson' | 'accessNote', string>;
 
 function LocationFormModal({ clubId, location, t, onClose, onSaved }: { clubId: string; location: Location | null; t: T; onClose: () => void; onSaved: () => void }) {
-    const run = useRun();
     const [draft, setDraft] = useState<LocationDraft>({
         name: location?.name ?? '',
         address: location?.address ?? '',
@@ -126,6 +153,25 @@ function LocationFormModal({ clubId, location, t, onClose, onSaved }: { clubId: 
     });
     const set = (key: keyof LocationDraft) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setDraft({ ...draft, [key]: e.target.value });
 
+    // Photo: `undefined` = unchanged, a key = uploaded in this dialog (claimed on save), `null` = remove.
+    const [photoKey, setPhotoKey] = useState<string | null | undefined>(undefined);
+    const [preview, setPreview] = useState<string | null>(null);
+    const [pickingPhoto, setPickingPhoto] = useState(false);
+    useEffect(() => () => {
+        if (preview) URL.revokeObjectURL(preview);
+    }, [preview]);
+    const shownPhoto = photoKey === null ? null : (preview ?? location?.photoUrl ?? null);
+
+    async function uploadPhoto(jpeg: Blob) {
+        try {
+            const key = await uploadMediaImage(clubId, jpeg, 'location.jpg');
+            setPhotoKey(key);
+            setPreview(URL.createObjectURL(jpeg));
+        } catch (err) {
+            throw new Error(t(mediaErrorKey(err)));
+        }
+    }
+
     // Create omits empty fields, edit clears them with null.
     const empty = location ? null : undefined;
     const body = {
@@ -134,6 +180,7 @@ function LocationFormModal({ clubId, location, t, onClose, onSaved }: { clubId: 
         openingHours: draft.openingHours.trim() || empty,
         contactPerson: draft.contactPerson.trim() || empty,
         accessNote: draft.accessNote.trim() || empty,
+        ...(photoKey !== undefined && (photoKey !== null || location) ? { photoKey } : {}),
     };
 
     return (
@@ -144,16 +191,47 @@ function LocationFormModal({ clubId, location, t, onClose, onSaved }: { clubId: 
             cancelLabel={t('standorte.locations.new.cancel')}
             canSubmit={!!draft.name.trim()}
             onClose={onClose}
-            onSubmit={() =>
-                run(async () => {
+            onSubmit={async () => {
+                try {
                     await apiFetch(location ? `/locations/${location.id}?clubId=${clubId}` : `/locations?clubId=${clubId}`, {
                         method: location ? 'PATCH' : 'POST',
                         body,
                     });
-                    onSaved();
-                })
-            }
+                } catch (err) {
+                    // A rejected photo key (quota, already used, foreign) is explained as such; everything else as usual.
+                    return typeof photoKey === 'string' && err instanceof ApiError && err.status === 422 ? t(mediaErrorKey(err)) : errorMessage(err, t);
+                }
+                onSaved();
+                return null;
+            }}
         >
+            <div className="flex flex-wrap items-center gap-3">
+                <LocationPhoto url={shownPhoto} className="h-20 w-28 shrink-0 overflow-hidden rounded-lg" />
+                <div className="flex flex-wrap gap-2">
+                    <button type="button" onClick={() => setPickingPhoto(true)} className={secondaryButtonClass}>
+                        <Camera className="h-4 w-4" aria-hidden="true" />
+                        {shownPhoto ? t('standorte.locations.photo.change') : t('standorte.locations.photo.add')}
+                    </button>
+                    {shownPhoto && (
+                        <button type="button" onClick={() => { setPhotoKey(null); setPreview(null); }} className={secondaryButtonClass}>
+                            <Trash2 className="h-4 w-4" aria-hidden="true" />
+                            {t('standorte.locations.photo.remove')}
+                        </button>
+                    )}
+                </div>
+                {!shownPhoto && <p className="w-full text-xs text-muted-foreground">{t('standorte.locations.photo.none')}</p>}
+            </div>
+            {pickingPhoto && (
+                <MemberPhotoDialog
+                    title={t('standorte.locations.photo.title')}
+                    hint={t('standorte.locations.photo.hint')}
+                    round={false}
+                    maxBytes={MEDIA_IMAGE_MAX_BYTES}
+                    outputSize={LOCATION_PHOTO_OUTPUT_SIZE}
+                    onClose={() => setPickingPhoto(false)}
+                    onSave={uploadPhoto}
+                />
+            )}
             <Field label={t('standorte.locations.detail.name')}>
                 <input type="text" value={draft.name} onChange={set('name')} required className={inputClass} />
             </Field>
@@ -193,6 +271,7 @@ function LocationGrid({
     onSelect: (id: string) => void;
 }) {
     const [showCreate, setShowCreate] = useState(false);
+    const photoExpired = useThrottledCallback(onChange);
 
     return (
         <div className="space-y-4">
@@ -215,7 +294,7 @@ function LocationGrid({
                             onClick={() => onSelect(loc.id)}
                             className="overflow-hidden rounded-xl border border-border bg-card text-left transition-colors hover:border-primary"
                         >
-                            <LocationPhoto url={loc.photoUrl} className="h-36 w-full" />
+                            <LocationPhoto url={loc.photoUrl} className="h-36 w-full" onExpired={photoExpired} />
                             <div className="space-y-1.5 p-4">
                                 <h3 className="font-semibold text-foreground">{loc.name}</h3>
                                 {loc.address && <InfoRow icon={<MapPin className="h-4 w-4" />}>{loc.address}</InfoRow>}
@@ -386,7 +465,7 @@ function WifiSection({ locationId, clubId, canWrite, t }: { locationId: string; 
             }
         >
             {networks === null ? (
-                <p className="text-sm text-muted-foreground">…</p>
+                <LoadingText />
             ) : networks.length === 0 ? (
                 <EmptyState icon={<Wifi className="h-6 w-6" />} text={t('standorte.wifi.empty')} />
             ) : (
@@ -551,7 +630,7 @@ function LinksSection({ locationId, clubId, canWrite, t }: { locationId: string;
             }
         >
             {links === null ? (
-                <p className="text-sm text-muted-foreground">…</p>
+                <LoadingText />
             ) : links.length === 0 ? (
                 <EmptyState icon={<LinkIcon className="h-6 w-6" />} text={t('standorte.links.empty')} />
             ) : (
@@ -626,9 +705,16 @@ function LocationDetail({
     const [editing, setEditing] = useState(false);
     const [deleting, setDeleting] = useState(false);
 
+    const [loadFailed, setLoadFailed] = useState(false);
+
     async function load() {
-        const { data } = await apiFetch<{ data: LocationDetailData }>(`/locations/${locationId}?clubId=${clubId}`);
-        setLocation(data);
+        try {
+            const { data } = await apiFetch<{ data: LocationDetailData }>(`/locations/${locationId}?clubId=${clubId}`);
+            setLocation(data);
+            setLoadFailed(false);
+        } catch {
+            setLoadFailed(true);
+        }
     }
 
     useEffect(() => {
@@ -636,8 +722,18 @@ function LocationDetail({
         void load();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [locationId]);
+    const photoExpired = useThrottledCallback(load);
 
-    if (!location) return <p className="text-sm text-muted-foreground">…</p>;
+    if (!location)
+        return (
+            <div className="space-y-4">
+                <button type="button" onClick={onBack} className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+                    <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                    {t('standorte.locations.back')}
+                </button>
+                {loadFailed ? <LoadError onRetry={() => void load()} /> : <LoadingText />}
+            </div>
+        );
 
     return (
         <div className="space-y-4">
@@ -647,7 +743,7 @@ function LocationDetail({
             </button>
 
             <div className="overflow-hidden rounded-xl border border-border bg-card">
-                {location.photoUrl && <LocationPhoto url={location.photoUrl} className="h-48 w-full sm:h-64" />}
+                {location.photoUrl && <LocationPhoto url={location.photoUrl} className="h-48 w-full sm:h-64" onExpired={photoExpired} />}
                 <div className="space-y-3 p-4">
                     <div className="flex flex-wrap items-start justify-between gap-2">
                         <h2 className="text-xl font-bold text-foreground">{location.name}</h2>

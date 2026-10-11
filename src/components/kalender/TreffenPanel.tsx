@@ -13,6 +13,7 @@ import {
     fromDatetimeLocal,
     MEETING_TYPES,
     meetingTypeKey,
+    resolutionChanges,
     statusForSchedule,
     toDatetimeLocal,
     type AttendanceEdit,
@@ -23,6 +24,8 @@ import {
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Modal } from '@/components/Modal';
 import { inputClass, labelClass, primaryBtn, secondaryBtn } from '@/components/kalender/calendarTypes';
+import LoadingText from '@/components/LoadingText';
+import LoadError from '@/components/LoadError';
 
 interface Meeting {
     id: string;
@@ -50,6 +53,9 @@ interface MeetingResolution {
     votesAgainst: number;
     votesAbstain: number;
     result: string;
+    /** Berichtigungsvermerk: set once the resolution was corrected (PATCH), absent/null otherwise. */
+    correctionNote?: string | null;
+    correctedAt?: string | null;
 }
 
 interface OverlapCandidate {
@@ -81,7 +87,7 @@ function typeLabel(type: string, t: TFn): string {
 function SectionCard({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) {
     return (
         <section className="rounded-xl border border-border bg-card p-4">
-            <div className="mb-3 flex items-center justify-between gap-2">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-sm font-bold text-foreground">{title}</h2>
                 {action}
             </div>
@@ -112,9 +118,16 @@ function MeetingList({ clubId, t, canWrite, onSelect }: { clubId: string; t: TFn
     const [error, setError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
 
+    const [loadFailed, setLoadFailed] = useState(false);
+
     async function load() {
-        const { data } = await apiFetch<{ data: Meeting[] }>(`/meetings?clubId=${clubId}`);
-        setMeetings(data);
+        try {
+            const { data } = await apiFetch<{ data: Meeting[] }>(`/meetings?clubId=${clubId}`);
+            setMeetings(data);
+            setLoadFailed(false);
+        } catch {
+            setLoadFailed(true);
+        }
     }
 
     useEffect(() => {
@@ -149,7 +162,8 @@ function MeetingList({ clubId, t, canWrite, onSelect }: { clubId: string; t: TFn
         }
     }
 
-    if (meetings === null) return <p className="text-sm text-muted-foreground">…</p>;
+    if (loadFailed && meetings === null) return <LoadError onRetry={() => void load()} />;
+    if (meetings === null) return <LoadingText />;
 
     return (
         <SectionCard
@@ -271,8 +285,19 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
         };
     }, [meetingId]);
 
+    const [detailLoadFailed, setDetailLoadFailed] = useState(false);
+
     async function load() {
         const seq = ++loadSeq.current;
+        try {
+            await loadAll(seq);
+            setDetailLoadFailed(false);
+        } catch {
+            if (seq === loadSeq.current) setDetailLoadFailed(true);
+        }
+    }
+
+    async function loadAll(seq: number) {
         const [meetingRes, inviteesRes, resolutionsRes, attendanceRes] = await Promise.all([
             apiFetch<{ data: Meeting }>(`/meetings/${meetingId}?clubId=${clubId}`),
             apiFetch<{ data: MeetingInvitee[] }>(`/meetings/${meetingId}/invitees?clubId=${clubId}`),
@@ -554,7 +579,57 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
         }
     }
 
-    if (!meeting) return <p className="text-sm text-muted-foreground">…</p>;
+    // --- Resolution correction (Berichtigungsvermerk is mandatory; no silent overwrite) ---
+    const [correcting, setCorrecting] = useState<MeetingResolution | null>(null);
+    const [corDescription, setCorDescription] = useState('');
+    const [corFor, setCorFor] = useState('0');
+    const [corAgainst, setCorAgainst] = useState('0');
+    const [corAbstain, setCorAbstain] = useState('0');
+    const [corResult, setCorResult] = useState('');
+    const [corNote, setCorNote] = useState('');
+    const [corError, setCorError] = useState<string | null>(null);
+    const [corSaving, setCorSaving] = useState(false);
+
+    function openCorrection(r: MeetingResolution) {
+        setCorrecting(r);
+        setCorDescription(r.description);
+        setCorFor(String(r.votesFor));
+        setCorAgainst(String(r.votesAgainst));
+        setCorAbstain(String(r.votesAbstain));
+        setCorResult(r.result);
+        setCorNote('');
+        setCorError(null);
+    }
+
+    const corChanges = correcting ? resolutionChanges(correcting, { description: corDescription, votesFor: corFor, votesAgainst: corAgainst, votesAbstain: corAbstain, result: corResult }) : {};
+    const corValid = !!correcting && Object.keys(corChanges).length > 0 && !!corNote.trim() && !!corDescription.trim() && !!corResult.trim();
+
+    async function handleCorrectResolution(e: React.FormEvent) {
+        e.preventDefault();
+        if (!correcting || !corValid || corSaving) return;
+        setCorSaving(true);
+        setCorError(null);
+        try {
+            await apiFetch(`/meetings/${meetingId}/resolutions/${correcting.id}?clubId=${clubId}`, {
+                method: 'PATCH',
+                body: { ...corChanges, correctionNote: corNote.trim() },
+            });
+            setCorrecting(null);
+            await load();
+        } catch (err) {
+            setCorError(t(memberErrorKey(err)));
+        } finally {
+            setCorSaving(false);
+        }
+    }
+
+    if (!meeting) return detailLoadFailed ? <LoadError onRetry={() => void load()} /> : <LoadingText />;
+
+    const corVoteFields = [
+        ['cor-for', 'treffen.resolutions.votes-for', corFor, setCorFor],
+        ['cor-against', 'treffen.resolutions.votes-against', corAgainst, setCorAgainst],
+        ['cor-abstain', 'treffen.resolutions.votes-abstain', corAbstain, setCorAbstain],
+    ] as const;
 
     const voteFields = [
         ['res-for', 'treffen.resolutions.votes-for', resFor, setResFor],
@@ -633,7 +708,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                                 ))}
                             </select>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                             <button type="button" onClick={() => void handleSaveAgenda()} className={primaryBtn}>
                                 {t('treffen.agenda-minutes.save')}
                             </button>
@@ -952,6 +1027,14 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                                     <p className="text-foreground">{r.description}</p>
                                     <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">{r.result}</span>
                                 </div>
+                                {r.correctionNote && (
+                                    <p className="mt-2 rounded-md bg-warning/10 px-2 py-1.5 text-xs text-foreground">
+                                        <span className="font-semibold">
+                                            {r.correctedAt ? t('treffen.resolutions.corrected-on', { date: new Date(r.correctedAt).toLocaleDateString('de-DE') }) : t('treffen.resolutions.corrected')}
+                                        </span>{' '}
+                                        {r.correctionNote}
+                                    </p>
+                                )}
                                 <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] font-medium">
                                     <span className="rounded-full bg-success/15 px-2 py-0.5 text-success">
                                         {t('treffen.resolutions.votes-for')}: {r.votesFor}
@@ -963,6 +1046,16 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                                         {t('treffen.resolutions.votes-abstain')}: {r.votesAbstain}
                                     </span>
                                 </div>
+                                {canWrite && (
+                                    <button
+                                        type="button"
+                                        onClick={() => openCorrection(r)}
+                                        className="mt-2 inline-flex items-center gap-1 rounded text-xs font-medium text-primary hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+                                    >
+                                        <Pencil className="h-3.5 w-3.5" aria-hidden />
+                                        {t('treffen.resolutions.correct')}
+                                    </button>
+                                )}
                             </li>
                         ))}
                     </ul>
@@ -1022,6 +1115,66 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                                 />
                             </div>
                             {resError && <ErrorText>{resError}</ErrorText>}
+                        </form>
+                    </Modal>
+                )}
+                {canWrite && (
+                    <Modal
+                        open={correcting !== null}
+                        onClose={corSaving ? () => {} : () => setCorrecting(null)}
+                        title={t('treffen.resolutions.correct')}
+                        footer={
+                            <div className="flex justify-end gap-2">
+                                <button type="button" onClick={() => setCorrecting(null)} disabled={corSaving} className={secondaryBtn}>
+                                    {t('treffen.cancel')}
+                                </button>
+                                <button type="submit" form="resolution-correct-form" disabled={!corValid || corSaving} className={primaryBtn}>
+                                    {t('treffen.resolutions.correct.submit')}
+                                </button>
+                            </div>
+                        }
+                    >
+                        <form id="resolution-correct-form" onSubmit={(e) => void handleCorrectResolution(e)} className="space-y-4">
+                            <p className="text-xs text-muted-foreground">{t('treffen.resolutions.correct.hint')}</p>
+                            <div>
+                                <label htmlFor="cor-description" className={labelClass}>
+                                    {t('treffen.resolutions.description')} *
+                                </label>
+                                <textarea id="cor-description" rows={3} value={corDescription} onChange={(e) => setCorDescription(e.target.value)} className={inputClass} />
+                            </div>
+                            <div className="grid grid-cols-3 gap-3">
+                                {corVoteFields.map(([id, label, value, setter]) => (
+                                    <div key={id}>
+                                        <label htmlFor={id} className={labelClass}>
+                                            {t(label)}
+                                        </label>
+                                        <input id={id} type="number" min={0} value={value} onChange={(e) => setter(e.target.value)} className={inputClass} />
+                                    </div>
+                                ))}
+                            </div>
+                            <div>
+                                <label htmlFor="cor-result" className={labelClass}>
+                                    {t('treffen.resolutions.result')} *
+                                </label>
+                                <input id="cor-result" type="text" value={corResult} onChange={(e) => setCorResult(e.target.value)} className={inputClass} />
+                            </div>
+                            <div>
+                                <label htmlFor="cor-note" className={labelClass}>
+                                    {t('treffen.resolutions.correct.note')} *
+                                </label>
+                                <textarea
+                                    id="cor-note"
+                                    rows={2}
+                                    maxLength={2000}
+                                    required
+                                    value={corNote}
+                                    onChange={(e) => setCorNote(e.target.value)}
+                                    placeholder={t('treffen.resolutions.correct.note.placeholder')}
+                                    className={inputClass}
+                                />
+                            </div>
+                            {correcting && Object.keys(corChanges).length === 0 && <p className="text-xs text-muted-foreground">{t('treffen.resolutions.correct.nochange')}</p>}
+                            {corError && <ErrorText>{corError}</ErrorText>}
                         </form>
                     </Modal>
                 )}

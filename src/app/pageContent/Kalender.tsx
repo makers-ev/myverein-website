@@ -20,6 +20,8 @@ import {
     primaryBtn,
     secondaryBtn,
 } from '@/components/kalender/calendarTypes';
+import LoadingText from '@/components/LoadingText';
+import LoadError from '@/components/LoadError';
 
 interface MyClub {
     clubId: string;
@@ -37,6 +39,7 @@ const navBtn = 'rounded-lg border border-border bg-background p-2 text-foregroun
 export default function KalenderPageContent() {
     const { t, language } = useLanguage();
     const [clubs, setClubs] = useState<MyClub[] | null>(null);
+    const [clubsError, setClubsError] = useState(false);
     const [departments, setDepartments] = useState<Department[]>([]);
     const [calendars, setCalendars] = useState<Calendar[] | null>(null);
     const [events, setEvents] = useState<CalendarEvent[] | null>(null);
@@ -51,9 +54,17 @@ export default function KalenderPageContent() {
     const activeClub = clubs?.[0] ?? null;
     const canWrite = permissions.includes('calendars:write');
 
-    useEffect(() => {
-        void apiFetch<{ data: MyClub[] }>('/my-clubs').then(({ data }) => setClubs(data));
-    }, []);
+    function loadClubs() {
+        apiFetch<{ data: MyClub[] }>('/my-clubs')
+            .then(({ data }) => {
+                setClubs(data);
+                setClubsError(false);
+            })
+            .catch(() => setClubsError(true));
+    }
+
+    // setClubs/setClubsError run inside promise callbacks, not synchronously in the effect body.
+    useEffect(loadClubs, []);
 
     async function refreshData(clubId: string) {
         const [infoRes, calendarsRes, eventsRes] = await Promise.all([
@@ -126,8 +137,10 @@ export default function KalenderPageContent() {
         <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
             <h1 className="text-2xl font-bold text-foreground">{t('kalender.page.title')}</h1>
 
-            {clubs === null ? (
-                <p className="mt-6 text-sm text-muted-foreground">…</p>
+            {clubsError ? (
+                <LoadError className="mt-6" onRetry={loadClubs} />
+            ) : clubs === null ? (
+                <LoadingText className="mt-6" />
             ) : !activeClub ? (
                 <div className="mt-6 rounded-xl border border-border bg-card p-4">
                     <p className="text-sm font-semibold text-foreground">{t('verein.no-club.title')}</p>
@@ -233,7 +246,7 @@ export default function KalenderPageContent() {
                                                 onCellClick={handleCellClick}
                                             />
                                             <section className="rounded-xl border border-border bg-card p-4">
-                                                <div className="mb-3 flex items-center justify-between gap-2">
+                                                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                                                     <h3 className="text-sm font-bold text-foreground">
                                                         {selectedDate.toLocaleDateString(language, { weekday: 'long', day: 'numeric', month: 'long' })}
                                                     </h3>
@@ -287,7 +300,7 @@ export default function KalenderPageContent() {
                                     )}
                                 </>
                             ) : (
-                                <p className="text-sm text-muted-foreground">…</p>
+                                <LoadingText />
                             ))}
                         {tab === 'treffen' && <TreffenPanel clubId={activeClub.clubId} canWrite={permissions.includes('meetings:write')} />}
                     </div>

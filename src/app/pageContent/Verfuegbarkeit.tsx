@@ -7,6 +7,7 @@ import { memberErrorKey } from '@/lib/clubMembers';
 import { apiFetch } from '@/lib/api-client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { inputClass, labelClass, primaryBtn } from '@/components/kalender/calendarTypes';
+import LoadingText from '@/components/LoadingText';
 
 interface MyClub {
     clubId: string;
@@ -169,7 +170,7 @@ export default function VerfuegbarkeitPageContent() {
             <h1 className="text-2xl font-bold text-foreground">{t('verfuegbarkeit.page.title')}</h1>
 
             {clubs === null ? (
-                <p className="mt-6 text-sm text-muted-foreground">…</p>
+                <LoadingText className="mt-6" />
             ) : !activeClub ? (
                 <div className="mt-6 rounded-xl border border-border bg-card p-4">
                     <p className="text-sm font-semibold text-foreground">{t('verein.no-club.title')}</p>

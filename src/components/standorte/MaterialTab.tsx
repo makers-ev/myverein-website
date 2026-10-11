@@ -25,6 +25,7 @@ import {
     type T,
     type Tone,
 } from '@/components/standorte/ui';
+import LoadingText from '@/components/LoadingText';
 
 export interface InventoryItem {
     id: string;
@@ -438,7 +439,7 @@ function LoansSection({
             )}
             {directoryError && <p className="mb-2 text-sm text-destructive">{t('verein.directory.error')}</p>}
             {loans === null ? (
-                <p className="text-sm text-muted-foreground">…</p>
+                <LoadingText />
             ) : loans.length === 0 ? (
                 <EmptyState icon={<Package className="h-6 w-6" />} text={t('standorte.loans.empty')} />
             ) : (
@@ -515,7 +516,7 @@ function DamageReportsSection({ itemId, clubId, canWrite, t }: { itemId: string;
         <SectionCard title={t('standorte.damage-reports.title')}>
             {error && <p className="mb-2 text-sm text-destructive">{error}</p>}
             {reports === null ? (
-                <p className="text-sm text-muted-foreground">…</p>
+                <LoadingText />
             ) : reports.length === 0 ? (
                 <EmptyState icon={<AlertTriangle className="h-6 w-6" />} text={t('standorte.damage-reports.empty')} />
             ) : (
@@ -608,7 +609,7 @@ function ItemDetail({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [itemId]);
 
-    if (!item) return <p className="text-sm text-muted-foreground">…</p>;
+    if (!item) return <LoadingText />;
 
     const facts: [string, string][] = [
         [t('standorte.items.table.category'), item.category ?? '—'],
@@ -724,7 +725,7 @@ export default function MaterialTab({ clubId, locations, canWrite, ownMemberId, 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [clubId]);
 
-    if (items === null) return <p className="text-sm text-muted-foreground">…</p>;
+    if (items === null) return <LoadingText />;
 
     return (
         <div className="space-y-4">
