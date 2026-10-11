@@ -26,6 +26,16 @@ describe('memberErrorKey', () => {
         expect(memberErrorKey(new ApiError(422, 'UNPROCESSABLE_ENTITY', 'Reopening a member who left requires a reason'))).toBe('verein.err.reasonRequired');
     });
 
+    it('maps CSV import and key/WLAN codes', () => {
+        expect(memberErrorKey(new ApiError(422, 'VALIDATION_ERROR', 'x', { code: 'csv_too_many_rows' }))).toBe('verein.err.csvTooManyRows');
+        expect(memberErrorKey(new ApiError(422, 'VALIDATION_ERROR', 'x', { code: 'import_has_errors' }))).toBe('verein.err.importHasErrors');
+        expect(memberErrorKey(new ApiError(409, 'CONFLICT', 'x', { code: 'import_already_applied' }))).toBe('verein.err.importAlreadyApplied');
+        expect(memberErrorKey(new ApiError(422, 'VALIDATION_ERROR', 'x', { code: 'unknown_column' }))).toBe('verein.err.exportColumn');
+        expect(memberErrorKey(new ApiError(409, 'CONFLICT', 'Member already holds a key for this location'))).toBe('verein.err.keyAlreadyIssued');
+        expect(memberErrorKey(new ApiError(422, 'VALIDATION_ERROR', "A password is required unless security is 'open'"))).toBe('verein.err.wifiPasswordRequired');
+        expect(memberErrorKey(new ApiError(429, 'RATE_LIMITED', 'x'))).toBe('verein.err.rateLimit');
+    });
+
     it('falls back to generic texts per status and treats non-API errors as network errors', () => {
         expect(memberErrorKey(new ApiError(403, 'FORBIDDEN', 'Missing members:write permission'))).toBe('verein.err.forbidden');
         expect(memberErrorKey(new ApiError(500, 'INTERNAL_ERROR', 'boom'))).toBe('verein.err.server');

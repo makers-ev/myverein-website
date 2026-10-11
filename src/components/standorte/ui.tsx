@@ -7,7 +7,7 @@ import { Modal } from '@/components/Modal';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { memberErrorKey } from '@/lib/clubMembers';
 
-export type T = (key: string) => string;
+export type T = (key: string, params?: Record<string, string | number>) => string;
 
 export const inputClass =
     'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none';

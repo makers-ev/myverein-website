@@ -1,10 +1,12 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Pencil, Search, UserPlus, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Download, Pencil, Search, Upload, UserPlus, X } from 'lucide-react';
 
 import MemberAvatar from '@/components/verein/MemberAvatar';
+import MemberExportDialog from '@/components/verein/MemberExportDialog';
 import MemberFormModal from '@/components/verein/MemberFormModal';
+import MemberImportDialog from '@/components/verein/MemberImportDialog';
 import MemberRoleCell from '@/components/verein/MemberRoleCell';
 import TransitionSuggestions from '@/components/verein/TransitionSuggestions';
 import { useThrottledCallback } from '@/lib/useThrottledCallback';
@@ -90,6 +92,8 @@ export default function MemberList({
     const [categories, setCategories] = useState<MemberCategory[]>([]);
     const [editing, setEditing] = useState<ClubMember | null>(null);
     const [creating, setCreating] = useState(false);
+    const [importing, setImporting] = useState(false);
+    const [exporting, setExporting] = useState(false);
 
     const reload = () => setLocalReload((n) => n + 1);
 
@@ -261,6 +265,18 @@ export default function MemberList({
                         className={`${inputClass} pl-9`}
                     />
                 </div>
+                {canWrite && (
+                    <button type="button" onClick={() => setImporting(true)} className={`${secondaryButtonClass} inline-flex items-center gap-1.5 !px-3 !py-2`}>
+                        <Upload className="h-4 w-4" aria-hidden="true" />
+                        {t('verein.import.open')}
+                    </button>
+                )}
+                {(canWrite || canSensitive) && (
+                    <button type="button" onClick={() => setExporting(true)} className={`${secondaryButtonClass} inline-flex items-center gap-1.5 !px-3 !py-2`}>
+                        <Download className="h-4 w-4" aria-hidden="true" />
+                        {t('verein.export.open')}
+                    </button>
+                )}
                 {canWrite && (
                     <button type="button" onClick={() => setCreating(true)} className={`${primaryButtonClass} inline-flex items-center gap-1.5`}>
                         <UserPlus className="h-4 w-4" aria-hidden="true" />
@@ -525,6 +541,10 @@ export default function MemberList({
                     }}
                     onChanged={reload}
                 />
+            )}
+            {importing && canWrite && <MemberImportDialog clubId={clubId} categories={categories} onClose={() => setImporting(false)} onImported={reload} />}
+            {exporting && (canWrite || canSensitive) && (
+                <MemberExportDialog clubId={clubId} permissions={permissions} categories={categories} departments={departments} onClose={() => setExporting(false)} />
             )}
         </div>
     );

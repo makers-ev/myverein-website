@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { ArrowLeft, Check, Clock, Copy, ExternalLink, KeyRound, Link as LinkIcon, MapPin, Pencil, Plus, QrCode, Trash2, User, Wifi } from 'lucide-react';
+import { ArrowLeft, Check, Clock, Copy, ExternalLink, Link as LinkIcon, MapPin, Pencil, Plus, QrCode, Trash2, User, Wifi } from 'lucide-react';
 
-import { useAccountMembers } from '@/lib/useAccountMembers';
 import { apiFetch } from '@/lib/api-client';
 import { LOCATION_VISIBILITIES, visibilityOf, type LocationVisibility } from '@/lib/locationVisibility';
-import { buildWifiQrPayload } from '@/lib/wifiQr';
+import { securityOf, WIFI_SECURITIES, wifiNeedsPassword, wifiPasswordFor, wifiQrValue, type WifiSecurity } from '@/lib/wifiQr';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Modal } from '@/components/Modal';
+import KeyManagement, { type LocationKeyHolder } from '@/components/standorte/KeyManagement';
 import {
     Chip,
     ConfirmModal,
@@ -17,7 +17,6 @@ import {
     Field,
     FormModal,
     SectionCard,
-    errorMessage,
     iconButtonClass,
     inputClass,
     primaryButtonClass,
@@ -43,12 +42,6 @@ export interface Location {
     updatedAt: string;
 }
 
-interface LocationKeyHolder {
-    id: string;
-    locationId: string;
-    memberId: string;
-}
-
 interface LocationDetailData extends Location {
     keyHolders: LocationKeyHolder[];
 }
@@ -59,6 +52,10 @@ interface WifiNetwork {
     label: string;
     ssid: string;
     password: string;
+    /** `open | wpa | wep | wpa3` (Wave 7 B14); absent on an older backend. */
+    security?: string;
+    /** Ready-made `WIFI:` string for the QR code, built by the backend. */
+    qrPayload?: string;
     visibility?: string;
     visibleToGuests: boolean;
     createdAt: string;
@@ -235,106 +232,18 @@ function LocationGrid({
     );
 }
 
-// --- Key holders -------------------------------------------------------------------
-
-function KeyHoldersSection({
-    location,
-    clubId,
-    canWrite,
-    t,
-    onChange,
-}: {
-    location: LocationDetailData;
-    clubId: string;
-    canWrite: boolean;
-    t: T;
-    onChange: () => void;
-}) {
-    const [newMemberId, setNewMemberId] = useState('');
-    const [error, setError] = useState<string | null>(null);
-
-    const { members, error: directoryError } = useAccountMembers(clubId);
-    const nameFor = (memberId: string) => members.find((m) => m.id === memberId)?.name ?? '—';
-    const availableMembers = members.filter((m) => !m.left && !location.keyHolders.some((kh) => kh.memberId === m.id));
-
-    async function handleAdd() {
-        if (!newMemberId) return;
-        setError(null);
-        try {
-            await apiFetch(`/locations/${location.id}/key-holders?clubId=${clubId}`, { method: 'POST', body: { memberId: newMemberId } });
-            setNewMemberId('');
-            onChange();
-        } catch (err) {
-            setError(errorMessage(err, t));
-        }
-    }
-
-    async function handleRemove(memberId: string) {
-        setError(null);
-        try {
-            await apiFetch(`/locations/${location.id}/key-holders/${memberId}?clubId=${clubId}`, { method: 'DELETE' });
-            onChange();
-        } catch (err) {
-            setError(errorMessage(err, t));
-        }
-    }
-
-    return (
-        <SectionCard title={t('standorte.keyholders.title')}>
-            {error && <p className="mb-2 text-sm text-destructive">{error}</p>}
-            {directoryError && <p className="mb-2 text-sm text-destructive">{t('verein.directory.error')}</p>}
-            {location.keyHolders.length === 0 ? (
-                <EmptyState icon={<KeyRound className="h-6 w-6" />} text={t('standorte.keyholders.empty')} />
-            ) : (
-                <ul className="flex flex-wrap gap-2">
-                    {location.keyHolders.map((kh) => (
-                        <li key={kh.id} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background py-1 pl-3 pr-1.5 text-sm text-foreground">
-                            <KeyRound className="h-3.5 w-3.5 text-muted-foreground" />
-                            {nameFor(kh.memberId)}
-                            {canWrite && (
-                                <button
-                                    onClick={() => void handleRemove(kh.memberId)}
-                                    className="rounded-full p-0.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                                    aria-label={t('standorte.keyholders.remove')}
-                                    title={t('standorte.keyholders.remove')}
-                                >
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                </button>
-                            )}
-                        </li>
-                    ))}
-                </ul>
-            )}
-            {canWrite && (
-                <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                    <select value={newMemberId} onChange={(e) => setNewMemberId(e.target.value)} className={`${inputClass} sm:flex-1`}>
-                        <option value="">{t('standorte.keyholders.select')}</option>
-                        {availableMembers.map((m) => (
-                            <option key={m.id} value={m.id}>
-                                {m.name ?? m.id}
-                            </option>
-                        ))}
-                    </select>
-                    <button onClick={() => void handleAdd()} disabled={!newMemberId} className={primaryButtonClass}>
-                        <Plus className="h-4 w-4" />
-                        {t('standorte.keyholders.add')}
-                    </button>
-                </div>
-            )}
-        </SectionCard>
-    );
-}
-
 // --- WiFi ---------------------------------------------------------------------------
 
 function WifiQrModal({ network, t, onClose }: { network: WifiNetwork; t: T; onClose: () => void }) {
+    const security = securityOf(network);
     return (
         <Modal open onClose={onClose} title={network.label}>
             <div className="flex flex-col items-center gap-4">
-                {/* White quiet zone keeps the code scannable in dark mode. */}
-                <div className="rounded-xl bg-white p-4">
-                    <QRCodeSVG value={buildWifiQrPayload(network.ssid, network.password)} size={240} marginSize={0} />
+                {/* White quiet zone keeps the code scannable in dark mode. The code is drawn in the browser, the payload goes nowhere else. */}
+                <div className="rounded-xl bg-white p-4" role="img" aria-label={t('standorte.wifi.qr.alt', { name: network.ssid })}>
+                    <QRCodeSVG value={wifiQrValue(network)} size={240} marginSize={0} />
                 </div>
+                <Chip tone={security === 'open' ? 'warning' : 'primary'}>{t(`standorte.wifi.security.${security}`)}</Chip>
                 <p className="text-center text-xs text-muted-foreground">{t('standorte.wifi.qr.hint')}</p>
                 <dl className="w-full space-y-2 text-sm">
                     <div className="flex items-center justify-between gap-2 rounded-lg bg-muted/50 px-3 py-2">
@@ -344,7 +253,7 @@ function WifiQrModal({ network, t, onClose }: { network: WifiNetwork; t: T; onCl
                             <CopyButton value={network.ssid} t={t} />
                         </dd>
                     </div>
-                    {network.password && (
+                    {wifiNeedsPassword(security) && network.password && (
                         <div className="flex items-center justify-between gap-2 rounded-lg bg-muted/50 px-3 py-2">
                             <dt className="text-muted-foreground">{t('standorte.wifi.password')}</dt>
                             <dd className="flex min-w-0 items-center gap-1 font-mono text-foreground">
@@ -392,7 +301,9 @@ function WifiFormModal({
     const run = useRun();
     const [label, setLabel] = useState(network?.label ?? '');
     const [ssid, setSsid] = useState(network?.ssid ?? '');
+    const [security, setSecurity] = useState<WifiSecurity>(network ? securityOf(network) : 'wpa');
     const [password, setPassword] = useState(network?.password ?? '');
+    const needsPassword = wifiNeedsPassword(security);
     const [visibility, setVisibility] = useState<LocationVisibility>(network ? visibilityOf(network) : 'mitglied');
 
     return (
@@ -401,13 +312,13 @@ function WifiFormModal({
             title={network ? t('standorte.wifi.edit.title') : t('standorte.wifi.new.title')}
             submitLabel={network ? t('standorte.wifi.save') : t('standorte.wifi.submit')}
             cancelLabel={t('standorte.wifi.cancel')}
-            canSubmit={!!label.trim() && !!ssid.trim()}
+            canSubmit={!!label.trim() && !!ssid.trim() && (!needsPassword || !!password.trim())}
             onClose={onClose}
             onSubmit={() =>
                 run(async () => {
                     await apiFetch(network ? `/locations/${locationId}/wifi/${network.id}?clubId=${clubId}` : `/locations/${locationId}/wifi?clubId=${clubId}`, {
                         method: network ? 'PATCH' : 'POST',
-                        body: { label: label.trim(), ssid: ssid.trim(), password: password.trim(), visibility },
+                        body: { label: label.trim(), ssid: ssid.trim(), security, password: wifiPasswordFor(security, password), visibility },
                     });
                     await onSaved();
                 })
@@ -420,10 +331,23 @@ function WifiFormModal({
                 <Field label={t('standorte.wifi.ssid')}>
                     <input type="text" value={ssid} onChange={(e) => setSsid(e.target.value)} required className={inputClass} />
                 </Field>
-                <Field label={t('standorte.wifi.password')}>
-                    <input type="text" value={password} onChange={(e) => setPassword(e.target.value)} className={`${inputClass} font-mono`} />
+                <Field label={t('standorte.wifi.security')}>
+                    <select value={security} onChange={(e) => setSecurity(e.target.value as WifiSecurity)} className={inputClass}>
+                        {WIFI_SECURITIES.map((s) => (
+                            <option key={s} value={s}>
+                                {t(`standorte.wifi.security.${s}`)}
+                            </option>
+                        ))}
+                    </select>
                 </Field>
             </div>
+            {needsPassword ? (
+                <Field label={t('standorte.wifi.password')}>
+                    <input type="text" value={password} onChange={(e) => setPassword(e.target.value)} required className={`${inputClass} font-mono`} />
+                </Field>
+            ) : (
+                <p className="rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">{t('standorte.wifi.security.open.hint')}</p>
+            )}
             <VisibilityField value={visibility} onChange={setVisibility} t={t} />
             <p className="text-xs text-muted-foreground">{t('standorte.wifi.hint')}</p>
         </FormModal>
@@ -475,11 +399,10 @@ function WifiSection({ locationId, clubId, canWrite, t }: { locationId: string; 
                                         <Wifi className="h-4 w-4 shrink-0 text-primary" />
                                         <span className="truncate">{net.label}</span>
                                     </p>
-                                    {canWrite && (
-                                        <div className="mt-1">
-                                            <Chip tone="primary">{t(`standorte.visibility.${visibilityOf(net)}`)}</Chip>
-                                        </div>
-                                    )}
+                                    <div className="mt-1 flex flex-wrap gap-1">
+                                        <Chip tone={securityOf(net) === 'open' ? 'warning' : 'muted'}>{t(`standorte.wifi.security.${securityOf(net)}`)}</Chip>
+                                        {canWrite && <Chip tone="primary">{t(`standorte.visibility.${visibilityOf(net)}`)}</Chip>}
+                                    </div>
                                 </div>
                                 {canWrite && (
                                     <div className="flex shrink-0">
@@ -497,15 +420,21 @@ function WifiSection({ locationId, clubId, canWrite, t }: { locationId: string; 
                                     <dt className="text-muted-foreground">{t('standorte.wifi.ssid')}</dt>
                                     <dd className="truncate text-foreground">{net.ssid}</dd>
                                 </div>
-                                <div className="flex items-center justify-between gap-2">
-                                    <dt className="text-muted-foreground">{t('standorte.wifi.password')}</dt>
-                                    <dd className="flex min-w-0 items-center gap-1 font-mono text-foreground">
-                                        <span className="truncate">{net.password}</span>
-                                        <CopyButton value={net.password} t={t} />
-                                    </dd>
-                                </div>
+                                {wifiNeedsPassword(securityOf(net)) && (
+                                    <div className="flex items-center justify-between gap-2">
+                                        <dt className="text-muted-foreground">{t('standorte.wifi.password')}</dt>
+                                        <dd className="flex min-w-0 items-center gap-1 font-mono text-foreground">
+                                            <span className="truncate">{net.password}</span>
+                                            <CopyButton value={net.password} t={t} />
+                                        </dd>
+                                    </div>
+                                )}
                             </dl>
-                            <button onClick={() => setQrFor(net)} className={`${secondaryButtonClass} mt-3 w-full justify-center`}>
+                            <button
+                                onClick={() => setQrFor(net)}
+                                disabled={wifiNeedsPassword(securityOf(net)) && !net.password}
+                                className={`${secondaryButtonClass} mt-3 w-full justify-center`}
+                            >
                                 <QrCode className="h-4 w-4" />
                                 {t('standorte.wifi.qr')}
                             </button>
@@ -756,7 +685,7 @@ function LocationDetail({
             </div>
 
             <WifiSection locationId={locationId} clubId={clubId} canWrite={canWrite} t={t} />
-            {!location.accessRestricted && <KeyHoldersSection location={location} clubId={clubId} canWrite={canWrite} t={t} onChange={() => void load()} />}
+            {!location.accessRestricted && <KeyManagement location={location} clubId={clubId} canWrite={canWrite} t={t} onChange={() => void load()} />}
             <LinksSection locationId={locationId} clubId={clubId} canWrite={canWrite} t={t} />
 
             {editing && (

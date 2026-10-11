@@ -215,6 +215,31 @@ export function memberErrorKey(err: unknown): string {
             return 'verein.err.mergeNotSupported';
         case 'account_has_open_items':
             return 'verein.err.accountOpenItems';
+        case 'unknown_column':
+            return 'verein.err.exportColumn';
+        // Wave 7 W6: CSV import file-level problems and the confirmation flow.
+        case 'csv_too_large':
+            return 'verein.err.csvTooLarge';
+        case 'csv_too_many_rows':
+            return 'verein.err.csvTooManyRows';
+        case 'csv_too_many_columns':
+            return 'verein.err.csvTooManyColumns';
+        case 'csv_cell_too_long':
+            return 'verein.err.csvCellTooLong';
+        case 'csv_empty':
+            return 'verein.err.csvEmpty';
+        case 'csv_malformed':
+            return 'verein.err.csvMalformed';
+        case 'csv_missing_name_column':
+            return 'verein.err.csvMissingNameColumn';
+        case 'import_not_confirmed':
+            return 'verein.err.importNotConfirmed';
+        case 'import_has_errors':
+            return 'verein.err.importHasErrors';
+        case 'import_nothing_to_do':
+            return 'verein.err.importNothingToDo';
+        case 'import_already_applied':
+            return 'verein.err.importAlreadyApplied';
     }
     switch (err.status) {
         case 403:
@@ -224,6 +249,7 @@ export function memberErrorKey(err: unknown): string {
             return 'verein.err.notFound';
         case 409:
             if ((err.details as { code?: unknown } | undefined)?.code === 'member_rejoin_blocked') return 'verein.err.rejoinBlocked';
+            if (/already holds a key/i.test(m)) return 'verein.err.keyAlreadyIssued';
             if (/member number/i.test(m)) return 'verein.err.memberNumberTaken';
             if (/no account/i.test(m)) return 'verein.err.noAccount';
             if (/already has an account/i.test(m)) return 'verein.err.hasAccount';
@@ -239,6 +265,8 @@ export function memberErrorKey(err: unknown): string {
             if (/archived/i.test(m)) return 'verein.err.categoryArchived';
             return 'verein.err.conflict';
         case 422:
+            if (/password is required/i.test(m)) return 'verein.err.wifiPasswordRequired';
+            if (/not a member of this club/i.test(m)) return 'verein.err.keyMemberInvalid';
             if (/unknown or archived category/i.test(m)) return 'verein.err.categoryUnknown';
             if (/requires a reason/i.test(m)) return 'verein.err.reasonRequired';
             if (/reopen/i.test(m)) return 'verein.err.reopenRequired';
