@@ -1,11 +1,23 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ArrowLeft, CalendarClock, Plus, X } from 'lucide-react';
+import { ArrowLeft, CalendarClock, Pencil, Plus, Trash2, X } from 'lucide-react';
 
 import { useAccountMembers } from '@/lib/useAccountMembers';
 import { memberErrorKey } from '@/lib/clubMembers';
 import { apiFetch } from '@/lib/api-client';
+import {
+    buildAttendancePatch,
+    effectiveAttendance,
+    fromDatetimeLocal,
+    MEETING_TYPES,
+    meetingTypeKey,
+    toDatetimeLocal,
+    type AttendanceEdit,
+    type AttendanceRow,
+    type MeetingType,
+    type RsvpResponse,
+} from '@/lib/meetings';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Modal } from '@/components/Modal';
 import { inputClass, labelClass, primaryBtn, secondaryBtn } from '@/components/kalender/calendarTypes';
@@ -59,6 +71,11 @@ const RESPONSE_STYLES: Record<string, string> = {
     abgesagt: 'bg-destructive/15 text-destructive',
 };
 
+function typeLabel(type: string, t: TFn): string {
+    const key = meetingTypeKey(type);
+    return key ? t(key) : type;
+}
+
 function SectionCard({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) {
     return (
         <section className="rounded-xl border border-border bg-card p-4">
@@ -87,7 +104,7 @@ function MeetingList({ clubId, t, canWrite, onSelect }: { clubId: string; t: TFn
     const [meetings, setMeetings] = useState<Meeting[] | null>(null);
     const [showCreate, setShowCreate] = useState(false);
     const [title, setTitle] = useState('');
-    const [type, setType] = useState('');
+    const [type, setType] = useState<MeetingType>('sonstige');
     const [scheduledAt, setScheduledAt] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
@@ -105,7 +122,7 @@ function MeetingList({ clubId, t, canWrite, onSelect }: { clubId: string; t: TFn
 
     async function handleCreate(e: React.FormEvent) {
         e.preventDefault();
-        if (!title.trim() || !type.trim()) return;
+        if (!title.trim()) return;
         setSubmitting(true);
         setError(null);
         try {
@@ -113,12 +130,12 @@ function MeetingList({ clubId, t, canWrite, onSelect }: { clubId: string; t: TFn
                 method: 'POST',
                 body: {
                     title: title.trim(),
-                    type: type.trim(),
-                    scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : undefined,
+                    type,
+                    scheduledAt: fromDatetimeLocal(scheduledAt) ?? undefined,
                 },
             });
             setTitle('');
-            setType('');
+            setType('sonstige');
             setScheduledAt('');
             setShowCreate(false);
             await load();
@@ -158,7 +175,7 @@ function MeetingList({ clubId, t, canWrite, onSelect }: { clubId: string; t: TFn
                                 <span className="min-w-0 flex-1">
                                     <span className="block truncate text-sm font-semibold text-foreground">{m.title}</span>
                                     <span className="block truncate text-xs text-muted-foreground">
-                                        {m.type} · {m.scheduledAt ? new Date(m.scheduledAt).toLocaleString('de-DE') : t('treffen.scheduled-at.pending')}
+                                        {typeLabel(m.type, t)} · {m.scheduledAt ? new Date(m.scheduledAt).toLocaleString('de-DE') : t('treffen.scheduled-at.pending')}
                                     </span>
                                 </span>
                                 <StatusBadge status={m.status} t={t} />
@@ -178,7 +195,7 @@ function MeetingList({ clubId, t, canWrite, onSelect }: { clubId: string; t: TFn
                             <button type="button" onClick={() => setShowCreate(false)} className={secondaryBtn}>
                                 {t('treffen.cancel')}
                             </button>
-                            <button type="submit" form="meeting-form" disabled={submitting || !title.trim() || !type.trim()} className={primaryBtn}>
+                            <button type="submit" form="meeting-form" disabled={submitting || !title.trim()} className={primaryBtn}>
                                 {t('treffen.submit')}
                             </button>
                         </div>
@@ -203,15 +220,13 @@ function MeetingList({ clubId, t, canWrite, onSelect }: { clubId: string; t: TFn
                             <label htmlFor="mt-type" className={labelClass}>
                                 {t('treffen.type')} *
                             </label>
-                            <input
-                                id="mt-type"
-                                type="text"
-                                required
-                                value={type}
-                                onChange={(e) => setType(e.target.value)}
-                                placeholder={t('treffen.type.placeholder')}
-                                className={inputClass}
-                            />
+                            <select id="mt-type" value={type} onChange={(e) => setType(e.target.value as MeetingType)} className={inputClass}>
+                                {MEETING_TYPES.map((mt) => (
+                                    <option key={mt} value={mt}>
+                                        {t(`treffen.type.${mt}`)}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
                         <div>
                             <label htmlFor="mt-scheduled" className={labelClass}>
@@ -239,17 +254,34 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
     const [invitees, setInvitees] = useState<MeetingInvitee[]>([]);
     const { members, error: directoryError } = useAccountMembers(clubId);
     const [resolutions, setResolutions] = useState<MeetingResolution[]>([]);
+    // Stored attendance (pre-fill) and the caller's own Better Auth member id (to find their invitation).
+    const [storedAttendance, setStoredAttendance] = useState<AttendanceRow[]>([]);
+    const [ownMemberId, setOwnMemberId] = useState<string | null>(null);
 
     async function load() {
-        const [meetingRes, inviteesRes, resolutionsRes] = await Promise.all([
+        const [meetingRes, inviteesRes, resolutionsRes, attendanceRes] = await Promise.all([
             apiFetch<{ data: Meeting }>(`/meetings/${meetingId}?clubId=${clubId}`),
             apiFetch<{ data: MeetingInvitee[] }>(`/meetings/${meetingId}/invitees?clubId=${clubId}`),
             apiFetch<{ data: MeetingResolution[] }>(`/meetings/${meetingId}/resolutions?clubId=${clubId}`),
+            apiFetch<{ data: AttendanceRow[] }>(`/meetings/${meetingId}/attendance?clubId=${clubId}`),
         ]);
         setMeeting(meetingRes.data);
         setInvitees(inviteesRes.data);
         setResolutions(resolutionsRes.data);
+        setStoredAttendance(attendanceRes.data);
     }
+
+    useEffect(() => {
+        let cancelled = false;
+        apiFetch<{ data?: { memberId?: string | null } }>(`/club-members/me?clubId=${clubId}`)
+            .then((res) => {
+                if (!cancelled) setOwnMemberId(res.data?.memberId ?? null);
+            })
+            .catch(() => undefined);
+        return () => {
+            cancelled = true;
+        };
+    }, [clubId]);
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -258,6 +290,81 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
     }, [meetingId]);
 
     const nameFor = (memberId: string) => members.find((m) => m.id === memberId)?.name ?? '—';
+
+    // --- Stammdaten (Titel/Art/Termin) bearbeiten + Löschen ---
+    const [metaOpen, setMetaOpen] = useState(false);
+    const [metaTitle, setMetaTitle] = useState('');
+    const [metaType, setMetaType] = useState<string>('sonstige');
+    const [metaScheduled, setMetaScheduled] = useState('');
+    const [metaError, setMetaError] = useState<string | null>(null);
+    const [metaSaving, setMetaSaving] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
+
+    function openEditMeeting() {
+        if (!meeting) return;
+        setMetaTitle(meeting.title);
+        setMetaType(meeting.type);
+        setMetaScheduled(toDatetimeLocal(meeting.scheduledAt));
+        setMetaError(null);
+        setMetaOpen(true);
+    }
+
+    async function handleSaveMeta(e: React.FormEvent) {
+        e.preventDefault();
+        if (!meeting || !metaTitle.trim()) return;
+        // Only what changed: sending the type of a legacy row again would be rejected by the enum.
+        const body: Record<string, unknown> = {};
+        if (metaTitle.trim() !== meeting.title) body.title = metaTitle.trim();
+        if (metaType !== meeting.type) body.type = metaType;
+        if (metaScheduled !== toDatetimeLocal(meeting.scheduledAt)) body.scheduledAt = fromDatetimeLocal(metaScheduled);
+        if (Object.keys(body).length === 0) {
+            setMetaOpen(false);
+            return;
+        }
+        setMetaSaving(true);
+        setMetaError(null);
+        try {
+            await apiFetch(`/meetings/${meetingId}?clubId=${clubId}`, { method: 'PATCH', body });
+            setMetaOpen(false);
+            await load();
+        } catch (err) {
+            setMetaError(t(memberErrorKey(err)));
+        } finally {
+            setMetaSaving(false);
+        }
+    }
+
+    async function handleDeleteMeeting() {
+        if (!meeting || !window.confirm(t('treffen.delete.confirm', { title: meeting.title }))) return;
+        setDeleting(true);
+        setDeleteError(null);
+        try {
+            await apiFetch(`/meetings/${meetingId}?clubId=${clubId}`, { method: 'DELETE' });
+            onBack();
+        } catch (err) {
+            setDeleteError(t(memberErrorKey(err)));
+            setDeleting(false);
+        }
+    }
+
+    // --- Zu-/Absage (own invitation) ---
+    const [rsvpBusy, setRsvpBusy] = useState(false);
+    const [rsvpError, setRsvpError] = useState<string | null>(null);
+    const ownInvite = ownMemberId ? invitees.find((inv) => inv.memberId === ownMemberId) : undefined;
+
+    async function handleRsvp(response: RsvpResponse) {
+        setRsvpBusy(true);
+        setRsvpError(null);
+        try {
+            await apiFetch(`/meetings/${meetingId}/invitees/me?clubId=${clubId}`, { method: 'PATCH', body: { response } });
+            await load();
+        } catch (err) {
+            setRsvpError(t(memberErrorKey(err)));
+        } finally {
+            setRsvpBusy(false);
+        }
+    }
 
     // --- Agenda/Protokoll + Status ---
     const [editing, setEditing] = useState(false);
@@ -346,26 +453,39 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
     }
 
     // --- Attendance ---
-    const [attendance, setAttendance] = useState<Record<string, { present: boolean; hasVotingRight: boolean }>>({});
+    // Pre-filled from the stored rows; `attendanceEdits` holds only what the user touched, and only that is sent.
+    const [attendanceEdits, setAttendanceEdits] = useState<Record<string, AttendanceEdit>>({});
     const [attendanceError, setAttendanceError] = useState<string | null>(null);
     const [attendanceSaved, setAttendanceSaved] = useState(false);
+    const [attendanceSaving, setAttendanceSaving] = useState(false);
+
+    function editAttendance(memberId: string, change: AttendanceEdit) {
+        setAttendanceSaved(false);
+        setAttendanceEdits((prev) => ({ ...prev, [memberId]: { ...prev[memberId], ...change } }));
+    }
+
+    const attendancePatch = buildAttendancePatch(storedAttendance, attendanceEdits);
 
     async function handleSaveAttendance() {
         setAttendanceError(null);
         setAttendanceSaved(false);
+        if (attendancePatch.length === 0) {
+            setAttendanceSaved(true);
+            return;
+        }
+        setAttendanceSaving(true);
         try {
-            const entries = invitees.map((inv) => ({
-                memberId: inv.memberId,
-                present: attendance[inv.memberId]?.present ?? false,
-                hasVotingRight: attendance[inv.memberId]?.hasVotingRight ?? true,
-            }));
-            await apiFetch(`/meetings/${meetingId}/attendance?clubId=${clubId}`, {
+            const res = await apiFetch<{ data: AttendanceRow[] }>(`/meetings/${meetingId}/attendance?clubId=${clubId}`, {
                 method: 'PATCH',
-                body: entries,
+                body: attendancePatch,
             });
+            setStoredAttendance(res.data);
+            setAttendanceEdits({});
             setAttendanceSaved(true);
         } catch (err) {
             setAttendanceError(t(memberErrorKey(err)));
+        } finally {
+            setAttendanceSaving(false);
         }
     }
 
@@ -424,8 +544,30 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                 <div className="min-w-0">
                     <h2 className="text-xl font-bold text-foreground">{meeting.title}</h2>
                     <p className="mt-0.5 text-sm text-muted-foreground">
-                        {meeting.type} · {meeting.scheduledAt ? new Date(meeting.scheduledAt).toLocaleString('de-DE') : t('treffen.scheduled-at.pending')}
+                        {typeLabel(meeting.type, t)} · {meeting.scheduledAt ? new Date(meeting.scheduledAt).toLocaleString('de-DE') : t('treffen.scheduled-at.pending')}
                     </p>
+                    {canWrite && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                            <button type="button" onClick={openEditMeeting} className={`${secondaryBtn} inline-flex items-center gap-1.5 !px-3 !py-1.5`}>
+                                <Pencil className="h-3.5 w-3.5" aria-hidden />
+                                {t('treffen.edit')}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => void handleDeleteMeeting()}
+                                disabled={deleting}
+                                className={`${secondaryBtn} inline-flex items-center gap-1.5 !px-3 !py-1.5 !text-destructive`}
+                            >
+                                <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                                {t('treffen.delete')}
+                            </button>
+                        </div>
+                    )}
+                    {deleteError && (
+                        <div className="mt-3">
+                            <ErrorText>{deleteError}</ErrorText>
+                        </div>
+                    )}
                 </div>
                 <StatusBadge status={meeting.status} t={t} />
             </div>
@@ -501,6 +643,40 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                     </div>
                 )}
             </SectionCard>
+
+            {ownInvite && (
+                <SectionCard title={t('treffen.rsvp.title')}>
+                    <p className="mb-3 text-sm text-muted-foreground">
+                        {t('treffen.rsvp.current')}:{' '}
+                        <span className="font-semibold text-foreground">{t(`treffen.rsvp.response.${ownInvite.response}`)}</span>
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                        <button
+                            type="button"
+                            onClick={() => void handleRsvp('zugesagt')}
+                            disabled={rsvpBusy || ownInvite.response === 'zugesagt'}
+                            aria-pressed={ownInvite.response === 'zugesagt'}
+                            className={primaryBtn}
+                        >
+                            {t('treffen.rsvp.accept')}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => void handleRsvp('abgesagt')}
+                            disabled={rsvpBusy || ownInvite.response === 'abgesagt'}
+                            aria-pressed={ownInvite.response === 'abgesagt'}
+                            className={secondaryBtn}
+                        >
+                            {t('treffen.rsvp.decline')}
+                        </button>
+                    </div>
+                    {rsvpError && (
+                        <div className="mt-3">
+                            <ErrorText>{rsvpError}</ErrorText>
+                        </div>
+                    )}
+                </SectionCard>
+            )}
 
             <SectionCard title={t('treffen.invitees.title')}>
                 {inviteError && (
@@ -650,14 +826,15 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                                     <th className="px-3 py-2">{t('treffen.attendance.name')}</th>
                                     <th className="px-3 py-2 text-center">{t('treffen.attendance.present')}</th>
                                     <th className="px-3 py-2 text-center">{t('treffen.attendance.voting-right')}</th>
+                                    <th className="px-3 py-2">{t('treffen.attendance.proxy')}</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {invitees.map((inv) => {
-                                    const row = attendance[inv.memberId] ?? {
-                                        present: false,
-                                        hasVotingRight: true,
-                                    };
+                                    const row = effectiveAttendance(
+                                        storedAttendance.find((r) => r.memberId === inv.memberId),
+                                        attendanceEdits[inv.memberId],
+                                    );
                                     return (
                                         <tr key={inv.id} className="border-b border-border last:border-b-0">
                                             <td className="px-3 py-2 text-foreground">{nameFor(inv.memberId)}</td>
@@ -667,15 +844,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                                                     aria-label={`${t('treffen.attendance.present')}: ${nameFor(inv.memberId)}`}
                                                     checked={row.present}
                                                     disabled={!canWrite}
-                                                    onChange={(e) =>
-                                                        setAttendance((prev) => ({
-                                                            ...prev,
-                                                            [inv.memberId]: {
-                                                                ...row,
-                                                                present: e.target.checked,
-                                                            },
-                                                        }))
-                                                    }
+                                                    onChange={(e) => editAttendance(inv.memberId, { present: e.target.checked })}
                                                     className="h-4 w-4 accent-primary"
                                                 />
                                             </td>
@@ -685,17 +854,27 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                                                     aria-label={`${t('treffen.attendance.voting-right')}: ${nameFor(inv.memberId)}`}
                                                     checked={row.hasVotingRight}
                                                     disabled={!canWrite}
-                                                    onChange={(e) =>
-                                                        setAttendance((prev) => ({
-                                                            ...prev,
-                                                            [inv.memberId]: {
-                                                                ...row,
-                                                                hasVotingRight: e.target.checked,
-                                                            },
-                                                        }))
-                                                    }
+                                                    onChange={(e) => editAttendance(inv.memberId, { hasVotingRight: e.target.checked })}
                                                     className="h-4 w-4 accent-primary"
                                                 />
+                                            </td>
+                                            <td className="px-3 py-2">
+                                                <select
+                                                    aria-label={`${t('treffen.attendance.proxy')}: ${nameFor(inv.memberId)}`}
+                                                    value={row.proxyForMemberId ?? ''}
+                                                    disabled={!canWrite}
+                                                    onChange={(e) => editAttendance(inv.memberId, { proxyForMemberId: e.target.value || null })}
+                                                    className="w-full min-w-32 rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground focus:border-primary focus:outline-none disabled:opacity-60"
+                                                >
+                                                    <option value="">{t('treffen.attendance.proxy.none')}</option>
+                                                    {members
+                                                        .filter((m) => m.id !== inv.memberId && (!m.left || m.id === row.proxyForMemberId))
+                                                        .map((m) => (
+                                                            <option key={m.id} value={m.id}>
+                                                                {m.name ?? m.id}
+                                                            </option>
+                                                        ))}
+                                                </select>
                                             </td>
                                         </tr>
                                     );
@@ -711,7 +890,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                 )}
                 {attendanceSaved && !attendanceError && <p className="mt-2 text-xs text-success">{t('treffen.attendance.saved')}</p>}
                 {canWrite && invitees.length > 0 && (
-                    <button type="button" onClick={() => void handleSaveAttendance()} className={`${primaryBtn} mt-3`}>
+                    <button type="button" onClick={() => void handleSaveAttendance()} disabled={attendanceSaving || attendancePatch.length === 0} className={`${primaryBtn} mt-3`}>
                         {t('treffen.attendance.save')}
                     </button>
                 )}
@@ -816,6 +995,54 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                     </Modal>
                 )}
             </SectionCard>
+
+            {canWrite && (
+                <Modal
+                    open={metaOpen}
+                    onClose={metaSaving ? () => {} : () => setMetaOpen(false)}
+                    title={t('treffen.edit')}
+                    footer={
+                        <div className="flex justify-end gap-2">
+                            <button type="button" onClick={() => setMetaOpen(false)} disabled={metaSaving} className={secondaryBtn}>
+                                {t('treffen.cancel')}
+                            </button>
+                            <button type="submit" form="meeting-edit-form" disabled={metaSaving || !metaTitle.trim()} className={primaryBtn}>
+                                {t('treffen.agenda-minutes.save')}
+                            </button>
+                        </div>
+                    }
+                >
+                    <form id="meeting-edit-form" onSubmit={(e) => void handleSaveMeta(e)} className="space-y-4">
+                        <div>
+                            <label htmlFor="me-title" className={labelClass}>
+                                {t('treffen.title')} *
+                            </label>
+                            <input id="me-title" type="text" required autoFocus value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} className={inputClass} />
+                        </div>
+                        <div>
+                            <label htmlFor="me-type" className={labelClass}>
+                                {t('treffen.type')} *
+                            </label>
+                            <select id="me-type" value={metaType} onChange={(e) => setMetaType(e.target.value)} className={inputClass}>
+                                {!MEETING_TYPES.some((mt) => mt === metaType) && <option value={metaType}>{metaType}</option>}
+                                {MEETING_TYPES.map((mt) => (
+                                    <option key={mt} value={mt}>
+                                        {t(`treffen.type.${mt}`)}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label htmlFor="me-scheduled" className={labelClass}>
+                                {t('treffen.scheduled-at')}
+                            </label>
+                            <input id="me-scheduled" type="datetime-local" value={metaScheduled} onChange={(e) => setMetaScheduled(e.target.value)} className={inputClass} />
+                            <p className="mt-1 text-xs text-muted-foreground">{t('treffen.scheduled-at.hint')}</p>
+                        </div>
+                        {metaError && <ErrorText>{metaError}</ErrorText>}
+                    </form>
+                </Modal>
+            )}
         </div>
     );
 }

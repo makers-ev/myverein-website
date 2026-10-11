@@ -16,7 +16,7 @@ vi.mock('./api-client', () => {
 });
 
 import { ApiError } from './api-client';
-import { allowedStatusesFromError, formatDate, hasPendingExit, memberCountFromError, memberErrorKey, STATUS_TRANSITIONS } from './clubMembers';
+import { allowedStatusesFromError, applyConflictKind, formatDate, hasPendingExit, memberCountFromError, memberErrorKey, STATUS_TRANSITIONS } from './clubMembers';
 
 describe('memberErrorKey', () => {
     it('maps known backend conflicts to plain-language keys instead of raw strings', () => {
@@ -75,5 +75,17 @@ describe('formatDate', () => {
         // 23:30 UTC on New Year's Eve is already 1 January in Berlin.
         expect(formatDate('2026-12-31T23:30:00.000Z', 'de')).toBe('1.1.2027');
         expect(formatDate(null, 'de')).toBe('—');
+    });
+});
+
+describe('applyConflictKind', () => {
+    it('tells ALREADY_MEMBER and APPLICATION_PENDING apart', () => {
+        expect(applyConflictKind(new ApiError(409, 'ALREADY_MEMBER', 'Already a member of this club'))).toBe('already_member');
+        expect(applyConflictKind(new ApiError(409, 'APPLICATION_PENDING', 'An application for this club is already pending'))).toBe('application_pending');
+    });
+    it('keeps a code-less 409 generic and ignores other statuses', () => {
+        expect(applyConflictKind(new ApiError(409, 'CONFLICT', 'x'))).toBe('other');
+        expect(applyConflictKind(new ApiError(404, 'NOT_FOUND', 'x'))).toBeNull();
+        expect(applyConflictKind(new Error('offline'))).toBeNull();
     });
 });

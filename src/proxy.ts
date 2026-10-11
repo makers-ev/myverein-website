@@ -66,14 +66,15 @@ export function proxy(request: NextRequest) {
     // The backend's origin must be reachable from `connect-src` since the
     // Better Auth client (src/lib/auth-client.ts) fetches it directly from
     // the browser (sign-in/sign-up/session calls never go through this app's
-    // own server).
+    // own server). `img-src` needs it too: member/location photos are signed
+    // `<backend>/media/...` URLs (media security layer), loaded by plain <img>.
     const backendOrigin = process.env.NEXT_PUBLIC_BACKEND_URL ?? "'self'";
 
     const cspHeader = `
         default-src 'self';
         script-src 'self' ${isDev ? "'unsafe-inline' 'unsafe-eval'" : `'nonce-${nonce}' 'strict-dynamic'`};
         style-src 'self' ${isDev ? "'unsafe-inline'" : `'nonce-${nonce}'`};
-        img-src 'self' blob: data:;
+        img-src 'self' blob: data: ${backendOrigin};
         font-src 'self';
         connect-src 'self' ${backendOrigin};
         object-src 'none';

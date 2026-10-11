@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { apiFetch } from '@/lib/api-client';
 import { memberErrorKey } from '@/lib/clubMembers';
@@ -12,6 +12,7 @@ import ClubSettingsPanel from '@/components/verein/ClubSettingsPanel';
 import ClubStatsPanel from '@/components/verein/ClubStatsPanel';
 import ExitQueuePanel from '@/components/verein/ExitQueuePanel';
 import MemberList from '@/components/verein/MemberList';
+import MemberAvatar from '@/components/verein/MemberAvatar';
 import RoleBadge from '@/components/verein/RoleBadge';
 import ProfilTab, { type OwnMembership } from '@/components/verein/ProfilTab';
 
@@ -27,6 +28,8 @@ interface BoardMember {
     name: string | null;
     roleType: string;
     termEndsAt: string | null;
+    /** Signed short-lived URL; only for own row / members:write / read_sensitive, else `null`. */
+    photoUrl?: string | null;
 }
 
 interface Department {
@@ -60,7 +63,7 @@ function SectionCard({ title, children }: { title: string; children: React.React
     );
 }
 
-function VereinsinfoTab({ info, t }: { info: ClubInfo; t: (key: string) => string }) {
+function VereinsinfoTab({ info, t, onPhotoExpired }: { info: ClubInfo; t: (key: string) => string; onPhotoExpired: () => void }) {
     return (
         <div className="grid gap-4 sm:grid-cols-2">
             <SectionCard title={t('verein.info.board')}>
@@ -70,7 +73,10 @@ function VereinsinfoTab({ info, t }: { info: ClubInfo; t: (key: string) => strin
                     <ul className="space-y-2">
                         {info.board.map((m) => (
                             <li key={m.memberId} className="flex items-center justify-between gap-2">
-                                <span className="text-sm text-foreground">{m.name ?? '—'}</span>
+                                <span className="flex min-w-0 items-center gap-2 text-sm text-foreground">
+                                    <MemberAvatar name={m.name} photoUrl={m.photoUrl} onExpired={onPhotoExpired} />
+                                    <span className="truncate">{m.name ?? '—'}</span>
+                                </span>
                                 <RoleBadge roleType={m.roleType} />
                             </li>
                         ))}
@@ -183,6 +189,9 @@ export default function VereinPageContent() {
 
     const activeClub = clubs?.[0] ?? null;
 
+    // Signed photo URLs expire: a failed image load refetches the club data once per window (avatars fail together).
+    const lastPhotoRefetch = useRef(0);
+
     function loadClubs() {
         void apiFetch<{ data: MyClub[] }>('/my-clubs').then(({ data }) => setClubs(data));
     }
@@ -274,7 +283,11 @@ export default function VereinPageContent() {
                     </div>
 
                     <div className="mt-4">
-                        {currentTab === 'info' && (info ? <VereinsinfoTab info={info} t={t} /> : <p className="text-sm text-muted-foreground">…</p>)}
+                        {currentTab === 'info' && (info ? <VereinsinfoTab info={info} t={t} onPhotoExpired={() => {
+                                    if (Date.now() - lastPhotoRefetch.current < 15_000) return;
+                                    lastPhotoRefetch.current = Date.now();
+                                    void refreshClubData(activeClub.clubId);
+                                }} /> : <p className="text-sm text-muted-foreground">…</p>)}
                         {currentTab === 'profil' &&
                             (me ? (
                                 <ProfilTab me={me} clubId={activeClub.clubId} onSaved={() => void refreshClubData(activeClub.clubId)} />

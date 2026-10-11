@@ -22,6 +22,8 @@ export default function StandortePageContent() {
     const [locations, setLocations] = useState<Location[] | null>(null);
     const [tab, setTab] = useState<Tab>('standorte');
     const [permissions, setPermissions] = useState<string[]>([]);
+    // Better Auth member id of the caller (what loans record as borrower).
+    const [ownMemberId, setOwnMemberId] = useState<string | null>(null);
 
     const activeClub = clubs?.[0] ?? null;
 
@@ -39,9 +41,15 @@ export default function StandortePageContent() {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         void refreshLocations(activeClub.clubId);
         // Missing permissions only hide write UI; the backend enforces them anyway.
-        apiFetch<{ data: { permissions?: string[] } }>(`/club-members/me?clubId=${activeClub.clubId}`)
-            .then(({ data }) => setPermissions(data.permissions ?? []))
-            .catch(() => setPermissions([]));
+        apiFetch<{ data: { permissions?: string[]; memberId?: string | null } }>(`/club-members/me?clubId=${activeClub.clubId}`)
+            .then(({ data }) => {
+                setPermissions(data.permissions ?? []);
+                setOwnMemberId(data.memberId ?? null);
+            })
+            .catch(() => {
+                setPermissions([]);
+                setOwnMemberId(null);
+            });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeClub?.clubId]);
 
@@ -86,7 +94,7 @@ export default function StandortePageContent() {
                                     />
                                 )}
                                 {tab === 'material' && (
-                                    <MaterialTab clubId={activeClub.clubId} locations={locations} canWrite={permissions.includes('inventory:write')} />
+                                    <MaterialTab clubId={activeClub.clubId} locations={locations} canWrite={permissions.includes('inventory:write')} ownMemberId={ownMemberId} />
                                 )}
                             </>
                         )}

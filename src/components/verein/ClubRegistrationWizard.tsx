@@ -9,6 +9,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import {
     ALLOWED_DOCUMENT_MIME_TYPES,
     CLAIMED_ROLES,
+    sanitizeClaimedRole,
     DOCUMENT_KINDS,
     LEGAL_FORMS,
     LIMITS,
@@ -71,7 +72,7 @@ export default function ClubRegistrationWizard({
     const [postalCode, setPostalCode] = useState(initial?.postalCode ?? '');
     const [city, setCity] = useState(initial?.city ?? '');
     const [websiteUrl, setWebsiteUrl] = useState(initial?.websiteUrl ?? '');
-    const [claimedRole, setClaimedRole] = useState<ClaimedRole>(initial?.claimedRole ?? 'vorsitz');
+    const [claimedRole, setClaimedRole] = useState<ClaimedRole>(sanitizeClaimedRole(initial?.claimedRole));
     const [confirmed, setConfirmed] = useState(false);
 
     const [queue, setQueue] = useState<QueuedFile[]>([]);

@@ -86,6 +86,8 @@ export interface ClubMember {
     emergencyContactName?: string | null;
     emergencyContactPhone?: string | null;
     suggestedCategory?: CategoryRef | null;
+    /** Short-lived signed photo URL; `null`/absent = no photo (or not visible to the caller) => initials avatar. Never stored. */
+    photoUrl?: string | null;
 }
 
 export interface MemberListResponse {
@@ -260,6 +262,16 @@ export function memberErrorKey(err: unknown): string {
         default:
             return err.status >= 500 ? 'verein.err.server' : 'verein.err.generic';
     }
+}
+
+/** Kind of a `POST /club-members/apply` conflict (`409` with `error.code`); `other` = a 409 without a known code. */
+export type ApplyConflict = 'already_member' | 'application_pending' | 'other';
+
+export function applyConflictKind(err: unknown): ApplyConflict | null {
+    if (!(err instanceof ApiError) || err.status !== 409) return null;
+    if (err.code === 'ALREADY_MEMBER') return 'already_member';
+    if (err.code === 'APPLICATION_PENDING') return 'application_pending';
+    return 'other';
 }
 
 /** The `details.allowed` list of a 409 "status change not allowed", if the backend sent one. */

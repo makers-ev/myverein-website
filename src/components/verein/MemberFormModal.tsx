@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { History, Info } from 'lucide-react';
 
 import MemberAccountSection from '@/components/verein/MemberAccountSection';
+import MemberPhotoSection from '@/components/verein/MemberPhotoSection';
 import MemberStatusDialog from '@/components/verein/MemberStatusDialog';
 import { Modal } from '@/components/Modal';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -394,6 +395,23 @@ export default function MemberFormModal({
                             {t('verein.status.change')}
                         </button>
                     </div>
+                )}
+
+                {!isCreate && member && (
+                    <section className="mb-4 rounded-lg border border-border p-3" aria-label={t('verein.photo.section')}>
+                        <MemberPhotoSection
+                            clubId={clubId}
+                            target={member.id}
+                            name={member.name}
+                            photoUrl={member.photoUrl}
+                            onChanged={(updated) => {
+                                if (updated) setMember(updated);
+                                else void reloadMember().catch(() => undefined);
+                                onChanged();
+                            }}
+                            onExpired={() => void reloadMember().catch(() => undefined)}
+                        />
+                    </section>
                 )}
 
                 {!isCreate && member && canManageAccount && (

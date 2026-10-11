@@ -6,6 +6,7 @@ import { CalendarDays, HeartPulse, Phone, UserRound } from 'lucide-react';
 import { memberErrorKey } from '@/lib/clubMembers';
 import { apiFetch } from '@/lib/api-client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import MemberPhotoSection from '@/components/verein/MemberPhotoSection';
 import ExitSection from '@/components/verein/ExitSection';
 
 export interface OwnMembership {
@@ -23,6 +24,8 @@ export interface OwnMembership {
     effectiveStatus?: string;
     memberNumber?: string | null;
     birthDate?: string | null;
+    /** Short-lived signed URL of the own photo (never stored); `null`/absent = initials. */
+    photoUrl?: string | null;
     emergencyContactName?: string | null;
     emergencyContactPhone?: string | null;
     roles: { id: string; roleType: string }[];
@@ -69,25 +72,24 @@ export default function ProfilTab({ me, clubId, onSaved }: { me: OwnMembership; 
         }
     }
 
-    const initials = (me.name ?? me.email ?? '?')
-        .split(/\s+/)
-        .map((part) => part[0])
-        .slice(0, 2)
-        .join('')
-        .toUpperCase();
-
     return (
         <div className="space-y-4">
             <div className="grid gap-4 md:grid-cols-[1fr_1.4fr]">
                 <div className="rounded-xl border border-border bg-card p-5">
-                    <div className="flex items-center gap-3">
-                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/15 text-lg font-bold text-primary">
-                            {initials}
-                        </div>
-                        <div className="min-w-0">
-                            <p className="truncate font-semibold text-foreground">{me.name ?? '—'}</p>
-                            <p className="truncate text-sm text-muted-foreground">{me.email}</p>
-                        </div>
+                    <div className="min-w-0">
+                        <p className="truncate font-semibold text-foreground">{me.name ?? '—'}</p>
+                        <p className="truncate text-sm text-muted-foreground">{me.email}</p>
+                    </div>
+                    <div className="mt-4">
+                        <MemberPhotoSection
+                            clubId={clubId}
+                            target="me"
+                            name={me.name ?? me.email}
+                            photoUrl={me.photoUrl}
+                            birthDate={me.birthDate}
+                            onChanged={() => onSaved()}
+                            onExpired={() => onSaved()}
+                        />
                     </div>
                     <dl className="mt-5 space-y-3 text-sm">
                         <div className="flex justify-between gap-2">

@@ -83,6 +83,13 @@ export default function MemberRoleCell({
     return (
         <div>
             <div className="flex flex-wrap gap-1">
+                {/* Implicit base role of every member: always there, can neither be added nor removed. */}
+                <span
+                    title={t('verein.roles.base.hint')}
+                    className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground"
+                >
+                    {t('verein.role.mitglied')}
+                </span>
                 {roles.map((r) => (
                     <RoleBadge key={r.id} roleType={r.roleType} onRemove={canEdit ? () => void handleRemove(r.id) : undefined} />
                 ))}
@@ -95,6 +102,9 @@ export default function MemberRoleCell({
                         aria-label={t('verein.roles.add')}
                         className="rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground focus:border-primary focus:outline-none"
                     >
+                        <option value="" disabled>
+                            {t('verein.roles.base.option')}
+                        </option>
                         {availableRoles.map((rt) => (
                             <option key={rt} value={rt}>
                                 {t(`verein.role.${rt}`)}

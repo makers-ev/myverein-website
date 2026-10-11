@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Clock, UserPlus } from 'lucide-react';
+import { CheckCircle2, Clock, UserPlus } from 'lucide-react';
 
-import { memberErrorKey } from '@/lib/clubMembers';
+import { applyConflictKind, type ApplyConflict, memberErrorKey } from '@/lib/clubMembers';
 import { apiFetch, ApiError } from '@/lib/api-client';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -22,7 +22,7 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
     const [birthDate, setBirthDate] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [pending, setPending] = useState<'submitted' | 'exists' | null>(null);
+    const [pending, setPending] = useState<'submitted' | ApplyConflict | null>(null);
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -37,9 +37,9 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
             setPending('submitted');
         } catch (err) {
             if (err instanceof ApiError && err.status === 404) setError(t('verein.join.notFound'));
-            // 409 = already a member OR an application is already open; the user sees this card
-            // only without a membership in their own clubs, so show it as a friendly pending notice.
-            else if (err instanceof ApiError && err.status === 409) setPending('exists');
+            // 409 carries a code: ALREADY_MEMBER vs APPLICATION_PENDING get their own message; a 409 without a
+            // known code keeps the combined notice.
+            else if (applyConflictKind(err)) setPending(applyConflictKind(err));
             else setError(t(memberErrorKey(err)));
         } finally {
             setSubmitting(false);
@@ -47,24 +47,35 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
     }
 
     if (pending) {
+        const member = pending === 'already_member';
+        const bodyKey = {
+            submitted: 'verein.join.pending.body',
+            already_member: 'verein.join.alreadyMember.body',
+            application_pending: 'verein.join.applicationPending.body',
+            other: 'verein.join.pending.exists',
+        }[pending];
+        const titleKey = {
+            submitted: 'verein.join.pending.title',
+            already_member: 'verein.join.alreadyMember.title',
+            application_pending: 'verein.join.applicationPending.title',
+            other: 'verein.join.pending.title',
+        }[pending];
         return (
             <div className={`${className} rounded-xl border border-border bg-card p-5`} role="status">
                 <div className="flex items-start gap-3">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15">
-                        <Clock className="h-5 w-5 text-primary" />
+                        {member ? <CheckCircle2 className="h-5 w-5 text-primary" /> : <Clock className="h-5 w-5 text-primary" />}
                     </div>
                     <div>
-                        <p className="font-semibold text-foreground">{t('verein.join.pending.title')}</p>
-                        <p className="mt-1 text-sm text-muted-foreground">
-                            {t(pending === 'submitted' ? 'verein.join.pending.body' : 'verein.join.pending.exists')}
-                        </p>
+                        <p className="font-semibold text-foreground">{t(titleKey)}</p>
+                        <p className="mt-1 text-sm text-muted-foreground">{t(bodyKey)}</p>
                         <div className="mt-4 flex flex-wrap gap-2">
                             <button
                                 type="button"
                                 onClick={onRefresh}
                                 className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
                             >
-                                {t('verein.join.pending.refresh')}
+                                {t(member ? 'verein.join.alreadyMember.refresh' : 'verein.join.pending.refresh')}
                             </button>
                             <button
                                 type="button"

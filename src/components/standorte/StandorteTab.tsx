@@ -6,6 +6,7 @@ import { ArrowLeft, Check, Clock, Copy, ExternalLink, KeyRound, Link as LinkIcon
 
 import { useAccountMembers } from '@/lib/useAccountMembers';
 import { apiFetch } from '@/lib/api-client';
+import { LOCATION_VISIBILITIES, visibilityOf, type LocationVisibility } from '@/lib/locationVisibility';
 import { buildWifiQrPayload } from '@/lib/wifiQr';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Modal } from '@/components/Modal';
@@ -16,7 +17,6 @@ import {
     Field,
     FormModal,
     SectionCard,
-    Toggle,
     errorMessage,
     iconButtonClass,
     inputClass,
@@ -37,6 +37,8 @@ export interface Location {
     photoUrl: string | null;
     contactPerson: string | null;
     accessNote: string | null;
+    /** `true` when the caller lacks `locations:write`/`locations:read_access`: access note and key holders are withheld. */
+    accessRestricted?: boolean;
     createdAt: string;
     updatedAt: string;
 }
@@ -57,6 +59,7 @@ interface WifiNetwork {
     label: string;
     ssid: string;
     password: string;
+    visibility?: string;
     visibleToGuests: boolean;
     createdAt: string;
 }
@@ -67,6 +70,7 @@ interface LocationLink {
     title: string;
     url: string;
     icon: string | null;
+    visibility?: string;
     visibleToGuests: boolean;
     createdAt: string;
 }
@@ -110,7 +114,7 @@ function CopyButton({ value, t }: { value: string; t: T }) {
 
 // --- Location create/edit ------------------------------------------------------
 
-type LocationDraft = Record<'name' | 'address' | 'openingHours' | 'contactPerson' | 'photoUrl' | 'accessNote', string>;
+type LocationDraft = Record<'name' | 'address' | 'openingHours' | 'contactPerson' | 'accessNote', string>;
 
 function LocationFormModal({ clubId, location, t, onClose, onSaved }: { clubId: string; location: Location | null; t: T; onClose: () => void; onSaved: () => void }) {
     const run = useRun();
@@ -119,7 +123,6 @@ function LocationFormModal({ clubId, location, t, onClose, onSaved }: { clubId: 
         address: location?.address ?? '',
         openingHours: location?.openingHours ?? '',
         contactPerson: location?.contactPerson ?? '',
-        photoUrl: location?.photoUrl ?? '',
         accessNote: location?.accessNote ?? '',
     });
     const set = (key: keyof LocationDraft) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setDraft({ ...draft, [key]: e.target.value });
@@ -131,7 +134,6 @@ function LocationFormModal({ clubId, location, t, onClose, onSaved }: { clubId: 
         address: draft.address.trim() || empty,
         openingHours: draft.openingHours.trim() || empty,
         contactPerson: draft.contactPerson.trim() || empty,
-        photoUrl: draft.photoUrl.trim() || empty,
         accessNote: draft.accessNote.trim() || empty,
     };
 
@@ -167,9 +169,6 @@ function LocationFormModal({ clubId, location, t, onClose, onSaved }: { clubId: 
                     <input type="text" value={draft.contactPerson} onChange={set('contactPerson')} className={inputClass} />
                 </Field>
             </div>
-            <Field label={t('standorte.locations.detail.photoUrl')}>
-                <input type="url" value={draft.photoUrl} onChange={set('photoUrl')} placeholder="https://…" className={inputClass} />
-            </Field>
             <Field label={t('standorte.locations.detail.accessNote')}>
                 <textarea value={draft.accessNote} onChange={set('accessNote')} rows={3} className={inputClass} />
             </Field>
@@ -358,6 +357,21 @@ function WifiQrModal({ network, t, onClose }: { network: WifiNetwork; t: T; onCl
     );
 }
 
+function VisibilityField({ value, onChange, t }: { value: LocationVisibility; onChange: (value: LocationVisibility) => void; t: T }) {
+    return (
+        <Field label={t('standorte.visibility.label')}>
+            <select value={value} onChange={(e) => onChange(e.target.value as LocationVisibility)} className={inputClass}>
+                {LOCATION_VISIBILITIES.map((v) => (
+                    <option key={v} value={v}>
+                        {t(`standorte.visibility.${v}`)}
+                    </option>
+                ))}
+            </select>
+            <span className="mt-1 block text-xs font-normal text-muted-foreground">{t(`standorte.visibility.${value}.hint`)}</span>
+        </Field>
+    );
+}
+
 function WifiFormModal({
     locationId,
     clubId,
@@ -377,7 +391,7 @@ function WifiFormModal({
     const [label, setLabel] = useState(network?.label ?? '');
     const [ssid, setSsid] = useState(network?.ssid ?? '');
     const [password, setPassword] = useState(network?.password ?? '');
-    const [visibleToGuests, setVisibleToGuests] = useState(network?.visibleToGuests ?? false);
+    const [visibility, setVisibility] = useState<LocationVisibility>(network ? visibilityOf(network) : 'mitglied');
 
     return (
         <FormModal
@@ -391,7 +405,7 @@ function WifiFormModal({
                 run(async () => {
                     await apiFetch(network ? `/locations/${locationId}/wifi/${network.id}?clubId=${clubId}` : `/locations/${locationId}/wifi?clubId=${clubId}`, {
                         method: network ? 'PATCH' : 'POST',
-                        body: { label: label.trim(), ssid: ssid.trim(), password: password.trim(), visibleToGuests },
+                        body: { label: label.trim(), ssid: ssid.trim(), password: password.trim(), visibility },
                     });
                     await onSaved();
                 })
@@ -408,7 +422,7 @@ function WifiFormModal({
                     <input type="text" value={password} onChange={(e) => setPassword(e.target.value)} className={`${inputClass} font-mono`} />
                 </Field>
             </div>
-            <Toggle checked={visibleToGuests} onChange={setVisibleToGuests} label={t('standorte.wifi.visibleToGuests')} />
+            <VisibilityField value={visibility} onChange={setVisibility} t={t} />
             <p className="text-xs text-muted-foreground">{t('standorte.wifi.hint')}</p>
         </FormModal>
     );
@@ -459,9 +473,9 @@ function WifiSection({ locationId, clubId, canWrite, t }: { locationId: string; 
                                         <Wifi className="h-4 w-4 shrink-0 text-primary" />
                                         <span className="truncate">{net.label}</span>
                                     </p>
-                                    {canWrite && net.visibleToGuests && (
+                                    {canWrite && (
                                         <div className="mt-1">
-                                            <Chip tone="primary">{t('standorte.wifi.visibleToGuests')}</Chip>
+                                            <Chip tone="primary">{t(`standorte.visibility.${visibilityOf(net)}`)}</Chip>
                                         </div>
                                     )}
                                 </div>
@@ -541,7 +555,7 @@ function LinkFormModal({
     const [title, setTitle] = useState(link?.title ?? '');
     const [url, setUrl] = useState(link?.url ?? '');
     const [icon, setIcon] = useState(link?.icon ?? '');
-    const [visibleToGuests, setVisibleToGuests] = useState(link?.visibleToGuests ?? false);
+    const [visibility, setVisibility] = useState<LocationVisibility>(link ? visibilityOf(link) : 'mitglied');
 
     return (
         <FormModal
@@ -555,7 +569,7 @@ function LinkFormModal({
                 run(async () => {
                     await apiFetch(link ? `/locations/${locationId}/links/${link.id}?clubId=${clubId}` : `/locations/${locationId}/links?clubId=${clubId}`, {
                         method: link ? 'PATCH' : 'POST',
-                        body: { title: title.trim(), url: url.trim(), icon: icon.trim() || (link ? null : undefined), visibleToGuests },
+                        body: { title: title.trim(), url: url.trim(), icon: icon.trim() || (link ? null : undefined), visibility },
                     });
                     await onSaved();
                 })
@@ -570,7 +584,7 @@ function LinkFormModal({
             <Field label={t('standorte.links.link.icon')}>
                 <input type="text" value={icon} onChange={(e) => setIcon(e.target.value)} className={inputClass} />
             </Field>
-            <Toggle checked={visibleToGuests} onChange={setVisibleToGuests} label={t('standorte.links.visibleToGuests')} />
+            <VisibilityField value={visibility} onChange={setVisibility} t={t} />
         </FormModal>
     );
 }
@@ -621,7 +635,7 @@ function LinksSection({ locationId, clubId, canWrite, t }: { locationId: string;
                                 </span>
                             </a>
                             <div className="flex shrink-0 items-center gap-1">
-                                {canWrite && link.visibleToGuests && <Chip tone="primary">{t('standorte.links.visibleToGuests')}</Chip>}
+                                {canWrite && <Chip tone="primary">{t(`standorte.visibility.${visibilityOf(link)}`)}</Chip>}
                                 {canWrite && (
                                     <>
                                         <button onClick={() => setEditing(link)} className={iconButtonClass} aria-label={t('standorte.links.edit')} title={t('standorte.links.edit')}>
@@ -727,6 +741,9 @@ function LocationDetail({
                         {location.openingHours && <InfoRow icon={<Clock className="h-4 w-4" />}>{location.openingHours}</InfoRow>}
                         {location.contactPerson && <InfoRow icon={<User className="h-4 w-4" />}>{location.contactPerson}</InfoRow>}
                     </div>
+                    {location.accessRestricted && !location.accessNote && (
+                        <p className="rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">{t('standorte.locations.accessRestricted')}</p>
+                    )}
                     {location.accessNote && (
                         <div className="rounded-lg bg-muted/50 p-3">
                             <p className="text-xs font-medium text-muted-foreground">{t('standorte.locations.detail.accessNote')}</p>
@@ -737,7 +754,7 @@ function LocationDetail({
             </div>
 
             <WifiSection locationId={locationId} clubId={clubId} canWrite={canWrite} t={t} />
-            <KeyHoldersSection location={location} clubId={clubId} canWrite={canWrite} t={t} onChange={() => void load()} />
+            {!location.accessRestricted && <KeyHoldersSection location={location} clubId={clubId} canWrite={canWrite} t={t} onChange={() => void load()} />}
             <LinksSection locationId={locationId} clubId={clubId} canWrite={canWrite} t={t} />
 
             {editing && (

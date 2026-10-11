@@ -4,8 +4,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, ArrowLeft, MapPin, Package, Pencil, Plus, Search, Trash2, Wrench } from 'lucide-react';
 
 import { useAccountMembers } from '@/lib/useAccountMembers';
-import { apiFetch } from '@/lib/api-client';
-import { backendUrl } from '@/lib/auth-client';
+import { ApiError, apiFetch } from '@/lib/api-client';
+import { canBorrow, canReturn } from '@/lib/loans';
+import type { ClubSettings } from '@/lib/memberLifecycle';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { Location } from '@/components/standorte/StandorteTab';
 import {
@@ -358,9 +359,32 @@ function ItemList({
 
 // --- Loans & damage reports -----------------------------------------------------------
 
-function LoansSection({ itemId, clubId, t }: { itemId: string; clubId: string; t: T }) {
+function LoansSection({
+    itemId,
+    clubId,
+    canManage,
+    ownMemberId,
+    allowSelfLoans,
+    t,
+}: {
+    itemId: string;
+    clubId: string;
+    /** `inventory:write`: exempt from the self-loan switch, may return anybody's loan. */
+    canManage: boolean;
+    ownMemberId: string | null;
+    /** Club setting; `null` = not known (hides the borrow action). */
+    allowSelfLoans: boolean | null;
+    t: T;
+}) {
     const [loans, setLoans] = useState<InventoryLoan[] | null>(null);
+    const [actionError, setActionError] = useState<string | null>(null);
+    const [busy, setBusy] = useState(false);
     const { members, error: directoryError } = useAccountMembers(clubId);
+
+    async function loadLoans() {
+        const loansRes = await apiFetch<{ data: InventoryLoan[] }>(`/inventory-items/${itemId}/loans?clubId=${clubId}`);
+        setLoans(loansRes.data);
+    }
 
     useEffect(() => {
         // State is set in the .then() callback, so no set-state-in-effect disable is needed.
@@ -370,10 +394,46 @@ function LoansSection({ itemId, clubId, t }: { itemId: string; clubId: string; t
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [itemId]);
 
+    async function act(request: () => Promise<unknown>) {
+        setBusy(true);
+        setActionError(null);
+        try {
+            await request();
+            await loadLoans();
+        } catch (err) {
+            // 403 on a borrow = the club switched self-service off since this page loaded.
+            setActionError(err instanceof ApiError && err.status === 403 ? t('standorte.loans.err.disabled') : errorMessage(err, t));
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    const borrowAllowed = canBorrow(allowSelfLoans, canManage);
+
     const nameFor = (memberId: string) => members.find((m) => m.id === memberId)?.name ?? '—';
 
     return (
-        <SectionCard title={t('standorte.loans.title')}>
+        <SectionCard
+            title={t('standorte.loans.title')}
+            action={
+                borrowAllowed && (
+                    <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void act(() => apiFetch(`/inventory-items/${itemId}/loans?clubId=${clubId}`, { method: 'POST', body: {} }))}
+                        className={secondaryButtonClass}
+                    >
+                        {t('standorte.loans.borrow')}
+                    </button>
+                )
+            }
+        >
+            {allowSelfLoans === false && !canManage && <p className="mb-2 text-xs text-muted-foreground">{t('standorte.loans.selfDisabled')}</p>}
+            {actionError && (
+                <p role="alert" className="mb-2 text-sm text-destructive">
+                    {actionError}
+                </p>
+            )}
             {directoryError && <p className="mb-2 text-sm text-destructive">{t('verein.directory.error')}</p>}
             {loans === null ? (
                 <p className="text-sm text-muted-foreground">…</p>
@@ -389,6 +449,7 @@ function LoansSection({ itemId, clubId, t }: { itemId: string; clubId: string; t
                                 <th className="px-3 py-2">{t('standorte.loans.table.dueAt')}</th>
                                 <th className="px-3 py-2">{t('standorte.loans.table.returnedAt')}</th>
                                 <th className="px-3 py-2">{t('standorte.loans.table.status')}</th>
+                                <th className="px-3 py-2" />
                             </tr>
                         </thead>
                         <tbody>
@@ -400,6 +461,18 @@ function LoansSection({ itemId, clubId, t }: { itemId: string; clubId: string; t
                                     <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">{formatDate(loan.returnedAt)}</td>
                                     <td className="px-3 py-2">
                                         <Chip tone={loanTone[loan.status] ?? 'muted'}>{t(`standorte.loans.status.${loan.status}`)}</Chip>
+                                    </td>
+                                    <td className="whitespace-nowrap px-3 py-2 text-right">
+                                        {canReturn(loan, ownMemberId, canManage) && (
+                                            <button
+                                                type="button"
+                                                disabled={busy}
+                                                onClick={() => void act(() => apiFetch(`/inventory-items/${itemId}/loans/${loan.id}?clubId=${clubId}`, { method: 'PATCH' }))}
+                                                className={secondaryButtonClass}
+                                            >
+                                                {t('standorte.loans.return')}
+                                            </button>
+                                        )}
                                     </td>
                                 </tr>
                             ))}
@@ -455,7 +528,7 @@ function DamageReportsSection({ itemId, clubId, canWrite, t }: { itemId: string;
                                         {report.resolvedAt && ` → ${formatDate(report.resolvedAt)}`}
                                     </p>
                                     {report.photoUrl && (
-                                        <a href={`${backendUrl}${report.photoUrl}`} target="_blank" rel="noreferrer" className="mt-1 inline-block text-xs text-primary hover:underline">
+                                        <a href={report.photoUrl} target="_blank" rel="noreferrer" className="mt-1 inline-block text-xs text-primary hover:underline">
                                             {t('standorte.damage-reports.photo')}
                                         </a>
                                     )}
@@ -498,6 +571,8 @@ function ItemDetail({
     items,
     locations,
     canWrite,
+    ownMemberId,
+    allowSelfLoans,
     t,
     onBack,
     onItemsChanged,
@@ -507,6 +582,8 @@ function ItemDetail({
     items: InventoryItem[];
     locations: Location[];
     canWrite: boolean;
+    ownMemberId: string | null;
+    allowSelfLoans: boolean | null;
     t: T;
     onBack: () => void;
     onItemsChanged: () => void;
@@ -576,7 +653,7 @@ function ItemDetail({
             </div>
 
             <DamageReportsSection itemId={itemId} clubId={clubId} canWrite={canWrite} t={t} />
-            <LoansSection itemId={itemId} clubId={clubId} t={t} />
+            <LoansSection itemId={itemId} clubId={clubId} canManage={canWrite} ownMemberId={ownMemberId} allowSelfLoans={allowSelfLoans} t={t} />
 
             {editing && (
                 <ItemFormModal
@@ -611,10 +688,26 @@ function ItemDetail({
     );
 }
 
-export default function MaterialTab({ clubId, locations, canWrite }: { clubId: string; locations: Location[]; canWrite: boolean }) {
+export default function MaterialTab({ clubId, locations, canWrite, ownMemberId }: { clubId: string; locations: Location[]; canWrite: boolean; ownMemberId: string | null }) {
     const { t } = useLanguage();
     const [items, setItems] = useState<InventoryItem[] | null>(null);
     const [selectedId, setSelectedId] = useState<string | null>(null);
+    // Club switch for self-service borrowing (`null` = not loaded / failed: the borrow action stays hidden).
+    const [allowSelfLoans, setAllowSelfLoans] = useState<boolean | null>(null);
+
+    useEffect(() => {
+        let cancelled = false;
+        apiFetch<{ data: ClubSettings }>(`/club-settings?clubId=${clubId}`)
+            .then((res) => {
+                if (!cancelled) setAllowSelfLoans(res.data.allowSelfLoans);
+            })
+            .catch(() => {
+                if (!cancelled) setAllowSelfLoans(null);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [clubId]);
 
     async function loadItems() {
         const { data } = await apiFetch<{ data: InventoryItem[] }>(`/inventory-items?clubId=${clubId}`);
@@ -641,6 +734,8 @@ export default function MaterialTab({ clubId, locations, canWrite }: { clubId: s
                     items={items}
                     locations={locations}
                     canWrite={canWrite}
+                    ownMemberId={ownMemberId}
+                    allowSelfLoans={allowSelfLoans}
                     t={t}
                     onBack={() => setSelectedId(null)}
                     onItemsChanged={() => void loadItems()}
