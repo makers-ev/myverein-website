@@ -10,6 +10,8 @@ import ExitSection from '@/components/verein/ExitSection';
 
 export interface OwnMembership {
     id: string;
+    /** `club_members.id` of the caller's own row. */
+    clubMemberId?: string;
     name: string | null;
     email: string | null;
     category: string | null;

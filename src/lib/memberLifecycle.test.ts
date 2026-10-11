@@ -21,6 +21,7 @@ import {
     clearInviteToken,
     errorDetailsCode,
     INVITE_TOKEN_STORAGE_KEY,
+    INVITE_TOKEN_TTL_MS,
     isOwnerOrgRole,
     isPlausibleInviteToken,
     isValidEmail,
@@ -30,8 +31,11 @@ import {
     parseNoticeDays,
     proposedDate,
     resolveInviteToken,
+    selfExitErrorKey,
+    shouldAutoRedirectToLogin,
     type TokenStore,
     unlinkBlockers,
+    unlinkErrorKey,
 } from './memberLifecycle';
 
 function memoryStore(initial: Record<string, string> = {}): TokenStore {
@@ -157,19 +161,64 @@ describe('invite token handling', () => {
         expect(isValidEmail('')).toBe(false);
     });
 
-    it('takes the token from the query and stashes it for the login round trip', () => {
-        const store = memoryStore();
-        expect(resolveInviteToken(`?token=${TOKEN}`, store)).toBe(TOKEN);
-        expect(store.getItem(INVITE_TOKEN_STORAGE_KEY)).toBe(TOKEN);
-        // After the redirect to login the URL carries no token any more.
-        expect(resolveInviteToken('', store)).toBe(TOKEN);
-        clearInviteToken(store);
-        expect(resolveInviteToken('', store)).toBeNull();
+    it('takes the token from the query and stashes it in every store for the login round trip', () => {
+        const tab = memoryStore();
+        const shared = memoryStore();
+        expect(resolveInviteToken(`?token=${TOKEN}`, [tab, shared], 1000)).toBe(TOKEN);
+        // After the redirect to login (or a verification link opened in a new tab) the URL carries no token.
+        expect(resolveInviteToken('', [tab, shared], 2000)).toBe(TOKEN);
+        expect(resolveInviteToken('', [memoryStore(), shared], 2000)).toBe(TOKEN);
+        clearInviteToken([tab, shared]);
+        expect(resolveInviteToken('', [tab, shared], 3000)).toBeNull();
     });
 
-    it('lets a fresh link win over a stashed token and rejects garbage', () => {
-        const store = memoryStore({ [INVITE_TOKEN_STORAGE_KEY]: 'old'.repeat(10) });
-        expect(resolveInviteToken(`?token=${TOKEN}`, store)).toBe(TOKEN);
-        expect(resolveInviteToken('?token=nope', memoryStore())).toBeNull();
+    it('expires a stashed token after 24 hours and drops it', () => {
+        const store = memoryStore();
+        resolveInviteToken(`?token=${TOKEN}`, [store], 0);
+        expect(resolveInviteToken('', [store], INVITE_TOKEN_TTL_MS - 1)).toBe(TOKEN);
+        expect(resolveInviteToken('', [store], INVITE_TOKEN_TTL_MS + 1)).toBeNull();
+        expect(store.getItem(INVITE_TOKEN_STORAGE_KEY)).toBeNull();
+    });
+
+    it('lets a fresh link win over a stashed token, rejects garbage and survives broken storage', () => {
+        const store = memoryStore({ [INVITE_TOKEN_STORAGE_KEY]: 'not json' });
+        expect(resolveInviteToken('', [store])).toBeNull();
+        expect(resolveInviteToken(`?token=${TOKEN}`, [store])).toBe(TOKEN);
+        expect(resolveInviteToken('?token=nope', [memoryStore()])).toBeNull();
+        const broken: TokenStore = {
+            getItem: () => {
+                throw new Error('blocked');
+            },
+            setItem: () => {
+                throw new Error('blocked');
+            },
+            removeItem: () => {
+                throw new Error('blocked');
+            },
+        };
+        expect(resolveInviteToken(`?token=${TOKEN}`, [broken, memoryStore()])).toBe(TOKEN);
+        expect(resolveInviteToken('', [broken])).toBeNull();
+        expect(() => clearInviteToken([broken])).not.toThrow();
+    });
+});
+
+describe('login redirect guard', () => {
+    it('redirects automatically once, then falls back to a manual link (no loop)', () => {
+        const store = memoryStore();
+        expect(shouldAutoRedirectToLogin(store, 1000)).toBe(true);
+        expect(shouldAutoRedirectToLogin(store, 5000)).toBe(false);
+        expect(shouldAutoRedirectToLogin(store, 1000 + 61_000)).toBe(true);
+    });
+});
+
+describe('context specific error keys', () => {
+    const fallback = () => 'fallback';
+    it('does not reuse the role hint for an unlink without account', () => {
+        expect(unlinkErrorKey(new ApiError(409, 'CONFLICT', 'Member has no account'), fallback)).toBe('verein.err.unlinkNoAccount');
+        expect(unlinkErrorKey(new ApiError(409, 'CONFLICT', 'other'), fallback)).toBe('fallback');
+    });
+    it('explains the owner protection to the cancelling owner', () => {
+        expect(selfExitErrorKey(new ApiError(409, 'CONFLICT', 'x', { code: 'owner_protected' }), fallback)).toBe('verein.exit.owner');
+        expect(selfExitErrorKey(new ApiError(409, 'CONFLICT', 'x'), fallback)).toBe('fallback');
     });
 });

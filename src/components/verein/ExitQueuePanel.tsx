@@ -44,12 +44,15 @@ const dangerButtonClass = 'rounded-lg bg-destructive px-4 py-2 text-sm font-semi
 export default function ExitQueuePanel({
     clubId,
     ownMemberId,
+    ownClubMemberId,
     canProtectedExit,
     onChanged,
 }: {
     clubId: string;
     /** Better Auth member id of the caller: the requester never decides their own request. */
     ownMemberId: string | null;
+    /** `club_members.id` of the caller: the board cannot exclude or record an exit for itself here. */
+    ownClubMemberId: string | null;
     onChanged: () => void;
     canProtectedExit: boolean;
 }) {
@@ -266,6 +269,7 @@ export default function ExitQueuePanel({
                 <DirectExitDialog
                     clubId={clubId}
                     canProtectedExit={canProtectedExit}
+                    ownClubMemberId={ownClubMemberId}
                     onClose={() => setDialog(null)}
                     onDone={() => {
                         setDialog(null);
@@ -575,11 +579,13 @@ function BoardWithdrawDialog({ clubId, request, onClose, onDone }: { clubId: str
 function DirectExitDialog({
     clubId,
     canProtectedExit,
+    ownClubMemberId,
     onClose,
     onDone,
 }: {
     clubId: string;
     canProtectedExit: boolean;
+    ownClubMemberId: string | null;
     onClose: () => void;
     onDone: () => void;
 }) {
@@ -621,7 +627,7 @@ function DirectExitDialog({
             setSearchError(null);
             apiFetch<{ data: ClubMember[] }>(`/club-members?clubId=${clubId}&q=${encodeURIComponent(q)}&pageSize=8&sort=name`)
                 .then((res) => {
-                    if (!cancelled) setResults(res.data.filter((m) => !isLeftStatus(m.effectiveStatus)));
+                    if (!cancelled) setResults(res.data.filter((m) => !isLeftStatus(m.effectiveStatus) && m.id !== ownClubMemberId));
                 })
                 .catch((err: unknown) => {
                     if (!cancelled) setSearchError(errorMessage(err, t));
@@ -632,7 +638,7 @@ function DirectExitDialog({
             clearTimeout(timer);
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [query, clubId]);
+    }, [query, clubId, ownClubMemberId]);
 
     const exclusion = kind === 'exclusion';
     const today = todayIso();
@@ -726,6 +732,7 @@ function DirectExitDialog({
                             </p>
                         )}
                         {results && results.length === 0 && <p className="mt-1 text-xs text-muted-foreground">{t('verein.exit.direct.noResults')}</p>}
+                        <p className="mt-1 text-xs text-muted-foreground">{t('verein.exit.direct.selfHint')}</p>
                         {results && results.length > 0 && (
                             <ul className="mt-1 divide-y divide-border rounded-lg border border-border">
                                 {results.map((m) => (

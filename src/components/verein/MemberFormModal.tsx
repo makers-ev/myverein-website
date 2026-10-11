@@ -179,7 +179,6 @@ export default function MemberFormModal({
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [statusOpen, setStatusOpen] = useState(false);
-    const [accountDialogOpen, setAccountDialogOpen] = useState(false);
 
     // Which sensitive fields the backend delivered for this member (edit); in create everything the caller may write.
     const has = (key: SensitiveKey | 'memberNumber') => (isCreate ? key !== 'memberNumber' || canReadSensitive : member?.[key] !== undefined);
@@ -354,7 +353,7 @@ export default function MemberFormModal({
             <Modal
                 open
                 size="lg"
-                onClose={statusOpen || accountDialogOpen || saving ? () => {} : requestClose}
+                onClose={statusOpen || saving ? () => {} : requestClose}
                 title={title}
                 footer={
                     <div className="flex items-center justify-end gap-2">
@@ -401,7 +400,6 @@ export default function MemberFormModal({
                     <MemberAccountSection
                         member={member}
                         clubId={clubId}
-                        onDialogOpenChange={setAccountDialogOpen}
                         onMemberChanged={(updated) => {
                             setMember(updated);
                             onChanged();

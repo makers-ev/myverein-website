@@ -8,7 +8,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { TwoFactorPrompt } from '@/features/auth/components/TwoFactorPrompt';
 import { EmailVerificationPrompt } from '@/features/auth/components/EmailVerificationPrompt';
 import { ForgotPasswordPrompt } from '@/features/auth/components/ForgotPasswordPrompt';
-import { resolveCallbackUrl } from '@/lib/resolveCallbackUrl';
+import { resolveCallbackUrl, verifyEmailCallback } from '@/lib/resolveCallbackUrl';
 
 type Mode = 'sign-in' | 'sign-up';
 
@@ -63,7 +63,7 @@ function LoginSignupFormInner() {
             name,
             email,
             password,
-            callbackURL: `${siteUrl}/verify-email`,
+            callbackURL: verifyEmailCallback(siteUrl, callbackUrl),
         });
 
         setIsSubmitting(false);
@@ -89,6 +89,7 @@ function LoginSignupFormInner() {
         return (
             <EmailVerificationPrompt
                 email={email}
+                callbackUrl={callbackUrl}
                 onBackToLogin={() => {
                     setNeedsEmailVerification(false);
                     setMode('sign-in');

@@ -8,7 +8,8 @@ import { Chip, errorMessage } from '@/components/standorte/ui';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api-client';
 import { type ClubMember, formatDate, inputClass, isLeftStatus, primaryButtonClass, secondaryButtonClass } from '@/lib/clubMembers';
-import { isValidEmail, type MemberInvite, unlinkBlockers } from '@/lib/memberLifecycle';
+import { isValidEmail, type MemberInvite, unlinkBlockers, unlinkErrorKey } from '@/lib/memberLifecycle';
+import { memberErrorKey } from '@/lib/clubMembers';
 
 type Dialog = 'invite' | 'revoke' | 'unlink' | null;
 
@@ -23,14 +24,11 @@ export default function MemberAccountSection({
     member,
     clubId,
     onMemberChanged,
-    onDialogOpenChange,
 }: {
     member: ClubMember;
     clubId: string;
     /** The unlink answered with the updated member. */
     onMemberChanged: (member: ClubMember) => void;
-    /** Lets the parent modal ignore Escape/backdrop while one of the nested dialogs is open. */
-    onDialogOpenChange?: (open: boolean) => void;
 }) {
     const { t, language } = useLanguage();
     const left = isLeftStatus(member.effectiveStatus);
@@ -40,10 +38,6 @@ export default function MemberAccountSection({
     const [inviteState, setInviteState] = useState<'idle' | 'loading' | 'error'>('idle');
     const [dialog, setDialog] = useState<Dialog>(null);
     const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(null);
-
-    useEffect(() => {
-        onDialogOpenChange?.(dialog !== null);
-    }, [dialog, onDialogOpenChange]);
 
     const loadInvite = useCallback(async () => {
         setInviteState('loading');
@@ -324,7 +318,7 @@ function UnlinkDialog({
                 setBlockers(list);
                 setForce(false);
             } else {
-                setError(errorMessage(err, t));
+                setError(t(unlinkErrorKey(err, memberErrorKey)));
             }
             setBusy(false);
         }

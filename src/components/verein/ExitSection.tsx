@@ -7,8 +7,8 @@ import { Modal } from '@/components/Modal';
 import { Chip, EmptyState, errorMessage, SectionCard, type Tone } from '@/components/standorte/ui';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api-client';
-import { formatDate, inputClass, isLeftStatus, secondaryButtonClass, todayIso } from '@/lib/clubMembers';
-import { canWithdraw, type ExitRequest, isOwnerOrgRole, type NoticePreview, noticeRuleText } from '@/lib/memberLifecycle';
+import { formatDate, inputClass, memberErrorKey, isLeftStatus, secondaryButtonClass, todayIso } from '@/lib/clubMembers';
+import { selfExitErrorKey, canWithdraw, type ExitRequest, isOwnerOrgRole, type NoticePreview, noticeRuleText } from '@/lib/memberLifecycle';
 
 const statusTone: Record<ExitRequest['status'], Tone> = { pending: 'warning', approved: 'primary', rejected: 'destructive', withdrawn: 'muted' };
 
@@ -227,7 +227,7 @@ function CancelDialog({
             });
             onDone(res.data.adjustedToEarliest === true, res.data.earliestEffectiveOn);
         } catch (err) {
-            setError(errorMessage(err, t));
+            setError(t(selfExitErrorKey(err, memberErrorKey)));
             setBusy(false);
         }
     }

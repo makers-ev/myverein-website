@@ -9,9 +9,28 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { ApiError, apiFetch } from '@/lib/api-client';
 import { authClient } from '@/lib/auth-client';
 import { formatDate, memberErrorKey } from '@/lib/clubMembers';
-import { clearInviteToken, type InviteAccepted, type InvitePreview, resolveInviteToken } from '@/lib/memberLifecycle';
+import {
+    clearInviteToken,
+    type InviteAccepted,
+    type InvitePreview,
+    resolveInviteToken,
+    shouldAutoRedirectToLogin,
+    type TokenStore,
+} from '@/lib/memberLifecycle';
 
 const RETURN_PATH = '/einladung';
+const LOGIN_PATH = `/login-signup?callbackUrl=${encodeURIComponent(RETURN_PATH)}`;
+
+/** sessionStorage (this tab) and localStorage (survives the verification e-mail opened in a new tab; 24 h expiry). */
+function inviteStores(): TokenStore[] {
+    const stores: TokenStore[] = [window.sessionStorage];
+    try {
+        stores.push(window.localStorage);
+    } catch {
+        // localStorage blocked: the tab-local copy still works.
+    }
+    return stores;
+}
 
 const buttonClass =
     'block w-full rounded-lg bg-primary px-5 py-3 text-center text-sm font-semibold text-primary-foreground transition-transform duration-200 hover:brightness-110 active:scale-95 disabled:opacity-50';
@@ -21,6 +40,7 @@ type View =
     | { kind: 'init' }
     | { kind: 'noToken' }
     | { kind: 'redirecting' }
+    | { kind: 'loginNeeded' }
     | { kind: 'loading' }
     | { kind: 'invalid' }
     | { kind: 'error'; textKey: string }
@@ -66,19 +86,38 @@ export default function InvitationContent() {
     const [reload, setReload] = useState(0);
 
     useEffect(() => {
-        const found = resolveInviteToken(window.location.search, window.sessionStorage);
+        const found = resolveInviteToken(window.location.search, inviteStores());
         if (window.location.search) window.history.replaceState(null, '', RETURN_PATH);
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setToken(found);
     }, []);
 
-    const signedIn = !!session;
+    // `useSession` can still be empty right after the login redirect. Before sending the visitor to the login again,
+    // ask the backend once; the redirect itself happens at most once a minute (no /einladung <-> login loop).
+    const [fallback, setFallback] = useState<{ email: string } | 'none' | null>(null);
+    const sessionSignedIn = !!session;
     const ready = token !== undefined && !isPending;
-
-    // Guests go to the login first; the callback is the token-less path, the token waits in sessionStorage.
     useEffect(() => {
-        if (ready && token !== null && !signedIn) router.replace(`/login-signup?callbackUrl=${encodeURIComponent(RETURN_PATH)}`);
-    }, [ready, token, signedIn, router]);
+        if (!ready || token === null || sessionSignedIn) return;
+        let cancelled = false;
+        authClient
+            .getSession()
+            .then(({ data }) => {
+                if (cancelled) return;
+                if (data) setFallback({ email: data.user.email });
+                else if (shouldAutoRedirectToLogin(window.sessionStorage)) router.replace(LOGIN_PATH);
+                else setFallback('none');
+            })
+            .catch(() => {
+                if (!cancelled) setFallback('none');
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [ready, token, sessionSignedIn, router]);
+
+    const signedIn = sessionSignedIn || (fallback !== null && fallback !== 'none');
+    const accountEmail = session?.user.email ?? (fallback && fallback !== 'none' ? fallback.email : '');
 
     useEffect(() => {
         if (!ready || token === null || !signedIn) return;
@@ -91,8 +130,11 @@ export default function InvitationContent() {
                 if (cancelled) return;
                 // 404 = unknown, expired or used (indistinguishable); 422 = malformed token.
                 if (err instanceof ApiError && (err.status === 404 || err.status === 422)) {
-                    clearInviteToken(window.sessionStorage);
+                    clearInviteToken(inviteStores());
                     setResult({ kind: 'invalid' });
+                } else if (err instanceof ApiError && err.status === 403) {
+                    // Typically an unverified e-mail address: the token stays, the visitor can come back after verifying.
+                    setResult({ kind: 'error', textKey: 'verein.invite.err.unverified' });
                 } else {
                     setResult({ kind: 'error', textKey: memberErrorKey(err) });
                 }
@@ -105,7 +147,7 @@ export default function InvitationContent() {
     let view: View;
     if (!ready) view = { kind: 'init' };
     else if (token === null) view = { kind: 'noToken' };
-    else if (!signedIn) view = { kind: 'redirecting' };
+    else if (!signedIn) view = fallback === 'none' ? { kind: 'loginNeeded' } : { kind: 'redirecting' };
     else view = result ?? { kind: 'loading' };
 
     const accept = useCallback(async () => {
@@ -114,11 +156,11 @@ export default function InvitationContent() {
         setAcceptError(null);
         try {
             const res = await apiFetch<{ data: InviteAccepted }>('/club-members/invites/accept', { method: 'POST', body: { token } });
-            clearInviteToken(window.sessionStorage);
+            clearInviteToken(inviteStores());
             setResult({ kind: 'done', accepted: res.data });
         } catch (err) {
             if (err instanceof ApiError && err.status === 404) {
-                clearInviteToken(window.sessionStorage);
+                clearInviteToken(inviteStores());
                 setResult({ kind: 'invalid' });
             } else if (err instanceof ApiError && err.status === 403 && !(err.details as { code?: unknown } | undefined)?.code) {
                 setAcceptError(t('verein.invite.err.emailMismatch'));
@@ -131,8 +173,9 @@ export default function InvitationContent() {
     }, [token, t]);
 
     async function switchAccount() {
+        // The token stays (24 h expiry) so the invited account can pick the invitation up after signing in.
         await authClient.signOut();
-        router.replace(`/login-signup?callbackUrl=${encodeURIComponent(RETURN_PATH)}`);
+        router.replace(LOGIN_PATH);
     }
 
     switch (view.kind) {
@@ -145,6 +188,16 @@ export default function InvitationContent() {
                     <p role="status" className="text-sm text-muted-foreground">
                         {view.kind === 'redirecting' ? t('verein.invite.redirecting') : t('verein.invite.loading')}
                     </p>
+                </Shell>
+            );
+        case 'loginNeeded':
+            return (
+                <Shell>
+                    <h1 className="mb-2 text-2xl font-bold text-card-foreground">{t('verein.invite.title')}</h1>
+                    <p className="mb-6 text-sm text-muted-foreground">{t('verein.invite.loginNeeded')}</p>
+                    <Link href={LOGIN_PATH} className={buttonClass}>
+                        {t('verein.invite.login')}
+                    </Link>
                 </Shell>
             );
         case 'noToken':
@@ -219,7 +272,7 @@ export default function InvitationContent() {
 
                     {preview.emailMatches ? (
                         <>
-                            <p className="mb-4 text-xs text-muted-foreground">{t('verein.invite.accept.hint', { email: session?.user.email ?? '' })}</p>
+                            <p className="mb-4 text-xs text-muted-foreground">{t('verein.invite.accept.hint', { email: accountEmail })}</p>
                             <button type="button" onClick={() => void accept()} disabled={accepting} className={buttonClass}>
                                 {t('verein.invite.accept')}
                             </button>
@@ -227,7 +280,7 @@ export default function InvitationContent() {
                     ) : (
                         <div role="alert" className="w-full space-y-3 text-left">
                             <p className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm text-foreground">
-                                {t('verein.invite.mismatch', { email: session?.user.email ?? '', invited: preview.invitedEmail })}
+                                {t('verein.invite.mismatch', { email: accountEmail, invited: preview.invitedEmail })}
                             </p>
                             <button type="button" onClick={() => void switchAccount()} className={buttonClass}>
                                 {t('verein.invite.switchAccount')}

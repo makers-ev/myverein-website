@@ -304,6 +304,7 @@ export default function VereinPageContent() {
                             <ExitQueuePanel
                                 clubId={activeClub.clubId}
                                 ownMemberId={me?.memberId ?? null}
+                                ownClubMemberId={me?.clubMemberId ?? null}
                                 canProtectedExit={permissions.includes('roles:write')}
                                 onChanged={() => void refreshClubData(activeClub.clubId)}
                             />

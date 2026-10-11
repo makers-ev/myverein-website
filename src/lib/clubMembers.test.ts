@@ -16,7 +16,7 @@ vi.mock('./api-client', () => {
 });
 
 import { ApiError } from './api-client';
-import { allowedStatusesFromError, hasPendingExit, memberCountFromError, memberErrorKey, STATUS_TRANSITIONS } from './clubMembers';
+import { allowedStatusesFromError, formatDate, hasPendingExit, memberCountFromError, memberErrorKey, STATUS_TRANSITIONS } from './clubMembers';
 
 describe('memberErrorKey', () => {
     it('maps known backend conflicts to plain-language keys instead of raw strings', () => {
@@ -63,5 +63,17 @@ describe('rejoin conflict', () => {
     it('is recognized by details.code, not by message text', () => {
         expect(memberErrorKey(new ApiError(409, 'CONFLICT', 'anything', { code: 'member_rejoin_blocked' }))).toBe('verein.err.rejoinBlocked');
         expect(memberErrorKey(new ApiError(409, 'CONFLICT', 'rejoin blocked'))).toBe('verein.err.conflict');
+    });
+});
+
+describe('formatDate', () => {
+    it('shows a date-only value as the named day', () => {
+        expect(formatDate('2026-12-31', 'de')).toBe('31.12.2026');
+    });
+
+    it('shows a timestamp as the calendar day in Europe/Berlin', () => {
+        // 23:30 UTC on New Year's Eve is already 1 January in Berlin.
+        expect(formatDate('2026-12-31T23:30:00.000Z', 'de')).toBe('1.1.2027');
+        expect(formatDate(null, 'de')).toBe('—');
     });
 });

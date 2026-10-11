@@ -136,8 +136,19 @@ export function dateLocale(language: string): string {
     return language === 'de' ? 'de-DE' : 'en-GB';
 }
 
+/**
+ * Formats `YYYY-MM-DD` dates as the calendar day they name, and full timestamps (`...T...Z`, e.g. invite expiry, loan
+ * start) as the calendar day in the club's time zone (Europe/Berlin) -- a timestamp near midnight UTC must not show the
+ * neighbouring day.
+ */
 export function formatDate(iso: string | null | undefined, language: string): string {
     if (!iso) return '—';
+    if (iso.length > 10 && iso.includes('T')) {
+        const instant = new Date(iso);
+        if (!Number.isNaN(instant.getTime())) {
+            return instant.toLocaleDateString(dateLocale(language), { timeZone: 'Europe/Berlin' });
+        }
+    }
     return new Date(`${iso.slice(0, 10)}T00:00`).toLocaleDateString(dateLocale(language));
 }
 

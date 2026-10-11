@@ -182,28 +182,95 @@ export function isPlausibleInviteToken(token: string | null | undefined): token 
 }
 
 export const INVITE_TOKEN_STORAGE_KEY = 'myverein.inviteToken';
+/** The token also survives opening the verification e-mail in a new tab (localStorage), but only this long. */
+export const INVITE_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 
-/** Minimal slice of `Storage` so the helpers below work with `sessionStorage` and with a test double. */
+/** Minimal slice of `Storage` so the helpers below work with `sessionStorage`/`localStorage` and with a test double. */
 export interface TokenStore {
     getItem(key: string): string | null;
     setItem(key: string, value: string): void;
     removeItem(key: string): void;
 }
 
-/**
- * Token of the invitation link: the query string wins (and is stashed so it survives the login round trip), else the
- * stashed one. The caller strips the token from the visible URL afterwards (`history.replaceState`).
- */
-export function resolveInviteToken(search: string, store: TokenStore): string | null {
-    const fromQuery = new URLSearchParams(search).get('token');
-    if (isPlausibleInviteToken(fromQuery)) {
-        store.setItem(INVITE_TOKEN_STORAGE_KEY, fromQuery);
-        return fromQuery;
+/** Storage access may throw (private mode, blocked cookies); a failing store is simply skipped. */
+function safely<T>(action: () => T): T | null {
+    try {
+        return action();
+    } catch {
+        return null;
     }
-    const stashed = store.getItem(INVITE_TOKEN_STORAGE_KEY);
-    return isPlausibleInviteToken(stashed) ? stashed : null;
 }
 
-export function clearInviteToken(store: TokenStore): void {
-    store.removeItem(INVITE_TOKEN_STORAGE_KEY);
+function readStashed(store: TokenStore, now: number): string | null {
+    const raw = safely(() => store.getItem(INVITE_TOKEN_STORAGE_KEY));
+    if (!raw) return null;
+    try {
+        const parsed = JSON.parse(raw) as { token?: unknown; exp?: unknown };
+        if (typeof parsed.exp === 'number' && parsed.exp > now && isPlausibleInviteToken(typeof parsed.token === 'string' ? parsed.token : null)) {
+            return parsed.token as string;
+        }
+    } catch {
+        // fall through: unreadable entry
+    }
+    safely(() => store.removeItem(INVITE_TOKEN_STORAGE_KEY));
+    return null;
+}
+
+/**
+ * Token of the invitation link: the query string wins (and is stashed with a 24 h expiry in every given store, so it
+ * survives the login round trip and a verification e-mail opened in another tab), else the first valid stashed one.
+ * The caller strips the token from the visible URL afterwards (`history.replaceState`).
+ */
+export function resolveInviteToken(search: string, stores: TokenStore[], now: number = Date.now()): string | null {
+    const fromQuery = new URLSearchParams(search).get('token');
+    if (isPlausibleInviteToken(fromQuery)) {
+        const value = JSON.stringify({ token: fromQuery, exp: now + INVITE_TOKEN_TTL_MS });
+        for (const store of stores) safely(() => store.setItem(INVITE_TOKEN_STORAGE_KEY, value));
+        return fromQuery;
+    }
+    for (const store of stores) {
+        const stashed = readStashed(store, now);
+        if (stashed) return stashed;
+    }
+    return null;
+}
+
+export function clearInviteToken(stores: TokenStore[]): void {
+    for (const store of stores) safely(() => store.removeItem(INVITE_TOKEN_STORAGE_KEY));
+}
+
+export const INVITE_LOGIN_REDIRECT_KEY = 'myverein.inviteLoginRedirect';
+const LOGIN_REDIRECT_COOLDOWN_MS = 60_000;
+
+/**
+ * Guards against a redirect loop between `/einladung` and `/login-signup` (e.g. a session that is not visible yet right
+ * after login): the automatic redirect happens at most once per minute, afterwards the page offers a manual link.
+ */
+export function shouldAutoRedirectToLogin(store: TokenStore, now: number = Date.now()): boolean {
+    const last = Number(safely(() => store.getItem(INVITE_LOGIN_REDIRECT_KEY)) ?? 0);
+    if (Number.isFinite(last) && last > 0 && now - last < LOGIN_REDIRECT_COOLDOWN_MS) return false;
+    safely(() => store.setItem(INVITE_LOGIN_REDIRECT_KEY, String(now)));
+    return true;
+}
+
+/** Error key for the unlink action: "Member has no account" must not read like the role-assignment hint. */
+export function unlinkErrorKey(err: unknown, fallback: (e: unknown) => string): string {
+    if (err instanceof ApiError && err.status === 409 && /no account/i.test(err.message)) return 'verein.err.unlinkNoAccount';
+    return fallback(err);
+}
+
+/** Error key for the member's own cancellation: the owner gets the owner explanation instead of a board message. */
+export function selfExitErrorKey(err: unknown, fallback: (e: unknown) => string): string {
+    if (errorDetailsCode(err) === 'owner_protected') return 'verein.exit.owner';
+    return fallback(err);
+}
+
+/** Removes a stashed invitation token from this tab and from localStorage (sign-out, accepted, invalid). */
+export function clearAllStoredInviteTokens(): void {
+    if (typeof window === 'undefined') return;
+    const stores: TokenStore[] = [];
+    safely(() => stores.push(window.sessionStorage));
+    safely(() => stores.push(window.localStorage));
+    clearInviteToken(stores);
+    for (const store of stores) safely(() => store.removeItem(INVITE_LOGIN_REDIRECT_KEY));
 }
