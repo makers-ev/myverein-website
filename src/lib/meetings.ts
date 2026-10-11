@@ -55,20 +55,62 @@ export function buildAttendancePatch(stored: AttendanceRow[], edits: Record<stri
     return out;
 }
 
-/** ISO instant -> value for `<input type="datetime-local">` in the browser's local time (`''` for none/invalid). */
-export function toDatetimeLocal(iso: string | null | undefined): string {
-    if (!iso) return '';
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return '';
-    const pad = (n: number) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const TZ = 'Europe/Berlin';
+
+/** Wall-clock parts of an instant in the club's time zone (Europe/Berlin). */
+function berlinParts(ms: number): { y: number; mo: number; d: number; h: number; mi: number } {
+    const parts = new Intl.DateTimeFormat('en-GB', {
+        timeZone: TZ,
+        hourCycle: 'h23',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+    }).formatToParts(new Date(ms));
+    const get = (type: string) => Number(parts.find((p) => p.type === type)?.value ?? 0);
+    return { y: get('year'), mo: get('month'), d: get('day'), h: get('hour'), mi: get('minute') };
 }
 
-/** `datetime-local` value -> ISO instant (`null` for empty/invalid). */
+/** ISO instant -> value for `<input type="datetime-local">` as Europe/Berlin wall-clock time (`''` for none/invalid). */
+export function toDatetimeLocal(iso: string | null | undefined): string {
+    if (!iso) return '';
+    const ms = new Date(iso).getTime();
+    if (Number.isNaN(ms)) return '';
+    const p = berlinParts(ms);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${p.y}-${pad(p.mo)}-${pad(p.d)}T${pad(p.h)}:${pad(p.mi)}`;
+}
+
+/** `datetime-local` value read as Europe/Berlin wall-clock time -> ISO instant (`null` for empty/invalid). */
 export function fromDatetimeLocal(value: string): string | null {
-    if (!value) return null;
-    const d = new Date(value);
-    return Number.isNaN(d.getTime()) ? null : d.toISOString();
+    const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(value);
+    if (!m) return null;
+    const [y, mo, d, h, mi] = m.slice(1).map(Number) as [number, number, number, number, number];
+    const asUtc = Date.UTC(y, mo - 1, d, h, mi);
+    // Offset of Berlin at that wall-clock time; evaluated twice so the guess near a DST switch settles.
+    const offsetAt = (ms: number) => {
+        const p = berlinParts(ms);
+        return Date.UTC(p.y, p.mo - 1, p.d, p.h, p.mi) - ms;
+    };
+    let ms = asUtc - offsetAt(asUtc);
+    ms = asUtc - offsetAt(ms);
+    return Number.isNaN(ms) ? null : new Date(ms).toISOString();
+}
+
+/** Date and time of a meeting in Europe/Berlin, formatted for the UI language. */
+export function formatMeetingDateTime(iso: string, language: string): string {
+    return new Date(iso).toLocaleString(language === 'de' ? 'de-DE' : 'en-GB', { timeZone: TZ, dateStyle: 'short', timeStyle: 'short' });
+}
+
+/**
+ * Status to send along when the date changes: a meeting that gets a date leaves `terminfindung` (-> `geplant`), and one
+ * that loses its date while only `geplant` goes back to `terminfindung`. `undefined` = leave the status alone.
+ */
+export function statusForSchedule(currentStatus: string, newScheduledAt: string | null): 'geplant' | 'terminfindung' | undefined {
+    if (newScheduledAt && currentStatus === 'terminfindung') return 'geplant';
+    if (!newScheduledAt && currentStatus === 'geplant') return 'terminfindung';
+    return undefined;
 }
 
 export type RsvpResponse = 'zugesagt' | 'abgesagt';

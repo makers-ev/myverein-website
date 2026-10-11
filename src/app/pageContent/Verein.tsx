@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { apiFetch } from '@/lib/api-client';
+import { useThrottledCallback } from '@/lib/useThrottledCallback';
 import { memberErrorKey } from '@/lib/clubMembers';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ApplicationsPanel, { type ClubApplication } from '@/components/verein/ApplicationsPanel';
@@ -189,8 +190,17 @@ export default function VereinPageContent() {
 
     const activeClub = clubs?.[0] ?? null;
 
-    // Signed photo URLs expire: a failed image load refetches the club data once per window (avatars fail together).
-    const lastPhotoRefetch = useRef(0);
+    // Signed photo URLs expire: a failed image load refetches only the resource that carried the URL, throttled.
+    const refetchBoardPhotos = useThrottledCallback(async () => {
+        if (!activeClub) return;
+        const res = await apiFetch<{ data: ClubInfo }>(`/club-info?clubId=${activeClub.clubId}`);
+        setInfo(res.data);
+    });
+    const refetchOwnPhoto = useThrottledCallback(async () => {
+        if (!activeClub) return;
+        const res = await apiFetch<{ data: OwnMembership }>(`/club-members/me?clubId=${activeClub.clubId}`);
+        setMe(res.data);
+    });
 
     function loadClubs() {
         void apiFetch<{ data: MyClub[] }>('/my-clubs').then(({ data }) => setClubs(data));
@@ -283,14 +293,10 @@ export default function VereinPageContent() {
                     </div>
 
                     <div className="mt-4">
-                        {currentTab === 'info' && (info ? <VereinsinfoTab info={info} t={t} onPhotoExpired={() => {
-                                    if (Date.now() - lastPhotoRefetch.current < 15_000) return;
-                                    lastPhotoRefetch.current = Date.now();
-                                    void refreshClubData(activeClub.clubId);
-                                }} /> : <p className="text-sm text-muted-foreground">…</p>)}
+                        {currentTab === 'info' && (info ? <VereinsinfoTab info={info} t={t} onPhotoExpired={refetchBoardPhotos} /> : <p className="text-sm text-muted-foreground">…</p>)}
                         {currentTab === 'profil' &&
                             (me ? (
-                                <ProfilTab me={me} clubId={activeClub.clubId} onSaved={() => void refreshClubData(activeClub.clubId)} />
+                                <ProfilTab me={me} clubId={activeClub.clubId} onSaved={() => void refreshClubData(activeClub.clubId)} onPhotoExpired={refetchOwnPhoto} />
                             ) : (
                                 <p className="text-sm text-muted-foreground">…</p>
                             ))}

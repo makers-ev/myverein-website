@@ -36,7 +36,7 @@ const inputClass =
     'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none';
 
 /** Self-service Selbstauskunft: PATCH /club-members/me (birth date + emergency contact). */
-export default function ProfilTab({ me, clubId, onSaved }: { me: OwnMembership; clubId: string; onSaved: () => void }) {
+export default function ProfilTab({ me, clubId, onSaved, onPhotoExpired }: { me: OwnMembership; clubId: string; onSaved: () => void; onPhotoExpired?: () => void }) {
     const { t } = useLanguage();
     const [birthDate, setBirthDate] = useState(me.birthDate ?? '');
     const [contactName, setContactName] = useState(me.emergencyContactName ?? '');
@@ -88,7 +88,7 @@ export default function ProfilTab({ me, clubId, onSaved }: { me: OwnMembership; 
                             photoUrl={me.photoUrl}
                             birthDate={me.birthDate}
                             onChanged={() => onSaved()}
-                            onExpired={() => onSaved()}
+                            onExpired={onPhotoExpired}
                         />
                     </div>
                     <dl className="mt-5 space-y-3 text-sm">

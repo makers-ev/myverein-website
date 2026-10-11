@@ -5,6 +5,7 @@ type Translation = Partial<Record<Language, Record<string, string>>>;
 // DE/EN only by design, same as VereinTranslation.ts -- see KalenderTranslation.ts.
 const TreffenTranslation: Translation = {
     de: {
+        'treffen.attendance.loadError': 'Die Anwesenheit konnte nicht geladen werden. Bitte lade die Seite neu.',
         'treffen.type.vorstandssitzung': 'Vorstandssitzung',
         'treffen.type.mitgliederversammlung': 'Mitgliederversammlung',
         'treffen.type.sonstige': 'Sonstiges Treffen',
@@ -73,6 +74,7 @@ const TreffenTranslation: Translation = {
         'treffen.attendance.name': 'Name',
     },
     en: {
+        'treffen.attendance.loadError': 'Attendance could not be loaded. Please reload the page.',
         'treffen.type.vorstandssitzung': 'Board meeting',
         'treffen.type.mitgliederversammlung': 'General assembly',
         'treffen.type.sonstige': 'Other meeting',

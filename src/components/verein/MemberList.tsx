@@ -1,12 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Pencil, Search, UserPlus, X } from 'lucide-react';
 
 import MemberAvatar from '@/components/verein/MemberAvatar';
 import MemberFormModal from '@/components/verein/MemberFormModal';
 import MemberRoleCell from '@/components/verein/MemberRoleCell';
 import TransitionSuggestions from '@/components/verein/TransitionSuggestions';
+import { useThrottledCallback } from '@/lib/useThrottledCallback';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ApiError, apiFetch } from '@/lib/api-client';
 import {
@@ -93,12 +94,7 @@ export default function MemberList({
     const reload = () => setLocalReload((n) => n + 1);
 
     // Signed photo URLs expire: a failed image load refetches the list once (all avatars fail together, so debounce).
-    const lastExpiredReload = useRef(0);
-    const onPhotoExpired = useCallback(() => {
-        if (Date.now() - lastExpiredReload.current < 15_000) return;
-        lastExpiredReload.current = Date.now();
-        setLocalReload((n) => n + 1);
-    }, []);
+    const onPhotoExpired = useThrottledCallback(() => setLocalReload((n) => n + 1));
 
     // Debounce the search box; a new search always starts on page 1.
     useEffect(() => {

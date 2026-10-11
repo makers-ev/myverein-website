@@ -71,9 +71,93 @@ export function drawCrop(canvas: HTMLCanvasElement, bitmap: ImageBitmap, crop: C
     ctx.drawImage(bitmap, sx, sy, size, size, 0, 0, outSize, outSize);
 }
 
-/** Decodes a picked file with its EXIF orientation applied. Rejects when the browser cannot decode it. */
-export function decodeUpright(file: Blob): Promise<ImageBitmap> {
-    return createImageBitmap(file, { imageOrientation: 'from-image' });
+/** Decompression-bomb guard: refuse images beyond these dimensions before the browser decodes them. */
+export const MAX_SOURCE_EDGE = 8000;
+export const MAX_SOURCE_PIXELS = 40_000_000;
+/** Working size: a decoded image is scaled down to this edge once (the upload is 512 px anyway). */
+export const WORKING_EDGE = 2048;
+
+/** Pixel size from the file header (JPEG SOFn, PNG IHDR, WebP VP8/VP8L/VP8X) without decoding; `null` if unreadable. */
+export function readImageSize(b: Uint8Array): { width: number; height: number } | null {
+    const u16be = (i: number) => (b[i]! << 8) | b[i + 1]!;
+    const u16le = (i: number) => b[i]! | (b[i + 1]! << 8);
+    const u24le = (i: number) => b[i]! | (b[i + 1]! << 8) | (b[i + 2]! << 16);
+    const ascii = (i: number, n: number) => String.fromCharCode(...Array.from(b.subarray(i, i + n)));
+    if (b.length >= 24 && b[0] === 0x89 && ascii(1, 3) === 'PNG') {
+        const dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
+        return { width: dv.getUint32(16), height: dv.getUint32(20) };
+    }
+    if (b.length >= 4 && b[0] === 0xff && b[1] === 0xd8) {
+        let i = 2;
+        while (i + 9 < b.length) {
+            if (b[i] !== 0xff) {
+                i += 1;
+                continue;
+            }
+            const marker = b[i + 1]!;
+            if (marker === 0xff) {
+                i += 1;
+                continue;
+            }
+            if (marker === 0xd8 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) {
+                i += 2;
+                continue;
+            }
+            const isSof = marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc;
+            if (isSof) return { height: u16be(i + 5), width: u16be(i + 7) };
+            i += 2 + u16be(i + 2);
+        }
+        return null;
+    }
+    if (b.length >= 30 && ascii(0, 4) === 'RIFF' && ascii(8, 4) === 'WEBP') {
+        const kind = ascii(12, 4);
+        if (kind === 'VP8 ') return { width: u16le(26) & 0x3fff, height: u16le(28) & 0x3fff };
+        if (kind === 'VP8L') {
+            const bits = b[21]! | (b[22]! << 8) | (b[23]! << 16) | (b[24]! << 24);
+            return { width: (bits & 0x3fff) + 1, height: ((bits >>> 14) & 0x3fff) + 1 };
+        }
+        if (kind === 'VP8X') return { width: u24le(24) + 1, height: u24le(27) + 1 };
+    }
+    return null;
+}
+
+/** `null` = acceptable, otherwise the problem: unreadable header or too large to decode safely. */
+export function checkImageSize(size: { width: number; height: number } | null): 'invalid' | 'dimensions' | null {
+    if (!size || size.width < 1 || size.height < 1) return 'invalid';
+    if (size.width > MAX_SOURCE_EDGE || size.height > MAX_SOURCE_EDGE || size.width * size.height > MAX_SOURCE_PIXELS) return 'dimensions';
+    return null;
+}
+
+/** Target size so the longer edge is at most `max` (never upscales). */
+export function fitWithin(width: number, height: number, max: number = WORKING_EDGE): { width: number; height: number } {
+    const scale = Math.min(1, max / Math.max(width, height));
+    return { width: Math.max(1, Math.round(width * scale)), height: Math.max(1, Math.round(height * scale)) };
+}
+
+/**
+ * Decodes a picked file with its EXIF orientation applied. The header size is checked first (decompression bomb), then
+ * the decoded bitmap is scaled down once to `WORKING_EDGE` and the full-size bitmap is closed right away.
+ * Rejects with `Error('dimensions')` / `Error('invalid')` / a decode error.
+ */
+export async function decodeUpright(file: Blob): Promise<ImageBitmap> {
+    const head = new Uint8Array(await file.slice(0, 65536).arrayBuffer());
+    const problem = checkImageSize(readImageSize(head));
+    if (problem) throw new Error(problem);
+    const full = await createImageBitmap(file, { imageOrientation: 'from-image' });
+    const target = fitWithin(full.width, full.height);
+    if (target.width === full.width && target.height === full.height) return full;
+    try {
+        const canvas = document.createElement('canvas');
+        canvas.width = target.width;
+        canvas.height = target.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('invalid');
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(full, 0, 0, target.width, target.height);
+        return await createImageBitmap(canvas);
+    } finally {
+        full.close();
+    }
 }
 
 /** Re-encodes the crop as an upright JPEG (also drops all metadata client-side). */
@@ -102,7 +186,7 @@ export function photoErrorKey(err: unknown, own: boolean): string {
     return memberErrorKey(err);
 }
 
-export function photoProblemKey(problem: PhotoFileProblem): string {
+export function photoProblemKey(problem: PhotoFileProblem | 'dimensions' | 'invalid'): string {
     switch (problem) {
         case 'empty':
             return 'verein.photo.err.invalid';
@@ -110,6 +194,10 @@ export function photoProblemKey(problem: PhotoFileProblem): string {
             return 'verein.photo.err.type';
         case 'size':
             return 'verein.photo.err.size';
+        case 'dimensions':
+            return 'verein.photo.err.dimensions';
+        case 'invalid':
+            return 'verein.photo.err.invalid';
     }
 }
 

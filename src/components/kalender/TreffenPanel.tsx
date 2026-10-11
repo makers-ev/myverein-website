@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, CalendarClock, Pencil, Plus, Trash2, X } from 'lucide-react';
 
 import { useAccountMembers } from '@/lib/useAccountMembers';
@@ -9,9 +9,11 @@ import { apiFetch } from '@/lib/api-client';
 import {
     buildAttendancePatch,
     effectiveAttendance,
+    formatMeetingDateTime,
     fromDatetimeLocal,
     MEETING_TYPES,
     meetingTypeKey,
+    statusForSchedule,
     toDatetimeLocal,
     type AttendanceEdit,
     type AttendanceRow,
@@ -101,6 +103,7 @@ function ErrorText({ children }: { children: React.ReactNode }) {
 }
 
 function MeetingList({ clubId, t, canWrite, onSelect }: { clubId: string; t: TFn; canWrite: boolean; onSelect: (id: string) => void }) {
+    const { language } = useLanguage();
     const [meetings, setMeetings] = useState<Meeting[] | null>(null);
     const [showCreate, setShowCreate] = useState(false);
     const [title, setTitle] = useState('');
@@ -175,7 +178,7 @@ function MeetingList({ clubId, t, canWrite, onSelect }: { clubId: string; t: TFn
                                 <span className="min-w-0 flex-1">
                                     <span className="block truncate text-sm font-semibold text-foreground">{m.title}</span>
                                     <span className="block truncate text-xs text-muted-foreground">
-                                        {typeLabel(m.type, t)} · {m.scheduledAt ? new Date(m.scheduledAt).toLocaleString('de-DE') : t('treffen.scheduled-at.pending')}
+                                        {typeLabel(m.type, t)} · {m.scheduledAt ? formatMeetingDateTime(m.scheduledAt, language) : t('treffen.scheduled-at.pending')}
                                     </span>
                                 </span>
                                 <StatusBadge status={m.status} t={t} />
@@ -250,6 +253,7 @@ function MeetingList({ clubId, t, canWrite, onSelect }: { clubId: string; t: TFn
 }
 
 function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: string; meetingId: string; t: TFn; canWrite: boolean; onBack: () => void }) {
+    const { language } = useLanguage();
     const [meeting, setMeeting] = useState<Meeting | null>(null);
     const [invitees, setInvitees] = useState<MeetingInvitee[]>([]);
     const { members, error: directoryError } = useAccountMembers(clubId);
@@ -258,17 +262,34 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
     const [storedAttendance, setStoredAttendance] = useState<AttendanceRow[]>([]);
     const [ownMemberId, setOwnMemberId] = useState<string | null>(null);
 
+    // Only the newest load may write state, and never after unmount / meeting switch.
+    const loadSeq = useRef(0);
+    const [attendanceLoadFailed, setAttendanceLoadFailed] = useState(false);
+    useEffect(() => {
+        return () => {
+            loadSeq.current += 1;
+        };
+    }, [meetingId]);
+
     async function load() {
+        const seq = ++loadSeq.current;
         const [meetingRes, inviteesRes, resolutionsRes, attendanceRes] = await Promise.all([
             apiFetch<{ data: Meeting }>(`/meetings/${meetingId}?clubId=${clubId}`),
             apiFetch<{ data: MeetingInvitee[] }>(`/meetings/${meetingId}/invitees?clubId=${clubId}`),
             apiFetch<{ data: MeetingResolution[] }>(`/meetings/${meetingId}/resolutions?clubId=${clubId}`),
-            apiFetch<{ data: AttendanceRow[] }>(`/meetings/${meetingId}/attendance?clubId=${clubId}`),
+            // A failing attendance read only hides that section, not the whole page.
+            apiFetch<{ data: AttendanceRow[] }>(`/meetings/${meetingId}/attendance?clubId=${clubId}`).catch(() => null),
         ]);
+        if (seq !== loadSeq.current) return;
         setMeeting(meetingRes.data);
         setInvitees(inviteesRes.data);
         setResolutions(resolutionsRes.data);
-        setStoredAttendance(attendanceRes.data);
+        if (attendanceRes) {
+            setStoredAttendance(attendanceRes.data);
+            setAttendanceLoadFailed(false);
+        } else {
+            setAttendanceLoadFailed(true);
+        }
     }
 
     useEffect(() => {
@@ -317,7 +338,13 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
         const body: Record<string, unknown> = {};
         if (metaTitle.trim() !== meeting.title) body.title = metaTitle.trim();
         if (metaType !== meeting.type) body.type = metaType;
-        if (metaScheduled !== toDatetimeLocal(meeting.scheduledAt)) body.scheduledAt = fromDatetimeLocal(metaScheduled);
+        if (metaScheduled !== toDatetimeLocal(meeting.scheduledAt)) {
+            const scheduled = fromDatetimeLocal(metaScheduled);
+            body.scheduledAt = scheduled;
+            // A meeting that gets a date is no longer in Terminfindung (and vice versa when the date is removed).
+            const nextStatus = statusForSchedule(meeting.status, scheduled);
+            if (nextStatus) body.status = nextStatus;
+        }
         if (Object.keys(body).length === 0) {
             setMetaOpen(false);
             return;
@@ -435,7 +462,9 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
 
     function handleAddCandidate() {
         if (!candidateInput) return;
-        setCandidates((prev) => [...prev, new Date(candidateInput).toISOString()]);
+        const iso = fromDatetimeLocal(candidateInput);
+        if (!iso) return;
+        setCandidates((prev) => [...prev, iso]);
         setCandidateInput('');
         setOverlapResults(null);
     }
@@ -544,7 +573,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                 <div className="min-w-0">
                     <h2 className="text-xl font-bold text-foreground">{meeting.title}</h2>
                     <p className="mt-0.5 text-sm text-muted-foreground">
-                        {typeLabel(meeting.type, t)} · {meeting.scheduledAt ? new Date(meeting.scheduledAt).toLocaleString('de-DE') : t('treffen.scheduled-at.pending')}
+                        {typeLabel(meeting.type, t)} · {meeting.scheduledAt ? formatMeetingDateTime(meeting.scheduledAt, language) : t('treffen.scheduled-at.pending')}
                     </p>
                     {canWrite && (
                         <div className="mt-3 flex flex-wrap gap-2">
@@ -745,7 +774,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                         <ul className="mb-3 flex flex-wrap gap-2">
                             {candidates.map((c, i) => (
                                 <li key={c + i} className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
-                                    {new Date(c).toLocaleString('de-DE')}
+                                    {formatMeetingDateTime(c, language)}
                                 </li>
                             ))}
                         </ul>
@@ -784,7 +813,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                                 return (
                                     <li key={result.candidate} className="rounded-lg border border-border bg-background p-3 text-xs">
                                         <div className="flex items-center justify-between gap-2">
-                                            <p className="font-semibold text-foreground">{new Date(result.candidate).toLocaleString('de-DE')}</p>
+                                            <p className="font-semibold text-foreground">{formatMeetingDateTime(result.candidate, language)}</p>
                                             <span className="text-muted-foreground">{t('treffen.overlap.count', { available, total })}</span>
                                         </div>
                                         <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
@@ -816,7 +845,9 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
             )}
 
             <SectionCard title={t('treffen.attendance.title')}>
-                {invitees.length === 0 ? (
+                {attendanceLoadFailed ? (
+                    <ErrorText>{t('treffen.attendance.loadError')}</ErrorText>
+                ) : invitees.length === 0 ? (
                     <p className="text-sm text-muted-foreground">{t('treffen.attendance.empty')}</p>
                 ) : (
                     <div className="overflow-x-auto rounded-lg border border-border">
@@ -889,7 +920,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                     </div>
                 )}
                 {attendanceSaved && !attendanceError && <p className="mt-2 text-xs text-success">{t('treffen.attendance.saved')}</p>}
-                {canWrite && invitees.length > 0 && (
+                {canWrite && !attendanceLoadFailed && invitees.length > 0 && (
                     <button type="button" onClick={() => void handleSaveAttendance()} disabled={attendanceSaving || attendancePatch.length === 0} className={`${primaryBtn} mt-3`}>
                         {t('treffen.attendance.save')}
                     </button>

@@ -10,6 +10,8 @@ type Translation = {
 
 const VereinTranslation: Translation = {
     de: {
+        'verein.photo.err.dimensions': 'Das Bild hat zu viele Pixel (höchstens 8000 px je Kante und 40 Megapixel). Bitte wähle ein kleineres Bild.',
+        'verein.photo.decoding': 'Bild wird geladen …',
         'verein.role.mitglied': 'Mitglied',
         'verein.roles.base.hint': 'Basisrolle jedes Mitglieds – sie ist immer vorhanden und kann nicht entfernt werden.',
         'verein.roles.base.option': 'Mitglied (Basisrolle, immer vorhanden)',
@@ -623,6 +625,8 @@ const VereinTranslation: Translation = {
         'verein.exit.direct.selfHint': 'Dein eigener Eintrag ist hier nicht auswählbar. Deine eigene Kündigung reichst du unter „Mein Profil“ ein.',
     },
     en: {
+        'verein.photo.err.dimensions': 'The image has too many pixels (8000 px per edge and 40 megapixels at most). Please choose a smaller image.',
+        'verein.photo.decoding': 'Loading image …',
         'verein.role.mitglied': 'Member',
         'verein.roles.base.hint': 'Base role of every member – always present and cannot be removed.',
         'verein.roles.base.option': 'Member (base role, always present)',

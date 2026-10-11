@@ -43,6 +43,16 @@ export default function MemberPhotoDialog({
     const [crop, setCrop] = useState<CropState>(DEFAULT_CROP);
     const [error, setError] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
+    const [decoding, setDecoding] = useState(false);
+    // Latest decode request and mount state: a slow decode must not overwrite a newer pick or touch an unmounted dialog.
+    const decodeSeq = useRef(0);
+    const alive = useRef(true);
+    useEffect(() => {
+        alive.current = true;
+        return () => {
+            alive.current = false;
+        };
+    }, []);
 
     // Release the decoded bitmap when it is replaced or the dialog goes away.
     useEffect(() => () => bitmap?.close(), [bitmap]);
@@ -61,12 +71,21 @@ export default function MemberPhotoDialog({
             setError(t(photoProblemKey(problem)));
             return;
         }
+        const seq = ++decodeSeq.current;
+        setDecoding(true);
         try {
             const decoded = await decodeUpright(file);
+            if (!alive.current || seq !== decodeSeq.current) {
+                decoded.close();
+                return;
+            }
             setCrop(DEFAULT_CROP);
             setBitmap(decoded);
-        } catch {
-            setError(t('verein.photo.err.invalid'));
+        } catch (err) {
+            if (!alive.current || seq !== decodeSeq.current) return;
+            setError(t(photoProblemKey(err instanceof Error && err.message === 'dimensions' ? 'dimensions' : 'invalid')));
+        } finally {
+            if (alive.current && seq === decodeSeq.current) setDecoding(false);
         }
     }
 
@@ -79,6 +98,7 @@ export default function MemberPhotoDialog({
             await onSave(jpeg);
             onClose();
         } catch (err) {
+            if (!alive.current) return;
             setError(err instanceof Error ? err.message : t('verein.err.generic'));
             setBusy(false);
         }
@@ -96,7 +116,7 @@ export default function MemberPhotoDialog({
                     <button type="button" onClick={onClose} disabled={busy} className={secondaryButtonClass}>
                         {t('verein.roles.add.cancel')}
                     </button>
-                    <button type="button" onClick={() => void handleSave()} disabled={busy || !bitmap} className={primaryButtonClass}>
+                    <button type="button" onClick={() => void handleSave()} disabled={busy || decoding || !bitmap} className={primaryButtonClass}>
                         {busy ? t('verein.photo.uploading') : t('verein.photo.save')}
                     </button>
                 </div>
@@ -119,17 +139,20 @@ export default function MemberPhotoDialog({
                 )}
 
                 <div>
-                    <label htmlFor={inputId} className={`${secondaryButtonClass} inline-block cursor-pointer`}>
-                        {bitmap ? t('verein.photo.choose.other') : t('verein.photo.choose')}
-                    </label>
                     <input
                         id={inputId}
                         type="file"
                         accept={PHOTO_MIME_TYPES.join(',')}
                         onChange={(e) => void handleFile(e)}
-                        disabled={busy}
-                        className="sr-only"
+                        disabled={busy || decoding}
+                        className="peer sr-only"
                     />
+                    <label
+                        htmlFor={inputId}
+                        className={`${secondaryButtonClass} inline-block cursor-pointer peer-focus-visible:ring-2 peer-focus-visible:ring-primary peer-focus-visible:ring-offset-2 peer-disabled:cursor-not-allowed peer-disabled:opacity-50`}
+                    >
+                        {decoding ? t('verein.photo.decoding') : bitmap ? t('verein.photo.choose.other') : t('verein.photo.choose')}
+                    </label>
                 </div>
 
                 {bitmap && (
@@ -142,6 +165,7 @@ export default function MemberPhotoDialog({
                                 max={MAX_ZOOM}
                                 step={0.05}
                                 value={crop.zoom}
+                                aria-valuetext={`${Math.round(crop.zoom * 100)} %`}
                                 onChange={(e) => setCrop((c) => ({ ...c, zoom: Number(e.target.value) }))}
                                 className={slider}
                             />
@@ -154,6 +178,7 @@ export default function MemberPhotoDialog({
                                 max={1}
                                 step={0.05}
                                 value={crop.offsetX}
+                                aria-valuetext={`${Math.round(crop.offsetX * 100)} %`}
                                 onChange={(e) => setCrop((c) => ({ ...c, offsetX: Number(e.target.value) }))}
                                 className={slider}
                             />
@@ -166,6 +191,7 @@ export default function MemberPhotoDialog({
                                 max={1}
                                 step={0.05}
                                 value={crop.offsetY}
+                                aria-valuetext={`${Math.round(crop.offsetY * 100)} %`}
                                 onChange={(e) => setCrop((c) => ({ ...c, offsetY: Number(e.target.value) }))}
                                 className={slider}
                             />

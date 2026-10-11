@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildAttendancePatch, effectiveAttendance, fromDatetimeLocal, meetingTypeKey, toDatetimeLocal, type AttendanceRow } from './meetings';
+import { buildAttendancePatch, effectiveAttendance, formatMeetingDateTime, fromDatetimeLocal, meetingTypeKey, statusForSchedule, toDatetimeLocal, type AttendanceRow } from './meetings';
 
 const stored: AttendanceRow[] = [
     { memberId: 'a', present: true, hasVotingRight: true, proxyForMemberId: null },
@@ -40,6 +40,37 @@ describe('meetingTypeKey', () => {
     it('maps enum values and leaves legacy ones alone', () => {
         expect(meetingTypeKey('sonstige')).toBe('treffen.type.sonstige');
         expect(meetingTypeKey('Vorstandstreffen')).toBeNull();
+    });
+});
+
+describe('Europe/Berlin conversion', () => {
+    it('reads the input as Berlin wall-clock time (summer and winter)', () => {
+        expect(fromDatetimeLocal('2026-07-01T18:30')).toBe('2026-07-01T16:30:00.000Z');
+        expect(fromDatetimeLocal('2026-12-01T18:30')).toBe('2026-12-01T17:30:00.000Z');
+    });
+    it('shows an instant as Berlin wall-clock time, independent of the browser zone', () => {
+        expect(toDatetimeLocal('2026-07-01T16:30:00.000Z')).toBe('2026-07-01T18:30');
+        expect(toDatetimeLocal('2026-12-31T23:30:00.000Z')).toBe('2027-01-01T00:30');
+    });
+    it('is stable around the DST switch', () => {
+        expect(fromDatetimeLocal('2026-03-29T12:00')).toBe('2026-03-29T10:00:00.000Z');
+        expect(toDatetimeLocal(fromDatetimeLocal('2026-10-25T12:00'))).toBe('2026-10-25T12:00');
+    });
+    it('formats with time zone and language', () => {
+        expect(formatMeetingDateTime('2026-12-31T23:30:00.000Z', 'de')).toContain('01.01.27');
+        expect(formatMeetingDateTime('2026-07-01T16:30:00.000Z', 'de')).toContain('18:30');
+    });
+});
+
+describe('statusForSchedule', () => {
+    it('moves between terminfindung and geplant with the date', () => {
+        expect(statusForSchedule('terminfindung', '2026-07-01T16:30:00.000Z')).toBe('geplant');
+        expect(statusForSchedule('geplant', null)).toBe('terminfindung');
+    });
+    it('leaves later statuses alone', () => {
+        expect(statusForSchedule('abgehalten', '2026-07-01T16:30:00.000Z')).toBeUndefined();
+        expect(statusForSchedule('protokolliert', null)).toBeUndefined();
+        expect(statusForSchedule('geplant', '2026-07-01T16:30:00.000Z')).toBeUndefined();
     });
 });
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { canBorrow, canReturn } from './loans';
+import { canBorrow, canReturn, isGuestRole } from './loans';
 
 describe('canBorrow', () => {
     it('follows the club switch for plain members', () => {
@@ -26,5 +26,20 @@ describe('canReturn', () => {
     });
     it('never offers a returned loan', () => {
         expect(canReturn({ memberId: 'm1', returnedAt: '2026-01-01T00:00:00Z' }, 'm1', true)).toBe(false);
+    });
+});
+
+describe('canBorrow guards', () => {
+    it('never for guests or items with an open loan', () => {
+        expect(canBorrow(true, false, true)).toBe(false);
+        expect(canBorrow(true, true, true)).toBe(false);
+        expect(canBorrow(true, false, false, true)).toBe(false);
+        expect(canBorrow(false, true, false, true)).toBe(false);
+    });
+    it('detects the guest role', () => {
+        expect(isGuestRole('guest')).toBe(true);
+        expect(isGuestRole('member, guest')).toBe(true);
+        expect(isGuestRole('member')).toBe(false);
+        expect(isGuestRole(null)).toBe(false);
     });
 });

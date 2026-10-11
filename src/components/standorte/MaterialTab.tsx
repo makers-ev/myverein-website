@@ -365,6 +365,7 @@ function LoansSection({
     canManage,
     ownMemberId,
     allowSelfLoans,
+    isGuest,
     t,
 }: {
     itemId: string;
@@ -374,6 +375,7 @@ function LoansSection({
     ownMemberId: string | null;
     /** Club setting; `null` = not known (hides the borrow action). */
     allowSelfLoans: boolean | null;
+    isGuest: boolean;
     t: T;
 }) {
     const [loans, setLoans] = useState<InventoryLoan[] | null>(null);
@@ -408,7 +410,7 @@ function LoansSection({
         }
     }
 
-    const borrowAllowed = canBorrow(allowSelfLoans, canManage);
+    const borrowAllowed = loans !== null && canBorrow(allowSelfLoans, canManage, isGuest, loans.some((l) => !l.returnedAt));
 
     const nameFor = (memberId: string) => members.find((m) => m.id === memberId)?.name ?? '—';
 
@@ -428,7 +430,7 @@ function LoansSection({
                 )
             }
         >
-            {allowSelfLoans === false && !canManage && <p className="mb-2 text-xs text-muted-foreground">{t('standorte.loans.selfDisabled')}</p>}
+            {allowSelfLoans === false && !canManage && !isGuest && <p className="mb-2 text-xs text-muted-foreground">{t('standorte.loans.selfDisabled')}</p>}
             {actionError && (
                 <p role="alert" className="mb-2 text-sm text-destructive">
                     {actionError}
@@ -573,6 +575,7 @@ function ItemDetail({
     canWrite,
     ownMemberId,
     allowSelfLoans,
+    isGuest,
     t,
     onBack,
     onItemsChanged,
@@ -584,6 +587,7 @@ function ItemDetail({
     canWrite: boolean;
     ownMemberId: string | null;
     allowSelfLoans: boolean | null;
+    isGuest: boolean;
     t: T;
     onBack: () => void;
     onItemsChanged: () => void;
@@ -653,7 +657,7 @@ function ItemDetail({
             </div>
 
             <DamageReportsSection itemId={itemId} clubId={clubId} canWrite={canWrite} t={t} />
-            <LoansSection itemId={itemId} clubId={clubId} canManage={canWrite} ownMemberId={ownMemberId} allowSelfLoans={allowSelfLoans} t={t} />
+            <LoansSection itemId={itemId} clubId={clubId} canManage={canWrite} ownMemberId={ownMemberId} allowSelfLoans={allowSelfLoans} isGuest={isGuest} t={t} />
 
             {editing && (
                 <ItemFormModal
@@ -688,7 +692,7 @@ function ItemDetail({
     );
 }
 
-export default function MaterialTab({ clubId, locations, canWrite, ownMemberId }: { clubId: string; locations: Location[]; canWrite: boolean; ownMemberId: string | null }) {
+export default function MaterialTab({ clubId, locations, canWrite, ownMemberId, isGuest }: { clubId: string; locations: Location[]; canWrite: boolean; ownMemberId: string | null; isGuest: boolean }) {
     const { t } = useLanguage();
     const [items, setItems] = useState<InventoryItem[] | null>(null);
     const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -736,6 +740,7 @@ export default function MaterialTab({ clubId, locations, canWrite, ownMemberId }
                     canWrite={canWrite}
                     ownMemberId={ownMemberId}
                     allowSelfLoans={allowSelfLoans}
+                    isGuest={isGuest}
                     t={t}
                     onBack={() => setSelectedId(null)}
                     onItemsChanged={() => void loadItems()}

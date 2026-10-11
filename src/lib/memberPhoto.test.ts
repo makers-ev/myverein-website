@@ -16,7 +16,7 @@ vi.mock('./api-client', () => {
 });
 
 import { ApiError } from './api-client';
-import { checkPhotoFile, cropRect, initialsOf, isMinorBirthDate, PHOTO_MAX_BYTES, photoErrorKey } from './memberPhoto';
+import { checkImageSize, checkPhotoFile, cropRect, fitWithin, readImageSize, initialsOf, isMinorBirthDate, PHOTO_MAX_BYTES, photoErrorKey } from './memberPhoto';
 
 describe('checkPhotoFile', () => {
     it('accepts JPEG, PNG and WebP up to 5 MB', () => {
@@ -85,5 +85,42 @@ describe('isMinorBirthDate', () => {
     it('treats an unknown birth date as not minor', () => {
         expect(isMinorBirthDate(null, '2026-10-11')).toBe(false);
         expect(isMinorBirthDate('', '2026-10-11')).toBe(false);
+    });
+});
+
+describe('readImageSize', () => {
+    it('reads PNG IHDR', () => {
+        const b = new Uint8Array(32);
+        b.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+        new DataView(b.buffer).setUint32(16, 1234);
+        new DataView(b.buffer).setUint32(20, 567);
+        expect(readImageSize(b)).toEqual({ width: 1234, height: 567 });
+    });
+    it('reads the JPEG SOF after other segments', () => {
+        const b = Uint8Array.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x04, 0x00, 0x00, 0xff, 0xc0, 0x00, 0x11, 0x08, 0x01, 0x2c, 0x01, 0x90, 0x03, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+        expect(readImageSize(b)).toEqual({ width: 400, height: 300 });
+    });
+    it('reads WebP VP8X canvas size', () => {
+        const b = new Uint8Array(32);
+        b.set([0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50, 0x56, 0x50, 0x38, 0x58]);
+        b.set([0x1f, 0x03, 0x00], 24);
+        b.set([0x57, 0x02, 0x00], 27);
+        expect(readImageSize(b)).toEqual({ width: 800, height: 600 });
+    });
+    it('returns null for unknown data', () => {
+        expect(readImageSize(new Uint8Array(40))).toBeNull();
+    });
+});
+
+describe('checkImageSize / fitWithin', () => {
+    it('rejects unreadable and oversized images', () => {
+        expect(checkImageSize(null)).toBe('invalid');
+        expect(checkImageSize({ width: 9000, height: 100 })).toBe('dimensions');
+        expect(checkImageSize({ width: 7000, height: 7000 })).toBe('dimensions');
+        expect(checkImageSize({ width: 4000, height: 3000 })).toBeNull();
+    });
+    it('scales down to the working edge and never up', () => {
+        expect(fitWithin(4096, 2048)).toEqual({ width: 2048, height: 1024 });
+        expect(fitWithin(800, 600)).toEqual({ width: 800, height: 600 });
     });
 });

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { apiFetch } from '@/lib/api-client';
+import { isGuestRole } from '@/lib/loans';
 import { useLanguage } from '@/contexts/LanguageContext';
 import StandorteTab, { type Location } from '@/components/standorte/StandorteTab';
 import MaterialTab from '@/components/standorte/MaterialTab';
@@ -24,6 +25,7 @@ export default function StandortePageContent() {
     const [permissions, setPermissions] = useState<string[]>([]);
     // Better Auth member id of the caller (what loans record as borrower).
     const [ownMemberId, setOwnMemberId] = useState<string | null>(null);
+    const [isGuest, setIsGuest] = useState(false);
 
     const activeClub = clubs?.[0] ?? null;
 
@@ -41,14 +43,16 @@ export default function StandortePageContent() {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         void refreshLocations(activeClub.clubId);
         // Missing permissions only hide write UI; the backend enforces them anyway.
-        apiFetch<{ data: { permissions?: string[]; memberId?: string | null } }>(`/club-members/me?clubId=${activeClub.clubId}`)
+        apiFetch<{ data: { permissions?: string[]; memberId?: string | null; orgRole?: string | null } }>(`/club-members/me?clubId=${activeClub.clubId}`)
             .then(({ data }) => {
                 setPermissions(data.permissions ?? []);
                 setOwnMemberId(data.memberId ?? null);
+                setIsGuest(isGuestRole(data.orgRole));
             })
             .catch(() => {
                 setPermissions([]);
                 setOwnMemberId(null);
+                setIsGuest(false);
             });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeClub?.clubId]);
@@ -94,7 +98,7 @@ export default function StandortePageContent() {
                                     />
                                 )}
                                 {tab === 'material' && (
-                                    <MaterialTab clubId={activeClub.clubId} locations={locations} canWrite={permissions.includes('inventory:write')} ownMemberId={ownMemberId} />
+                                    <MaterialTab clubId={activeClub.clubId} locations={locations} canWrite={permissions.includes('inventory:write')} ownMemberId={ownMemberId} isGuest={isGuest} />
                                 )}
                             </>
                         )}

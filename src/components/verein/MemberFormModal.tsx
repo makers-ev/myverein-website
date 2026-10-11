@@ -9,6 +9,7 @@ import MemberStatusDialog from '@/components/verein/MemberStatusDialog';
 import { Modal } from '@/components/Modal';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api-client';
+import { useThrottledCallback } from '@/lib/useThrottledCallback';
 import {
     CREATE_STATUSES,
     currentDepartments,
@@ -197,6 +198,8 @@ export default function MemberFormModal({
     const [deptToAdd, setDeptToAdd] = useState('');
     const current = member ? currentDepartments(member) : [];
     const addable = departments.filter((d) => !current.some((c) => c.id === d.id));
+
+    const refetchPhoto = useThrottledCallback(() => reloadMember());
 
     async function reloadMember() {
         if (!member) return;
@@ -409,7 +412,7 @@ export default function MemberFormModal({
                                 else void reloadMember().catch(() => undefined);
                                 onChanged();
                             }}
-                            onExpired={() => void reloadMember().catch(() => undefined)}
+                            onExpired={refetchPhoto}
                         />
                     </section>
                 )}

@@ -76,7 +76,9 @@ interface LocationLink {
 }
 
 function LocationPhoto({ url, className }: { url: string | null; className: string }) {
-    if (!url) {
+    // A signed URL can have expired or the file may be gone: fall back to the placeholder instead of a broken image.
+    const [failedUrl, setFailedUrl] = useState<string | null>(null);
+    if (!url || failedUrl === url) {
         return (
             <div className={`flex items-center justify-center bg-muted text-muted-foreground ${className}`}>
                 <MapPin className="h-8 w-8" />
@@ -84,7 +86,7 @@ function LocationPhoto({ url, className }: { url: string | null; className: stri
         );
     }
     // eslint-disable-next-line @next/next/no-img-element -- arbitrary external URLs, next/image would need remotePatterns.
-    return <img src={url} alt="" className={`object-cover ${className}`} />;
+    return <img src={url} alt="" onError={() => setFailedUrl(url)} className={`object-cover ${className}`} />;
 }
 
 function InfoRow({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
