@@ -46,7 +46,7 @@ export function EventDetailModal({ event, clubId, calendar, color, canWrite, rsv
         try {
             await action();
         } catch (err) {
-            setError(errorMessage(err));
+            setError(errorMessage(err, t));
         } finally {
             setBusy(false);
         }
@@ -206,7 +206,7 @@ export function EventFormModal({ clubId, calendars, colorFor, event, initialStar
             });
             onSaved();
         } catch (err) {
-            setError(errorMessage(err));
+            setError(errorMessage(err, t));
         } finally {
             setSubmitting(false);
         }

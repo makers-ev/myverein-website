@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 
-import { apiFetch, ApiError } from '@/lib/api-client';
+import { memberErrorKey } from '@/lib/clubMembers';
+import { apiFetch } from '@/lib/api-client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { inputClass, labelClass, primaryBtn } from '@/components/kalender/calendarTypes';
 
@@ -115,7 +116,7 @@ export default function VerfuegbarkeitPageContent() {
             }
         } catch (err) {
             setRows((prev) => ({ ...prev, [day]: { ...row, available: !value } }));
-            setError(err instanceof ApiError ? err.message : 'Request failed');
+            setError(t(memberErrorKey(err)));
         }
     }
 
@@ -126,7 +127,7 @@ export default function VerfuegbarkeitPageContent() {
         try {
             await upsertSlot(day, `${row.startTime}:00`, `${row.endTime}:00`);
         } catch (err) {
-            setError(err instanceof ApiError ? err.message : 'Request failed');
+            setError(t(memberErrorKey(err)));
         }
     }
 
@@ -148,7 +149,7 @@ export default function VerfuegbarkeitPageContent() {
             setExcAvailable(true);
             await refresh(activeClub.clubId);
         } catch (err) {
-            setExcError(err instanceof ApiError ? err.message : 'Request failed');
+            setExcError(t(memberErrorKey(err)));
         }
     }
 
@@ -159,7 +160,7 @@ export default function VerfuegbarkeitPageContent() {
             await apiFetch(`/availability/exceptions/${id}?clubId=${activeClub.clubId}`, { method: 'DELETE' });
             await refresh(activeClub.clubId);
         } catch (err) {
-            setExcError(err instanceof ApiError ? err.message : 'Request failed');
+            setExcError(t(memberErrorKey(err)));
         }
     }
 

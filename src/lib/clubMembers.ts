@@ -121,10 +121,9 @@ export interface StatusHistoryEntry {
     createdAt: string;
 }
 
+/** Today as `YYYY-MM-DD` in the club's time zone (Europe/Berlin), not the browser's -- matches the backend's "today". */
 export function todayIso(): string {
-    const d = new Date();
-    const pad = (n: number) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 }
 
 /** True when an exit is booked for a future key date (stored status still live, `leftAt` in the future). */
@@ -193,6 +192,7 @@ export function memberErrorKey(err: unknown): string {
             if (/department/i.test(m)) return 'verein.err.departmentNotFound';
             return 'verein.err.notFound';
         case 409:
+            if ((err.details as { code?: unknown } | undefined)?.code === 'member_rejoin_blocked') return 'verein.err.rejoinBlocked';
             if (/member number/i.test(m)) return 'verein.err.memberNumberTaken';
             if (/no account/i.test(m)) return 'verein.err.noAccount';
             if (/already assigned to this department/i.test(m)) return 'verein.err.departmentAssigned';
@@ -202,7 +202,6 @@ export function memberErrorKey(err: unknown): string {
             if (/still has members/i.test(m)) return 'verein.err.categoryHasMembers';
             if (/default category/i.test(m)) return 'verein.err.categoryDefault';
             if (/archived/i.test(m)) return 'verein.err.categoryArchived';
-            if (/rejoin|blocked/i.test(m)) return 'verein.err.rejoinBlocked';
             return 'verein.err.conflict';
         case 422:
             if (/unknown or archived category/i.test(m)) return 'verein.err.categoryUnknown';
@@ -254,33 +253,58 @@ export interface AccountMember {
     /** Better Auth `member.id` -- NOT `club_members.id`. */
     id: string;
     name: string | null;
+    /** Has left the club: still needed to resolve names of old loans/invitations, but not offered in dropdowns. */
+    left: boolean;
 }
 
 const DIRECTORY_PAGE_SIZE = 100;
 const DIRECTORY_MAX = 5000;
+const DIRECTORY_TTL_MS = 60_000;
 
-/**
- * Loads all members with an account (`hasAccount` + `memberId`) by walking the paged `GET /club-members`
- * (pageSize 100, at most 5000 entries). Features bound to a login (key holders, loans, meeting invitees) store the
- * account id, so they must use `memberId`, not the club-member `id`. `isCancelled` aborts between pages.
- * Never throws: a caller without list permission (403, e.g. guests) simply gets an empty directory, and names
- * then stay unknown.
- */
-export async function loadAccountMembers(clubId: string, isCancelled: () => boolean = () => false): Promise<AccountMember[]> {
+const directoryCache = new Map<string, { at: number; promise: Promise<AccountMember[]> }>();
+
+async function fetchAccountMembers(clubId: string): Promise<AccountMember[]> {
     const result: AccountMember[] = [];
     try {
         for (let page = 1; result.length < DIRECTORY_MAX; page++) {
             const res = await apiFetch<{ data: ClubMember[]; total: number }>(
                 `/club-members?clubId=${clubId}&page=${page}&pageSize=${DIRECTORY_PAGE_SIZE}&sort=name`,
             );
-            if (isCancelled()) return [];
             for (const m of res.data) {
-                if (m.hasAccount && m.memberId && !isLeftStatus(m.effectiveStatus)) result.push({ id: m.memberId, name: m.name });
+                if (m.hasAccount && m.memberId) result.push({ id: m.memberId, name: m.name, left: isLeftStatus(m.effectiveStatus) });
             }
             if (res.data.length < DIRECTORY_PAGE_SIZE || page * DIRECTORY_PAGE_SIZE >= res.total) break;
         }
-    } catch {
-        return result;
+    } catch (err) {
+        // Guests/guardians may not read the member list (403): degrade to "names unknown". Anything else is a real error.
+        if (err instanceof ApiError && err.status === 403) return [];
+        throw err;
     }
     return result;
+}
+
+/**
+ * All members with an account (`hasAccount` + `memberId`, including members who left so old references still get a
+ * name) by walking the paged `GET /club-members` (pageSize 100, at most 5000 entries). Features bound to a login (key
+ * holders, loans, meeting invitees) store the account id, so they must use `memberId`, not the club-member `id`.
+ *
+ * The result is cached per club for a minute and concurrent callers share one request chain (the list endpoint is
+ * rate limited and three tabs ask for the same data). Because the request is shared it is not aborted when one
+ * consumer unmounts -- consumers drop stale results themselves (see `useAccountMembers`). A 403 yields an empty
+ * list; every other error rejects (and is not cached).
+ */
+export function loadAccountMembers(clubId: string): Promise<AccountMember[]> {
+    const hit = directoryCache.get(clubId);
+    if (hit && Date.now() - hit.at < DIRECTORY_TTL_MS) return hit.promise;
+    const promise = fetchAccountMembers(clubId);
+    directoryCache.set(clubId, { at: Date.now(), promise });
+    promise.catch(() => {
+        if (directoryCache.get(clubId)?.promise === promise) directoryCache.delete(clubId);
+    });
+    return promise;
+}
+
+/** Forget the cached directory (tests / after members were added or removed). */
+export function clearAccountMembersCache(): void {
+    directoryCache.clear();
 }

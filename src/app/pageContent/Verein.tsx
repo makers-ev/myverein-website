@@ -218,7 +218,9 @@ export default function VereinPageContent() {
 
     const permissions = me?.permissions ?? [];
     // Every tab beyond the basics hangs on a permission from GET /club-members/me (the backend enforces them too).
-    const tabs: Tab[] = ['info', 'profil', 'mitglieder', 'abteilungen'];
+    // Guardians (external role) have no right to the member list; hide the tab instead of showing a 403.
+    const guardianOnly = !!me && permissions.length === 0 && me.roles.length > 0 && me.roles.every((r) => r.roleType === 'erziehungsberechtigt');
+    const tabs: Tab[] = guardianOnly ? ['info', 'profil', 'abteilungen'] : ['info', 'profil', 'mitglieder', 'abteilungen'];
     if (permissions.includes('club_stats:read')) tabs.push('kennzahlen');
     if (permissions.includes('members:write')) tabs.push('einstellungen');
     const currentTab: Tab = tabs.includes(tab) ? tab : 'info';

@@ -71,7 +71,7 @@ function CalendarFormModal({
             }
             onSaved();
         } catch (err) {
-            setError(errorMessage(err));
+            setError(errorMessage(err, t));
         } finally {
             setSubmitting(false);
         }
@@ -152,7 +152,7 @@ function VisibilityModal({
             const { data } = await apiFetch<{ data: CalendarVisibility[] }>(`${baseUrl}?clubId=${clubId}`);
             setGrants(data);
         } catch (err) {
-            setError(errorMessage(err));
+            setError(errorMessage(err, t));
         }
     }
 
@@ -168,7 +168,7 @@ function VisibilityModal({
             await action();
             await load();
         } catch (err) {
-            setError(errorMessage(err));
+            setError(errorMessage(err, t));
         }
     }
 
@@ -297,7 +297,7 @@ export default function CalendarManager({
             await apiFetch(`/calendars/${cal.id}?clubId=${clubId}`, { method: 'DELETE' });
             onChange();
         } catch (err) {
-            setError(errorMessage(err));
+            setError(errorMessage(err, t));
         }
     }
 

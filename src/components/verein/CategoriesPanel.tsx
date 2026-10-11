@@ -48,14 +48,16 @@ function CategoryFormModal({
     onSaved: () => void;
 }) {
     const { t } = useLanguage();
-    const [form, setForm] = useState<FormState>({
+    const initialForm: FormState = {
         name: category?.name ?? '',
         key: '',
         votingRight: category?.votingRight ?? true,
         minAge: category?.minAge?.toString() ?? '',
         maxAge: category?.maxAge?.toString() ?? '',
         autoTransitionToKey: category?.autoTransitionToKey ?? '',
-    });
+    };
+    const [initial] = useState(initialForm);
+    const [form, setForm] = useState<FormState>(initial);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -66,6 +68,12 @@ function CategoryFormModal({
         if (v.trim() === '') return null;
         const n = Number(v);
         return Number.isInteger(n) && n >= 0 && n <= 120 ? n : undefined;
+    }
+
+    // Esc, the X and a click on the backdrop all end up here: never drop typed input without asking.
+    function requestClose() {
+        if (JSON.stringify(form) !== JSON.stringify(initial) && !window.confirm(t('verein.form.discard'))) return;
+        onClose();
     }
 
     async function save() {
@@ -122,11 +130,11 @@ function CategoryFormModal({
     return (
         <Modal
             open
-            onClose={saving ? () => {} : onClose}
+            onClose={saving ? () => {} : requestClose}
             title={category ? t('verein.categories.edit.title', { name: category.name }) : t('verein.categories.create.title')}
             footer={
                 <div className="flex justify-end gap-2">
-                    <button type="button" onClick={onClose} disabled={saving} className={secondaryButtonClass}>
+                    <button type="button" onClick={requestClose} disabled={saving} className={secondaryButtonClass}>
                         {t('verein.roles.add.cancel')}
                     </button>
                     <button type="button" onClick={() => void save()} disabled={saving} className={primaryButtonClass}>

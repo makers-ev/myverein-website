@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { FileText, Loader2, Trash2 } from 'lucide-react';
 
 import { apiFetch, ApiError } from '@/lib/api-client';
+import { memberErrorKey } from '@/lib/clubMembers';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
     ALLOWED_DOCUMENT_MIME_TYPES,
@@ -86,9 +87,9 @@ export default function ClubRegistrationWizard({
     const qualifying = QUALIFYING_KINDS[legalForm];
     const qualifyingText = qualifying.map((k) => t(`verein.create.docs.kind.${k}`)).join(', ');
 
-    // Backend messages are English; ApiError text is only shown for cases without a dedicated key.
+    // Backend messages are English and never shown; unmapped cases get the generic per-status text.
     function errorMessage(err: unknown): string {
-        return err instanceof ApiError && err.message ? err.message : t('verein.create.err.generic');
+        return t(memberErrorKey(err));
     }
 
     // Upload errors (422/413/415) come with raw English backend messages -> map to translated keys.

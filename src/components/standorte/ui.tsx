@@ -4,7 +4,8 @@ import type { ReactNode } from 'react';
 import { useState } from 'react';
 
 import { Modal } from '@/components/Modal';
-import { ApiError } from '@/lib/api-client';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { memberErrorKey } from '@/lib/clubMembers';
 
 export type T = (key: string) => string;
 
@@ -16,8 +17,9 @@ export const secondaryButtonClass =
     'inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50';
 export const iconButtonClass = 'rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground';
 
-export function errorMessage(err: unknown): string {
-    return err instanceof ApiError ? err.message : 'Request failed';
+/** Plain-language (translated) text for a failed API call; never the raw English server message. */
+export function errorMessage(err: unknown, t: T): string {
+    return t(memberErrorKey(err));
 }
 
 export function formatDate(value: string | null): string {
@@ -205,12 +207,15 @@ export function ConfirmModal({
     );
 }
 
-/** Wraps an API call so it resolves to an error message (or null) for FormModal/ConfirmModal. */
-export async function run(action: () => Promise<unknown>): Promise<string | null> {
-    try {
-        await action();
-        return null;
-    } catch (err) {
-        return errorMessage(err);
-    }
+/** Hook: wraps an API call so it resolves to a translated error message (or null) for FormModal/ConfirmModal. */
+export function useRun(): (action: () => Promise<unknown>) => Promise<string | null> {
+    const { t } = useLanguage();
+    return async (action) => {
+        try {
+            await action();
+            return null;
+        } catch (err) {
+            return errorMessage(err, t);
+        }
+    };
 }

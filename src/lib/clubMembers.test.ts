@@ -58,3 +58,10 @@ describe('status helpers', () => {
         expect(hasPendingExit({ status: 'aktiv', effectiveStatus: 'aktiv', leftAt: null })).toBe(false);
     });
 });
+
+describe('rejoin conflict', () => {
+    it('is recognized by details.code, not by message text', () => {
+        expect(memberErrorKey(new ApiError(409, 'CONFLICT', 'anything', { code: 'member_rejoin_blocked' }))).toBe('verein.err.rejoinBlocked');
+        expect(memberErrorKey(new ApiError(409, 'CONFLICT', 'rejoin blocked'))).toBe('verein.err.conflict');
+    });
+});

@@ -75,6 +75,15 @@ function initialValues(member: ClubMember | null, defaultCategoryId: string): Fo
     };
 }
 
+function ReadOnlyField({ label, value }: { label: string; value: string }) {
+    return (
+        <div className="text-xs font-semibold text-muted-foreground">
+            <span>{label}</span>
+            <p className="mt-1 py-2 text-sm font-normal text-foreground">{value}</p>
+        </div>
+    );
+}
+
 const looksLikeEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
@@ -172,6 +181,9 @@ export default function MemberFormModal({
     const showSensitiveBlock = isCreate || SENSITIVE_KEYS.some((k) => member?.[k] !== undefined);
     const showMemberNumber = has('memberNumber');
 
+    // In create mode the categories may arrive after the form opened: fall back to the default category then.
+    const categoryId = values.categoryId || (isCreate ? defaultCategoryId : '');
+
     const set = (key: keyof FormValues, value: string) => setValues((v) => ({ ...v, [key]: value }));
 
     // ---- departments (edit only) ----
@@ -251,7 +263,8 @@ export default function MemberFormModal({
     // ---- save ----
     function validate(): string | null {
         if (!values.name.trim()) return t('verein.form.err.name');
-        if (!values.categoryId) return t('verein.form.err.category');
+        // A member without any category (legacy data) may be saved without picking one; creating needs one.
+        if (!categoryId && (isCreate || original.categoryId)) return t('verein.form.err.category');
         if (has('contactEmail') && values.contactEmail.trim() && !looksLikeEmail(values.contactEmail.trim())) return t('verein.form.err.email');
         return null;
     }
@@ -271,7 +284,7 @@ export default function MemberFormModal({
             if (isCreate) {
                 const body: Record<string, unknown> = {
                     displayName: text(values.name),
-                    categoryId: values.categoryId,
+                    categoryId,
                     status,
                 };
                 if (joinedAt) body.joinedAt = joinedAt;
@@ -291,7 +304,7 @@ export default function MemberFormModal({
             // Only changed fields; sensitive ones only if the backend delivered them for this row.
             const body: Record<string, unknown> = {};
             if (text(values.name) !== text(original.name)) body.displayName = text(values.name);
-            if (values.categoryId !== original.categoryId) body.categoryId = values.categoryId;
+            if (categoryId && categoryId !== original.categoryId) body.categoryId = categoryId;
             if (showMemberNumber && text(values.memberNumber) !== text(original.memberNumber)) {
                 // Explicitly edited: an emptied field means "remove the number", anything else sets it.
                 body.memberNumber = nullable(values.memberNumber);
@@ -316,6 +329,13 @@ export default function MemberFormModal({
     }
 
     const dirty = isCreate || JSON.stringify(values) !== JSON.stringify(original);
+    const touched = JSON.stringify(values) !== JSON.stringify(original) || (isCreate && (status !== 'aktiv' || joinedAt !== ''));
+
+    // Esc, the X and a click on the backdrop all end up here: never drop typed input without asking.
+    function requestClose() {
+        if (touched && !window.confirm(t('verein.form.discard'))) return;
+        onClose();
+    }
 
     // Category options: the club's active categories plus the member's current one if it was archived meanwhile.
     const categoryOptions: CategoryRef[] = [...categories];
@@ -329,11 +349,11 @@ export default function MemberFormModal({
             <Modal
                 open
                 size="lg"
-                onClose={statusOpen || saving ? () => {} : onClose}
+                onClose={statusOpen || saving ? () => {} : requestClose}
                 title={title}
                 footer={
                     <div className="flex items-center justify-end gap-2">
-                        <button type="button" onClick={onClose} disabled={saving} className={secondaryButtonClass}>
+                        <button type="button" onClick={requestClose} disabled={saving} className={secondaryButtonClass}>
                             {t('verein.roles.add.cancel')}
                         </button>
                         <button type="button" onClick={() => void handleSave()} disabled={saving || !dirty} className={primaryButtonClass}>
@@ -380,8 +400,8 @@ export default function MemberFormModal({
                     </div>
 
                     <Field label={`${t('verein.members.table.category')} *`}>
-                        <select value={values.categoryId} onChange={(e) => set('categoryId', e.target.value)} className={inputClass}>
-                            {values.categoryId === '' && <option value="" />}
+                        <select value={categoryId} onChange={(e) => set('categoryId', e.target.value)} className={inputClass}>
+                            {categoryId === '' && <option value="" />}
                             {categoryOptions.map((c) => (
                                 <option key={c.id} value={c.id}>
                                     {c.name}
@@ -406,9 +426,7 @@ export default function MemberFormModal({
                             </Field>
                         </>
                     ) : (
-                        <Field label={t('verein.form.joinedAt')}>
-                            <p className="py-2 text-sm font-normal text-foreground">{formatDate(member?.joinedAt, language)}</p>
-                        </Field>
+                        <ReadOnlyField label={t('verein.form.joinedAt')} value={formatDate(member?.joinedAt, language)} />
                     )}
 
                     {showMemberNumber && (

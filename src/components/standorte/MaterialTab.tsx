@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, ArrowLeft, MapPin, Package, Pencil, Plus, Search, Trash2, Wrench } from 'lucide-react';
 
-import { loadAccountMembers, type AccountMember } from '@/lib/clubMembers';
+import { useAccountMembers } from '@/lib/useAccountMembers';
 import { apiFetch } from '@/lib/api-client';
 import { backendUrl } from '@/lib/auth-client';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -19,7 +19,7 @@ import {
     formatDate,
     inputClass,
     primaryButtonClass,
-    run,
+    useRun,
     secondaryButtonClass,
     type T,
     type Tone,
@@ -149,6 +149,7 @@ function ItemFormModal({
     onClose: () => void;
     onSaved: () => void;
 }) {
+    const run = useRun();
     const [name, setName] = useState(item?.name ?? '');
     const [category, setCategory] = useState(item?.category ?? '');
     const [condition, setCondition] = useState(item?.condition ?? '');
@@ -359,16 +360,12 @@ function ItemList({
 
 function LoansSection({ itemId, clubId, t }: { itemId: string; clubId: string; t: T }) {
     const [loans, setLoans] = useState<InventoryLoan[] | null>(null);
-    const [members, setMembers] = useState<AccountMember[]>([]);
+    const { members, error: directoryError } = useAccountMembers(clubId);
 
     useEffect(() => {
         // State is set in the .then() callback, so no set-state-in-effect disable is needed.
-        void Promise.all([
-            apiFetch<{ data: InventoryLoan[] }>(`/inventory-items/${itemId}/loans?clubId=${clubId}`),
-            loadAccountMembers(clubId),
-        ]).then(([loansRes, membersList]) => {
+        void apiFetch<{ data: InventoryLoan[] }>(`/inventory-items/${itemId}/loans?clubId=${clubId}`).then((loansRes) => {
             setLoans(loansRes.data);
-            setMembers(membersList);
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [itemId]);
@@ -377,6 +374,7 @@ function LoansSection({ itemId, clubId, t }: { itemId: string; clubId: string; t
 
     return (
         <SectionCard title={t('standorte.loans.title')}>
+            {directoryError && <p className="mb-2 text-sm text-destructive">{t('verein.directory.error')}</p>}
             {loans === null ? (
                 <p className="text-sm text-muted-foreground">…</p>
             ) : loans.length === 0 ? (
@@ -434,7 +432,7 @@ function DamageReportsSection({ itemId, clubId, canWrite, t }: { itemId: string;
             await apiFetch(`/inventory-items/${itemId}/damage-reports/${reportId}?clubId=${clubId}`, { method: 'PATCH', body: { status } });
             await load();
         } catch (err) {
-            setError(errorMessage(err));
+            setError(errorMessage(err, t));
         }
     }
 
@@ -513,6 +511,7 @@ function ItemDetail({
     onBack: () => void;
     onItemsChanged: () => void;
 }) {
+    const run = useRun();
     const [item, setItem] = useState<InventoryItem | null>(null);
     const [editing, setEditing] = useState(false);
     const [deleting, setDeleting] = useState(false);

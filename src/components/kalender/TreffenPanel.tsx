@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, CalendarClock, Plus, X } from 'lucide-react';
 
-import { loadAccountMembers, type AccountMember } from '@/lib/clubMembers';
-import { apiFetch, ApiError } from '@/lib/api-client';
+import { useAccountMembers } from '@/lib/useAccountMembers';
+import { memberErrorKey } from '@/lib/clubMembers';
+import { apiFetch } from '@/lib/api-client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Modal } from '@/components/Modal';
 import { inputClass, labelClass, primaryBtn, secondaryBtn } from '@/components/kalender/calendarTypes';
@@ -122,7 +123,7 @@ function MeetingList({ clubId, t, canWrite, onSelect }: { clubId: string; t: TFn
             setShowCreate(false);
             await load();
         } catch (err) {
-            setError(err instanceof ApiError ? err.message : 'Request failed');
+            setError(t(memberErrorKey(err)));
         } finally {
             setSubmitting(false);
         }
@@ -236,19 +237,17 @@ function MeetingList({ clubId, t, canWrite, onSelect }: { clubId: string; t: TFn
 function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: string; meetingId: string; t: TFn; canWrite: boolean; onBack: () => void }) {
     const [meeting, setMeeting] = useState<Meeting | null>(null);
     const [invitees, setInvitees] = useState<MeetingInvitee[]>([]);
-    const [members, setMembers] = useState<AccountMember[]>([]);
+    const { members, error: directoryError } = useAccountMembers(clubId);
     const [resolutions, setResolutions] = useState<MeetingResolution[]>([]);
 
     async function load() {
-        const [meetingRes, inviteesRes, membersRes, resolutionsRes] = await Promise.all([
+        const [meetingRes, inviteesRes, resolutionsRes] = await Promise.all([
             apiFetch<{ data: Meeting }>(`/meetings/${meetingId}?clubId=${clubId}`),
             apiFetch<{ data: MeetingInvitee[] }>(`/meetings/${meetingId}/invitees?clubId=${clubId}`),
-            loadAccountMembers(clubId),
             apiFetch<{ data: MeetingResolution[] }>(`/meetings/${meetingId}/resolutions?clubId=${clubId}`),
         ]);
         setMeeting(meetingRes.data);
         setInvitees(inviteesRes.data);
-        setMembers(membersRes);
         setResolutions(resolutionsRes.data);
     }
 
@@ -288,7 +287,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
             setEditing(false);
             await load();
         } catch (err) {
-            setSaveError(err instanceof ApiError ? err.message : 'Request failed');
+            setSaveError(t(memberErrorKey(err)));
         }
     }
 
@@ -307,7 +306,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
             setNewInviteeId('');
             await load();
         } catch (err) {
-            setInviteError(err instanceof ApiError ? err.message : 'Request failed');
+            setInviteError(t(memberErrorKey(err)));
         }
     }
 
@@ -317,7 +316,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
             await apiFetch(`/meetings/${meetingId}/invitees/${memberId}?clubId=${clubId}`, { method: 'DELETE' });
             await load();
         } catch (err) {
-            setInviteError(err instanceof ApiError ? err.message : 'Request failed');
+            setInviteError(t(memberErrorKey(err)));
         }
     }
 
@@ -342,7 +341,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
             const { data } = await apiFetch<{ data: OverlapCandidate[] }>(`/meetings/${meetingId}/overlap?clubId=${clubId}&candidates=${params}`);
             setOverlapResults(data);
         } catch (err) {
-            setOverlapError(err instanceof ApiError ? err.message : 'Request failed');
+            setOverlapError(t(memberErrorKey(err)));
         }
     }
 
@@ -366,7 +365,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
             });
             setAttendanceSaved(true);
         } catch (err) {
-            setAttendanceError(err instanceof ApiError ? err.message : 'Request failed');
+            setAttendanceError(t(memberErrorKey(err)));
         }
     }
 
@@ -402,7 +401,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
             setShowResolutionForm(false);
             await load();
         } catch (err) {
-            setResError(err instanceof ApiError ? err.message : 'Request failed');
+            setResError(t(memberErrorKey(err)));
         }
     }
 
@@ -546,7 +545,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                             <select id="mt-invitee" value={newInviteeId} onChange={(e) => setNewInviteeId(e.target.value)} className={inputClass}>
                                 <option value="">—</option>
                                 {members
-                                    .filter((m) => !invitees.some((inv) => inv.memberId === m.id))
+                                    .filter((m) => !m.left && !invitees.some((inv) => inv.memberId === m.id))
                                     .map((m) => (
                                         <option key={m.id} value={m.id}>
                                             {m.name ?? m.id}
@@ -554,6 +553,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                                     ))}
                             </select>
                         </div>
+                        {directoryError && <p className="w-full text-xs text-destructive">{t('verein.directory.error')}</p>}
                         <button type="button" onClick={() => void handleAddInvitee()} disabled={!newInviteeId} className={primaryBtn}>
                             {t('treffen.invitees.invite')}
                         </button>

@@ -386,6 +386,9 @@ const VereinTranslation: Translation = {
         'verein.stats.movement.sum': 'Zusammen: {{joined}} Zugänge, {{left}} Abgänge',
         'verein.stats.joined': 'Zugänge',
         'verein.stats.left': 'Abgänge',
+        'verein.directory.error': 'Die Namen der Mitglieder konnten nicht geladen werden. Statt Namen siehst du „—“. Lade die Seite neu.',
+        'verein.members.forbidden': 'Mit deiner Rolle kannst du die Mitgliederliste nicht sehen.',
+        'verein.form.discard': 'Deine Eingaben gehen verloren. Wirklich schließen?',
     },
     en: {
         'nav.verein': 'Club',
@@ -764,6 +767,9 @@ const VereinTranslation: Translation = {
         'verein.stats.movement.sum': 'Total: {{joined}} joined, {{left}} left',
         'verein.stats.joined': 'Joined',
         'verein.stats.left': 'Left',
+        'verein.directory.error': 'The member names could not be loaded. You will see "—" instead of names. Reload the page.',
+        'verein.members.forbidden': 'Your role does not allow you to see the member list.',
+        'verein.form.discard': 'Your input will be lost. Close anyway?',
     },
 };
 

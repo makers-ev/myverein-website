@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Clock, UserPlus } from 'lucide-react';
 
+import { memberErrorKey } from '@/lib/clubMembers';
 import { apiFetch, ApiError } from '@/lib/api-client';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -39,7 +40,7 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
             // 409 = already a member OR an application is already open; the user sees this card
             // only without a membership in their own clubs, so show it as a friendly pending notice.
             else if (err instanceof ApiError && err.status === 409) setPending('exists');
-            else setError(err instanceof ApiError ? err.message : 'Request failed');
+            else setError(t(memberErrorKey(err)));
         } finally {
             setSubmitting(false);
         }

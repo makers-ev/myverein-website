@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { ArrowLeft, Check, Clock, Copy, ExternalLink, KeyRound, Link as LinkIcon, MapPin, Pencil, Plus, QrCode, Trash2, User, Wifi } from 'lucide-react';
 
-import { loadAccountMembers, type AccountMember } from '@/lib/clubMembers';
+import { useAccountMembers } from '@/lib/useAccountMembers';
 import { apiFetch } from '@/lib/api-client';
 import { buildWifiQrPayload } from '@/lib/wifiQr';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -21,7 +21,7 @@ import {
     iconButtonClass,
     inputClass,
     primaryButtonClass,
-    run,
+    useRun,
     secondaryButtonClass,
     type T,
 } from '@/components/standorte/ui';
@@ -113,6 +113,7 @@ function CopyButton({ value, t }: { value: string; t: T }) {
 type LocationDraft = Record<'name' | 'address' | 'openingHours' | 'contactPerson' | 'photoUrl' | 'accessNote', string>;
 
 function LocationFormModal({ clubId, location, t, onClose, onSaved }: { clubId: string; location: Location | null; t: T; onClose: () => void; onSaved: () => void }) {
+    const run = useRun();
     const [draft, setDraft] = useState<LocationDraft>({
         name: location?.name ?? '',
         address: location?.address ?? '',
@@ -237,14 +238,12 @@ function LocationGrid({
 
 function KeyHoldersSection({
     location,
-    members,
     clubId,
     canWrite,
     t,
     onChange,
 }: {
     location: LocationDetailData;
-    members: AccountMember[];
     clubId: string;
     canWrite: boolean;
     t: T;
@@ -253,8 +252,9 @@ function KeyHoldersSection({
     const [newMemberId, setNewMemberId] = useState('');
     const [error, setError] = useState<string | null>(null);
 
+    const { members, error: directoryError } = useAccountMembers(clubId);
     const nameFor = (memberId: string) => members.find((m) => m.id === memberId)?.name ?? '—';
-    const availableMembers = members.filter((m) => !location.keyHolders.some((kh) => kh.memberId === m.id));
+    const availableMembers = members.filter((m) => !m.left && !location.keyHolders.some((kh) => kh.memberId === m.id));
 
     async function handleAdd() {
         if (!newMemberId) return;
@@ -264,7 +264,7 @@ function KeyHoldersSection({
             setNewMemberId('');
             onChange();
         } catch (err) {
-            setError(errorMessage(err));
+            setError(errorMessage(err, t));
         }
     }
 
@@ -274,13 +274,14 @@ function KeyHoldersSection({
             await apiFetch(`/locations/${location.id}/key-holders/${memberId}?clubId=${clubId}`, { method: 'DELETE' });
             onChange();
         } catch (err) {
-            setError(errorMessage(err));
+            setError(errorMessage(err, t));
         }
     }
 
     return (
         <SectionCard title={t('standorte.keyholders.title')}>
             {error && <p className="mb-2 text-sm text-destructive">{error}</p>}
+            {directoryError && <p className="mb-2 text-sm text-destructive">{t('verein.directory.error')}</p>}
             {location.keyHolders.length === 0 ? (
                 <EmptyState icon={<KeyRound className="h-6 w-6" />} text={t('standorte.keyholders.empty')} />
             ) : (
@@ -372,6 +373,7 @@ function WifiFormModal({
     onClose: () => void;
     onSaved: () => Promise<void>;
 }) {
+    const run = useRun();
     const [label, setLabel] = useState(network?.label ?? '');
     const [ssid, setSsid] = useState(network?.ssid ?? '');
     const [password, setPassword] = useState(network?.password ?? '');
@@ -413,6 +415,7 @@ function WifiFormModal({
 }
 
 function WifiSection({ locationId, clubId, canWrite, t }: { locationId: string; clubId: string; canWrite: boolean; t: T }) {
+    const run = useRun();
     const [networks, setNetworks] = useState<WifiNetwork[] | null>(null);
     // undefined = closed, null = create, network = edit
     const [editing, setEditing] = useState<WifiNetwork | null | undefined>(undefined);
@@ -534,6 +537,7 @@ function LinkFormModal({
     onClose: () => void;
     onSaved: () => Promise<void>;
 }) {
+    const run = useRun();
     const [title, setTitle] = useState(link?.title ?? '');
     const [url, setUrl] = useState(link?.url ?? '');
     const [icon, setIcon] = useState(link?.icon ?? '');
@@ -572,6 +576,7 @@ function LinkFormModal({
 }
 
 function LinksSection({ locationId, clubId, canWrite, t }: { locationId: string; clubId: string; canWrite: boolean; t: T }) {
+    const run = useRun();
     const [links, setLinks] = useState<LocationLink[] | null>(null);
     // undefined = closed, null = create, link = edit
     const [editing, setEditing] = useState<LocationLink | null | undefined>(undefined);
@@ -659,7 +664,6 @@ function LinksSection({ locationId, clubId, canWrite, t }: { locationId: string;
 function LocationDetail({
     clubId,
     locationId,
-    members,
     canWrite,
     t,
     onBack,
@@ -667,12 +671,12 @@ function LocationDetail({
 }: {
     clubId: string;
     locationId: string;
-    members: AccountMember[];
     canWrite: boolean;
     t: T;
     onBack: () => void;
     onLocationsChanged: () => void;
 }) {
+    const run = useRun();
     const [location, setLocation] = useState<LocationDetailData | null>(null);
     const [editing, setEditing] = useState(false);
     const [deleting, setDeleting] = useState(false);
@@ -733,7 +737,7 @@ function LocationDetail({
             </div>
 
             <WifiSection locationId={locationId} clubId={clubId} canWrite={canWrite} t={t} />
-            <KeyHoldersSection location={location} members={members} clubId={clubId} canWrite={canWrite} t={t} onChange={() => void load()} />
+            <KeyHoldersSection location={location} clubId={clubId} canWrite={canWrite} t={t} onChange={() => void load()} />
             <LinksSection locationId={locationId} clubId={clubId} canWrite={canWrite} t={t} />
 
             {editing && (
@@ -781,24 +785,12 @@ export default function StandorteTab({
     onLocationsChanged: () => void;
 }) {
     const { t } = useLanguage();
-    const [members, setMembers] = useState<AccountMember[]>([]);
     const [selectedId, setSelectedId] = useState<string | null>(null);
-
-    useEffect(() => {
-        let cancelled = false;
-        void loadAccountMembers(clubId, () => cancelled).then((list) => {
-            if (!cancelled) setMembers(list);
-        });
-        return () => {
-            cancelled = true;
-        };
-    }, [clubId]);
 
     return selectedId ? (
         <LocationDetail
             clubId={clubId}
             locationId={selectedId}
-            members={members}
             canWrite={canWrite}
             t={t}
             onBack={() => setSelectedId(null)}

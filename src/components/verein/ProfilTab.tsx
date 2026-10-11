@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { CalendarDays, HeartPulse, Phone, UserRound } from 'lucide-react';
 
-import { apiFetch, ApiError } from '@/lib/api-client';
+import { memberErrorKey } from '@/lib/clubMembers';
+import { apiFetch } from '@/lib/api-client';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export interface OwnMembership {
@@ -54,7 +55,7 @@ export default function ProfilTab({ me, clubId, onSaved }: { me: OwnMembership; 
             setStatus({ ok: true, text: t('verein.profil.saved') });
             onSaved();
         } catch (err) {
-            setStatus({ ok: false, text: err instanceof ApiError ? err.message : 'Request failed' });
+            setStatus({ ok: false, text: t(memberErrorKey(err)) });
         } finally {
             setSaving(false);
         }

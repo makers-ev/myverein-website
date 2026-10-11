@@ -7,6 +7,9 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api-client';
 import { memberErrorKey, type CategoryRef } from '@/lib/clubMembers';
 
+/** The backend applies at most this many members per request. */
+const MAX_APPLY = 500;
+
 interface Suggestion {
     id: string;
     name: string;
@@ -47,7 +50,7 @@ export default function TransitionSuggestions({
         try {
             const res = await apiFetch<{ data: Suggestion[] }>(`/club-members/transition-suggestions?clubId=${clubId}`);
             setItems(res.data);
-            setSelected(new Set(res.data.map((s) => s.id)));
+            setSelected(new Set(res.data.slice(0, MAX_APPLY).map((s) => s.id)));
             setLoadError(false);
         } catch {
             setLoadError(true);
@@ -60,7 +63,7 @@ export default function TransitionSuggestions({
     }, [load, reloadToken]);
 
     async function apply() {
-        const memberIds = [...selected].slice(0, 500);
+        const memberIds = [...selected].slice(0, MAX_APPLY);
         if (memberIds.length === 0) return;
         setBusy(true);
         setError(null);
@@ -84,7 +87,7 @@ export default function TransitionSuggestions({
         setSelected((prev) => {
             const next = new Set(prev);
             if (next.has(id)) next.delete(id);
-            else next.add(id);
+            else if (next.size < MAX_APPLY) next.add(id);
             return next;
         });
     }
@@ -143,7 +146,7 @@ export default function TransitionSuggestions({
                                     </li>
                                 ))}
                             </ul>
-                            {items.length > 500 && <p className="mt-1 text-xs text-muted-foreground">{t('verein.suggestions.limit')}</p>}
+                            {items.length > MAX_APPLY && <p className="mt-1 text-xs text-muted-foreground">{t('verein.suggestions.limit')}</p>}
                             <div className="mt-3 flex items-center gap-3">
                                 <button
                                     type="button"
@@ -155,10 +158,10 @@ export default function TransitionSuggestions({
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => setSelected(selected.size === items.length ? new Set() : new Set(items.map((s) => s.id)))}
+                                    onClick={() => setSelected(selected.size > 0 ? new Set() : new Set(items.slice(0, MAX_APPLY).map((s) => s.id)))}
                                     className="text-xs text-muted-foreground hover:text-foreground"
                                 >
-                                    {selected.size === items.length ? t('verein.suggestions.none') : t('verein.suggestions.all')}
+                                    {selected.size > 0 ? t('verein.suggestions.none') : t('verein.suggestions.all')}
                                 </button>
                             </div>
                         </div>

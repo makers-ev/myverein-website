@@ -7,7 +7,7 @@ import MemberFormModal from '@/components/verein/MemberFormModal';
 import MemberRoleCell from '@/components/verein/MemberRoleCell';
 import TransitionSuggestions from '@/components/verein/TransitionSuggestions';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { apiFetch } from '@/lib/api-client';
+import { ApiError, apiFetch } from '@/lib/api-client';
 import {
     categoryLabel,
     currentDepartments,
@@ -71,6 +71,8 @@ export default function MemberList({
     const canWrite = permissions.includes('members:write');
     const canRoles = permissions.includes('roles:write');
     const canSensitive = permissions.includes('members:read_sensitive');
+    // Plain members only get live members (probe/aktiv/ruhend) from the backend, so other statuses are not offered.
+    const statusOptions = canWrite || canSensitive ? MEMBER_STATUSES : MEMBER_STATUSES.filter((s) => s === 'probe' || s === 'aktiv' || s === 'ruhend');
 
     const [searchInput, setSearchInput] = useState('');
     const [q, setQ] = useState('');
@@ -80,6 +82,7 @@ export default function MemberList({
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(25);
     const [localReload, setLocalReload] = useState(0);
+    const [ageInput, setAgeInput] = useState({ min: '', max: '' });
 
     const [outcome, setOutcome] = useState<Outcome | null>(null);
     const [categories, setCategories] = useState<MemberCategory[]>([]);
@@ -96,6 +99,17 @@ export default function MemberList({
         }, 350);
         return () => clearTimeout(handle);
     }, [searchInput]);
+
+    // Debounce the age range; an inverted range (min > max) is reported instead of sent (the backend would answer 422).
+    const ageInvalid = ageInput.min !== '' && ageInput.max !== '' && Number(ageInput.min) > Number(ageInput.max);
+    useEffect(() => {
+        if (ageInvalid) return;
+        const handle = setTimeout(() => {
+            setFilters((f) => (f.ageMin === ageInput.min && f.ageMax === ageInput.max ? f : { ...f, ageMin: ageInput.min, ageMax: ageInput.max }));
+            setPage(1);
+        }, 400);
+        return () => clearTimeout(handle);
+    }, [ageInput, ageInvalid]);
 
     // Categories (also used for the filter and the form); every member may read them.
     useEffect(() => {
@@ -143,6 +157,8 @@ export default function MemberList({
     const loading = outcome?.key !== requestKey;
     const lastList = outcome?.res ?? null;
     const failed = !loading && outcome?.error !== undefined;
+    // 403: the role may not read the list at all (e.g. guardians) -- retrying cannot help.
+    const forbidden = failed && outcome?.error instanceof ApiError && outcome.error.status === 403;
     const rows = lastList?.data ?? [];
     const total = lastList?.total ?? 0;
     const pages = Math.max(1, Math.ceil(total / pageSize));
@@ -171,6 +187,7 @@ export default function MemberList({
 
     function resetAll() {
         setFilters(EMPTY_FILTERS);
+        setAgeInput({ min: '', max: '' });
         setSearchInput('');
         setQ('');
         setPage(1);
@@ -198,7 +215,10 @@ export default function MemberList({
         chips.push({
             id: 'age',
             label: t('verein.members.chip.age', { min: filters.ageMin === '' ? '0' : filters.ageMin, max: filters.ageMax === '' ? '∞' : filters.ageMax }),
-            clear: () => setFilters((f) => ({ ...f, ageMin: '', ageMax: '' })),
+            clear: () => {
+                setAgeInput({ min: '', max: '' });
+                setFilters((f) => ({ ...f, ageMin: '', ageMax: '' }));
+            },
         });
     }
 
@@ -247,7 +267,7 @@ export default function MemberList({
             <div className="mb-3 flex flex-wrap items-center gap-2">
                 <select value={filters.status} onChange={(e) => changeFilter('status', e.target.value)} aria-label={t('verein.members.filter.status')} className={selectClass}>
                     <option value="">{t('verein.members.filter.status.all')}</option>
-                    {MEMBER_STATUSES.map((s) => (
+                    {statusOptions.map((s) => (
                         <option key={s} value={s}>
                             {t(`verein.status.${s}`)}
                         </option>
@@ -288,8 +308,9 @@ export default function MemberList({
                             type="number"
                             min={0}
                             max={150}
-                            value={filters.ageMin}
-                            onChange={(e) => changeFilter('ageMin', e.target.value)}
+                            value={ageInput.min}
+                            onChange={(e) => setAgeInput((a) => ({ ...a, min: e.target.value }))}
+                            aria-invalid={ageInvalid}
                             aria-label={t('verein.members.filter.ageMin')}
                             className={`${inputClass} w-16`}
                         />
@@ -298,11 +319,17 @@ export default function MemberList({
                             type="number"
                             min={0}
                             max={150}
-                            value={filters.ageMax}
-                            onChange={(e) => changeFilter('ageMax', e.target.value)}
+                            value={ageInput.max}
+                            onChange={(e) => setAgeInput((a) => ({ ...a, max: e.target.value }))}
+                            aria-invalid={ageInvalid}
                             aria-label={t('verein.members.filter.ageMax')}
                             className={`${inputClass} w-16`}
                         />
+                        {ageInvalid && (
+                            <span role="alert" className="text-destructive">
+                                {t('verein.err.ageRange')}
+                            </span>
+                        )}
                     </span>
                 )}
             </div>
@@ -325,10 +352,12 @@ export default function MemberList({
 
             {failed ? (
                 <div role="alert" className="rounded-xl border border-destructive/40 bg-destructive/5 p-4 text-sm">
-                    <p className="text-destructive">{t(memberErrorKey(outcome?.error))}</p>
-                    <button type="button" onClick={reload} className={`${secondaryButtonClass} mt-3`}>
-                        {t('verein.create.retry')}
-                    </button>
+                    <p className="text-destructive">{forbidden ? t('verein.members.forbidden') : t(memberErrorKey(outcome?.error))}</p>
+                    {!forbidden && (
+                        <button type="button" onClick={reload} className={`${secondaryButtonClass} mt-3`}>
+                            {t('verein.create.retry')}
+                        </button>
+                    )}
                 </div>
             ) : !lastList ? (
                 <p className="text-sm text-muted-foreground" role="status">
