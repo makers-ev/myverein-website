@@ -42,4 +42,12 @@ describe('LanguageContext translations (S2 fallback data)', () => {
     expect(translations.en[legalKey]).toBeTruthy();
     expect(translations.fr[legalKey]).toBeUndefined();
   });
+
+  it('resolves the shared common.* texts (used by LoadingText/LoadError on every page) in German and English', () => {
+    for (const lang of ['de', 'en'] as const) {
+      for (const key of ['common.loading', 'common.error', 'common.retry']) {
+        expect(translations[lang][key], `${lang} ${key}`).toBeTruthy();
+      }
+    }
+  });
 });

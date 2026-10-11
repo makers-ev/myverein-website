@@ -1,11 +1,12 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { ArrowLeft, Camera, Check, Clock, Copy, ExternalLink, Link as LinkIcon, MapPin, Pencil, Plus, QrCode, Trash2, User, Wifi } from 'lucide-react';
 
-import { ApiError, apiFetch } from '@/lib/api-client';
-import { LOCATION_PHOTO_OUTPUT_SIZE, MEDIA_IMAGE_MAX_BYTES, mediaErrorKey, uploadMediaImage } from '@/lib/mediaUpload';
+import { apiFetch } from '@/lib/api-client';
+import { isMediaClaimError, LOCATION_PHOTO_OUTPUT_SIZE, locationPhotoField, MEDIA_IMAGE_MAX_BYTES, mediaErrorKey, uploadMediaImage } from '@/lib/mediaUpload';
 import { useThrottledCallback } from '@/lib/useThrottledCallback';
 import { LOCATION_VISIBILITIES, visibilityOf, type LocationVisibility } from '@/lib/locationVisibility';
 import { securityOf, WIFI_SECURITIES, wifiNeedsPassword, wifiPasswordFor, wifiQrValue, type WifiSecurity } from '@/lib/wifiQr';
@@ -153,23 +154,22 @@ function LocationFormModal({ clubId, location, t, onClose, onSaved }: { clubId: 
     });
     const set = (key: keyof LocationDraft) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setDraft({ ...draft, [key]: e.target.value });
 
-    // Photo: `undefined` = unchanged, a key = uploaded in this dialog (claimed on save), `null` = remove.
-    const [photoKey, setPhotoKey] = useState<string | null | undefined>(undefined);
-    const [preview, setPreview] = useState<string | null>(null);
+    // Photo: `undefined` = unchanged, `null` = remove, otherwise a picked image. Nothing is uploaded before the modal is
+    // saved (so cancelling, replacing or removing never leaves an orphan upload); the key of a successful upload is kept
+    // so that a failed save does not upload the same image again.
+    const [photo, setPhoto] = useState<{ blob: Blob; preview: string; key?: string } | null | undefined>(undefined);
     const [pickingPhoto, setPickingPhoto] = useState(false);
-    useEffect(() => () => {
-        if (preview) URL.revokeObjectURL(preview);
-    }, [preview]);
-    const shownPhoto = photoKey === null ? null : (preview ?? location?.photoUrl ?? null);
+    const previewUrl = photo ? photo.preview : null;
+    useEffect(
+        () => () => {
+            if (previewUrl) URL.revokeObjectURL(previewUrl);
+        },
+        [previewUrl],
+    );
+    const shownPhoto = photo === null ? null : (previewUrl ?? location?.photoUrl ?? null);
 
-    async function uploadPhoto(jpeg: Blob) {
-        try {
-            const key = await uploadMediaImage(clubId, jpeg, 'location.jpg');
-            setPhotoKey(key);
-            setPreview(URL.createObjectURL(jpeg));
-        } catch (err) {
-            throw new Error(t(mediaErrorKey(err)));
-        }
+    async function pickPhoto(jpeg: Blob) {
+        setPhoto({ blob: jpeg, preview: URL.createObjectURL(jpeg) });
     }
 
     // Create omits empty fields, edit clears them with null.
@@ -180,7 +180,6 @@ function LocationFormModal({ clubId, location, t, onClose, onSaved }: { clubId: 
         openingHours: draft.openingHours.trim() || empty,
         contactPerson: draft.contactPerson.trim() || empty,
         accessNote: draft.accessNote.trim() || empty,
-        ...(photoKey !== undefined && (photoKey !== null || location) ? { photoKey } : {}),
     };
 
     return (
@@ -192,14 +191,24 @@ function LocationFormModal({ clubId, location, t, onClose, onSaved }: { clubId: 
             canSubmit={!!draft.name.trim()}
             onClose={onClose}
             onSubmit={async () => {
+                let key: string | null | undefined = photo === undefined ? undefined : photo === null ? null : photo.key;
+                if (photo && !photo.key) {
+                    try {
+                        key = await uploadMediaImage(clubId, photo.blob, 'location.jpg');
+                        const uploaded = key;
+                        setPhoto((cur) => (cur && cur.blob === photo.blob ? { ...cur, key: uploaded } : cur));
+                    } catch (err) {
+                        return t(mediaErrorKey(err));
+                    }
+                }
                 try {
                     await apiFetch(location ? `/locations/${location.id}?clubId=${clubId}` : `/locations?clubId=${clubId}`, {
                         method: location ? 'PATCH' : 'POST',
-                        body,
+                        body: { ...body, ...locationPhotoField(key, !!location) },
                     });
                 } catch (err) {
-                    // A rejected photo key (quota, already used, foreign) is explained as such; everything else as usual.
-                    return typeof photoKey === 'string' && err instanceof ApiError && err.status === 422 ? t(mediaErrorKey(err)) : errorMessage(err, t);
+                    // Only a rejected photo key (quota, unknown/used key) is explained as a media problem.
+                    return typeof key === 'string' && isMediaClaimError(err) ? t(mediaErrorKey(err)) : errorMessage(err, t);
                 }
                 onSaved();
                 return null;
@@ -213,7 +222,7 @@ function LocationFormModal({ clubId, location, t, onClose, onSaved }: { clubId: 
                         {shownPhoto ? t('standorte.locations.photo.change') : t('standorte.locations.photo.add')}
                     </button>
                     {shownPhoto && (
-                        <button type="button" onClick={() => { setPhotoKey(null); setPreview(null); }} className={secondaryButtonClass}>
+                        <button type="button" onClick={() => setPhoto(null)} className={secondaryButtonClass}>
                             <Trash2 className="h-4 w-4" aria-hidden="true" />
                             {t('standorte.locations.photo.remove')}
                         </button>
@@ -221,7 +230,8 @@ function LocationFormModal({ clubId, location, t, onClose, onSaved }: { clubId: 
                 </div>
                 {!shownPhoto && <p className="w-full text-xs text-muted-foreground">{t('standorte.locations.photo.none')}</p>}
             </div>
-            {pickingPhoto && (
+            {pickingPhoto &&
+                createPortal(
                 <MemberPhotoDialog
                     title={t('standorte.locations.photo.title')}
                     hint={t('standorte.locations.photo.hint')}
@@ -229,8 +239,9 @@ function LocationFormModal({ clubId, location, t, onClose, onSaved }: { clubId: 
                     maxBytes={MEDIA_IMAGE_MAX_BYTES}
                     outputSize={LOCATION_PHOTO_OUTPUT_SIZE}
                     onClose={() => setPickingPhoto(false)}
-                    onSave={uploadPhoto}
-                />
+                    onSave={pickPhoto}
+                />,
+                document.body,
             )}
             <Field label={t('standorte.locations.detail.name')}>
                 <input type="text" value={draft.name} onChange={set('name')} required className={inputClass} />

@@ -123,6 +123,11 @@ export interface ResolutionFields {
     result: string;
 }
 
+/** A vote count field must be a whole number >= 0; empty, negative, fractional or non-numeric input is a form error. */
+export function isValidVoteCount(value: string): boolean {
+    return /^\d{1,9}$/.test(value.trim());
+}
+
 /** Only the fields that differ from the stored resolution (the backend wants at least one besides the note). */
 export function resolutionChanges(
     r: ResolutionFields,
@@ -131,10 +136,11 @@ export function resolutionChanges(
     const out: Partial<ResolutionFields> = {};
     const description = draft.description.trim();
     const result = draft.result.trim();
-    if (description && description !== r.description) out.description = description;
-    if (result && result !== r.result) out.result = result;
+    if (description && description !== r.description.trim()) out.description = description;
+    if (result && result !== r.result.trim()) out.result = result;
     for (const key of ['votesFor', 'votesAgainst', 'votesAbstain'] as const) {
-        const n = Math.max(0, Math.floor(Number(draft[key]) || 0));
+        if (!isValidVoteCount(draft[key])) continue;
+        const n = Number(draft[key].trim());
         if (n !== r[key]) out[key] = n;
     }
     return out;

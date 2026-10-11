@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildAttendancePatch, effectiveAttendance, formatMeetingDateTime, fromDatetimeLocal, meetingTypeKey, resolutionChanges, statusForSchedule, toDatetimeLocal, type AttendanceRow } from './meetings';
+import { buildAttendancePatch, effectiveAttendance, formatMeetingDateTime, fromDatetimeLocal, meetingTypeKey, isValidVoteCount, resolutionChanges, statusForSchedule, toDatetimeLocal, type AttendanceRow } from './meetings';
 
 const stored: AttendanceRow[] = [
     { memberId: 'a', present: true, hasVotingRight: true, proxyForMemberId: null },
@@ -88,11 +88,21 @@ describe('datetime-local conversion', () => {
 
 describe('resolutionChanges', () => {
     const r = { description: 'Budget', votesFor: 5, votesAgainst: 1, votesAbstain: 0, result: 'angenommen' };
+    const same = { description: 'Budget', votesFor: '5', votesAgainst: '1', votesAbstain: '0', result: 'angenommen' };
     it('returns only changed fields', () => {
-        expect(resolutionChanges(r, { description: 'Budget', votesFor: '6', votesAgainst: '1', votesAbstain: '0', result: ' angenommen ' })).toEqual({ votesFor: 6 });
+        expect(resolutionChanges(r, { ...same, votesFor: '6', result: ' angenommen ' })).toEqual({ votesFor: 6 });
     });
-    it('returns nothing when unchanged and never sends negative or blank values', () => {
-        expect(resolutionChanges(r, { description: 'Budget', votesFor: '5', votesAgainst: '1', votesAbstain: '0', result: 'angenommen' })).toEqual({});
-        expect(resolutionChanges(r, { description: '  ', votesFor: '-3', votesAgainst: '1', votesAbstain: '', result: '' })).toEqual({ votesFor: 0 });
+    it('compares trimmed values on both sides', () => {
+        expect(resolutionChanges({ ...r, description: ' Budget ' }, same)).toEqual({});
+    });
+    it('never sends blank, negative or fractional values', () => {
+        expect(resolutionChanges(r, { description: '  ', votesFor: '-3', votesAgainst: '1.5', votesAbstain: '', result: '' })).toEqual({});
+    });
+});
+
+describe('isValidVoteCount', () => {
+    it('accepts whole numbers only', () => {
+        expect(['0', '12', ' 7 '].every(isValidVoteCount)).toBe(true);
+        expect(['', ' ', '-1', '1.5', '1e3', 'abc'].some(isValidVoteCount)).toBe(false);
     });
 });

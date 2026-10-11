@@ -13,6 +13,7 @@ import {
     fromDatetimeLocal,
     MEETING_TYPES,
     meetingTypeKey,
+    isValidVoteCount,
     resolutionChanges,
     statusForSchedule,
     toDatetimeLocal,
@@ -602,7 +603,8 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
     }
 
     const corChanges = correcting ? resolutionChanges(correcting, { description: corDescription, votesFor: corFor, votesAgainst: corAgainst, votesAbstain: corAbstain, result: corResult }) : {};
-    const corValid = !!correcting && Object.keys(corChanges).length > 0 && !!corNote.trim() && !!corDescription.trim() && !!corResult.trim();
+    const corVotesValid = [corFor, corAgainst, corAbstain].every(isValidVoteCount);
+    const corValid = !!correcting && corVotesValid && Object.keys(corChanges).length > 0 && !!corNote.trim() && !!corDescription.trim() && !!corResult.trim();
 
     async function handleCorrectResolution(e: React.FormEvent) {
         e.preventDefault();
@@ -614,13 +616,15 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                 method: 'PATCH',
                 body: { ...corChanges, correctionNote: corNote.trim() },
             });
-            setCorrecting(null);
-            await load();
         } catch (err) {
             setCorError(t(memberErrorKey(err)));
-        } finally {
             setCorSaving(false);
+            return;
         }
+        // The correction is saved; a failing reload must not look like a failed correction.
+        setCorrecting(null);
+        setCorSaving(false);
+        await load(); // never throws; a failed reload shows the retry banner of the detail view
     }
 
     if (!meeting) return detailLoadFailed ? <LoadError onRetry={() => void load()} /> : <LoadingText />;
@@ -643,6 +647,8 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                 <ArrowLeft className="h-4 w-4" aria-hidden />
                 {t('treffen.back')}
             </button>
+
+            {detailLoadFailed && <LoadError onRetry={() => void load()} />}
 
             <div className="flex items-start justify-between gap-3 rounded-xl border border-border bg-card p-4">
                 <div className="min-w-0">
@@ -1148,7 +1154,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                                         <label htmlFor={id} className={labelClass}>
                                             {t(label)}
                                         </label>
-                                        <input id={id} type="number" min={0} value={value} onChange={(e) => setter(e.target.value)} className={inputClass} />
+                                        <input id={id} type="number" min={0} step={1} value={value} onChange={(e) => setter(e.target.value)} className={inputClass} />
                                     </div>
                                 ))}
                             </div>
@@ -1173,7 +1179,8 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                                     className={inputClass}
                                 />
                             </div>
-                            {correcting && Object.keys(corChanges).length === 0 && <p className="text-xs text-muted-foreground">{t('treffen.resolutions.correct.nochange')}</p>}
+                            {correcting && !corVotesValid && <p role="alert" className="text-xs text-destructive">{t('treffen.resolutions.correct.votes-invalid')}</p>}
+                            {correcting && corVotesValid && Object.keys(corChanges).length === 0 && <p className="text-xs text-muted-foreground">{t('treffen.resolutions.correct.nochange')}</p>}
                             {corError && <ErrorText>{corError}</ErrorText>}
                         </form>
                     </Modal>

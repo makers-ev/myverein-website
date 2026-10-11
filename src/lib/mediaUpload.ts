@@ -17,10 +17,32 @@ export async function uploadMediaImage(clubId: string, jpeg: Blob, filename = 'p
     return res.data.key;
 }
 
+/** Backend `details.code` of a quota refusal: `club_quota` (club storage full) or `unattached_cap` (too many unsaved uploads). */
+function quotaReason(err: ApiError): string | null {
+    const code = (err.details as { code?: unknown } | undefined)?.code;
+    return typeof code === 'string' ? code : null;
+}
+
+/** `true` if the error is about the uploaded image itself (quota, unknown/used media key), not about other form fields. */
+export function isMediaClaimError(err: unknown): boolean {
+    if (!(err instanceof ApiError)) return false;
+    return err.code === 'QUOTA_EXCEEDED' || /unknown media key/i.test(err.message);
+}
+
+/**
+ * Body part for the photo of a location: `undefined` = unchanged (omitted), a key = new photo, `null` = remove. A create
+ * has no photo to remove, so `null` is omitted there.
+ */
+export function locationPhotoField(key: string | null | undefined, isEdit: boolean): { photoKey?: string | null } {
+    if (key === undefined) return {};
+    if (key === null) return isEdit ? { photoKey: null } : {};
+    return { photoKey: key };
+}
+
 /** Translation key for a failed media upload or a photo-key claim (quota, size, type, rights, ...). */
 export function mediaErrorKey(err: unknown): string {
     if (err instanceof ApiError) {
-        if (err.code === 'QUOTA_EXCEEDED') return 'media.err.quota';
+        if (err.code === 'QUOTA_EXCEEDED') return quotaReason(err) === 'unattached_cap' ? 'media.err.unattachedCap' : 'media.err.quota';
         if (err.status === 413) return 'media.err.sizeApi';
         if (err.status === 422 || err.status === 400) {
             if (/exceeds maximum size/i.test(err.message)) return 'media.err.sizeApi';
