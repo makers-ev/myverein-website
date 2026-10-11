@@ -86,7 +86,7 @@ function ErrorText({ children }: { children: React.ReactNode }) {
     );
 }
 
-function MeetingList({ clubId, t, onSelect }: { clubId: string; t: TFn; onSelect: (id: string) => void }) {
+function MeetingList({ clubId, t, canWrite, onSelect }: { clubId: string; t: TFn; canWrite: boolean; onSelect: (id: string) => void }) {
     const [meetings, setMeetings] = useState<Meeting[] | null>(null);
     const [showCreate, setShowCreate] = useState(false);
     const [title, setTitle] = useState('');
@@ -114,7 +114,11 @@ function MeetingList({ clubId, t, onSelect }: { clubId: string; t: TFn; onSelect
         try {
             await apiFetch(`/meetings?clubId=${clubId}`, {
                 method: 'POST',
-                body: { title: title.trim(), type: type.trim(), scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : undefined },
+                body: {
+                    title: title.trim(),
+                    type: type.trim(),
+                    scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : undefined,
+                },
             });
             setTitle('');
             setType('');
@@ -134,10 +138,12 @@ function MeetingList({ clubId, t, onSelect }: { clubId: string; t: TFn; onSelect
         <SectionCard
             title={t('treffen.list.title')}
             action={
-                <button type="button" onClick={() => setShowCreate(true)} className={`${primaryBtn} inline-flex items-center gap-1.5 !px-3 !py-1.5`}>
-                    <Plus className="h-4 w-4" aria-hidden />
-                    {t('treffen.create')}
-                </button>
+                canWrite ? (
+                    <button type="button" onClick={() => setShowCreate(true)} className={`${primaryBtn} inline-flex items-center gap-1.5 !px-3 !py-1.5`}>
+                        <Plus className="h-4 w-4" aria-hidden />
+                        {t('treffen.create')}
+                    </button>
+                ) : undefined
             }
         >
             {meetings.length === 0 ? (
@@ -165,57 +171,73 @@ function MeetingList({ clubId, t, onSelect }: { clubId: string; t: TFn; onSelect
                 </ul>
             )}
 
-            <Modal
-                open={showCreate}
-                onClose={() => setShowCreate(false)}
-                title={t('treffen.create')}
-                footer={
-                    <div className="flex justify-end gap-2">
-                        <button type="button" onClick={() => setShowCreate(false)} className={secondaryBtn}>
-                            {t('treffen.cancel')}
-                        </button>
-                        <button type="submit" form="meeting-form" disabled={submitting || !title.trim() || !type.trim()} className={primaryBtn}>
-                            {t('treffen.submit')}
-                        </button>
-                    </div>
-                }
-            >
-                <form id="meeting-form" onSubmit={(e) => void handleCreate(e)} className="space-y-4">
-                    <div>
-                        <label htmlFor="mt-title" className={labelClass}>
-                            {t('treffen.title')} *
-                        </label>
-                        <input id="mt-title" type="text" required autoFocus value={title} onChange={(e) => setTitle(e.target.value)} className={inputClass} />
-                    </div>
-                    <div>
-                        <label htmlFor="mt-type" className={labelClass}>
-                            {t('treffen.type')} *
-                        </label>
-                        <input
-                            id="mt-type"
-                            type="text"
-                            required
-                            value={type}
-                            onChange={(e) => setType(e.target.value)}
-                            placeholder={t('treffen.type.placeholder')}
-                            className={inputClass}
-                        />
-                    </div>
-                    <div>
-                        <label htmlFor="mt-scheduled" className={labelClass}>
-                            {t('treffen.scheduled-at')}
-                        </label>
-                        <input id="mt-scheduled" type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} className={inputClass} />
-                        <p className="mt-1 text-xs text-muted-foreground">{t('treffen.scheduled-at.hint')}</p>
-                    </div>
-                    {error && <ErrorText>{error}</ErrorText>}
-                </form>
-            </Modal>
+            {canWrite && (
+                <Modal
+                    open={showCreate}
+                    onClose={() => setShowCreate(false)}
+                    title={t('treffen.create')}
+                    footer={
+                        <div className="flex justify-end gap-2">
+                            <button type="button" onClick={() => setShowCreate(false)} className={secondaryBtn}>
+                                {t('treffen.cancel')}
+                            </button>
+                            <button type="submit" form="meeting-form" disabled={submitting || !title.trim() || !type.trim()} className={primaryBtn}>
+                                {t('treffen.submit')}
+                            </button>
+                        </div>
+                    }
+                >
+                    <form id="meeting-form" onSubmit={(e) => void handleCreate(e)} className="space-y-4">
+                        <div>
+                            <label htmlFor="mt-title" className={labelClass}>
+                                {t('treffen.title')} *
+                            </label>
+                            <input
+                                id="mt-title"
+                                type="text"
+                                required
+                                autoFocus
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                                className={inputClass}
+                            />
+                        </div>
+                        <div>
+                            <label htmlFor="mt-type" className={labelClass}>
+                                {t('treffen.type')} *
+                            </label>
+                            <input
+                                id="mt-type"
+                                type="text"
+                                required
+                                value={type}
+                                onChange={(e) => setType(e.target.value)}
+                                placeholder={t('treffen.type.placeholder')}
+                                className={inputClass}
+                            />
+                        </div>
+                        <div>
+                            <label htmlFor="mt-scheduled" className={labelClass}>
+                                {t('treffen.scheduled-at')}
+                            </label>
+                            <input
+                                id="mt-scheduled"
+                                type="datetime-local"
+                                value={scheduledAt}
+                                onChange={(e) => setScheduledAt(e.target.value)}
+                                className={inputClass}
+                            />
+                            <p className="mt-1 text-xs text-muted-foreground">{t('treffen.scheduled-at.hint')}</p>
+                        </div>
+                        {error && <ErrorText>{error}</ErrorText>}
+                    </form>
+                </Modal>
+            )}
         </SectionCard>
     );
 }
 
-function MeetingDetail({ clubId, meetingId, t, onBack }: { clubId: string; meetingId: string; t: TFn; onBack: () => void }) {
+function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: string; meetingId: string; t: TFn; canWrite: boolean; onBack: () => void }) {
     const [meeting, setMeeting] = useState<Meeting | null>(null);
     const [invitees, setInvitees] = useState<MeetingInvitee[]>([]);
     const [members, setMembers] = useState<ClubMember[]>([]);
@@ -262,7 +284,10 @@ function MeetingDetail({ clubId, meetingId, t, onBack }: { clubId: string; meeti
         setSaveError(null);
         setSaved(false);
         try {
-            await apiFetch(`/meetings/${meetingId}?clubId=${clubId}`, { method: 'PATCH', body: { agenda, minutes, status } });
+            await apiFetch(`/meetings/${meetingId}?clubId=${clubId}`, {
+                method: 'PATCH',
+                body: { agenda, minutes, status },
+            });
             setSaved(true);
             setEditing(false);
             await load();
@@ -279,7 +304,10 @@ function MeetingDetail({ clubId, meetingId, t, onBack }: { clubId: string; meeti
         if (!newInviteeId.trim()) return;
         setInviteError(null);
         try {
-            await apiFetch(`/meetings/${meetingId}/invitees?clubId=${clubId}`, { method: 'POST', body: { memberId: newInviteeId.trim() } });
+            await apiFetch(`/meetings/${meetingId}/invitees?clubId=${clubId}`, {
+                method: 'POST',
+                body: { memberId: newInviteeId.trim() },
+            });
             setNewInviteeId('');
             await load();
         } catch (err) {
@@ -336,7 +364,10 @@ function MeetingDetail({ clubId, meetingId, t, onBack }: { clubId: string; meeti
                 present: attendance[inv.memberId]?.present ?? false,
                 hasVotingRight: attendance[inv.memberId]?.hasVotingRight ?? true,
             }));
-            await apiFetch(`/meetings/${meetingId}/attendance?clubId=${clubId}`, { method: 'PATCH', body: entries });
+            await apiFetch(`/meetings/${meetingId}/attendance?clubId=${clubId}`, {
+                method: 'PATCH',
+                body: entries,
+            });
             setAttendanceSaved(true);
         } catch (err) {
             setAttendanceError(err instanceof ApiError ? err.message : 'Request failed');
@@ -405,7 +436,7 @@ function MeetingDetail({ clubId, meetingId, t, onBack }: { clubId: string; meeti
             </div>
 
             <SectionCard title={t('treffen.agenda')}>
-                {editing ? (
+                {canWrite && editing ? (
                     <div className="space-y-3">
                         <div>
                             <label htmlFor="mt-agenda" className={labelClass}>
@@ -467,15 +498,21 @@ function MeetingDetail({ clubId, meetingId, t, onBack }: { clubId: string; meeti
                             </p>
                         </div>
                         {saved && <p className="text-xs text-success">{t('treffen.agenda-minutes.saved')}</p>}
-                        <button type="button" onClick={() => setEditing(true)} className={`${secondaryBtn} !px-3 !py-1.5`}>
-                            {t('treffen.agenda-minutes.edit')}
-                        </button>
+                        {canWrite && (
+                            <button type="button" onClick={() => setEditing(true)} className={`${secondaryBtn} !px-3 !py-1.5`}>
+                                {t('treffen.agenda-minutes.edit')}
+                            </button>
+                        )}
                     </div>
                 )}
             </SectionCard>
 
             <SectionCard title={t('treffen.invitees.title')}>
-                {inviteError && <div className="mb-3"><ErrorText>{inviteError}</ErrorText></div>}
+                {inviteError && (
+                    <div className="mb-3">
+                        <ErrorText>{inviteError}</ErrorText>
+                    </div>
+                )}
                 {invitees.length === 0 ? (
                     <p className="mb-3 text-sm text-muted-foreground">{t('treffen.attendance.empty')}</p>
                 ) : (
@@ -483,109 +520,128 @@ function MeetingDetail({ clubId, meetingId, t, onBack }: { clubId: string; meeti
                         {invitees.map((inv) => (
                             <li key={inv.id} className="inline-flex items-center gap-2 rounded-full border border-border bg-background py-1 pl-3 pr-1 text-sm">
                                 <span className="text-foreground">{nameFor(inv.memberId)}</span>
-                                <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${RESPONSE_STYLES[inv.response] ?? 'bg-muted text-muted-foreground'}`}>
+                                <span
+                                    className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${RESPONSE_STYLES[inv.response] ?? 'bg-muted text-muted-foreground'}`}
+                                >
                                     {t(`treffen.rsvp.response.${inv.response}`)}
                                 </span>
-                                <button
-                                    type="button"
-                                    onClick={() => void handleRemoveInvitee(inv.memberId)}
-                                    aria-label={`${t('treffen.invitees.remove')}: ${nameFor(inv.memberId)}`}
-                                    className="rounded-full p-0.5 text-muted-foreground hover:bg-muted hover:text-destructive"
-                                >
-                                    <X className="h-3.5 w-3.5" />
-                                </button>
+                                {canWrite ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => void handleRemoveInvitee(inv.memberId)}
+                                        aria-label={`${t('treffen.invitees.remove')}: ${nameFor(inv.memberId)}`}
+                                        className="rounded-full p-0.5 text-muted-foreground hover:bg-muted hover:text-destructive"
+                                    >
+                                        <X className="h-3.5 w-3.5" />
+                                    </button>
+                                ) : (
+                                    <span className="w-1" aria-hidden />
+                                )}
                             </li>
                         ))}
                     </ul>
                 )}
-                <div className="flex flex-wrap items-end gap-2">
-                    <div className="min-w-48 flex-1">
-                        <label htmlFor="mt-invitee" className={labelClass}>
-                            {t('treffen.invitees.add')}
-                        </label>
-                        <select id="mt-invitee" value={newInviteeId} onChange={(e) => setNewInviteeId(e.target.value)} className={inputClass}>
-                            <option value="">—</option>
-                            {members
-                                .filter((m) => !invitees.some((inv) => inv.memberId === m.id))
-                                .map((m) => (
-                                    <option key={m.id} value={m.id}>
-                                        {m.name ?? m.id}
-                                    </option>
-                                ))}
-                        </select>
+                {canWrite && (
+                    <div className="flex flex-wrap items-end gap-2">
+                        <div className="min-w-48 flex-1">
+                            <label htmlFor="mt-invitee" className={labelClass}>
+                                {t('treffen.invitees.add')}
+                            </label>
+                            <select id="mt-invitee" value={newInviteeId} onChange={(e) => setNewInviteeId(e.target.value)} className={inputClass}>
+                                <option value="">—</option>
+                                {members
+                                    .filter((m) => !invitees.some((inv) => inv.memberId === m.id))
+                                    .map((m) => (
+                                        <option key={m.id} value={m.id}>
+                                            {m.name ?? m.id}
+                                        </option>
+                                    ))}
+                            </select>
+                        </div>
+                        <button type="button" onClick={() => void handleAddInvitee()} disabled={!newInviteeId} className={primaryBtn}>
+                            {t('treffen.invitees.invite')}
+                        </button>
                     </div>
-                    <button type="button" onClick={() => void handleAddInvitee()} disabled={!newInviteeId} className={primaryBtn}>
-                        {t('treffen.invitees.invite')}
-                    </button>
-                </div>
+                )}
             </SectionCard>
 
-            <SectionCard title={t('treffen.overlap.title')}>
-                {candidates.length === 0 ? (
-                    <p className="mb-3 text-sm text-muted-foreground">{t('treffen.overlap.empty')}</p>
-                ) : (
-                    <ul className="mb-3 flex flex-wrap gap-2">
-                        {candidates.map((c, i) => (
-                            <li key={c + i} className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
-                                {new Date(c).toLocaleString('de-DE')}
-                            </li>
-                        ))}
-                    </ul>
-                )}
-                <div className="flex flex-wrap items-end gap-2">
-                    <div>
-                        <label htmlFor="mt-candidate" className={labelClass}>
-                            {t('treffen.overlap.candidate')}
-                        </label>
-                        <input
-                            id="mt-candidate"
-                            type="datetime-local"
-                            value={candidateInput}
-                            onChange={(e) => setCandidateInput(e.target.value)}
-                            className={inputClass}
-                        />
-                    </div>
-                    <button type="button" onClick={handleAddCandidate} disabled={!candidateInput} className={secondaryBtn}>
-                        {t('treffen.overlap.add-candidate')}
-                    </button>
-                    <button type="button" onClick={() => void handleCheckOverlap()} disabled={candidates.length === 0} className={primaryBtn}>
-                        {t('treffen.overlap.check')}
-                    </button>
-                </div>
-                {overlapError && <div className="mt-3"><ErrorText>{overlapError}</ErrorText></div>}
-
-                {overlapResults && (
-                    <ul className="mt-4 space-y-2">
-                        {overlapResults.map((result) => {
-                            const available = result.availability.filter((a) => a.available).length;
-                            const total = result.availability.length;
-                            return (
-                                <li key={result.candidate} className="rounded-lg border border-border bg-background p-3 text-xs">
-                                    <div className="flex items-center justify-between gap-2">
-                                        <p className="font-semibold text-foreground">{new Date(result.candidate).toLocaleString('de-DE')}</p>
-                                        <span className="text-muted-foreground">{t('treffen.overlap.count', { available, total })}</span>
-                                    </div>
-                                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
-                                        <div className="h-full rounded-full bg-success" style={{ width: `${total ? (available / total) * 100 : 0}%` }} />
-                                    </div>
-                                    <div className="mt-2 flex flex-wrap gap-1.5">
-                                        {result.availability.map((a) => (
-                                            <span
-                                                key={a.memberId}
-                                                className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                                                    a.available ? 'bg-success/15 text-success' : 'bg-destructive/15 text-destructive'
-                                                }`}
-                                            >
-                                                {a.available ? '✓' : '✕'} {nameFor(a.memberId)}
-                                            </span>
-                                        ))}
-                                    </div>
+            {canWrite && (
+                <SectionCard title={t('treffen.overlap.title')}>
+                    {candidates.length === 0 ? (
+                        <p className="mb-3 text-sm text-muted-foreground">{t('treffen.overlap.empty')}</p>
+                    ) : (
+                        <ul className="mb-3 flex flex-wrap gap-2">
+                            {candidates.map((c, i) => (
+                                <li key={c + i} className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
+                                    {new Date(c).toLocaleString('de-DE')}
                                 </li>
-                            );
-                        })}
-                    </ul>
-                )}
-            </SectionCard>
+                            ))}
+                        </ul>
+                    )}
+                    <div className="flex flex-wrap items-end gap-2">
+                        <div>
+                            <label htmlFor="mt-candidate" className={labelClass}>
+                                {t('treffen.overlap.candidate')}
+                            </label>
+                            <input
+                                id="mt-candidate"
+                                type="datetime-local"
+                                value={candidateInput}
+                                onChange={(e) => setCandidateInput(e.target.value)}
+                                className={inputClass}
+                            />
+                        </div>
+                        <button type="button" onClick={handleAddCandidate} disabled={!candidateInput} className={secondaryBtn}>
+                            {t('treffen.overlap.add-candidate')}
+                        </button>
+                        <button type="button" onClick={() => void handleCheckOverlap()} disabled={candidates.length === 0} className={primaryBtn}>
+                            {t('treffen.overlap.check')}
+                        </button>
+                    </div>
+                    {overlapError && (
+                        <div className="mt-3">
+                            <ErrorText>{overlapError}</ErrorText>
+                        </div>
+                    )}
+
+                    {overlapResults && (
+                        <ul className="mt-4 space-y-2">
+                            {overlapResults.map((result) => {
+                                const available = result.availability.filter((a) => a.available).length;
+                                const total = result.availability.length;
+                                return (
+                                    <li key={result.candidate} className="rounded-lg border border-border bg-background p-3 text-xs">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <p className="font-semibold text-foreground">{new Date(result.candidate).toLocaleString('de-DE')}</p>
+                                            <span className="text-muted-foreground">{t('treffen.overlap.count', { available, total })}</span>
+                                        </div>
+                                        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+                                            <div
+                                                className="h-full rounded-full bg-success"
+                                                style={{
+                                                    width: `${total ? (available / total) * 100 : 0}%`,
+                                                }}
+                                            />
+                                        </div>
+                                        <div className="mt-2 flex flex-wrap gap-1.5">
+                                            {result.availability.map((a) => (
+                                                <span
+                                                    key={a.memberId}
+                                                    className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                                                        a.available ? 'bg-success/15 text-success' : 'bg-destructive/15 text-destructive'
+                                                    }`}
+                                                >
+                                                    {a.available ? '✓' : '✕'} {nameFor(a.memberId)}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    )}
+                </SectionCard>
+            )}
 
             <SectionCard title={t('treffen.attendance.title')}>
                 {invitees.length === 0 ? (
@@ -602,7 +658,10 @@ function MeetingDetail({ clubId, meetingId, t, onBack }: { clubId: string; meeti
                             </thead>
                             <tbody>
                                 {invitees.map((inv) => {
-                                    const row = attendance[inv.memberId] ?? { present: false, hasVotingRight: true };
+                                    const row = attendance[inv.memberId] ?? {
+                                        present: false,
+                                        hasVotingRight: true,
+                                    };
                                     return (
                                         <tr key={inv.id} className="border-b border-border last:border-b-0">
                                             <td className="px-3 py-2 text-foreground">{nameFor(inv.memberId)}</td>
@@ -611,8 +670,15 @@ function MeetingDetail({ clubId, meetingId, t, onBack }: { clubId: string; meeti
                                                     type="checkbox"
                                                     aria-label={`${t('treffen.attendance.present')}: ${nameFor(inv.memberId)}`}
                                                     checked={row.present}
+                                                    disabled={!canWrite}
                                                     onChange={(e) =>
-                                                        setAttendance((prev) => ({ ...prev, [inv.memberId]: { ...row, present: e.target.checked } }))
+                                                        setAttendance((prev) => ({
+                                                            ...prev,
+                                                            [inv.memberId]: {
+                                                                ...row,
+                                                                present: e.target.checked,
+                                                            },
+                                                        }))
                                                     }
                                                     className="h-4 w-4 accent-primary"
                                                 />
@@ -622,8 +688,15 @@ function MeetingDetail({ clubId, meetingId, t, onBack }: { clubId: string; meeti
                                                     type="checkbox"
                                                     aria-label={`${t('treffen.attendance.voting-right')}: ${nameFor(inv.memberId)}`}
                                                     checked={row.hasVotingRight}
+                                                    disabled={!canWrite}
                                                     onChange={(e) =>
-                                                        setAttendance((prev) => ({ ...prev, [inv.memberId]: { ...row, hasVotingRight: e.target.checked } }))
+                                                        setAttendance((prev) => ({
+                                                            ...prev,
+                                                            [inv.memberId]: {
+                                                                ...row,
+                                                                hasVotingRight: e.target.checked,
+                                                            },
+                                                        }))
                                                     }
                                                     className="h-4 w-4 accent-primary"
                                                 />
@@ -635,9 +708,13 @@ function MeetingDetail({ clubId, meetingId, t, onBack }: { clubId: string; meeti
                         </table>
                     </div>
                 )}
-                {attendanceError && <div className="mt-3"><ErrorText>{attendanceError}</ErrorText></div>}
+                {attendanceError && (
+                    <div className="mt-3">
+                        <ErrorText>{attendanceError}</ErrorText>
+                    </div>
+                )}
                 {attendanceSaved && !attendanceError && <p className="mt-2 text-xs text-success">{t('treffen.attendance.saved')}</p>}
-                {invitees.length > 0 && (
+                {canWrite && invitees.length > 0 && (
                     <button type="button" onClick={() => void handleSaveAttendance()} className={`${primaryBtn} mt-3`}>
                         {t('treffen.attendance.save')}
                     </button>
@@ -647,10 +724,16 @@ function MeetingDetail({ clubId, meetingId, t, onBack }: { clubId: string; meeti
             <SectionCard
                 title={t('treffen.resolutions.title')}
                 action={
-                    <button type="button" onClick={() => setShowResolutionForm(true)} className={`${secondaryBtn} inline-flex items-center gap-1.5 !px-3 !py-1.5`}>
-                        <Plus className="h-4 w-4" aria-hidden />
-                        {t('treffen.resolutions.create')}
-                    </button>
+                    canWrite ? (
+                        <button
+                            type="button"
+                            onClick={() => setShowResolutionForm(true)}
+                            className={`${secondaryBtn} inline-flex items-center gap-1.5 !px-3 !py-1.5`}
+                        >
+                            <Plus className="h-4 w-4" aria-hidden />
+                            {t('treffen.resolutions.create')}
+                        </button>
+                    ) : undefined
                 }
             >
                 {resolutions.length === 0 ? (
@@ -679,73 +762,75 @@ function MeetingDetail({ clubId, meetingId, t, onBack }: { clubId: string; meeti
                     </ul>
                 )}
 
-                <Modal
-                    open={showResolutionForm}
-                    onClose={() => setShowResolutionForm(false)}
-                    title={t('treffen.resolutions.create')}
-                    footer={
-                        <div className="flex justify-end gap-2">
-                            <button type="button" onClick={() => setShowResolutionForm(false)} className={secondaryBtn}>
-                                {t('treffen.cancel')}
-                            </button>
-                            <button type="submit" form="resolution-form" disabled={!resDescription.trim() || !resResult.trim()} className={primaryBtn}>
-                                {t('treffen.resolutions.submit')}
-                            </button>
-                        </div>
-                    }
-                >
-                    <form id="resolution-form" onSubmit={(e) => void handleCreateResolution(e)} className="space-y-4">
-                        <div>
-                            <label htmlFor="res-description" className={labelClass}>
-                                {t('treffen.resolutions.description')} *
-                            </label>
-                            <textarea
-                                id="res-description"
-                                rows={3}
-                                autoFocus
-                                value={resDescription}
-                                onChange={(e) => setResDescription(e.target.value)}
-                                className={inputClass}
-                            />
-                        </div>
-                        <div className="grid grid-cols-3 gap-3">
-                            {voteFields.map(([id, label, value, setter]) => (
-                                <div key={id}>
-                                    <label htmlFor={id} className={labelClass}>
-                                        {t(label)}
-                                    </label>
-                                    <input id={id} type="number" min={0} value={value} onChange={(e) => setter(e.target.value)} className={inputClass} />
-                                </div>
-                            ))}
-                        </div>
-                        <div>
-                            <label htmlFor="res-result" className={labelClass}>
-                                {t('treffen.resolutions.result')} *
-                            </label>
-                            <input
-                                id="res-result"
-                                type="text"
-                                value={resResult}
-                                onChange={(e) => setResResult(e.target.value)}
-                                placeholder={t('treffen.resolutions.result.placeholder')}
-                                className={inputClass}
-                            />
-                        </div>
-                        {resError && <ErrorText>{resError}</ErrorText>}
-                    </form>
-                </Modal>
+                {canWrite && (
+                    <Modal
+                        open={showResolutionForm}
+                        onClose={() => setShowResolutionForm(false)}
+                        title={t('treffen.resolutions.create')}
+                        footer={
+                            <div className="flex justify-end gap-2">
+                                <button type="button" onClick={() => setShowResolutionForm(false)} className={secondaryBtn}>
+                                    {t('treffen.cancel')}
+                                </button>
+                                <button type="submit" form="resolution-form" disabled={!resDescription.trim() || !resResult.trim()} className={primaryBtn}>
+                                    {t('treffen.resolutions.submit')}
+                                </button>
+                            </div>
+                        }
+                    >
+                        <form id="resolution-form" onSubmit={(e) => void handleCreateResolution(e)} className="space-y-4">
+                            <div>
+                                <label htmlFor="res-description" className={labelClass}>
+                                    {t('treffen.resolutions.description')} *
+                                </label>
+                                <textarea
+                                    id="res-description"
+                                    rows={3}
+                                    autoFocus
+                                    value={resDescription}
+                                    onChange={(e) => setResDescription(e.target.value)}
+                                    className={inputClass}
+                                />
+                            </div>
+                            <div className="grid grid-cols-3 gap-3">
+                                {voteFields.map(([id, label, value, setter]) => (
+                                    <div key={id}>
+                                        <label htmlFor={id} className={labelClass}>
+                                            {t(label)}
+                                        </label>
+                                        <input id={id} type="number" min={0} value={value} onChange={(e) => setter(e.target.value)} className={inputClass} />
+                                    </div>
+                                ))}
+                            </div>
+                            <div>
+                                <label htmlFor="res-result" className={labelClass}>
+                                    {t('treffen.resolutions.result')} *
+                                </label>
+                                <input
+                                    id="res-result"
+                                    type="text"
+                                    value={resResult}
+                                    onChange={(e) => setResResult(e.target.value)}
+                                    placeholder={t('treffen.resolutions.result.placeholder')}
+                                    className={inputClass}
+                                />
+                            </div>
+                            {resError && <ErrorText>{resError}</ErrorText>}
+                        </form>
+                    </Modal>
+                )}
             </SectionCard>
         </div>
     );
 }
 
-export default function TreffenPanel({ clubId }: { clubId: string }) {
+export default function TreffenPanel({ clubId, canWrite }: { clubId: string; canWrite: boolean }) {
     const { t } = useLanguage();
     const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null);
 
     return selectedMeetingId ? (
-        <MeetingDetail clubId={clubId} meetingId={selectedMeetingId} t={t} onBack={() => setSelectedMeetingId(null)} />
+        <MeetingDetail clubId={clubId} meetingId={selectedMeetingId} t={t} canWrite={canWrite} onBack={() => setSelectedMeetingId(null)} />
     ) : (
-        <MeetingList clubId={clubId} t={t} onSelect={setSelectedMeetingId} />
+        <MeetingList clubId={clubId} t={t} canWrite={canWrite} onSelect={setSelectedMeetingId} />
     );
 }

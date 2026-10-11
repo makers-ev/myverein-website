@@ -289,7 +289,7 @@ export default function KalenderPageContent() {
                             ) : (
                                 <p className="text-sm text-muted-foreground">…</p>
                             ))}
-                        {tab === 'treffen' && <TreffenPanel clubId={activeClub.clubId} />}
+                        {tab === 'treffen' && <TreffenPanel clubId={activeClub.clubId} canWrite={permissions.includes('meetings:write')} />}
                     </div>
 
                     {detailEvent && (
