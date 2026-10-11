@@ -43,7 +43,17 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
     });
 
     if (error) {
-        throw new ApiError(error.status, (error as { code?: string }).code ?? 'UNKNOWN', error.message ?? 'Request failed');
+        // The Hono backend answers `{ error: { code, message, details? } }` (AppError.toJSON), Better Auth's own
+        // routes answer flat `{ code, message }` -- read the nested form first so `code`/`details` (e.g. the
+        // `allowed` list of a 409 status change) are not lost.
+        const body = error as { code?: string; message?: string; details?: unknown; error?: unknown };
+        const nested = body.error && typeof body.error === 'object' ? (body.error as { code?: string; message?: string; details?: unknown }) : null;
+        throw new ApiError(
+            error.status,
+            nested?.code ?? body.code ?? 'UNKNOWN',
+            nested?.message ?? body.message ?? 'Request failed',
+            nested?.details ?? body.details,
+        );
     }
 
     return data as T;

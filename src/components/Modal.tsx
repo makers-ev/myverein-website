@@ -10,10 +10,12 @@ interface ModalProps {
   title: string;
   children: ReactNode;
   footer?: ReactNode;
+  /** `lg` for form-heavy dialogs (member form); default `md`. */
+  size?: 'md' | 'lg';
 }
 
 /** Centered dialog -- the first generic modal/dialog primitive in this template, used by IntroModal.tsx. */
-export function Modal({ open, onClose, title, children, footer }: ModalProps) {
+export function Modal({ open, onClose, title, children, footer, size = 'md' }: ModalProps) {
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
@@ -48,7 +50,7 @@ export function Modal({ open, onClose, title, children, footer }: ModalProps) {
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="flex max-h-[85vh] w-full max-w-lg flex-col rounded-2xl bg-card shadow-xl"
+        className={`flex max-h-[90vh] w-full flex-col rounded-2xl bg-card shadow-xl ${size === 'lg' ? 'max-w-2xl' : 'max-w-lg'}`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
