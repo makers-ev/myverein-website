@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { History, Info } from 'lucide-react';
 
+import MemberAccountSection from '@/components/verein/MemberAccountSection';
 import MemberStatusDialog from '@/components/verein/MemberStatusDialog';
 import { Modal } from '@/components/Modal';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -149,6 +150,7 @@ export default function MemberFormModal({
     categories,
     departments,
     canReadSensitive,
+    canManageAccount,
     onClose,
     onChanged,
 }: {
@@ -159,6 +161,8 @@ export default function MemberFormModal({
     categories: MemberCategory[];
     departments: DepartmentOption[];
     canReadSensitive: boolean;
+    /** `members:write`: invite / unlink the account (Wave 7 W3). */
+    canManageAccount: boolean;
     onClose: () => void;
     /** Something was saved on the server (list should reload). */
     onChanged: () => void;
@@ -175,6 +179,7 @@ export default function MemberFormModal({
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [statusOpen, setStatusOpen] = useState(false);
+    const [accountDialogOpen, setAccountDialogOpen] = useState(false);
 
     // Which sensitive fields the backend delivered for this member (edit); in create everything the caller may write.
     const has = (key: SensitiveKey | 'memberNumber') => (isCreate ? key !== 'memberNumber' || canReadSensitive : member?.[key] !== undefined);
@@ -349,7 +354,7 @@ export default function MemberFormModal({
             <Modal
                 open
                 size="lg"
-                onClose={statusOpen || saving ? () => {} : requestClose}
+                onClose={statusOpen || accountDialogOpen || saving ? () => {} : requestClose}
                 title={title}
                 footer={
                     <div className="flex items-center justify-end gap-2">
@@ -390,6 +395,18 @@ export default function MemberFormModal({
                             {t('verein.status.change')}
                         </button>
                     </div>
+                )}
+
+                {!isCreate && member && canManageAccount && (
+                    <MemberAccountSection
+                        member={member}
+                        clubId={clubId}
+                        onDialogOpenChange={setAccountDialogOpen}
+                        onMemberChanged={(updated) => {
+                            setMember(updated);
+                            onChanged();
+                        }}
+                    />
                 )}
 
                 <div className="grid gap-4 sm:grid-cols-2">

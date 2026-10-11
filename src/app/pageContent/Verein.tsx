@@ -8,7 +8,9 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import ApplicationsPanel, { type ClubApplication } from '@/components/verein/ApplicationsPanel';
 import NoClubSection from '@/components/verein/NoClubSection';
 import CategoriesPanel from '@/components/verein/CategoriesPanel';
+import ClubSettingsPanel from '@/components/verein/ClubSettingsPanel';
 import ClubStatsPanel from '@/components/verein/ClubStatsPanel';
+import ExitQueuePanel from '@/components/verein/ExitQueuePanel';
 import MemberList from '@/components/verein/MemberList';
 import RoleBadge from '@/components/verein/RoleBadge';
 import ProfilTab, { type OwnMembership } from '@/components/verein/ProfilTab';
@@ -47,7 +49,7 @@ interface ClubInfo {
     pages: ClubInfoPage[];
 }
 
-type Tab = 'info' | 'profil' | 'mitglieder' | 'abteilungen' | 'kennzahlen' | 'einstellungen';
+type Tab = 'info' | 'profil' | 'mitglieder' | 'austritte' | 'abteilungen' | 'kennzahlen' | 'einstellungen';
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
     return (
@@ -174,6 +176,8 @@ export default function VereinPageContent() {
     const [tab, setTab] = useState<Tab>('info');
     const [applications, setApplications] = useState<ClubApplication[] | null>(null);
     const [applicationsError, setApplicationsError] = useState(false);
+    // Open exit requests (badge on the "Austritte" tab); null = unknown / no permission.
+    const [exitPending, setExitPending] = useState<number | null>(null);
     // Bumped whenever the member list must reload (an application was decided, ...).
     const [membersReload, setMembersReload] = useState(0);
 
@@ -203,9 +207,16 @@ export default function VereinPageContent() {
             } catch {
                 setApplicationsError(true);
             }
+            try {
+                const exitRes = await apiFetch<{ total: number }>(`/club-exit-requests?clubId=${clubId}&status=pending&pageSize=1`);
+                setExitPending(exitRes.total);
+            } catch {
+                setExitPending(null);
+            }
         } else {
             setApplications(null);
             setApplicationsError(false);
+            setExitPending(null);
         }
     }
 
@@ -221,6 +232,7 @@ export default function VereinPageContent() {
     // Guardians (external role) have no right to the member list; hide the tab instead of showing a 403.
     const guardianOnly = !!me && permissions.length === 0 && me.roles.length > 0 && me.roles.every((r) => r.roleType === 'erziehungsberechtigt');
     const tabs: Tab[] = guardianOnly ? ['info', 'profil', 'abteilungen'] : ['info', 'profil', 'mitglieder', 'abteilungen'];
+    if (permissions.includes('members:write')) tabs.push('austritte');
     if (permissions.includes('club_stats:read')) tabs.push('kennzahlen');
     if (permissions.includes('members:write')) tabs.push('einstellungen');
     const currentTab: Tab = tabs.includes(tab) ? tab : 'info';
@@ -247,6 +259,11 @@ export default function VereinPageContent() {
                                 }`}
                             >
                                 {t(`verein.tab.${value}`)}
+                                {value === 'austritte' && exitPending !== null && exitPending > 0 && (
+                                    <span className="ml-1.5 rounded-full bg-primary px-1.5 py-0.5 text-xs font-semibold text-primary-foreground">
+                                        {exitPending}
+                                    </span>
+                                )}
                                 {value === 'mitglieder' && applications && applications.length > 0 && (
                                     <span className="ml-1.5 rounded-full bg-primary px-1.5 py-0.5 text-xs font-semibold text-primary-foreground">
                                         {applications.length}
@@ -283,6 +300,14 @@ export default function VereinPageContent() {
                             ) : (
                                 <p className="text-sm text-muted-foreground">…</p>
                             ))}
+                        {currentTab === 'austritte' && permissions.includes('members:write') && (
+                            <ExitQueuePanel
+                                clubId={activeClub.clubId}
+                                ownMemberId={me?.memberId ?? null}
+                                canProtectedExit={permissions.includes('roles:write')}
+                                onChanged={() => void refreshClubData(activeClub.clubId)}
+                            />
+                        )}
                         {currentTab === 'abteilungen' &&
                             (info ? (
                                 <AbteilungenTab
@@ -297,7 +322,10 @@ export default function VereinPageContent() {
                             ))}
                         {currentTab === 'kennzahlen' && <ClubStatsPanel clubId={activeClub.clubId} />}
                         {currentTab === 'einstellungen' && (
-                            <CategoriesPanel clubId={activeClub.clubId} onChanged={() => setMembersReload((n) => n + 1)} />
+                            <div className="space-y-6">
+                                <ClubSettingsPanel clubId={activeClub.clubId} />
+                                <CategoriesPanel clubId={activeClub.clubId} onChanged={() => setMembersReload((n) => n + 1)} />
+                            </div>
                         )}
                     </div>
                 </>

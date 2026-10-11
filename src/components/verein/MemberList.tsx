@@ -508,6 +508,7 @@ export default function MemberList({
                     categories={categories}
                     departments={departments}
                     canReadSensitive={canSensitive}
+                    canManageAccount={canWrite}
                     onClose={() => {
                         setEditing(null);
                         setCreating(false);

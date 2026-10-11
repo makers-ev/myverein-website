@@ -185,6 +185,24 @@ export function currentDepartments(m: Pick<ClubMember, 'departments'>): MemberDe
 export function memberErrorKey(err: unknown): string {
     if (!(err instanceof ApiError)) return 'verein.err.network';
     const m = err.message;
+    // Wave 7 B4/B6 conflicts carry a machine-readable `details.code`; it wins over the message text.
+    const detailsCode = (err.details as { code?: unknown } | undefined)?.code;
+    switch (detailsCode) {
+        case 'owner_protected':
+            return 'verein.err.ownerProtected';
+        case 'board_protected':
+            return 'verein.err.boardProtected';
+        case 'self_approval':
+            return 'verein.err.selfApproval';
+        case 'exit_request_pending':
+            return 'verein.err.exitPending';
+        case 'exit_already_scheduled':
+            return 'verein.err.exitScheduled';
+        case 'merge_not_supported':
+            return 'verein.err.mergeNotSupported';
+        case 'account_has_open_items':
+            return 'verein.err.accountOpenItems';
+    }
     switch (err.status) {
         case 403:
             return 'verein.err.forbidden';
@@ -195,6 +213,10 @@ export function memberErrorKey(err: unknown): string {
             if ((err.details as { code?: unknown } | undefined)?.code === 'member_rejoin_blocked') return 'verein.err.rejoinBlocked';
             if (/member number/i.test(m)) return 'verein.err.memberNumberTaken';
             if (/no account/i.test(m)) return 'verein.err.noAccount';
+            if (/already has an account/i.test(m)) return 'verein.err.hasAccount';
+            if (/has (already )?left the club/i.test(m)) return 'verein.err.alreadyLeft';
+            if (/own account/i.test(m)) return 'verein.err.ownUnlink';
+            if (/can no longer be withdrawn|already been decided|already effective|cannot be withdrawn/i.test(m)) return 'verein.err.exitDecided';
             if (/already assigned to this department/i.test(m)) return 'verein.err.departmentAssigned';
             if (/status change|already has status/i.test(m)) return 'verein.err.statusNotAllowed';
             if (/nothing to change/i.test(m)) return 'verein.err.nothingToChange';
@@ -208,6 +230,10 @@ export function memberErrorKey(err: unknown): string {
             if (/requires a reason/i.test(m)) return 'verein.err.reasonRequired';
             if (/reopen/i.test(m)) return 'verein.err.reopenRequired';
             if (/before the join date/i.test(m)) return 'verein.err.dateBeforeJoin';
+            if (/too far in the future/i.test(m)) return 'verein.err.dateTooFar';
+            if (/in the past/i.test(m)) return 'verein.err.datePast';
+            if (/earliest date/i.test(m)) return 'verein.err.beforeEarliest';
+            if (/exclude yourself/i.test(m)) return 'verein.err.excludeSelf';
             if (/future|dated/i.test(m)) return 'verein.err.dateFuture';
             if (/minAge/i.test(m)) return 'verein.err.ageRange';
             if (/requires maxAge/i.test(m)) return 'verein.err.autoNeedsMaxAge';
@@ -216,6 +242,7 @@ export function memberErrorKey(err: unknown): string {
             if (/moveTo/i.test(m)) return 'verein.err.moveTo';
             if (/derive a valid key|key must be/i.test(m)) return 'verein.err.categoryKeyInvalid';
             if (/ageMin/i.test(m)) return 'verein.err.ageRange';
+            if (/memberNumberPrefix/i.test(m)) return 'verein.err.prefixInvalid';
             return 'verein.err.invalid';
         case 429:
             return 'verein.err.rateLimit';
