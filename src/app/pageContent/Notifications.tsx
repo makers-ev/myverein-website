@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Mail, MailOpen, Trash2 } from 'lucide-react';
 
 import { authClient, backendUrl } from '@/lib/auth-client';
+import { formatBerlinDateTime } from '@/lib/keyHistory';
 import { useLanguage } from '@/contexts/LanguageContext';
 import LoadingText from '@/components/LoadingText';
 
@@ -44,7 +45,7 @@ function useNotificationText(n: NotificationItem) {
 }
 
 function NotificationCard({ n, onChange }: { n: NotificationItem; onChange: () => void }) {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const { title, body } = useNotificationText(n);
 
     async function handleToggleRead() {
@@ -83,7 +84,7 @@ function NotificationCard({ n, onChange }: { n: NotificationItem; onChange: () =
             </div>
             <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{body}</p>
             <p className="mt-1.5 text-right text-[11px] text-muted-foreground">
-                {new Date(n.createdAt).toLocaleString('de-DE', { timeZone: 'UTC' })}
+                {formatBerlinDateTime(n.createdAt, language)}
             </p>
         </div>
     );

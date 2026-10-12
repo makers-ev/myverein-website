@@ -99,7 +99,7 @@ export function fromDatetimeLocal(value: string): string | null {
 }
 
 /** Date and time of a meeting in Europe/Berlin, formatted for the UI language. */
-export function formatMeetingDateTime(iso: string, language: string): string {
+export function formatMeetingDateTime(iso: string | Date, language: string): string {
     return new Date(iso).toLocaleString(language === 'de' ? 'de-DE' : 'en-GB', { timeZone: TZ, dateStyle: 'short', timeStyle: 'short' });
 }
 

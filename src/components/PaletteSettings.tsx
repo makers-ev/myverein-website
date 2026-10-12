@@ -1,12 +1,19 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
+
 import { usePalette } from '@/components/PaletteProvider';
 import { palettes, predefinedPaletteIds } from '@/theme/palettes';
 import type { PaletteAnchors } from '@/theme/deriveTokens';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 function Swatch({ color }: { color: string }) {
-    return <span className="inline-block h-4 w-4 rounded-full border border-border" style={{ backgroundColor: color }} />;
+    // CSSOM instead of a `style` attribute: the CSP (nonce-only style-src) blocks server-rendered inline styles.
+    const ref = useRef<HTMLSpanElement>(null);
+    useEffect(() => {
+        if (ref.current) ref.current.style.backgroundColor = color;
+    }, [color]);
+    return <span ref={ref} className="inline-block h-4 w-4 rounded-full border border-border" />;
 }
 
 /** 6 native color inputs (light/dark x background/foreground/primary) -- ladder: `<input type="color">` is a native picker, no library needed for a template. */

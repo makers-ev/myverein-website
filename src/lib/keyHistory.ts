@@ -40,7 +40,7 @@ export function pageCount(total: number, pageSize: number): number {
 }
 
 /** Date and time of a timestamp in the club's time zone (Europe/Berlin), never the browser's. */
-export function formatBerlinDateTime(iso: string, language: string): string {
+export function formatBerlinDateTime(iso: string | Date, language: string): string {
     const instant = new Date(iso);
     if (Number.isNaN(instant.getTime())) return '—';
     return instant.toLocaleString(language === 'de' ? 'de-DE' : 'en-GB', { timeZone: 'Europe/Berlin', dateStyle: 'medium', timeStyle: 'short' });
