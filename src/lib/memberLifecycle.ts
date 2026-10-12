@@ -191,8 +191,29 @@ export type AcceptFailure =
     | { kind: 'invalid' }
     | { kind: 'message'; textKey: string; conflictKeys: string[]; retry: boolean };
 
+/**
+ * A 404 on accept may also mean "the first request already succeeded" (lost response, double submit: the token is used
+ * up). Asks the own membership of the previewed club: linked = the account now is a member, else the invitation is
+ * really invalid. Any failure of the check counts as invalid.
+ */
+export async function resolveLostAccept(fetchOwnMembership: () => Promise<{ data?: { memberId?: string | null } | null }>): Promise<'linked' | 'invalid'> {
+    try {
+        const res = await fetchOwnMembership();
+        return res.data?.memberId ? 'linked' : 'invalid';
+    } catch {
+        return 'invalid';
+    }
+}
+
 export function classifyAcceptError(err: unknown, fallback: (e: unknown) => string): AcceptFailure {
     if (err instanceof ApiError && err.status === 404) return { kind: 'invalid' };
+    if (err instanceof ApiError && err.status === 429) {
+        return { kind: 'message', textKey: 'verein.invite.err.rateLimit', conflictKeys: [], retry: true };
+    }
+    // The invited member got linked in the meantime (parallel accept): for the invitee that reads "already linked".
+    if (err instanceof ApiError && err.status === 409 && !errorDetailsCode(err) && /already has an account/i.test(err.message)) {
+        return { kind: 'message', textKey: 'verein.invite.err.alreadyLinked', conflictKeys: [], retry: false };
+    }
     if (err instanceof ApiError && err.status === 403 && !errorDetailsCode(err)) {
         return { kind: 'message', textKey: 'verein.invite.err.emailMismatch', conflictKeys: [], retry: false };
     }

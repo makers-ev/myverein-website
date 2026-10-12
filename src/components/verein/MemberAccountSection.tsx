@@ -56,6 +56,11 @@ export default function MemberAccountSection({
         void loadInvite();
     }, [canInvite, loadInvite]);
 
+    function openDialog(next: Exclude<Dialog, null>) {
+        setNotice(null);
+        setDialog(next);
+    }
+
     const [resending, setResending] = useState(false);
     async function resend() {
         if (resending) return;
@@ -93,7 +98,7 @@ export default function MemberAccountSection({
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                     <Chip tone="success">{t('verein.account.linked')}</Chip>
                     <p className="text-xs text-muted-foreground">{t('verein.account.linked.hint')}</p>
-                    <button type="button" onClick={() => setDialog('unlink')} className={`ml-auto ${secondaryButtonClass}`}>
+                    <button type="button" onClick={() => openDialog('unlink')} className={`ml-auto ${secondaryButtonClass}`}>
                         <Link2Off className="h-4 w-4" aria-hidden="true" /> {t('verein.account.unlink')}
                     </button>
                 </div>
@@ -123,7 +128,7 @@ export default function MemberAccountSection({
                         </div>
                     )}
                     <div className="flex flex-wrap gap-2">
-                        <button type="button" onClick={() => setDialog('invite')} disabled={inviteState === 'loading'} className={secondaryButtonClass}>
+                        <button type="button" onClick={() => openDialog('invite')} disabled={inviteState === 'loading'} className={secondaryButtonClass}>
                             <Mail className="h-4 w-4" aria-hidden="true" />
                             {invite ? t('verein.account.invite.resend') : t('verein.account.invite')}
                         </button>
@@ -134,7 +139,7 @@ export default function MemberAccountSection({
                             </button>
                         )}
                         {invite && (
-                            <button type="button" onClick={() => setDialog('revoke')} className={secondaryButtonClass}>
+                            <button type="button" onClick={() => openDialog('revoke')} className={secondaryButtonClass}>
                                 {t('verein.account.invite.revoke')}
                             </button>
                         )}

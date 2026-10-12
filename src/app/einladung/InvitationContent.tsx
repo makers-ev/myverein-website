@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
@@ -16,6 +16,7 @@ import {
     type InviteAccepted,
     type InvitePreview,
     resolveInviteToken,
+    resolveLostAccept,
     shouldAutoRedirectToLogin,
     type TokenStore,
 } from '@/lib/memberLifecycle';
@@ -47,7 +48,7 @@ type View =
     | { kind: 'invalid' }
     | { kind: 'error'; textKey: string }
     | { kind: 'preview'; preview: InvitePreview }
-    | { kind: 'done'; accepted: InviteAccepted };
+    | { kind: 'done'; textKey: string; club: string };
 
 function Shell({ children, status }: { children: React.ReactNode; status?: 'ok' | 'warn' }) {
     return (
@@ -86,6 +87,17 @@ export default function InvitationContent() {
     const [accepting, setAccepting] = useState(false);
     const [acceptError, setAcceptError] = useState<{ text: string; conflictKeys: string[]; retry: boolean } | null>(null);
     const [reload, setReload] = useState(0);
+    const mounted = useRef(true);
+    const errorRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        mounted.current = true;
+        return () => {
+            mounted.current = false;
+        };
+    }, []);
+    useEffect(() => {
+        if (acceptError) errorRef.current?.focus();
+    }, [acceptError]);
 
     useEffect(() => {
         const found = resolveInviteToken(window.location.search, inviteStores());
@@ -134,6 +146,8 @@ export default function InvitationContent() {
                 if (err instanceof ApiError && (err.status === 404 || err.status === 422)) {
                     clearInviteToken(inviteStores());
                     setResult({ kind: 'invalid' });
+                } else if (err instanceof ApiError && err.status === 429) {
+                    setResult({ kind: 'error', textKey: 'verein.invite.err.rateLimit' });
                 } else if (err instanceof ApiError && err.status === 403) {
                     // Typically an unverified e-mail address: the token stays, the visitor can come back after verifying.
                     setResult({ kind: 'error', textKey: 'verein.invite.err.unverified' });
@@ -152,6 +166,9 @@ export default function InvitationContent() {
     else if (!signedIn) view = fallback === 'none' ? { kind: 'loginNeeded' } : { kind: 'redirecting' };
     else view = result ?? { kind: 'loading' };
 
+    const clubId = result?.kind === 'preview' ? result.preview.clubId : '';
+    const clubName = result?.kind === 'preview' ? (result.preview.clubName ?? '—') : '—';
+
     const accept = useCallback(async () => {
         if (!token) return;
         setAccepting(true);
@@ -162,20 +179,26 @@ export default function InvitationContent() {
             // The kept member row can differ from the one the page knew (merge): re-read the own membership. Best effort,
             // the account is linked either way.
             if (res.data.clubId) await apiFetch(`/club-members/me?clubId=${encodeURIComponent(res.data.clubId)}`).catch(() => undefined);
-            setResult({ kind: 'done', accepted: res.data });
+            if (!mounted.current) return;
+            setResult({ kind: 'done', textKey: acceptedNoticeKey(res.data), club: res.data.clubName ?? '—' });
         } catch (err) {
+            if (!mounted.current) return;
             const failure = classifyAcceptError(err, memberErrorKey);
             if (failure.kind === 'invalid') {
+                // 404 can also be a lost answer / double submit of an accept that worked: check the own membership.
+                const outcome = await resolveLostAccept(() => apiFetch(`/club-members/me?clubId=${encodeURIComponent(clubId)}`));
+                if (!mounted.current) return;
                 clearInviteToken(inviteStores());
-                setResult({ kind: 'invalid' });
+                if (outcome === 'linked') setResult({ kind: 'done', textKey: 'verein.invite.done.alreadyLinked', club: clubName });
+                else setResult({ kind: 'invalid' });
             } else {
                 // The token stays on purpose: after merge_conflict the invitation is still valid.
                 setAcceptError({ text: t(failure.textKey), conflictKeys: failure.conflictKeys, retry: failure.retry });
             }
         } finally {
-            setAccepting(false);
+            if (mounted.current) setAccepting(false);
         }
-    }, [token, t]);
+    }, [token, t, clubId, clubName]);
 
     async function switchAccount() {
         // The token stays (24 h expiry) so the invited account can pick the invitation up after signing in.
@@ -244,7 +267,7 @@ export default function InvitationContent() {
             return (
                 <Shell status="ok">
                     <h1 className="mb-2 text-2xl font-bold text-card-foreground">{t('verein.invite.done.title')}</h1>
-                    <p className="mb-6 text-sm text-muted-foreground">{t(acceptedNoticeKey(view.accepted), { club: view.accepted.clubName ?? '—' })}</p>
+                    <p className="mb-6 text-sm text-muted-foreground">{t(view.textKey, { club: view.club })}</p>
                     <Link href="/verein" className={buttonClass}>
                         {t('verein.invite.toClub')}
                     </Link>
@@ -293,7 +316,7 @@ export default function InvitationContent() {
                         </div>
                     )}
                     {acceptError && (
-                        <div role="alert" className="mt-4 w-full space-y-2 text-left text-sm">
+                        <div ref={errorRef} tabIndex={-1} role="alert" className="mt-4 w-full space-y-2 text-left text-sm outline-none">
                             <p className="text-destructive">{acceptError.text}</p>
                             {acceptError.conflictKeys.length > 0 && (
                                 <div className="text-muted-foreground">
