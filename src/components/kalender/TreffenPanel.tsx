@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, CalendarClock, Pencil, Plus, Trash2, X } from 'lucide-react';
 
 import { useAccountMembers } from '@/lib/useAccountMembers';
-import { memberErrorKey } from '@/lib/clubMembers';
+import { formatDate, memberErrorKey } from '@/lib/clubMembers';
 import { apiFetch } from '@/lib/api-client';
 import {
     buildAttendancePatch,
@@ -1036,7 +1036,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                                 {r.correctionNote && (
                                     <p className="mt-2 rounded-md bg-warning/10 px-2 py-1.5 text-xs text-foreground">
                                         <span className="font-semibold">
-                                            {r.correctedAt ? t('treffen.resolutions.corrected-on', { date: new Date(r.correctedAt).toLocaleDateString('de-DE') }) : t('treffen.resolutions.corrected')}
+                                            {r.correctedAt ? t('treffen.resolutions.corrected-on', { date: formatDate(r.correctedAt, language) }) : t('treffen.resolutions.corrected')}
                                         </span>{' '}
                                         {r.correctionNote}
                                     </p>

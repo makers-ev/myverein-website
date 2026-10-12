@@ -125,12 +125,9 @@ export default function ContactForm() {
               key={c}
               type="button"
               onClick={() => setCategory(c)}
-              className="rounded-full border px-3 py-1.5 text-xs font-semibold transition"
-              style={{
-                borderColor: 'var(--color-primary)',
-                backgroundColor: category === c ? 'var(--color-primary)' : 'transparent',
-                color: category === c ? 'var(--color-primary-foreground)' : 'var(--color-primary)',
-              }}
+              className={`rounded-full border border-primary px-3 py-1.5 text-xs font-semibold transition ${
+                category === c ? 'bg-primary text-primary-foreground' : 'bg-transparent text-primary'
+              }`}
             >
               {t(`contact.category-${c}`)}
             </button>

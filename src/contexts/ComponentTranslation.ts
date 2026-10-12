@@ -18,13 +18,13 @@ const ComponentTranslation: Translation = {
         'cookie.analytics.description': 'Hilft uns zu verstehen, wie Besucher mit der Website interagieren.',
 
         'intro-modal.title': 'Willkommen!',
-        'intro-modal.intro': 'Dieses Template bringt einiges bereits fertig eingerichtet mit. Ein kurzer Überblick:',
+        'intro-modal.intro': 'MyVerein ist dein digitaler Vereinsmanager: Mitglieder, Termine, Material und Treffen an einem Ort. Ein kurzer Überblick:',
         'intro-modal.step1.title': 'Konto erstellen',
         'intro-modal.step1.text': 'Registriere dich oder logge dich von der Startseite aus ein -- E-Mail/Passwort-Login und optionale Zwei-Faktor-Authentifizierung sind bereits eingebaut.',
         'intro-modal.step2.title': 'Dein Konto ist geschützt',
         'intro-modal.step2.text': 'Sessions, Passwort-Reset und Konto-Löschung sind bereits fertig -- siehe Einstellungen.',
         'intro-modal.step3.title': 'Rechtstexte im Footer',
-        'intro-modal.step3.text': 'Datenschutzerklärung, Nutzungsbedingungen und Impressum findest du im Footer -- ein guter Startpunkt, bevor du eigene Funktionen baust.',
+        'intro-modal.step3.text': 'Datenschutzerklärung, Nutzungsbedingungen und Impressum findest du im Footer -- hier findest du alles Rechtliche zu MyVerein.',
         'intro-modal.button': "Los geht's",
 
         'settings.section-help': 'Hilfe',
@@ -64,13 +64,13 @@ const ComponentTranslation: Translation = {
         'cookie.analytics.description': 'Helps us understand how visitors interact with the website.',
 
         'intro-modal.title': 'Welcome!',
-        'intro-modal.intro': "This template ships with a few things already wired up. Here's a quick look:",
+        'intro-modal.intro': 'MyVerein is your digital club manager: members, events, equipment and meetings in one place. A quick look:',
         'intro-modal.step1.title': 'Create your account',
         'intro-modal.step1.text': 'Sign up or log in from Home -- email/password auth and optional two-factor authentication are already built in.',
         'intro-modal.step2.title': 'Your account is protected',
         'intro-modal.step2.text': 'Sessions, password resets, and account deletion are handled for you -- see Settings.',
         'intro-modal.step3.title': 'Legal pages in the footer',
-        'intro-modal.step3.text': 'Privacy Policy, Terms of Service, and Imprint all live in the footer -- start from there when you build your own features.',
+        'intro-modal.step3.text': 'Privacy Policy, Terms of Service, and Imprint all live in the footer -- you will find everything legal about MyVerein there.',
         'intro-modal.button': "Let's go",
 
         'settings.section-help': 'Help',

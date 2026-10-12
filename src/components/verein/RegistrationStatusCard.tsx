@@ -2,6 +2,7 @@
 
 import { AlertCircle, CheckCircle2, Clock, XCircle } from 'lucide-react';
 
+import { formatDate } from '@/lib/clubMembers';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { ClubRegistration } from '@/components/verein/clubRegistration';
 
@@ -48,7 +49,7 @@ export default function RegistrationStatusCard({
                     <p className="mt-1 text-sm text-muted-foreground">{t(`verein.create.status.${status}.body`, { name })}</p>
                     {registration.submittedAt && status === 'pending' && (
                         <p className="mt-1 text-xs text-muted-foreground">
-                            {t('verein.create.status.submittedAt')} {new Date(registration.submittedAt).toLocaleDateString(language)}
+                            {t('verein.create.status.submittedAt')} {formatDate(registration.submittedAt, language)}
                         </p>
                     )}
 

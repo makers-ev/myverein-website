@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { CalendarDays, HeartPulse, Phone, UserRound } from 'lucide-react';
 
-import { memberErrorKey } from '@/lib/clubMembers';
+import { formatDate, memberErrorKey } from '@/lib/clubMembers';
 import { apiFetch } from '@/lib/api-client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import MemberPhotoSection from '@/components/verein/MemberPhotoSection';
@@ -37,7 +37,7 @@ const inputClass =
 
 /** Self-service Selbstauskunft: PATCH /club-members/me (birth date + emergency contact). */
 export default function ProfilTab({ me, clubId, onSaved, onPhotoExpired }: { me: OwnMembership; clubId: string; onSaved: () => void; onPhotoExpired?: () => void }) {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const [birthDate, setBirthDate] = useState(me.birthDate ?? '');
     const [contactName, setContactName] = useState(me.emergencyContactName ?? '');
     const [contactPhone, setContactPhone] = useState(me.emergencyContactPhone ?? '');
@@ -98,7 +98,7 @@ export default function ProfilTab({ me, clubId, onSaved, onPhotoExpired }: { me:
                         </div>
                         <div className="flex justify-between gap-2">
                             <dt className="text-muted-foreground">{t('verein.members.table.joined')}</dt>
-                            <dd className="font-medium text-foreground">{me.joinedAt ? new Date(`${me.joinedAt}T00:00`).toLocaleDateString('de-DE') : '—'}</dd>
+                            <dd className="font-medium text-foreground">{formatDate(me.joinedAt, language)}</dd>
                         </div>
                         {me.memberNumber ? (
                             <div className="flex justify-between gap-2">

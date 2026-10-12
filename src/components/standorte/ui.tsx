@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 import { Modal } from '@/components/Modal';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { memberErrorKey } from '@/lib/clubMembers';
+import { formatDate as formatClubDate, memberErrorKey } from '@/lib/clubMembers';
 
 export type T = (key: string, params?: Record<string, string | number>) => string;
 
@@ -22,10 +22,9 @@ export function errorMessage(err: unknown, t: T): string {
     return t(memberErrorKey(err));
 }
 
-export function formatDate(value: string | null): string {
-    if (!value) return '—';
-    // Plain `YYYY-MM-DD` would parse as UTC midnight; read it as a local day instead.
-    return new Date(/^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T00:00` : value).toLocaleDateString('de-DE');
+/** Same single date helper as everywhere (`formatDate` in `lib/clubMembers.ts`): string or Date, Europe/Berlin, UI language. */
+export function formatDate(value: string | Date | null | undefined, language = 'de'): string {
+    return formatClubDate(value, language);
 }
 
 export function SectionCard({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {

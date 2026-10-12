@@ -7,6 +7,11 @@ export default function Reveal({ children, delay = 0, className = '' }: { childr
     const ref = useRef<HTMLDivElement>(null);
     const [shown, setShown] = useState(false);
 
+    // The CSP (style-src with nonce only) blocks a server-rendered `style` attribute; setting it through the CSSOM is allowed.
+    useEffect(() => {
+        if (ref.current) ref.current.style.transitionDelay = `${delay}ms`;
+    }, [delay]);
+
     useEffect(() => {
         const el = ref.current;
         if (!el) return;
@@ -23,7 +28,6 @@ export default function Reveal({ children, delay = 0, className = '' }: { childr
     return (
         <div
             ref={ref}
-            style={{ transitionDelay: `${delay}ms` }}
             className={`transition-all duration-700 motion-reduce:transition-none ${shown ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0 motion-reduce:opacity-100 motion-reduce:translate-y-0'} ${className}`}
         >
             {children}
