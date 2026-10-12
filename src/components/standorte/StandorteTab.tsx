@@ -1,29 +1,36 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { QRCodeSVG } from 'qrcode.react';
-import { ArrowLeft, Check, Clock, Copy, ExternalLink, KeyRound, Link as LinkIcon, MapPin, Pencil, Plus, QrCode, Trash2, User, Wifi } from 'lucide-react';
+import { ArrowLeft, Camera, Check, Clock, Copy, ExternalLink, Link as LinkIcon, MapPin, Pencil, Plus, QrCode, Trash2, User, Wifi } from 'lucide-react';
 
 import { apiFetch } from '@/lib/api-client';
-import { buildWifiQrPayload } from '@/lib/wifiQr';
+import { isMediaClaimError, LOCATION_PHOTO_OUTPUT_SIZE, locationPhotoField, MEDIA_IMAGE_MAX_BYTES, mediaErrorKey, uploadMediaImage } from '@/lib/mediaUpload';
+import { useThrottledCallback } from '@/lib/useThrottledCallback';
+import { LOCATION_VISIBILITIES, visibilityOf, type LocationVisibility } from '@/lib/locationVisibility';
+import { securityOf, WIFI_SECURITIES, wifiNeedsPassword, wifiPasswordFor, wifiQrValue, type WifiSecurity } from '@/lib/wifiQr';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Modal } from '@/components/Modal';
+import MemberPhotoDialog from '@/components/verein/MemberPhotoDialog';
+import KeyManagement, { type LocationKeyHolder } from '@/components/standorte/KeyManagement';
 import {
     Chip,
     ConfirmModal,
     EmptyState,
     Field,
+    errorMessage,
     FormModal,
     SectionCard,
-    Toggle,
-    errorMessage,
     iconButtonClass,
     inputClass,
     primaryButtonClass,
-    run,
+    useRun,
     secondaryButtonClass,
     type T,
 } from '@/components/standorte/ui';
+import LoadingText from '@/components/LoadingText';
+import LoadError from '@/components/LoadError';
 
 export interface Location {
     id: string;
@@ -36,14 +43,10 @@ export interface Location {
     photoUrl: string | null;
     contactPerson: string | null;
     accessNote: string | null;
+    /** `true` when the caller lacks `locations:write`/`locations:read_access`: access note and key holders are withheld. */
+    accessRestricted?: boolean;
     createdAt: string;
     updatedAt: string;
-}
-
-interface LocationKeyHolder {
-    id: string;
-    locationId: string;
-    memberId: string;
 }
 
 interface LocationDetailData extends Location {
@@ -56,6 +59,11 @@ interface WifiNetwork {
     label: string;
     ssid: string;
     password: string;
+    /** `open | wpa | wep | wpa3` (Wave 7 B14); absent on an older backend. */
+    security?: string;
+    /** Ready-made `WIFI:` string for the QR code, built by the backend. */
+    qrPayload?: string;
+    visibility?: string;
     visibleToGuests: boolean;
     createdAt: string;
 }
@@ -66,25 +74,45 @@ interface LocationLink {
     title: string;
     url: string;
     icon: string | null;
+    visibility?: string;
     visibleToGuests: boolean;
     createdAt: string;
 }
 
-interface ClubMember {
-    id: string;
-    name: string | null;
-}
-
-function LocationPhoto({ url, className }: { url: string | null; className: string }) {
-    if (!url) {
+function LocationPhoto({ url, className, onExpired }: { url: string | null; className: string; onExpired?: () => void }) {
+    // A signed URL can have expired or the file may be gone: fall back to the placeholder instead of a broken image and
+    // ask the parent (throttled there) to refetch the resource that carried the URL.
+    const [failedUrl, setFailedUrl] = useState<string | null>(null);
+    const refetched = useRef(false);
+    if (!url || failedUrl === url) {
         return (
             <div className={`flex items-center justify-center bg-muted text-muted-foreground ${className}`}>
-                <MapPin className="h-8 w-8" />
+                <MapPin className="h-8 w-8" aria-hidden="true" />
             </div>
         );
     }
-    // eslint-disable-next-line @next/next/no-img-element -- arbitrary external URLs, next/image would need remotePatterns.
-    return <img src={url} alt="" className={`object-cover ${className}`} />;
+    return (
+        // Signed media URL on the backend origin (CSP img-src); next/image would proxy it through this server.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+            src={url}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            referrerPolicy="no-referrer"
+            onLoad={() => {
+                refetched.current = false;
+            }}
+            onError={() => {
+                setFailedUrl(url);
+                if (!refetched.current) {
+                    refetched.current = true;
+                    onExpired?.();
+                }
+            }}
+            className={`object-cover ${className}`}
+        />
+    );
 }
 
 function InfoRow({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
@@ -114,7 +142,7 @@ function CopyButton({ value, t }: { value: string; t: T }) {
 
 // --- Location create/edit ------------------------------------------------------
 
-type LocationDraft = Record<'name' | 'address' | 'openingHours' | 'contactPerson' | 'photoUrl' | 'accessNote', string>;
+type LocationDraft = Record<'name' | 'address' | 'openingHours' | 'contactPerson' | 'accessNote', string>;
 
 function LocationFormModal({ clubId, location, t, onClose, onSaved }: { clubId: string; location: Location | null; t: T; onClose: () => void; onSaved: () => void }) {
     const [draft, setDraft] = useState<LocationDraft>({
@@ -122,10 +150,27 @@ function LocationFormModal({ clubId, location, t, onClose, onSaved }: { clubId: 
         address: location?.address ?? '',
         openingHours: location?.openingHours ?? '',
         contactPerson: location?.contactPerson ?? '',
-        photoUrl: location?.photoUrl ?? '',
         accessNote: location?.accessNote ?? '',
     });
     const set = (key: keyof LocationDraft) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setDraft({ ...draft, [key]: e.target.value });
+
+    // Photo: `undefined` = unchanged, `null` = remove, otherwise a picked image. Nothing is uploaded before the modal is
+    // saved (so cancelling, replacing or removing never leaves an orphan upload); the key of a successful upload is kept
+    // so that a failed save does not upload the same image again.
+    const [photo, setPhoto] = useState<{ blob: Blob; preview: string; key?: string } | null | undefined>(undefined);
+    const [pickingPhoto, setPickingPhoto] = useState(false);
+    const previewUrl = photo ? photo.preview : null;
+    useEffect(
+        () => () => {
+            if (previewUrl) URL.revokeObjectURL(previewUrl);
+        },
+        [previewUrl],
+    );
+    const shownPhoto = photo === null ? null : (previewUrl ?? location?.photoUrl ?? null);
+
+    async function pickPhoto(jpeg: Blob) {
+        setPhoto({ blob: jpeg, preview: URL.createObjectURL(jpeg) });
+    }
 
     // Create omits empty fields, edit clears them with null.
     const empty = location ? null : undefined;
@@ -134,7 +179,6 @@ function LocationFormModal({ clubId, location, t, onClose, onSaved }: { clubId: 
         address: draft.address.trim() || empty,
         openingHours: draft.openingHours.trim() || empty,
         contactPerson: draft.contactPerson.trim() || empty,
-        photoUrl: draft.photoUrl.trim() || empty,
         accessNote: draft.accessNote.trim() || empty,
     };
 
@@ -146,16 +190,59 @@ function LocationFormModal({ clubId, location, t, onClose, onSaved }: { clubId: 
             cancelLabel={t('standorte.locations.new.cancel')}
             canSubmit={!!draft.name.trim()}
             onClose={onClose}
-            onSubmit={() =>
-                run(async () => {
+            onSubmit={async () => {
+                let key: string | null | undefined = photo === undefined ? undefined : photo === null ? null : photo.key;
+                if (photo && !photo.key) {
+                    try {
+                        key = await uploadMediaImage(clubId, photo.blob, 'location.jpg');
+                        const uploaded = key;
+                        setPhoto((cur) => (cur && cur.blob === photo.blob ? { ...cur, key: uploaded } : cur));
+                    } catch (err) {
+                        return t(mediaErrorKey(err));
+                    }
+                }
+                try {
                     await apiFetch(location ? `/locations/${location.id}?clubId=${clubId}` : `/locations?clubId=${clubId}`, {
                         method: location ? 'PATCH' : 'POST',
-                        body,
+                        body: { ...body, ...locationPhotoField(key, !!location) },
                     });
-                    onSaved();
-                })
-            }
+                } catch (err) {
+                    // Only a rejected photo key (quota, unknown/used key) is explained as a media problem.
+                    return typeof key === 'string' && isMediaClaimError(err) ? t(mediaErrorKey(err)) : errorMessage(err, t);
+                }
+                onSaved();
+                return null;
+            }}
         >
+            <div className="flex flex-wrap items-center gap-3">
+                <LocationPhoto url={shownPhoto} className="h-20 w-28 shrink-0 overflow-hidden rounded-lg" />
+                <div className="flex flex-wrap gap-2">
+                    <button type="button" onClick={() => setPickingPhoto(true)} className={secondaryButtonClass}>
+                        <Camera className="h-4 w-4" aria-hidden="true" />
+                        {shownPhoto ? t('standorte.locations.photo.change') : t('standorte.locations.photo.add')}
+                    </button>
+                    {shownPhoto && (
+                        <button type="button" onClick={() => setPhoto(null)} className={secondaryButtonClass}>
+                            <Trash2 className="h-4 w-4" aria-hidden="true" />
+                            {t('standorte.locations.photo.remove')}
+                        </button>
+                    )}
+                </div>
+                {!shownPhoto && <p className="w-full text-xs text-muted-foreground">{t('standorte.locations.photo.none')}</p>}
+            </div>
+            {pickingPhoto &&
+                createPortal(
+                <MemberPhotoDialog
+                    title={t('standorte.locations.photo.title')}
+                    hint={t('standorte.locations.photo.hint')}
+                    round={false}
+                    maxBytes={MEDIA_IMAGE_MAX_BYTES}
+                    outputSize={LOCATION_PHOTO_OUTPUT_SIZE}
+                    onClose={() => setPickingPhoto(false)}
+                    onSave={pickPhoto}
+                />,
+                document.body,
+            )}
             <Field label={t('standorte.locations.detail.name')}>
                 <input type="text" value={draft.name} onChange={set('name')} required className={inputClass} />
             </Field>
@@ -170,9 +257,6 @@ function LocationFormModal({ clubId, location, t, onClose, onSaved }: { clubId: 
                     <input type="text" value={draft.contactPerson} onChange={set('contactPerson')} className={inputClass} />
                 </Field>
             </div>
-            <Field label={t('standorte.locations.detail.photoUrl')}>
-                <input type="url" value={draft.photoUrl} onChange={set('photoUrl')} placeholder="https://…" className={inputClass} />
-            </Field>
             <Field label={t('standorte.locations.detail.accessNote')}>
                 <textarea value={draft.accessNote} onChange={set('accessNote')} rows={3} className={inputClass} />
             </Field>
@@ -198,6 +282,7 @@ function LocationGrid({
     onSelect: (id: string) => void;
 }) {
     const [showCreate, setShowCreate] = useState(false);
+    const photoExpired = useThrottledCallback(onChange);
 
     return (
         <div className="space-y-4">
@@ -220,7 +305,7 @@ function LocationGrid({
                             onClick={() => onSelect(loc.id)}
                             className="overflow-hidden rounded-xl border border-border bg-card text-left transition-colors hover:border-primary"
                         >
-                            <LocationPhoto url={loc.photoUrl} className="h-36 w-full" />
+                            <LocationPhoto url={loc.photoUrl} className="h-36 w-full" onExpired={photoExpired} />
                             <div className="space-y-1.5 p-4">
                                 <h3 className="font-semibold text-foreground">{loc.name}</h3>
                                 {loc.address && <InfoRow icon={<MapPin className="h-4 w-4" />}>{loc.address}</InfoRow>}
@@ -237,106 +322,18 @@ function LocationGrid({
     );
 }
 
-// --- Key holders -------------------------------------------------------------------
-
-function KeyHoldersSection({
-    location,
-    members,
-    clubId,
-    canWrite,
-    t,
-    onChange,
-}: {
-    location: LocationDetailData;
-    members: ClubMember[];
-    clubId: string;
-    canWrite: boolean;
-    t: T;
-    onChange: () => void;
-}) {
-    const [newMemberId, setNewMemberId] = useState('');
-    const [error, setError] = useState<string | null>(null);
-
-    const nameFor = (memberId: string) => members.find((m) => m.id === memberId)?.name ?? memberId;
-    const availableMembers = members.filter((m) => !location.keyHolders.some((kh) => kh.memberId === m.id));
-
-    async function handleAdd() {
-        if (!newMemberId) return;
-        setError(null);
-        try {
-            await apiFetch(`/locations/${location.id}/key-holders?clubId=${clubId}`, { method: 'POST', body: { memberId: newMemberId } });
-            setNewMemberId('');
-            onChange();
-        } catch (err) {
-            setError(errorMessage(err));
-        }
-    }
-
-    async function handleRemove(memberId: string) {
-        setError(null);
-        try {
-            await apiFetch(`/locations/${location.id}/key-holders/${memberId}?clubId=${clubId}`, { method: 'DELETE' });
-            onChange();
-        } catch (err) {
-            setError(errorMessage(err));
-        }
-    }
-
-    return (
-        <SectionCard title={t('standorte.keyholders.title')}>
-            {error && <p className="mb-2 text-sm text-destructive">{error}</p>}
-            {location.keyHolders.length === 0 ? (
-                <EmptyState icon={<KeyRound className="h-6 w-6" />} text={t('standorte.keyholders.empty')} />
-            ) : (
-                <ul className="flex flex-wrap gap-2">
-                    {location.keyHolders.map((kh) => (
-                        <li key={kh.id} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background py-1 pl-3 pr-1.5 text-sm text-foreground">
-                            <KeyRound className="h-3.5 w-3.5 text-muted-foreground" />
-                            {nameFor(kh.memberId)}
-                            {canWrite && (
-                                <button
-                                    onClick={() => void handleRemove(kh.memberId)}
-                                    className="rounded-full p-0.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                                    aria-label={t('standorte.keyholders.remove')}
-                                    title={t('standorte.keyholders.remove')}
-                                >
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                </button>
-                            )}
-                        </li>
-                    ))}
-                </ul>
-            )}
-            {canWrite && (
-                <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                    <select value={newMemberId} onChange={(e) => setNewMemberId(e.target.value)} className={`${inputClass} sm:flex-1`}>
-                        <option value="">{t('standorte.keyholders.select')}</option>
-                        {availableMembers.map((m) => (
-                            <option key={m.id} value={m.id}>
-                                {m.name ?? m.id}
-                            </option>
-                        ))}
-                    </select>
-                    <button onClick={() => void handleAdd()} disabled={!newMemberId} className={primaryButtonClass}>
-                        <Plus className="h-4 w-4" />
-                        {t('standorte.keyholders.add')}
-                    </button>
-                </div>
-            )}
-        </SectionCard>
-    );
-}
-
 // --- WiFi ---------------------------------------------------------------------------
 
 function WifiQrModal({ network, t, onClose }: { network: WifiNetwork; t: T; onClose: () => void }) {
+    const security = securityOf(network);
     return (
         <Modal open onClose={onClose} title={network.label}>
             <div className="flex flex-col items-center gap-4">
-                {/* White quiet zone keeps the code scannable in dark mode. */}
-                <div className="rounded-xl bg-white p-4">
-                    <QRCodeSVG value={buildWifiQrPayload(network.ssid, network.password)} size={240} marginSize={0} />
+                {/* White quiet zone keeps the code scannable in dark mode. The code is drawn in the browser, the payload goes nowhere else. */}
+                <div className="rounded-xl bg-white p-4" role="img" aria-label={t('standorte.wifi.qr.alt', { name: network.ssid })}>
+                    <QRCodeSVG value={wifiQrValue(network)} size={240} marginSize={0} />
                 </div>
+                <Chip tone={security === 'open' ? 'warning' : 'primary'}>{t(`standorte.wifi.security.${security}`)}</Chip>
                 <p className="text-center text-xs text-muted-foreground">{t('standorte.wifi.qr.hint')}</p>
                 <dl className="w-full space-y-2 text-sm">
                     <div className="flex items-center justify-between gap-2 rounded-lg bg-muted/50 px-3 py-2">
@@ -346,7 +343,7 @@ function WifiQrModal({ network, t, onClose }: { network: WifiNetwork; t: T; onCl
                             <CopyButton value={network.ssid} t={t} />
                         </dd>
                     </div>
-                    {network.password && (
+                    {wifiNeedsPassword(security) && network.password && (
                         <div className="flex items-center justify-between gap-2 rounded-lg bg-muted/50 px-3 py-2">
                             <dt className="text-muted-foreground">{t('standorte.wifi.password')}</dt>
                             <dd className="flex min-w-0 items-center gap-1 font-mono text-foreground">
@@ -358,6 +355,21 @@ function WifiQrModal({ network, t, onClose }: { network: WifiNetwork; t: T; onCl
                 </dl>
             </div>
         </Modal>
+    );
+}
+
+function VisibilityField({ value, onChange, t }: { value: LocationVisibility; onChange: (value: LocationVisibility) => void; t: T }) {
+    return (
+        <Field label={t('standorte.visibility.label')}>
+            <select value={value} onChange={(e) => onChange(e.target.value as LocationVisibility)} className={inputClass}>
+                {LOCATION_VISIBILITIES.map((v) => (
+                    <option key={v} value={v}>
+                        {t(`standorte.visibility.${v}`)}
+                    </option>
+                ))}
+            </select>
+            <span className="mt-1 block text-xs font-normal text-muted-foreground">{t(`standorte.visibility.${value}.hint`)}</span>
+        </Field>
     );
 }
 
@@ -376,10 +388,13 @@ function WifiFormModal({
     onClose: () => void;
     onSaved: () => Promise<void>;
 }) {
+    const run = useRun();
     const [label, setLabel] = useState(network?.label ?? '');
     const [ssid, setSsid] = useState(network?.ssid ?? '');
+    const [security, setSecurity] = useState<WifiSecurity>(network ? securityOf(network) : 'wpa');
     const [password, setPassword] = useState(network?.password ?? '');
-    const [visibleToGuests, setVisibleToGuests] = useState(network?.visibleToGuests ?? false);
+    const needsPassword = wifiNeedsPassword(security);
+    const [visibility, setVisibility] = useState<LocationVisibility>(network ? visibilityOf(network) : 'mitglied');
 
     return (
         <FormModal
@@ -387,13 +402,13 @@ function WifiFormModal({
             title={network ? t('standorte.wifi.edit.title') : t('standorte.wifi.new.title')}
             submitLabel={network ? t('standorte.wifi.save') : t('standorte.wifi.submit')}
             cancelLabel={t('standorte.wifi.cancel')}
-            canSubmit={!!label.trim() && !!ssid.trim()}
+            canSubmit={!!label.trim() && !!ssid.trim() && (!needsPassword || !!password.trim())}
             onClose={onClose}
             onSubmit={() =>
                 run(async () => {
                     await apiFetch(network ? `/locations/${locationId}/wifi/${network.id}?clubId=${clubId}` : `/locations/${locationId}/wifi?clubId=${clubId}`, {
                         method: network ? 'PATCH' : 'POST',
-                        body: { label: label.trim(), ssid: ssid.trim(), password: password.trim(), visibleToGuests },
+                        body: { label: label.trim(), ssid: ssid.trim(), security, password: wifiPasswordFor(security, password), visibility },
                     });
                     await onSaved();
                 })
@@ -406,17 +421,31 @@ function WifiFormModal({
                 <Field label={t('standorte.wifi.ssid')}>
                     <input type="text" value={ssid} onChange={(e) => setSsid(e.target.value)} required className={inputClass} />
                 </Field>
-                <Field label={t('standorte.wifi.password')}>
-                    <input type="text" value={password} onChange={(e) => setPassword(e.target.value)} className={`${inputClass} font-mono`} />
+                <Field label={t('standorte.wifi.security')}>
+                    <select value={security} onChange={(e) => setSecurity(e.target.value as WifiSecurity)} className={inputClass}>
+                        {WIFI_SECURITIES.map((s) => (
+                            <option key={s} value={s}>
+                                {t(`standorte.wifi.security.${s}`)}
+                            </option>
+                        ))}
+                    </select>
                 </Field>
             </div>
-            <Toggle checked={visibleToGuests} onChange={setVisibleToGuests} label={t('standorte.wifi.visibleToGuests')} />
+            {needsPassword ? (
+                <Field label={t('standorte.wifi.password')}>
+                    <input type="text" value={password} onChange={(e) => setPassword(e.target.value)} required className={`${inputClass} font-mono`} />
+                </Field>
+            ) : (
+                <p className="rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">{t('standorte.wifi.security.open.hint')}</p>
+            )}
+            <VisibilityField value={visibility} onChange={setVisibility} t={t} />
             <p className="text-xs text-muted-foreground">{t('standorte.wifi.hint')}</p>
         </FormModal>
     );
 }
 
 function WifiSection({ locationId, clubId, canWrite, t }: { locationId: string; clubId: string; canWrite: boolean; t: T }) {
+    const run = useRun();
     const [networks, setNetworks] = useState<WifiNetwork[] | null>(null);
     // undefined = closed, null = create, network = edit
     const [editing, setEditing] = useState<WifiNetwork | null | undefined>(undefined);
@@ -447,7 +476,7 @@ function WifiSection({ locationId, clubId, canWrite, t }: { locationId: string; 
             }
         >
             {networks === null ? (
-                <p className="text-sm text-muted-foreground">…</p>
+                <LoadingText />
             ) : networks.length === 0 ? (
                 <EmptyState icon={<Wifi className="h-6 w-6" />} text={t('standorte.wifi.empty')} />
             ) : (
@@ -460,11 +489,10 @@ function WifiSection({ locationId, clubId, canWrite, t }: { locationId: string; 
                                         <Wifi className="h-4 w-4 shrink-0 text-primary" />
                                         <span className="truncate">{net.label}</span>
                                     </p>
-                                    {canWrite && net.visibleToGuests && (
-                                        <div className="mt-1">
-                                            <Chip tone="primary">{t('standorte.wifi.visibleToGuests')}</Chip>
-                                        </div>
-                                    )}
+                                    <div className="mt-1 flex flex-wrap gap-1">
+                                        <Chip tone={securityOf(net) === 'open' ? 'warning' : 'muted'}>{t(`standorte.wifi.security.${securityOf(net)}`)}</Chip>
+                                        {canWrite && <Chip tone="primary">{t(`standorte.visibility.${visibilityOf(net)}`)}</Chip>}
+                                    </div>
                                 </div>
                                 {canWrite && (
                                     <div className="flex shrink-0">
@@ -482,15 +510,21 @@ function WifiSection({ locationId, clubId, canWrite, t }: { locationId: string; 
                                     <dt className="text-muted-foreground">{t('standorte.wifi.ssid')}</dt>
                                     <dd className="truncate text-foreground">{net.ssid}</dd>
                                 </div>
-                                <div className="flex items-center justify-between gap-2">
-                                    <dt className="text-muted-foreground">{t('standorte.wifi.password')}</dt>
-                                    <dd className="flex min-w-0 items-center gap-1 font-mono text-foreground">
-                                        <span className="truncate">{net.password}</span>
-                                        <CopyButton value={net.password} t={t} />
-                                    </dd>
-                                </div>
+                                {wifiNeedsPassword(securityOf(net)) && (
+                                    <div className="flex items-center justify-between gap-2">
+                                        <dt className="text-muted-foreground">{t('standorte.wifi.password')}</dt>
+                                        <dd className="flex min-w-0 items-center gap-1 font-mono text-foreground">
+                                            <span className="truncate">{net.password}</span>
+                                            <CopyButton value={net.password} t={t} />
+                                        </dd>
+                                    </div>
+                                )}
                             </dl>
-                            <button onClick={() => setQrFor(net)} className={`${secondaryButtonClass} mt-3 w-full justify-center`}>
+                            <button
+                                onClick={() => setQrFor(net)}
+                                disabled={wifiNeedsPassword(securityOf(net)) && !net.password}
+                                className={`${secondaryButtonClass} mt-3 w-full justify-center`}
+                            >
                                 <QrCode className="h-4 w-4" />
                                 {t('standorte.wifi.qr')}
                             </button>
@@ -538,10 +572,11 @@ function LinkFormModal({
     onClose: () => void;
     onSaved: () => Promise<void>;
 }) {
+    const run = useRun();
     const [title, setTitle] = useState(link?.title ?? '');
     const [url, setUrl] = useState(link?.url ?? '');
     const [icon, setIcon] = useState(link?.icon ?? '');
-    const [visibleToGuests, setVisibleToGuests] = useState(link?.visibleToGuests ?? false);
+    const [visibility, setVisibility] = useState<LocationVisibility>(link ? visibilityOf(link) : 'mitglied');
 
     return (
         <FormModal
@@ -555,7 +590,7 @@ function LinkFormModal({
                 run(async () => {
                     await apiFetch(link ? `/locations/${locationId}/links/${link.id}?clubId=${clubId}` : `/locations/${locationId}/links?clubId=${clubId}`, {
                         method: link ? 'PATCH' : 'POST',
-                        body: { title: title.trim(), url: url.trim(), icon: icon.trim() || (link ? null : undefined), visibleToGuests },
+                        body: { title: title.trim(), url: url.trim(), icon: icon.trim() || (link ? null : undefined), visibility },
                     });
                     await onSaved();
                 })
@@ -570,12 +605,13 @@ function LinkFormModal({
             <Field label={t('standorte.links.link.icon')}>
                 <input type="text" value={icon} onChange={(e) => setIcon(e.target.value)} className={inputClass} />
             </Field>
-            <Toggle checked={visibleToGuests} onChange={setVisibleToGuests} label={t('standorte.links.visibleToGuests')} />
+            <VisibilityField value={visibility} onChange={setVisibility} t={t} />
         </FormModal>
     );
 }
 
 function LinksSection({ locationId, clubId, canWrite, t }: { locationId: string; clubId: string; canWrite: boolean; t: T }) {
+    const run = useRun();
     const [links, setLinks] = useState<LocationLink[] | null>(null);
     // undefined = closed, null = create, link = edit
     const [editing, setEditing] = useState<LocationLink | null | undefined>(undefined);
@@ -605,7 +641,7 @@ function LinksSection({ locationId, clubId, canWrite, t }: { locationId: string;
             }
         >
             {links === null ? (
-                <p className="text-sm text-muted-foreground">…</p>
+                <LoadingText />
             ) : links.length === 0 ? (
                 <EmptyState icon={<LinkIcon className="h-6 w-6" />} text={t('standorte.links.empty')} />
             ) : (
@@ -620,7 +656,7 @@ function LinksSection({ locationId, clubId, canWrite, t }: { locationId: string;
                                 </span>
                             </a>
                             <div className="flex shrink-0 items-center gap-1">
-                                {canWrite && link.visibleToGuests && <Chip tone="primary">{t('standorte.links.visibleToGuests')}</Chip>}
+                                {canWrite && <Chip tone="primary">{t(`standorte.visibility.${visibilityOf(link)}`)}</Chip>}
                                 {canWrite && (
                                     <>
                                         <button onClick={() => setEditing(link)} className={iconButtonClass} aria-label={t('standorte.links.edit')} title={t('standorte.links.edit')}>
@@ -663,7 +699,6 @@ function LinksSection({ locationId, clubId, canWrite, t }: { locationId: string;
 function LocationDetail({
     clubId,
     locationId,
-    members,
     canWrite,
     t,
     onBack,
@@ -671,19 +706,26 @@ function LocationDetail({
 }: {
     clubId: string;
     locationId: string;
-    members: ClubMember[];
     canWrite: boolean;
     t: T;
     onBack: () => void;
     onLocationsChanged: () => void;
 }) {
+    const run = useRun();
     const [location, setLocation] = useState<LocationDetailData | null>(null);
     const [editing, setEditing] = useState(false);
     const [deleting, setDeleting] = useState(false);
 
+    const [loadFailed, setLoadFailed] = useState(false);
+
     async function load() {
-        const { data } = await apiFetch<{ data: LocationDetailData }>(`/locations/${locationId}?clubId=${clubId}`);
-        setLocation(data);
+        try {
+            const { data } = await apiFetch<{ data: LocationDetailData }>(`/locations/${locationId}?clubId=${clubId}`);
+            setLocation(data);
+            setLoadFailed(false);
+        } catch {
+            setLoadFailed(true);
+        }
     }
 
     useEffect(() => {
@@ -691,8 +733,18 @@ function LocationDetail({
         void load();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [locationId]);
+    const photoExpired = useThrottledCallback(load);
 
-    if (!location) return <p className="text-sm text-muted-foreground">…</p>;
+    if (!location)
+        return (
+            <div className="space-y-4">
+                <button type="button" onClick={onBack} className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+                    <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                    {t('standorte.locations.back')}
+                </button>
+                {loadFailed ? <LoadError onRetry={() => void load()} /> : <LoadingText />}
+            </div>
+        );
 
     return (
         <div className="space-y-4">
@@ -702,7 +754,7 @@ function LocationDetail({
             </button>
 
             <div className="overflow-hidden rounded-xl border border-border bg-card">
-                {location.photoUrl && <LocationPhoto url={location.photoUrl} className="h-48 w-full sm:h-64" />}
+                {location.photoUrl && <LocationPhoto url={location.photoUrl} className="h-48 w-full sm:h-64" onExpired={photoExpired} />}
                 <div className="space-y-3 p-4">
                     <div className="flex flex-wrap items-start justify-between gap-2">
                         <h2 className="text-xl font-bold text-foreground">{location.name}</h2>
@@ -727,6 +779,9 @@ function LocationDetail({
                         {location.openingHours && <InfoRow icon={<Clock className="h-4 w-4" />}>{location.openingHours}</InfoRow>}
                         {location.contactPerson && <InfoRow icon={<User className="h-4 w-4" />}>{location.contactPerson}</InfoRow>}
                     </div>
+                    {location.accessRestricted && !location.accessNote && (
+                        <p className="rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">{t('standorte.locations.accessRestricted')}</p>
+                    )}
                     {location.accessNote && (
                         <div className="rounded-lg bg-muted/50 p-3">
                             <p className="text-xs font-medium text-muted-foreground">{t('standorte.locations.detail.accessNote')}</p>
@@ -737,7 +792,7 @@ function LocationDetail({
             </div>
 
             <WifiSection locationId={locationId} clubId={clubId} canWrite={canWrite} t={t} />
-            <KeyHoldersSection location={location} members={members} clubId={clubId} canWrite={canWrite} t={t} onChange={() => void load()} />
+            {!location.accessRestricted && <KeyManagement key={location.id} location={location} clubId={clubId} canWrite={canWrite} t={t} onChange={() => void load()} />}
             <LinksSection locationId={locationId} clubId={clubId} canWrite={canWrite} t={t} />
 
             {editing && (
@@ -785,18 +840,12 @@ export default function StandorteTab({
     onLocationsChanged: () => void;
 }) {
     const { t } = useLanguage();
-    const [members, setMembers] = useState<ClubMember[]>([]);
     const [selectedId, setSelectedId] = useState<string | null>(null);
-
-    useEffect(() => {
-        void apiFetch<{ data: ClubMember[] }>(`/club-members?clubId=${clubId}`).then(({ data }) => setMembers(data));
-    }, [clubId]);
 
     return selectedId ? (
         <LocationDetail
             clubId={clubId}
             locationId={selectedId}
-            members={members}
             canWrite={canWrite}
             t={t}
             onBack={() => setSelectedId(null)}

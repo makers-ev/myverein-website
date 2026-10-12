@@ -5,8 +5,15 @@
 export const LEGAL_FORMS = ['e_v', 'nicht_eingetragen', 'sonstige'] as const;
 export type LegalForm = (typeof LEGAL_FORMS)[number];
 
-export const CLAIMED_ROLES = ['vorsitz', 'stellv_vorsitz', 'schriftfuehrer'] as const;
+// Mirrors the backend's CLAIMABLE_ROLES. `schriftfuehrer` is deliberately absent: approving needs members:write AND
+// roles:write, which a Schriftfuehrer:in does not have (Wave 7 B16) -- the board role is assigned after the approval.
+export const CLAIMED_ROLES = ['vorsitz', 'stellv_vorsitz'] as const;
 export type ClaimedRole = (typeof CLAIMED_ROLES)[number];
+
+/** Stored drafts may still carry a role that is no longer claimable: fall back to `vorsitz`. */
+export function sanitizeClaimedRole(value: string | null | undefined): ClaimedRole {
+    return (CLAIMED_ROLES as readonly string[]).includes(value ?? '') ? (value as ClaimedRole) : 'vorsitz';
+}
 
 export const DOCUMENT_KINDS = ['registerauszug', 'satzung', 'freistellungsbescheid', 'gruendungsprotokoll', 'sonstiges'] as const;
 export type DocumentKind = (typeof DOCUMENT_KINDS)[number];

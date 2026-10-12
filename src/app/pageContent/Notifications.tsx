@@ -5,6 +5,7 @@ import { Mail, MailOpen, Trash2 } from 'lucide-react';
 
 import { authClient, backendUrl } from '@/lib/auth-client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import LoadingText from '@/components/LoadingText';
 
 interface NotificationItem {
     id: string;
@@ -127,7 +128,7 @@ export default function NotificationsPageContent() {
 
             <div className="mt-4 space-y-3">
                 {items === null ? (
-                    <p className="text-sm text-muted-foreground">…</p>
+                    <LoadingText />
                 ) : items.length === 0 ? (
                     <p className="text-sm text-muted-foreground">{t(`notifications.empty.${tab}`)}</p>
                 ) : (

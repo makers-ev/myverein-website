@@ -1,3 +1,5 @@
+import { memberErrorKey } from '@/lib/clubMembers';
+
 export interface Department {
     id: string;
     clubId: string;
@@ -64,6 +66,7 @@ export function formatTimeRange(ev: CalendarEvent, language: string): string {
     return ev.endsAt ? `${formatTime(ev.startsAt, language)} – ${formatTime(ev.endsAt, language)}` : formatTime(ev.startsAt, language);
 }
 
-export function errorMessage(err: unknown): string {
-    return err instanceof Error ? err.message : 'Request failed';
+/** Plain-language (translated) text for a failed API call; never the raw English server message. */
+export function errorMessage(err: unknown, t: (key: string) => string): string {
+    return t(memberErrorKey(err));
 }

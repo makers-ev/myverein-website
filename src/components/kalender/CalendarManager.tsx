@@ -17,6 +17,7 @@ import {
     primaryBtn,
     secondaryBtn,
 } from './calendarTypes';
+import LoadingText from '@/components/LoadingText';
 
 const CLUB_ROLE_TYPES = [
     'vorsitz',
@@ -71,7 +72,7 @@ function CalendarFormModal({
             }
             onSaved();
         } catch (err) {
-            setError(errorMessage(err));
+            setError(errorMessage(err, t));
         } finally {
             setSubmitting(false);
         }
@@ -152,7 +153,7 @@ function VisibilityModal({
             const { data } = await apiFetch<{ data: CalendarVisibility[] }>(`${baseUrl}?clubId=${clubId}`);
             setGrants(data);
         } catch (err) {
-            setError(errorMessage(err));
+            setError(errorMessage(err, t));
         }
     }
 
@@ -168,7 +169,7 @@ function VisibilityModal({
             await action();
             await load();
         } catch (err) {
-            setError(errorMessage(err));
+            setError(errorMessage(err, t));
         }
     }
 
@@ -185,7 +186,7 @@ function VisibilityModal({
                 <div>
                     <p className={labelClass}>{t('kalender.calendars.visibility.current')}</p>
                     {grants === null ? (
-                        <p className="text-sm text-muted-foreground">…</p>
+                        <LoadingText />
                     ) : grants.length === 0 ? (
                         <p className="rounded-lg bg-muted/50 px-3 py-2 text-sm text-muted-foreground">{t('kalender.calendars.visibility.everyone')}</p>
                     ) : (
@@ -297,7 +298,7 @@ export default function CalendarManager({
             await apiFetch(`/calendars/${cal.id}?clubId=${clubId}`, { method: 'DELETE' });
             onChange();
         } catch (err) {
-            setError(errorMessage(err));
+            setError(errorMessage(err, t));
         }
     }
 
@@ -308,7 +309,7 @@ export default function CalendarManager({
 
     return (
         <section className="rounded-xl border border-border bg-card p-4">
-            <div className="mb-3 flex items-center justify-between gap-2">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-sm font-bold text-foreground">{t('kalender.calendars.title')}</h2>
                 <button type="button" onClick={() => setModal({ kind: 'create' })} className={`${secondaryBtn} inline-flex items-center gap-1.5 !px-3 !py-1.5`}>
                     <Plus className="h-4 w-4" aria-hidden />
