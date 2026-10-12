@@ -10,6 +10,8 @@ import { ApiError, apiFetch } from '@/lib/api-client';
 import { authClient } from '@/lib/auth-client';
 import { formatDate, memberErrorKey } from '@/lib/clubMembers';
 import {
+    acceptedNoticeKey,
+    classifyAcceptError,
     clearInviteToken,
     type InviteAccepted,
     type InvitePreview,
@@ -82,7 +84,7 @@ export default function InvitationContent() {
     // Outcome of the preview request; everything before that is derived below.
     const [result, setResult] = useState<View | null>(null);
     const [accepting, setAccepting] = useState(false);
-    const [acceptError, setAcceptError] = useState<string | null>(null);
+    const [acceptError, setAcceptError] = useState<{ text: string; conflictKeys: string[]; retry: boolean } | null>(null);
     const [reload, setReload] = useState(0);
 
     useEffect(() => {
@@ -122,7 +124,7 @@ export default function InvitationContent() {
     useEffect(() => {
         if (!ready || token === null || !signedIn) return;
         let cancelled = false;
-        apiFetch<{ data: InvitePreview }>(`/club-members/invites/preview?token=${encodeURIComponent(token)}`)
+        apiFetch<{ data: InvitePreview }>('/club-members/invites/preview', { method: 'POST', body: { token } })
             .then((res) => {
                 if (!cancelled) setResult({ kind: 'preview', preview: res.data });
             })
@@ -157,15 +159,18 @@ export default function InvitationContent() {
         try {
             const res = await apiFetch<{ data: InviteAccepted }>('/club-members/invites/accept', { method: 'POST', body: { token } });
             clearInviteToken(inviteStores());
+            // The kept member row can differ from the one the page knew (merge): re-read the own membership. Best effort,
+            // the account is linked either way.
+            if (res.data.clubId) await apiFetch(`/club-members/me?clubId=${encodeURIComponent(res.data.clubId)}`).catch(() => undefined);
             setResult({ kind: 'done', accepted: res.data });
         } catch (err) {
-            if (err instanceof ApiError && err.status === 404) {
+            const failure = classifyAcceptError(err, memberErrorKey);
+            if (failure.kind === 'invalid') {
                 clearInviteToken(inviteStores());
                 setResult({ kind: 'invalid' });
-            } else if (err instanceof ApiError && err.status === 403 && !(err.details as { code?: unknown } | undefined)?.code) {
-                setAcceptError(t('verein.invite.err.emailMismatch'));
             } else {
-                setAcceptError(t(memberErrorKey(err)));
+                // The token stays on purpose: after merge_conflict the invitation is still valid.
+                setAcceptError({ text: t(failure.textKey), conflictKeys: failure.conflictKeys, retry: failure.retry });
             }
         } finally {
             setAccepting(false);
@@ -239,7 +244,7 @@ export default function InvitationContent() {
             return (
                 <Shell status="ok">
                     <h1 className="mb-2 text-2xl font-bold text-card-foreground">{t('verein.invite.done.title')}</h1>
-                    <p className="mb-6 text-sm text-muted-foreground">{t('verein.invite.done.body', { club: view.accepted.clubName ?? '—' })}</p>
+                    <p className="mb-6 text-sm text-muted-foreground">{t(acceptedNoticeKey(view.accepted), { club: view.accepted.clubName ?? '—' })}</p>
                     <Link href="/verein" className={buttonClass}>
                         {t('verein.invite.toClub')}
                     </Link>
@@ -288,9 +293,24 @@ export default function InvitationContent() {
                         </div>
                     )}
                     {acceptError && (
-                        <p role="alert" className="mt-4 text-sm text-destructive">
-                            {acceptError}
-                        </p>
+                        <div role="alert" className="mt-4 w-full space-y-2 text-left text-sm">
+                            <p className="text-destructive">{acceptError.text}</p>
+                            {acceptError.conflictKeys.length > 0 && (
+                                <div className="text-muted-foreground">
+                                    <p>{t('verein.invite.conflict.intro')}</p>
+                                    <ul className="mt-1 list-disc space-y-0.5 pl-5">
+                                        {acceptError.conflictKeys.map((key) => (
+                                            <li key={key}>{t(key)}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+                            {acceptError.retry && (
+                                <button type="button" onClick={() => void accept()} disabled={accepting} className={secondaryClass}>
+                                    {t('verein.invite.retryAccept')}
+                                </button>
+                            )}
+                        </div>
                     )}
                 </Shell>
             );

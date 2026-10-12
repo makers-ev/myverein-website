@@ -156,6 +156,53 @@ export interface InviteAccepted {
     clubName: string | null;
     clubMemberId: string;
     memberId: string;
+    /** The account's own untouched member record was merged into the invited one (`clubMemberId` = the kept row). */
+    merged?: boolean;
+}
+
+/** Translation key of the success text of an accepted invitation (merged accounts get the merge notice). */
+export function acceptedNoticeKey(accepted: Pick<InviteAccepted, 'merged'>): 'verein.invite.done.merged' | 'verein.invite.done.body' {
+    return accepted.merged === true ? 'verein.invite.done.merged' : 'verein.invite.done.body';
+}
+
+/** Kinds of data that block an automatic merge (`details.conflicts[]` of a 409 `merge_conflict`). */
+export const MERGE_CONFLICT_KINDS = ['member_number', 'departments', 'photo', 'status_history', 'exit_requests', 'custom_fields', 'guest_account'] as const;
+export type MergeConflictKind = (typeof MERGE_CONFLICT_KINDS)[number];
+
+/** The known conflict kinds of a 409 `merge_conflict` (unknown kinds are dropped, duplicates removed); `null` for any other error. */
+export function mergeConflictKinds(err: unknown): MergeConflictKind[] | null {
+    if (!(err instanceof ApiError) || err.status !== 409 || errorDetailsCode(err) !== 'merge_conflict') return null;
+    const raw = (err.details as { conflicts?: unknown }).conflicts;
+    const list = Array.isArray(raw) ? raw : [];
+    return MERGE_CONFLICT_KINDS.filter((kind) => list.includes(kind));
+}
+
+export function mergeConflictKindKey(kind: MergeConflictKind): string {
+    return `verein.invite.conflict.${kind}`;
+}
+
+/** A 409 `merge_busy` is transient (someone edits the record right now): offer "Erneut versuchen". */
+export function isMergeBusy(err: unknown): boolean {
+    return err instanceof ApiError && err.status === 409 && errorDetailsCode(err) === 'merge_busy';
+}
+
+/** Outcome of a failed accept: text, plain-language conflict explanations and whether a retry makes sense. */
+export type AcceptFailure =
+    | { kind: 'invalid' }
+    | { kind: 'message'; textKey: string; conflictKeys: string[]; retry: boolean };
+
+export function classifyAcceptError(err: unknown, fallback: (e: unknown) => string): AcceptFailure {
+    if (err instanceof ApiError && err.status === 404) return { kind: 'invalid' };
+    if (err instanceof ApiError && err.status === 403 && !errorDetailsCode(err)) {
+        return { kind: 'message', textKey: 'verein.invite.err.emailMismatch', conflictKeys: [], retry: false };
+    }
+    const kinds = mergeConflictKinds(err);
+    return {
+        kind: 'message',
+        textKey: fallback(err),
+        conflictKeys: kinds ? kinds.map(mergeConflictKindKey) : [],
+        retry: isMergeBusy(err),
+    };
 }
 
 export function isValidEmail(value: string): boolean {

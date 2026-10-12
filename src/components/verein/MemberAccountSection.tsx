@@ -6,7 +6,7 @@ import { Link2, Link2Off, Mail } from 'lucide-react';
 import { Modal } from '@/components/Modal';
 import { Chip, errorMessage } from '@/components/standorte/ui';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { apiFetch } from '@/lib/api-client';
+import { ApiError, apiFetch } from '@/lib/api-client';
 import { type ClubMember, formatDate, inputClass, isLeftStatus, primaryButtonClass, secondaryButtonClass } from '@/lib/clubMembers';
 import { isValidEmail, type MemberInvite, unlinkBlockers, unlinkErrorKey } from '@/lib/memberLifecycle';
 import { memberErrorKey } from '@/lib/clubMembers';
@@ -56,6 +56,33 @@ export default function MemberAccountSection({
         void loadInvite();
     }, [canInvite, loadInvite]);
 
+    const [resending, setResending] = useState(false);
+    async function resend() {
+        if (resending) return;
+        setResending(true);
+        setNotice(null);
+        try {
+            const res = await apiFetch<{ data: MemberInvite }>(`/club-members/${member.id}/invite/resend?clubId=${clubId}`, { method: 'POST' });
+            setInvite(res.data);
+            setNotice(
+                res.data.emailSent === false
+                    ? { ok: false, text: t('verein.account.invite.resentNoMail', { email: res.data.email }) }
+                    : { ok: true, text: t('verein.account.invite.resent', { email: res.data.email }) },
+            );
+        } catch (err) {
+            if (err instanceof ApiError && err.status === 404) {
+                setNotice({ ok: false, text: t('verein.account.invite.resendGone') });
+                void loadInvite();
+            } else if (err instanceof ApiError && err.status === 429) {
+                setNotice({ ok: false, text: t('verein.account.invite.resendRate') });
+            } else {
+                setNotice({ ok: false, text: errorMessage(err, t) });
+            }
+        } finally {
+            setResending(false);
+        }
+    }
+
     return (
         <section className="mb-4 rounded-lg border border-border p-3" aria-labelledby={`account-${member.id}`}>
             <h3 id={`account-${member.id}`} className="flex items-center gap-1.5 text-sm font-bold text-foreground">
@@ -100,6 +127,12 @@ export default function MemberAccountSection({
                             <Mail className="h-4 w-4" aria-hidden="true" />
                             {invite ? t('verein.account.invite.resend') : t('verein.account.invite')}
                         </button>
+                        {invite && (invite.status === 'pending' || invite.status === 'expired') && (
+                            <button type="button" onClick={() => void resend()} disabled={resending} className={secondaryButtonClass}>
+                                <Mail className="h-4 w-4" aria-hidden="true" />
+                                {resending ? t('verein.account.invite.resending') : t('verein.account.invite.resendNow')}
+                            </button>
+                        )}
                         {invite && (
                             <button type="button" onClick={() => setDialog('revoke')} className={secondaryButtonClass}>
                                 {t('verein.account.invite.revoke')}
@@ -227,6 +260,7 @@ function InviteDialog({
                     />
                 </label>
                 <p className="mt-2 text-xs text-muted-foreground">{t('verein.account.invite.emailHint')}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{t('verein.account.invite.notifyHint')}</p>
                 {error && (
                     <p role="alert" className="mt-3 text-sm text-destructive">
                         {error}

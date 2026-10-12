@@ -211,8 +211,12 @@ export function memberErrorKey(err: unknown): string {
             return 'verein.err.exitPending';
         case 'exit_already_scheduled':
             return 'verein.err.exitScheduled';
-        case 'merge_not_supported':
-            return 'verein.err.mergeNotSupported';
+        case 'merge_conflict':
+            return 'verein.err.mergeConflict';
+        case 'merge_busy':
+            return 'verein.err.mergeBusy';
+        case 'already_member':
+            return 'verein.err.alreadyMember';
         case 'account_has_open_items':
             return 'verein.err.accountOpenItems';
         case 'export_too_large':
