@@ -13,6 +13,7 @@ import {
     acceptedNoticeKey,
     classifyAcceptError,
     clearInviteToken,
+    INVALID_INVITE_LINK,
     type InviteAccepted,
     type InvitePreview,
     resolveInviteToken,
@@ -52,7 +53,7 @@ type View =
 
 function Shell({ children, status }: { children: React.ReactNode; status?: 'ok' | 'warn' }) {
     return (
-        <main className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+        <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
             <div className="w-full max-w-md overflow-hidden rounded-2xl bg-card p-8 shadow-xl">
                 <div className="flex flex-col items-center text-center">
                     {status === 'ok' && (
@@ -68,7 +69,7 @@ function Shell({ children, status }: { children: React.ReactNode; status?: 'ok' 
                     {children}
                 </div>
             </div>
-        </main>
+        </div>
     );
 }
 
@@ -102,6 +103,8 @@ export default function InvitationContent() {
     useEffect(() => {
         const found = resolveInviteToken(window.location.search, inviteStores());
         if (window.location.search) window.history.replaceState(null, '', RETURN_PATH);
+        // A broken link must not leave an older stashed invitation behind for the login round trip.
+        if (found === INVALID_INVITE_LINK) clearInviteToken(inviteStores());
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setToken(found);
     }, []);
@@ -112,7 +115,7 @@ export default function InvitationContent() {
     const sessionSignedIn = !!session;
     const ready = token !== undefined && !isPending;
     useEffect(() => {
-        if (!ready || token === null || sessionSignedIn) return;
+        if (!ready || token === null || token === INVALID_INVITE_LINK || sessionSignedIn) return;
         let cancelled = false;
         authClient
             .getSession()
@@ -134,7 +137,7 @@ export default function InvitationContent() {
     const accountEmail = session?.user.email ?? (fallback && fallback !== 'none' ? fallback.email : '');
 
     useEffect(() => {
-        if (!ready || token === null || !signedIn) return;
+        if (!ready || token === null || token === INVALID_INVITE_LINK || !signedIn) return;
         let cancelled = false;
         apiFetch<{ data: InvitePreview }>('/club-members/invites/preview', { method: 'POST', body: { token } })
             .then((res) => {
@@ -163,6 +166,7 @@ export default function InvitationContent() {
     let view: View;
     if (!ready) view = { kind: 'init' };
     else if (token === null) view = { kind: 'noToken' };
+    else if (token === INVALID_INVITE_LINK) view = { kind: 'invalid' };
     else if (!signedIn) view = fallback === 'none' ? { kind: 'loginNeeded' } : { kind: 'redirecting' };
     else view = result ?? { kind: 'loading' };
 

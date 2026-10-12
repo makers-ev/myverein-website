@@ -284,6 +284,9 @@ function readStashed(store: TokenStore, now: number): string | null {
     return null;
 }
 
+/** Returned by `resolveInviteToken` for a link with a malformed `?token=` (real tokens are at least 16 characters). */
+export const INVALID_INVITE_LINK = 'invalid-link';
+
 /**
  * Token of the invitation link: the query string wins (and is stashed with a 24 h expiry in every given store, so it
  * survives the login round trip and a verification e-mail opened in another tab), else the first valid stashed one.
@@ -291,6 +294,8 @@ function readStashed(store: TokenStore, now: number): string | null {
  */
 export function resolveInviteToken(search: string, stores: TokenStore[], now: number = Date.now()): string | null {
     const fromQuery = new URLSearchParams(search).get('token');
+    // A link that carries a (broken) token must not silently fall back to an older stashed invitation.
+    if (fromQuery && !isPlausibleInviteToken(fromQuery)) return INVALID_INVITE_LINK;
     if (isPlausibleInviteToken(fromQuery)) {
         const value = JSON.stringify({ token: fromQuery, exp: now + INVITE_TOKEN_TTL_MS });
         for (const store of stores) safely(() => store.setItem(INVITE_TOKEN_STORAGE_KEY, value));

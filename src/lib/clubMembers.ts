@@ -142,6 +142,13 @@ export function historyReasonKey(reason: string): string | null {
     return Object.prototype.hasOwnProperty.call(HISTORY_REASONS, reason) ? HISTORY_REASONS[reason]! : null;
 }
 
+/** Heading of a history entry that changed neither status nor category: only the reason `created` is "Mitglied angelegt". */
+export function historyUnchangedHeadingKey(reason: string | null | undefined): string {
+    if (reason === 'created') return 'verein.history.created';
+    if (reason === 'merged') return 'verein.history.merged';
+    return 'verein.history.unchanged';
+}
+
 /** Translation key of a status in the history; `null` for the missing "from" status of the first entry. */
 export function historyStatusKey(status: string | null | undefined): string | null {
     return status ? `verein.status.${status}` : null;
