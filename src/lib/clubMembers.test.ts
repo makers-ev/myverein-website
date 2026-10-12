@@ -16,7 +16,7 @@ vi.mock('./api-client', () => {
 });
 
 import { ApiError } from './api-client';
-import { allowedStatusesFromError, applyConflictKind, formatDate, hasPendingExit, historyReasonKey, historyStatusKey, memberCountFromError, memberErrorKey, STATUS_TRANSITIONS } from './clubMembers';
+import { allowedStatusesFromError, applyConflictKind, formatDate, hasPendingExit, historyReasonKey, historyStatusKey, historyUnchangedHeadingKey, memberCountFromError, memberErrorKey, STATUS_TRANSITIONS } from './clubMembers';
 
 describe('memberErrorKey', () => {
     it('maps known backend conflicts to plain-language keys instead of raw strings', () => {
@@ -119,6 +119,10 @@ describe('status history labels', () => {
         expect(historyReasonKey('reopen')).toBe('verein.history.reason.reopen');
         expect(historyReasonKey('Weil er umzieht')).toBeNull();
         expect(historyReasonKey('toString')).toBeNull();
+        expect(historyUnchangedHeadingKey('created')).toBe('verein.history.created');
+        expect(historyUnchangedHeadingKey('merged')).toBe('verein.history.merged');
+        expect(historyUnchangedHeadingKey('import')).toBe('verein.history.unchanged');
+        expect(historyUnchangedHeadingKey(null)).toBe('verein.history.unchanged');
         expect(historyStatusKey(null)).toBeNull();
         expect(historyStatusKey('aktiv')).toBe('verein.status.aktiv');
     });

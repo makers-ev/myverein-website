@@ -15,6 +15,7 @@ import {
     currentDepartments,
     formatDate,
     historyReasonKey,
+    historyUnchangedHeadingKey,
     historyStatusKey,
     hasPendingExit,
     inputClass,
@@ -131,7 +132,7 @@ function HistoryList({ entries, categories, loading, error }: { entries: StatusH
                                 {t('verein.history.category', { from: categoryName(h.fromCategoryId), to: categoryName(h.toCategoryId) })}
                             </p>
                         )}
-                        {!statusChanged && !categoryChanged && <p className="text-foreground">{t('verein.history.created')}</p>}
+                        {!statusChanged && !categoryChanged && <p className="text-foreground">{t(historyUnchangedHeadingKey(h.reason))}</p>}
                         {h.reason && <p className="text-xs text-muted-foreground">{t('verein.history.reason', { reason: reasonKey ? t(reasonKey) : h.reason })}</p>}
                     </li>
                 );
