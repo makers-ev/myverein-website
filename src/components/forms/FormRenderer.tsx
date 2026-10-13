@@ -35,8 +35,8 @@ export interface FormRendererProps {
     disabled?: boolean;
     /** Prefix of the DOM ids (several renderers on one page need different ones). */
     idPrefix?: string;
-    /** Uploads a file/photo; reports progress; rejects with the request error. Without it, file and image fields are not offered. */
-    onUploadFile?: (fieldKey: string, file: Blob, filename: string, onProgress: (percent: number | null) => void) => Promise<void>;
+    /** Uploads a file/photo; reports progress; stops when `signal` aborts (cancel button, unmount); rejects with the request error. Without it, file and image fields are not offered. */
+    onUploadFile?: (fieldKey: string, file: Blob, filename: string, onProgress: (percent: number | null) => void, signal: AbortSignal) => Promise<void>;
     onRemoveFile?: (file: FormFile) => Promise<void>;
 }
 
@@ -100,7 +100,7 @@ function FieldShell({
             )}
             <div className="mt-1.5">{children(aria)}</div>
             {error && (
-                <p id={errId} className="mt-1 text-xs text-destructive">
+                <p id={errId} role="alert" className="mt-1 text-xs text-destructive">
                     {t(fieldErrorKey(error))}
                 </p>
             )}
@@ -108,7 +108,7 @@ function FieldShell({
     );
     if (group) {
         return (
-            <fieldset id={id} tabIndex={-1} aria-describedby={describedBy} aria-invalid={error || extra?.shown ? true : undefined} className="min-w-0 focus:outline-none">
+            <fieldset id={id} tabIndex={-1} aria-describedby={describedBy} aria-invalid={error || extra?.shown ? true : undefined} className="min-w-0 rounded focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
                 <legend className="text-sm font-medium text-foreground">
                     {field.label}
                     <Required field={field} />
@@ -128,58 +128,69 @@ function FieldShell({
     );
 }
 
-/** Number input that keeps what is typed (`1.`, `-`) while only valid numbers reach the answers. */
-function NumberInput({
+/**
+ * Number/date input that keeps what is typed. While the browser holds an unfinished entry (`1e`, half a date) its value is
+ * empty with `validity.badInput`; that intermediate state is NOT reported as "answer removed", so the autosave never deletes
+ * an answer in the middle of typing.
+ */
+function BufferedInput({
     aria,
+    kind,
     field,
     value,
     disabled,
     onChange,
 }: {
     aria: object;
+    kind: 'number' | 'date';
     field: FormField;
     value: unknown;
     disabled?: boolean;
-    onChange: (v: number | undefined) => void;
+    onChange: (v: number | string | undefined) => void;
 }) {
-    const [text, setText] = useState(typeof value === 'number' ? String(value) : '');
+    const external = (v: unknown) => (kind === 'number' ? (typeof v === 'number' ? String(v) : '') : typeof v === 'string' ? v : '');
+    const [text, setText] = useState(external(value));
     const [seen, setSeen] = useState(value);
     // An external change (re-pinned answers, reset) replaces the draft text; our own edits already match it.
     if (value !== seen) {
         setSeen(value);
-        const parsed = text.trim() === '' ? undefined : Number(text);
-        if (value !== parsed) setText(typeof value === 'number' ? String(value) : '');
+        if (external(value) !== text && !(kind === 'number' && value === undefined && text.trim() === '')) setText(external(value));
     }
+    const v = field.validation;
     return (
         <input
             {...aria}
-            type="number"
-            inputMode="decimal"
-            step="any"
-            min={field.validation?.min}
-            max={field.validation?.max}
+            type={kind}
+            {...(kind === 'number' ? { inputMode: 'decimal' as const, step: 'any', min: v?.min, max: v?.max } : { min: v?.minDate, max: v?.maxDate })}
             value={text}
             disabled={disabled}
             onChange={(e) => {
-                setText(e.target.value);
-                const n = e.target.value.trim() === '' ? undefined : Number(e.target.value);
+                const raw = e.target.value;
+                setText(raw);
+                if (raw === '' && e.target.validity.badInput) return;
+                if (kind === 'date') {
+                    onChange(raw);
+                    return;
+                }
+                const n = raw.trim() === '' ? undefined : Number(raw);
                 onChange(n !== undefined && Number.isFinite(n) ? n : undefined);
             }}
-            className={inputClass}
+            className={kind === 'date' ? `${inputClass} sm:w-auto` : inputClass}
         />
     );
 }
 
 function PrivacyBlock({ text, title }: { text: string; title?: string }) {
     const { t } = useLanguage();
+    const headingId = useId();
     return (
-        <section className="rounded-xl border-2 border-primary/40 bg-primary/5 p-4" aria-label={title ?? t('forms.privacy.title')}>
-            <h3 className="flex items-center gap-2 text-sm font-bold text-foreground">
+        <section className="rounded-xl border-2 border-primary/40 bg-primary/5 p-4" aria-labelledby={headingId}>
+            <h3 id={headingId} className="flex items-center gap-2 text-sm font-bold text-foreground">
                 <ShieldCheck className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
                 {title ?? t('forms.privacy.title')}
             </h3>
             {/* Plain text on purpose: texts come from the club's form definition and are never interpreted as HTML. */}
-            <div tabIndex={0} role="region" aria-label={t('forms.privacy.text')} className="mt-2 max-h-64 overflow-y-auto whitespace-pre-line break-words text-sm text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
+            <div tabIndex={0} role="region" aria-labelledby={headingId} className="mt-2 max-h-64 overflow-y-auto whitespace-pre-line break-words text-sm text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
                 {text}
             </div>
         </section>
@@ -208,7 +219,8 @@ export default function FormRenderer({
     const autoId = useId();
     const prefix = idPrefix ?? `ff${autoId.replace(/:/g, '')}`;
     const shown = visibleFields(fields, answers);
-    const noticeAt = privacyNoticeIndex(fields, privacyNotice);
+    // Placed against the VISIBLE fields: right above the first visible consent, else at the end.
+    const noticeAt = privacyNoticeIndex(shown, privacyNotice);
 
     const [uploading, setUploading] = useState<Record<string, number | null>>({});
     const [uploadErrors, setUploadErrors] = useState<Record<string, string>>({});
@@ -217,11 +229,15 @@ export default function FormRenderer({
     const [previews, setPreviews] = useState<Record<string, string>>({});
     const previewsRef = useRef<Record<string, string>>({});
     const alive = useRef(true);
+    const controllers = useRef(new Map<string, AbortController>());
     useEffect(() => {
         alive.current = true;
         const urls = previewsRef;
+        const running = controllers.current;
         return () => {
             alive.current = false;
+            // Leaving the form (mode switch, other club) cancels uploads that are still running.
+            running.forEach((c) => c.abort());
             Object.values(urls.current).forEach((u) => URL.revokeObjectURL(u));
         };
     }, []);
@@ -238,16 +254,27 @@ export default function FormRenderer({
         if (!onUploadFile) return;
         setUploadErrors((e) => omit(e, field.key));
         setUploading((u) => ({ ...u, [field.key]: 0 }));
+        const controller = new AbortController();
+        controllers.current.set(field.key, controller);
         try {
-            await onUploadFile(field.key, blob, filename, (p) => {
-                if (alive.current) setUploading((u) => ({ ...u, [field.key]: p }));
-            });
+            await onUploadFile(
+                field.key,
+                blob,
+                filename,
+                (p) => {
+                    if (alive.current) setUploading((u) => ({ ...u, [field.key]: p }));
+                },
+                controller.signal,
+            );
         } catch (err) {
-            if (alive.current) {
+            if (alive.current && controller.signal.aborted) {
+                if (field.type === 'image') setPreview(field.key, null);
+            } else if (alive.current) {
                 setUploadErrors((e) => ({ ...e, [field.key]: t(formErrorKey(err)) }));
                 if (field.type === 'image') setPreview(field.key, null);
             }
         } finally {
+            if (controllers.current.get(field.key) === controller) controllers.current.delete(field.key);
             if (alive.current) {
                 setUploading((u) => omit(u, field.key));
             }
@@ -336,7 +363,7 @@ export default function FormRenderer({
             case 'number':
                 return (
                     <FieldShell field={field} id={id} error={error}>
-                        {(aria) => <NumberInput aria={aria} field={field} value={value} disabled={disabled} onChange={(n) => onChange(field.key, n)} />}
+                        {(aria) => <BufferedInput aria={aria} kind="number" field={field} value={value} disabled={disabled} onChange={(n) => onChange(field.key, n)} />}
                     </FieldShell>
                 );
 
@@ -344,16 +371,7 @@ export default function FormRenderer({
                 return (
                     <FieldShell field={field} id={id} error={error}>
                         {(aria) => (
-                            <input
-                                {...aria}
-                                type="date"
-                                min={v?.minDate}
-                                max={v?.maxDate}
-                                value={typeof value === 'string' ? value : ''}
-                                disabled={disabled}
-                                onChange={(e) => onChange(field.key, e.target.value)}
-                                className={`${inputClass} sm:w-auto`}
-                            />
+                            <BufferedInput aria={aria} kind="date" field={field} value={value} disabled={disabled} onChange={(d) => onChange(field.key, d)} />
                         )}
                     </FieldShell>
                 );
@@ -429,7 +447,7 @@ export default function FormRenderer({
                             </p>
                         )}
                         {error && (
-                            <p id={errId} className="mt-1 pl-7 text-xs text-destructive">
+                            <p id={errId} role="alert" className="mt-1 pl-7 text-xs text-destructive">
                                 {t(fieldErrorKey(error))}
                             </p>
                         )}
@@ -445,7 +463,8 @@ export default function FormRenderer({
                 const shownError = uploadError ?? (error ? t(fieldErrorKey(error)) : null);
                 const image = field.type === 'image';
                 const current = image ? own[0] : undefined;
-                const preview = previews[field.key] ?? current?.url ?? null;
+                // A local preview only counts while its photo exists or is uploading (after a re-pin the file may be gone).
+                const preview = current || busy ? (previews[field.key] ?? current?.url ?? null) : null;
                 const pickId = `${id}-pick`;
                 const errId = `${id}-err`;
                 const progress = uploading[field.key];
@@ -525,9 +544,12 @@ export default function FormRenderer({
                                     )}
                                     {busy && (
                                         <div role="status" className="space-y-1">
-                                            <p className="flex items-center gap-2 text-xs text-muted-foreground">
+                                            <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                                                 <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
                                                 {progress === null || progress === undefined ? t('forms.file.uploading') : t('forms.file.uploadingPercent', { percent: progress })}
+                                                <button type="button" onClick={() => controllers.current.get(field.key)?.abort()} className="font-semibold text-primary underline">
+                                                    {t('forms.file.cancel')}
+                                                </button>
                                             </p>
                                             {typeof progress === 'number' && (
                                                 <progress value={progress} max={100} aria-label={t('forms.file.uploading')} className="h-1.5 w-full max-w-xs accent-[var(--color-primary,currentColor)]" />
@@ -553,19 +575,13 @@ export default function FormRenderer({
 
     return (
         <div className="space-y-5">
-            {shown.map((field) => {
-                const index = fields.indexOf(field);
-                return (
-                    <Fragment key={field.key}>
-                        {noticeAt === index && privacyNotice && <PrivacyBlock text={privacyNotice} />}
-                        {renderField(field)}
-                    </Fragment>
-                );
-            })}
-            {noticeAt !== null && privacyNotice && (noticeAt >= fields.length || !shown.some((f) => fields.indexOf(f) === noticeAt)) && (
-                // The anchor field is hidden or the notice goes last: still show it exactly once (never skipped).
-                <PrivacyBlock text={privacyNotice} />
-            )}
+            {shown.map((field, index) => (
+                <Fragment key={field.key}>
+                    {noticeAt === index && privacyNotice && <PrivacyBlock text={privacyNotice} />}
+                    {renderField(field)}
+                </Fragment>
+            ))}
+            {noticeAt !== null && noticeAt >= shown.length && privacyNotice && <PrivacyBlock text={privacyNotice} />}
             {cropField && onUploadFile && (
                 <MemberPhotoDialog
                     title={cropField.label}

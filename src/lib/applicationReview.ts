@@ -218,9 +218,18 @@ export function shortHash(hash: string): string {
     return hash.slice(0, 12);
 }
 
-/** A 404/409 on a decision means someone else decided (or the applicant withdrew) in the meantime: the list is stale. */
+/**
+ * The list is stale only if the application is gone (404), was withdrawn (`application_withdrawn`) or already decided.
+ * A busy decision (`decision_busy`) or "already a member" is a hint, not staleness: the buttons stay (retry / reject still possible).
+ */
 export function isStaleDecision(err: unknown): boolean {
-    return err instanceof ApiError && (err.status === 404 || err.status === 409);
+    if (!(err instanceof ApiError)) return false;
+    if (err.status === 404) return true;
+    if (err.status !== 409) return false;
+    const code = (err.details as { code?: unknown } | undefined)?.code;
+    if (code === 'application_withdrawn') return true;
+    if (code === 'decision_busy') return false;
+    return /already been decided/i.test(err.message);
 }
 
 /** Translation key for a failed review request (load or decision). */
@@ -229,14 +238,36 @@ export function reviewErrorKey(err: unknown): string {
         const code = (err.details as { code?: unknown } | undefined)?.code;
         if (code === 'application_withdrawn' || code === 'decision_busy') return formErrorKey(err);
         if (/already been decided/i.test(err.message)) return 'forms.review.err.decided';
+        if (/already a member/i.test(err.message)) return 'forms.review.err.alreadyMember';
     }
     if (err instanceof ApiError && err.status === 404) return 'forms.review.err.gone';
     if (err instanceof ApiError && err.status === 422 && /unknown or archived category/i.test(err.message)) return 'forms.review.err.category';
     return err instanceof ApiError ? formErrorKey(err) : memberErrorKey(err);
 }
 
-/** File name for a download: the stored name, else a neutral one; path separators and control characters are removed. */
-export function safeDownloadName(name: string | null | undefined, fallback = 'datei'): string {
-    const cleaned = (name ?? '').replace(/[\\/:*?"<>|\u0000-\u001f]/g, '_').replace(/^\.+/, '').trim();
-    return cleaned || fallback;
+const WINDOWS_RESERVED = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i;
+const EXTENSIONS: Record<string, string> = { 'application/pdf': 'pdf', 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+
+/**
+ * File name for a download: path separators, control characters, bidi overrides/isolates and zero-width characters are removed,
+ * trailing dots/spaces and Windows-reserved device names are neutralised, the length is capped and the extension follows the
+ * MIME type the server stored (a name cannot claim another type).
+ */
+export function safeDownloadName(name: string | null | undefined, mimeType?: string | null, fallback = 'datei'): string {
+    let cleaned = (name ?? '')
+        .replace(/[\\/:*?"<>|\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2066-\u2069\u2028\u2029\ufeff]/g, '_')
+        .replace(/^\.+/, '')
+        .replace(/[. ]+$/, '')
+        .trim();
+    const ext = mimeType ? EXTENSIONS[mimeType.toLowerCase()] : undefined;
+    let base = cleaned;
+    let dot = cleaned.lastIndexOf('.');
+    // Only a short alphanumeric tail counts as an extension.
+    if (dot > 0 && !/^[a-z0-9]{1,8}$/i.test(cleaned.slice(dot + 1))) dot = -1;
+    if (dot > 0) base = cleaned.slice(0, dot);
+    base = base.replace(/[. ]+$/, '');
+    if (!base || WINDOWS_RESERVED.test(base)) base = base ? `_${base}` : fallback;
+    base = Array.from(base).slice(0, 80).join('');
+    cleaned = ext ? `${base}.${ext}` : dot > 0 ? `${base}${cleaned.slice(dot)}` : base;
+    return cleaned;
 }

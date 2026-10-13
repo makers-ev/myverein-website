@@ -174,13 +174,13 @@ export default function ApplicationReviewDialog({
             const blob = await fetchAuthedBlob(file.path, abort.current.signal);
             if (!alive.current) return;
             if (mode === 'download') {
-                saveBlob(blob, safeDownloadName(file.filename));
+                saveBlob(blob, safeDownloadName(file.filename, file.mimeType));
             } else if (blob.type.startsWith('image/')) {
                 if (previewUrl.current) URL.revokeObjectURL(previewUrl.current);
                 previewUrl.current = URL.createObjectURL(blob);
                 setPreview({ id: file.id, url: previewUrl.current });
             } else {
-                saveBlob(blob, safeDownloadName(file.filename));
+                saveBlob(blob, safeDownloadName(file.filename, file.mimeType));
             }
         } catch (err) {
             if (!alive.current || (err instanceof DOMException && err.name === 'AbortError')) return;

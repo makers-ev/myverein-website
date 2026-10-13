@@ -22,6 +22,8 @@ import {
     checkFieldFile,
     childWarningKey,
     diffAnswers,
+    lostEntryLabels,
+    mergeConcurrentEdits,
     droppedLabels,
     fieldErrorsFromError,
     type FormField,
@@ -147,6 +149,27 @@ describe('validateAnswers (client mirror)', () => {
         expect(e({ sports: ['a', 'a'] })).toEqual({ sports: 'invalid_value' });
     });
 
+    it('mirrors the server character policy for typed text', () => {
+        const e = (answers: Record<string, unknown>) => validateAnswers(FIELDS, answers, { mode: 'draft' });
+        expect(e({ first_name: 'A\u0000B' })).toEqual({ first_name: 'invalid_value' });
+        expect(e({ first_name: 'A\u202Eb' })).toEqual({ first_name: 'invalid_value' });
+        expect(e({ first_name: 'A\u2028b' })).toEqual({ first_name: 'invalid_value' });
+        expect(e({ first_name: 'A\uD800b' })).toEqual({ first_name: 'invalid_value' });
+        expect(e({ first_name: 'A\nb' })).toEqual({ first_name: 'invalid_value' });
+        expect(e({ first_name: '<b>Ä😀</b>' })).toEqual({});
+        const area: FormField[] = [{ key: 'note_field', type: 'textarea', label: 'N' }];
+        expect(validateAnswers(area, { note_field: 'a\nb\tc' }, { mode: 'draft' })).toEqual({});
+        expect(validateAnswers(area, { note_field: 'a\u0007' }, { mode: 'draft' })).toEqual({ note_field: 'invalid_value' });
+    });
+
+    it('evaluates conditions on trimmed text like the server', () => {
+        const f: FormField[] = [
+            { key: 'a_field', type: 'text', label: 'A' },
+            { key: 'b_field', type: 'text', label: 'B', visibleIf: { fieldKey: 'a_field', op: 'eq', value: 'ja' } },
+        ];
+        expect(visibleFieldKeys(f, { a_field: ' ja ' }).has('b_field')).toBe(true);
+    });
+
     it('does not validate hidden fields', () => {
         expect(validateAnswers(FIELDS, { newsletter: false, newsletter_mail: 'nope' }, { mode: 'draft' })).toEqual({});
     });
@@ -205,6 +228,35 @@ describe('carryAnswers / droppedLabels', () => {
     });
     it('labels dropped keys from the old definition', () => {
         expect(droppedLabels(FIELDS, ['category', 'gone', 'category'])).toEqual(['Kategorie', 'gone']);
+    });
+});
+
+describe('re-pin helpers', () => {
+    const next: FormField[] = [
+        { key: 'first_name', type: 'text', label: 'Vorname' },
+        { key: 'city_field', type: 'text', label: 'Ort' },
+    ];
+    it('keeps what was typed while the re-pin request was running', () => {
+        const snapshot = { first_name: 'Anna' };
+        const latest = { first_name: 'Anna', city_field: 'Bonn' };
+        // the server answer lacks the new city; the typed value is merged in
+        expect(mergeConcurrentEdits(snapshot, latest, { first_name: 'Anna' }, next)).toEqual({ first_name: 'Anna', city_field: 'Bonn' });
+        // a value emptied meanwhile stays removed
+        expect(mergeConcurrentEdits({ first_name: 'Anna' }, { first_name: '' }, { first_name: 'Anna' }, next)).toEqual({});
+        // untouched keys keep the computed base; fields that no longer exist are not revived
+        expect(mergeConcurrentEdits({ first_name: 'A' }, { first_name: 'A', gone_field: 'x' }, { first_name: 'B' }, next)).toEqual({ first_name: 'B' });
+    });
+
+    it('lists lost answers and files but not answers that were sent again', () => {
+        const file = (id: string, fieldKey: string) => ({ id, fieldKey, filename: 'f', mimeType: 'image/png', sizeBytes: 1, kind: 'image', url: null });
+        const labels = lostEntryLabels({
+            oldFields: FIELDS,
+            droppedKeys: ['first_name', 'category', 'parent_note'],
+            finalAnswers: { first_name: 'Anna' },
+            oldFiles: [file('1', 'photo'), file('2', 'photo')],
+            newFiles: [file('2', 'photo')],
+        });
+        expect(labels).toEqual(['Kategorie', 'Hinweis Eltern', 'Foto']);
     });
 });
 

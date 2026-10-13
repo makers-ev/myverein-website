@@ -46,6 +46,9 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
     const [club, setClub] = useState<ClubState | null>(null);
     const [conflict, setConflict] = useState<ApplyConflict | null>(null);
     const [banner, setBanner] = useState<{ warnings: string[] } | null>(null);
+    // A reload while a club is shown keeps the club area mounted (`refreshing`) instead of replacing it with a loading state.
+    const [refreshing, setRefreshing] = useState(false);
+    const [refreshFailed, setRefreshFailed] = useState(false);
     const [withdrawId, setWithdrawId] = useState<string | null>(null);
     const [withdrawBusy, setWithdrawBusy] = useState(false);
     const [actionErrorKey, setActionErrorKey] = useState<string | null>(null);
@@ -61,10 +64,13 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
     }, []);
 
     /** Loads the club's form and the person's own submissions; resumes the newest draft of the chosen mode. */
-    async function load(clubSlug: string, preferred?: OnBehalfOf): Promise<boolean> {
+    async function load(clubSlug: string, preferred?: OnBehalfOf, keepForm = false): Promise<boolean> {
         const seq = ++loadSeq.current;
-        setPhase('loading');
+        const reloading = club !== null && club.slug === clubSlug;
+        if (reloading) setRefreshing(true);
+        else setPhase('loading');
         setLoadErrorKey(null);
+        setRefreshFailed(false);
         try {
             const [formRes, mineRes] = await Promise.all([
                 apiFetch<{ data: FormDefinition }>(`/club-forms/${encodeURIComponent(clubSlug)}/aufnahme`),
@@ -85,11 +91,23 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
                 }
             }
             if (!alive.current || seq !== loadSeq.current) return false;
-            setClub((prev) => ({ slug: clubSlug, definition, submitted, modes, mode, resume, formKey: (prev?.formKey ?? 0) + 1 }));
+            setClub((prev) =>
+                keepForm && prev && prev.slug === clubSlug
+                    ? // Background refresh after a submit: the list changes, the form the person may already be filling in stays.
+                      { ...prev, submitted, modes: allowedModes(prev.definition, submitted) }
+                    : { slug: clubSlug, definition, submitted, modes, mode, resume, formKey: (prev?.formKey ?? 0) + 1 },
+            );
             setPhase('ready');
+            setRefreshing(false);
             return true;
         } catch (err) {
             if (!alive.current || seq !== loadSeq.current) return false;
+            setRefreshing(false);
+            if (reloading) {
+                // The club area stays; the person can retry.
+                setRefreshFailed(true);
+                return false;
+            }
             setLoadErrorKey(err instanceof ApiError && err.status === 404 ? 'verein.join.notFound' : formErrorKey(err));
             setPhase('slug');
             return false;
@@ -145,11 +163,14 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
     async function handleSubmitted(result: SubmittedResult) {
         if (!club) return;
         const warnings = result.warnings.map(childWarningKey).filter((k): k is string => k !== null);
-        const ok = await load(club.slug, club.mode ?? undefined);
-        if (ok && alive.current) {
-            setBanner({ warnings });
-            setTimeout(() => bannerRef.current?.focus(), 0);
-        }
+        // The success banner and the new entry in the list come from the submit answer itself, so a failing reload cannot hide them.
+        const entry = { ...result.submission, purpose: 'aufnahme', version: club.definition.version, club: { id: '', name: '', slug: club.slug } } as MySubmission;
+        const submitted = [entry, ...club.submitted.filter((s) => s.id !== entry.id)];
+        const modes = allowedModes(club.definition, submitted);
+        setClub({ ...club, submitted, modes, mode: club.mode && modes.includes(club.mode) ? club.mode : (modes[0] ?? null), resume: undefined, formKey: club.formKey + 1 });
+        setBanner({ warnings });
+        setTimeout(() => bannerRef.current?.focus(), 0);
+        void load(club.slug, club.mode ?? undefined, true);
     }
 
     if (conflict) {
@@ -213,7 +234,7 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
                         <input
                             value={slug}
                             onChange={(e) => setSlug(e.target.value)}
-                            placeholder="z. B. demo-sportverein"
+                            placeholder={t('forms.apply.slugPlaceholder')}
                             autoCapitalize="none"
                             disabled={phase === 'loading'}
                             aria-describedby={loadErrorKey ? 'join-load-error' : undefined}
@@ -241,6 +262,16 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
                             {t('forms.apply.otherClub')}
                         </button>
                     </div>
+
+                    {refreshing && <LoadingText className="mt-3" />}
+                    {refreshFailed && (
+                        <div role="alert" className="mt-3 flex flex-wrap items-center gap-2 text-sm text-destructive">
+                            {t('forms.apply.refreshFailed')}
+                            <button type="button" onClick={() => void load(club.slug, club.mode ?? undefined, true)} className={secondaryButtonClass}>
+                                {t('common.retry')}
+                            </button>
+                        </div>
+                    )}
 
                     {banner && (
                         <div ref={bannerRef} tabIndex={-1} role="status" className="mt-4 rounded-lg border border-success/40 bg-success/10 p-3 text-sm text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-primary">

@@ -96,13 +96,22 @@ describe('display helpers', () => {
         expect(safeDownloadName('a:b*c.pdf')).toBe('a_b_c.pdf');
         expect(safeDownloadName(null)).toBe('datei');
         expect(safeDownloadName('   ')).toBe('datei');
+        // bidi override cannot disguise the extension, extension follows the stored type
+        expect(safeDownloadName('foto\u202Egpj.exe', 'application/pdf')).toBe('foto_gpj.pdf');
+        expect(safeDownloadName('report.pdf. ', 'application/pdf')).toBe('report.pdf');
+        expect(safeDownloadName('con.txt')).toBe('_con.txt');
+        expect(safeDownloadName('NUL', 'image/png')).toBe('_NUL.png');
+        expect(Array.from(safeDownloadName('x'.repeat(500) + '.pdf', 'application/pdf')).length).toBeLessThanOrEqual(84);
     });
 });
 
 describe('decision errors', () => {
     it('recognises a stale list', () => {
         expect(isStaleDecision(new ApiError(404, 'NOT_FOUND', 'm'))).toBe(true);
-        expect(isStaleDecision(new ApiError(409, 'CONFLICT', 'm'))).toBe(true);
+        expect(isStaleDecision(new ApiError(409, 'CONFLICT', 'Application has already been decided'))).toBe(true);
+        expect(isStaleDecision(new ApiError(409, 'CONFLICT', 'm', { code: 'application_withdrawn' }))).toBe(true);
+        expect(isStaleDecision(new ApiError(409, 'CONFLICT', 'm', { code: 'decision_busy' }))).toBe(false);
+        expect(isStaleDecision(new ApiError(409, 'CONFLICT', 'Applicant is already a member of this club'))).toBe(false);
         expect(isStaleDecision(new ApiError(500, 'X', 'm'))).toBe(false);
         expect(isStaleDecision(new Error('x'))).toBe(false);
     });
@@ -110,6 +119,7 @@ describe('decision errors', () => {
         expect(reviewErrorKey(new ApiError(409, 'CONFLICT', 'Application has already been decided'))).toBe('forms.review.err.decided');
         expect(reviewErrorKey(new ApiError(409, 'CONFLICT', 'm', { code: 'application_withdrawn' }))).toBe('forms.err.applicationWithdrawn');
         expect(reviewErrorKey(new ApiError(409, 'CONFLICT', 'm', { code: 'decision_busy' }))).toBe('forms.err.decisionBusy');
+        expect(reviewErrorKey(new ApiError(409, 'CONFLICT', 'Applicant is already a member of this club'))).toBe('forms.review.err.alreadyMember');
         expect(reviewErrorKey(new ApiError(404, 'NOT_FOUND', 'Application not found'))).toBe('forms.review.err.gone');
         expect(reviewErrorKey(new ApiError(422, 'UNPROCESSABLE_ENTITY', 'Unknown or archived category'))).toBe('forms.review.err.category');
         expect(reviewErrorKey(new ApiError(403, 'FORBIDDEN', 'm'))).toBe('verein.err.forbidden');

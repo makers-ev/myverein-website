@@ -3,17 +3,19 @@
 import { useEffect, useRef, useState } from 'react';
 import { RefreshCw } from 'lucide-react';
 
-import FormRenderer, { focusField } from '@/components/forms/FormRenderer';
+import FormRenderer, { fieldDomId, focusField } from '@/components/forms/FormRenderer';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { apiFetch } from '@/lib/api-client';
+import { ApiError, apiFetch } from '@/lib/api-client';
 import { type ApplyConflict, applyConflictKind, primaryButtonClass, secondaryButtonClass } from '@/lib/clubMembers';
 import {
     type Answers,
     applyPatch,
     carryAnswers,
     diffAnswers,
-    droppedLabels,
+    lostEntryLabels,
+    mergeConcurrentEdits,
     type FieldErrorCode,
+    fieldErrorKey,
     fieldErrorsFromError,
     type FormDefinition,
     type FormFile,
@@ -190,7 +192,9 @@ export default function ApplicationForm({ slug, mode, current, resume, registerF
             return;
         }
         const previous = defRef.current;
-        const local = visibleAnswers(previous.fields, answersRef.current);
+        const startAnswers = answersRef.current;
+        const startFiles = filesRef.current;
+        const local = visibleAnswers(previous.fields, startAnswers);
         const carriedLocal = carryAnswers(next.fields, local);
         let nextAnswers: Answers = carriedLocal.answers;
         let dropped = carriedLocal.dropped;
@@ -236,14 +240,20 @@ export default function ApplicationForm({ slug, mode, current, resume, registerF
             return;
         }
         if (!alive.current) return;
+        // Whatever was typed while the request ran is kept (the state of the form may have moved on meanwhile).
+        const merged = mergeConcurrentEdits(startAnswers, answersRef.current, nextAnswers, next.fields);
+        const labels = lostEntryLabels({ oldFields: previous.fields, droppedKeys: dropped, finalAnswers: merged, oldFiles: startFiles, newFiles: nextFiles ?? (idRef.current ? filesRef.current : []) });
         rejectedRef.current.clear();
         outdatedSeen.current = true;
         setDefinitionBoth(next);
-        setAnswersBoth(nextAnswers);
+        setAnswersBoth(merged);
         if (nextFiles) setFilesBoth(() => nextFiles!);
+        else if (!idRef.current) setFilesBoth(() => []);
         setErrors({});
-        setNotice({ labels: droppedLabels(previous.fields, dropped), version: next.version });
+        setNotice({ labels, version: next.version });
         setSaveState(idRef.current ? 'saved' : 'idle');
+        // Answers the server does not have yet (no draft was created, or typing during the request) go out with the next save.
+        if (Object.keys(diffAnswers(savedRef.current, visibleAnswers(next.fields, merged))).length > 0) scheduleSave();
         setTimeout(() => noticeRef.current?.focus(), 0);
     }
 
@@ -288,6 +298,10 @@ export default function ApplicationForm({ slug, mode, current, resume, registerF
         });
         setSubmitErrorKey(null);
         setSaveState('dirty');
+        scheduleSave();
+    }
+
+    function scheduleSave() {
         if (timerRef.current) clearTimeout(timerRef.current);
         timerRef.current = setTimeout(() => {
             timerRef.current = null;
@@ -313,14 +327,15 @@ export default function ApplicationForm({ slug, mode, current, resume, registerF
         return idRef.current;
     }
 
-    async function uploadFile(fieldKey: string, blob: Blob, filename: string, onProgress: (percent: number | null) => void): Promise<void> {
+    async function uploadFile(fieldKey: string, blob: Blob, filename: string, onProgress: (percent: number | null) => void, signal: AbortSignal): Promise<void> {
         const id = await ensureDraft();
+        if (signal.aborted) throw new Error('aborted');
         let file: FormFile;
         try {
-            file = await uploadSubmissionFile(id, fieldKey, blob, filename, onProgress);
+            file = await uploadSubmissionFile(id, fieldKey, blob, filename, onProgress, signal);
         } catch (err) {
             const outdated = outdatedFrom(err);
-            if (outdated) await enqueue(() => handleOutdated(outdated));
+            if (outdated && !signal.aborted) await enqueue(() => handleOutdated(outdated));
             throw err;
         }
         const field = defRef.current.fields.find((f) => f.key === fieldKey);
@@ -407,7 +422,14 @@ export default function ApplicationForm({ slug, mode, current, resume, registerF
                 timerRef.current = null;
             }
             await enqueue(async () => {
-                if (idRef.current) await apiFetch(`/form-submissions/${idRef.current}/withdraw`, { method: 'POST' });
+                if (!idRef.current) return;
+                try {
+                    await apiFetch(`/form-submissions/${idRef.current}`, { method: 'DELETE' });
+                } catch (err) {
+                    // Backends without the draft DELETE route: withdrawing closes the draft (files are deleted either way).
+                    if (!(err instanceof ApiError) || (err.status !== 404 && err.status !== 405)) throw err;
+                    await apiFetch(`/form-submissions/${idRef.current}/withdraw`, { method: 'POST' });
+                }
             });
             idRef.current = null;
             if (alive.current) onDiscarded();
@@ -427,6 +449,9 @@ export default function ApplicationForm({ slug, mode, current, resume, registerF
               : saveState === 'error' && saveErrorKey
                 ? t('forms.apply.saveFailed', { reason: t(saveErrorKey) })
                 : '';
+
+    // Summary of the fields with an error, in form order, with links that move focus to the field.
+    const errorList = definition.fields.filter((f) => f.key in errors).map((f) => ({ key: f.key, label: f.label, code: errors[f.key]! }));
 
     if (fatalKey) {
         return (
@@ -489,10 +514,29 @@ export default function ApplicationForm({ slug, mode, current, resume, registerF
             <p aria-live="polite" className="mt-4 min-h-4 text-xs text-muted-foreground">
                 {saveText}
             </p>
-            {submitErrorKey && (
-                <p role="alert" className="mt-2 text-sm text-destructive">
-                    {t(submitErrorKey)}
-                </p>
+            {(submitErrorKey || errorList.length > 0) && (
+                <div role="alert" className="mt-2 text-sm text-destructive">
+                    {submitErrorKey && <p>{t(submitErrorKey)}</p>}
+                    {errorList.length > 0 && (
+                        <ul className="mt-1 list-inside list-disc">
+                            {errorList.map((e) => (
+                                <li key={e.key}>
+                                    <a
+                                        href={`#${fieldDomId(FORM_ID_PREFIX, e.key)}`}
+                                        onClick={(ev) => {
+                                            ev.preventDefault();
+                                            focusField(FORM_ID_PREFIX, e.key);
+                                        }}
+                                        className="underline"
+                                    >
+                                        {e.label}
+                                    </a>
+                                    : {t(fieldErrorKey(e.code))}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
             )}
 
             <div className="mt-3 flex flex-wrap items-center gap-2">

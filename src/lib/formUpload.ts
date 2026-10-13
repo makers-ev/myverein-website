@@ -86,7 +86,7 @@ export function uploadSubmissionFile(
 export async function fetchAuthedBlob(path: string, signal?: AbortSignal): Promise<Blob> {
     let res: Response;
     try {
-        res = await fetch(`${backendUrl}${path}`, { credentials: 'include', signal });
+        res = await fetch(`${backendUrl}${path}`, { credentials: 'include', cache: 'no-store', signal });
     } catch (err) {
         if (err instanceof DOMException && err.name === 'AbortError') throw err;
         throw new TypeError('network');

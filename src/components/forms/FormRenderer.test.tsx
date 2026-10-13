@@ -101,4 +101,22 @@ describe('FormRenderer', () => {
         expect(html).toContain('a.pdf');
         expect(html).toContain('Datei a.pdf entfernen');
     });
+
+    it('places the notice above the first VISIBLE consent when an earlier consent is hidden', () => {
+        const fields: FormField[] = [
+            { key: 'kid', type: 'checkbox', label: 'Kind' },
+            { key: 'agree_kid', type: 'consent', label: 'Zustimmung Kind', visibleIf: { fieldKey: 'kid', op: 'checked' } },
+            { key: 'name_field', type: 'text', label: 'Name' },
+            { key: 'agree', type: 'consent', label: 'Zustimmung allgemein' },
+        ];
+        const html = render({ fields, privacyNotice: 'Hinweistext' });
+        expect(html.match(/Hinweistext/g)).toHaveLength(1);
+        expect(html.indexOf('Hinweistext')).toBeGreaterThan(html.indexOf('Name'));
+        expect(html.indexOf('Hinweistext')).toBeLessThan(html.indexOf('Zustimmung allgemein'));
+    });
+
+    it('marks errors for assistive technology with role=alert', () => {
+        const html = render({ fields: [{ key: 'agree', type: 'consent', label: 'Ok', required: true }], errors: { agree: 'required' } });
+        expect(html).toContain('role="alert"');
+    });
 });

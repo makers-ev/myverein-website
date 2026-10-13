@@ -124,7 +124,9 @@ function conditionHolds(field: FormField, values: Answers, visible: ReadonlySet<
     if (!cond) return true;
     // A field behind a hidden field is hidden too.
     if (!visible.has(cond.fieldKey)) return false;
-    const actual = Object.prototype.hasOwnProperty.call(values, cond.fieldKey) ? values[cond.fieldKey] : undefined;
+    const rawActual = Object.prototype.hasOwnProperty.call(values, cond.fieldKey) ? values[cond.fieldKey] : undefined;
+    // The server evaluates conditions on trimmed answers.
+    const actual = typeof rawActual === 'string' ? rawActual.trim() : rawActual;
     switch (cond.op) {
         case 'checked':
             return actual === true;
@@ -172,6 +174,31 @@ export function privacyNoticeIndex(fields: readonly FormField[], privacyNotice: 
     return consent >= 0 ? consent : fields.length;
 }
 
+const FORBIDDEN_RANGES: ReadonlyArray<readonly [number, number]> = [
+    [0x00, 0x1f],
+    [0x7f, 0x9f],
+    [0x061c, 0x061c],
+    [0x200e, 0x200f],
+    [0x2028, 0x2029],
+    [0x202a, 0x202e],
+    [0x2066, 0x2069],
+];
+
+/**
+ * Mirror of the server's character policy for typed answers: no control characters (tab/newline/CR only in multi-line text),
+ * no bidi marks/overrides/isolates, no line/paragraph separators and no unpaired surrogates. `<` and `>` are allowed (answers
+ * are rendered as text everywhere).
+ */
+export function isCleanText(value: string, multiline = false): boolean {
+    if (!value.isWellFormed()) return false;
+    for (const ch of value) {
+        const cp = ch.codePointAt(0)!;
+        if (multiline && (cp === 0x09 || cp === 0x0a || cp === 0x0d)) continue;
+        if (FORBIDDEN_RANGES.some(([from, to]) => cp >= from && cp <= to)) return false;
+    }
+    return true;
+}
+
 function isIsoDate(value: string): boolean {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
     const d = new Date(`${value}T00:00:00Z`);
@@ -188,6 +215,7 @@ function cleanValue(field: FormField, value: unknown): FieldErrorCode | null {
             const hardMax = field.type === 'text' ? 200 : 5000;
             if (text.length > Math.min(v?.maxLength ?? hardMax, hardMax)) return 'too_long';
             if (text.length < (v?.minLength ?? 0)) return 'too_short';
+            if (!isCleanText(text, field.type === 'textarea')) return 'invalid_value';
             if (v?.pattern && PATTERN_PRESETS[v.pattern] && !PATTERN_PRESETS[v.pattern].test(text)) return 'invalid_format';
             return null;
         }
@@ -324,6 +352,41 @@ export function carryAnswers(newFields: readonly FormField[], answers: Answers, 
 export function droppedLabels(oldFields: readonly FormField[], keys: readonly string[]): string[] {
     const byKey = new Map(oldFields.map((f) => [f.key, f.label]));
     return [...new Set(keys)].map((k) => byKey.get(k) ?? k);
+}
+
+/**
+ * Entries the person has to look at after the form moved to a new version: answers that were dropped and are NOT present in
+ * the final answers (an answer that was sent again in the same patch is not lost) plus fields whose uploaded files were
+ * removed (field removed, or its type changed). Labels come from the old definition.
+ */
+export function lostEntryLabels(input: {
+    oldFields: readonly FormField[];
+    droppedKeys: readonly string[];
+    finalAnswers: Answers;
+    oldFiles: readonly FormFile[];
+    newFiles: readonly FormFile[];
+}): string[] {
+    const lostAnswers = input.droppedKeys.filter((k) => !(Object.prototype.hasOwnProperty.call(input.finalAnswers, k) && !isEmptyAnswer(input.finalAnswers[k])));
+    const kept = new Set(input.newFiles.map((f) => f.id));
+    const lostFileFields = input.oldFiles.filter((f) => !kept.has(f.id)).map((f) => f.fieldKey);
+    return droppedLabels(input.oldFields, [...lostAnswers, ...lostFileFields]);
+}
+
+/**
+ * Answers after an asynchronous step (re-pin) finished: `base` is the computed result, but keys the person changed since
+ * `snapshot` was taken keep their newest value (or stay removed) as long as the new definition still has the field.
+ */
+export function mergeConcurrentEdits(snapshot: Answers, latest: Answers, base: Answers, newFields: readonly FormField[]): Answers {
+    const answerable = new Set(newFields.filter(isAnswerField).map((f) => f.key));
+    const out: Answers = { ...base };
+    for (const key of new Set([...Object.keys(snapshot), ...Object.keys(latest)])) {
+        const before = isEmptyAnswer(snapshot[key]) ? undefined : snapshot[key];
+        const after = isEmptyAnswer(latest[key]) ? undefined : latest[key];
+        if (sameValue(before, after) || !answerable.has(key)) continue;
+        if (after === undefined) delete out[key];
+        else out[key] = latest[key];
+    }
+    return out;
 }
 
 /** Field errors of a `422` (`details.fields`: `{ fieldKey: code }`); unknown codes become `invalid_value`. `null` = not a field error. */

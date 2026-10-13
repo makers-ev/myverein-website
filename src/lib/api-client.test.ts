@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const fetchMock = vi.fn();
 vi.mock('@/lib/auth-client', () => ({ authClient: { $fetch: (...args: unknown[]) => fetchMock(...args) }, backendUrl: 'http://backend.test' }));
 
-import { ApiError, apiFetch, parseJsonPlain } from './api-client';
+import { ApiError, apiFetch, cachePolicyFor, parseJsonPlain } from './api-client';
 
 beforeEach(() => fetchMock.mockReset());
 
@@ -54,5 +54,23 @@ describe('apiFetch date handling', () => {
     it('parses plain JSON, an empty body as null', () => {
         expect(parseJsonPlain('{"a":"2026-10-12T10:00:00.000Z"}')).toEqual({ a: '2026-10-12T10:00:00.000Z' });
         expect(parseJsonPlain('')).toBeNull();
+    });
+});
+
+describe('cache policy of personal-data routes', () => {
+    it('never uses the HTTP cache for form submissions, applicant forms and the application review', () => {
+        for (const path of ['/form-submissions/mine', '/form-submissions/abc?x=1', '/club-forms/demo/aufnahme', '/club-applications?clubId=c', '/club-applications/1']) {
+            expect(cachePolicyFor(path)).toBe('no-store');
+        }
+        expect(cachePolicyFor('/club-members?clubId=c')).toBeUndefined();
+        expect(cachePolicyFor('/form-submissionsX')).toBeUndefined();
+    });
+
+    it('passes the policy to the fetch call', async () => {
+        fetchMock.mockResolvedValue({ data: { data: [] }, error: null });
+        await apiFetch('/form-submissions/mine');
+        expect(fetchMock.mock.calls[0]![1]).toMatchObject({ cache: 'no-store' });
+        await apiFetch('/my-clubs');
+        expect(fetchMock.mock.calls[1]![1]).not.toHaveProperty('cache');
     });
 });
