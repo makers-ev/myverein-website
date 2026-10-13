@@ -30,9 +30,18 @@ describe('FormsTranslation', () => {
 
     it('has every static forms.* key used by the form helpers and components', () => {
         const root = join(__dirname, '..');
-        const files = ['lib/formSchema.ts', 'components/forms/FormRenderer.tsx', 'components/verein/ApplicationForm.tsx', 'components/verein/JoinClubCard.tsx'];
+        const files = ['lib/formSchema.ts', 'components/forms/FormRenderer.tsx', 'components/verein/ApplicationForm.tsx', 'components/verein/JoinClubCard.tsx', 'components/verein/ApplicationReviewDialog.tsx', 'components/verein/ApplicationsPanel.tsx', 'lib/applicationReview.ts'];
         const used = files.flatMap((f) => [...readFileSync(join(root, f), 'utf8').matchAll(/'(forms\.[\w.]+)'/g)].map((m) => m[1]!));
         expect(used.length).toBeGreaterThan(20);
         for (const key of used) expect(FormsTranslation.de[key], key).toBeTruthy();
+    });
+
+    it('has the dynamically built review keys (mapping reasons, targets, statuses, warnings)', () => {
+        const reasons = ['not_answered', 'no_file', 'unknown_target', 'type_mismatch', 'not_a_text', 'invalid_value', 'custom_field_unknown', 'custom_field_archived', 'custom_field_type_mismatch', 'custom_field_not_sensitive', 'other'];
+        for (const r of reasons) expect(FormsTranslation.de[`forms.review.mapping.reason.${r}`], r).toBeTruthy();
+        const targets = ['firstName', 'lastName', 'birthDate', 'street', 'postalCode', 'city', 'phone', 'contactEmail', 'emergencyContactName', 'emergencyContactPhone', 'category', 'photo', 'custom'];
+        for (const target of targets) expect(FormsTranslation.de[`forms.review.target.${target}`], target).toBeTruthy();
+        for (const status of ['approved', 'rejected', 'withdrawn']) expect(FormsTranslation.de[`forms.review.status.${status}`], status).toBeTruthy();
+        for (const w of ['child_is_adult', 'birth_date_missing', 'child_name_matches_guardian']) expect(FormsTranslation.de[`forms.review.warn.${w}`], w).toBeTruthy();
     });
 });

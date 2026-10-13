@@ -6,7 +6,7 @@ import { apiFetch } from '@/lib/api-client';
 import { useThrottledCallback } from '@/lib/useThrottledCallback';
 import { memberErrorKey } from '@/lib/clubMembers';
 import { useLanguage } from '@/contexts/LanguageContext';
-import ApplicationsPanel, { type ClubApplication } from '@/components/verein/ApplicationsPanel';
+import ApplicationsPanel from '@/components/verein/ApplicationsPanel';
 import NoClubSection from '@/components/verein/NoClubSection';
 import CategoriesPanel from '@/components/verein/CategoriesPanel';
 import ClubSettingsPanel from '@/components/verein/ClubSettingsPanel';
@@ -184,8 +184,8 @@ export default function VereinPageContent() {
     const [info, setInfo] = useState<ClubInfo | null>(null);
     const [me, setMe] = useState<OwnMembership | null>(null);
     const [tab, setTab] = useState<Tab>('info');
-    const [applications, setApplications] = useState<ClubApplication[] | null>(null);
-    const [applicationsError, setApplicationsError] = useState(false);
+    // Number of open applications (badge on the "Mitglieder" tab); the panel itself pages through them.
+    const [applicationsTotal, setApplicationsTotal] = useState<number | null>(null);
     // Open exit requests (badge on the "Austritte" tab); null = unknown / no permission.
     const [exitPending, setExitPending] = useState<number | null>(null);
     // Bumped whenever the member list must reload (an application was decided, ...).
@@ -228,11 +228,10 @@ export default function VereinPageContent() {
         // Open applications are only readable with members:write.
         if (meRes.data.permissions.includes('members:write')) {
             try {
-                const appsRes = await apiFetch<{ data: ClubApplication[] }>(`/club-applications?clubId=${clubId}`);
-                setApplications(appsRes.data);
-                setApplicationsError(false);
+                const appsRes = await apiFetch<{ total: number }>(`/club-applications?clubId=${clubId}&pageSize=1`);
+                setApplicationsTotal(appsRes.total);
             } catch {
-                setApplicationsError(true);
+                setApplicationsTotal(null);
             }
             try {
                 const exitRes = await apiFetch<{ total: number }>(`/club-exit-requests?clubId=${clubId}&status=pending&pageSize=1`);
@@ -241,8 +240,7 @@ export default function VereinPageContent() {
                 setExitPending(null);
             }
         } else {
-            setApplications(null);
-            setApplicationsError(false);
+            setApplicationsTotal(null);
             setExitPending(null);
         }
     }
@@ -293,9 +291,9 @@ export default function VereinPageContent() {
                                         {exitPending}
                                     </span>
                                 )}
-                                {value === 'mitglieder' && applications && applications.length > 0 && (
+                                {value === 'mitglieder' && applicationsTotal !== null && applicationsTotal > 0 && (
                                     <span className="ml-1.5 rounded-full bg-primary px-1.5 py-0.5 text-xs font-semibold text-primary-foreground">
-                                        {applications.length}
+                                        {applicationsTotal}
                                     </span>
                                 )}
                             </button>
@@ -312,8 +310,6 @@ export default function VereinPageContent() {
                             ))}
                         {currentTab === 'mitglieder' && permissions.includes('members:write') && (
                             <ApplicationsPanel
-                                applications={applications}
-                                loadError={applicationsError}
                                 clubId={activeClub.clubId}
                                 onDecided={() => refreshClubData(activeClub.clubId)}
                             />
