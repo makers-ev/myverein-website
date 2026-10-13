@@ -30,7 +30,7 @@ describe('FormsTranslation', () => {
 
     it('has every static forms.* key used by the form helpers and components', () => {
         const root = join(__dirname, '..');
-        const files = ['lib/formSchema.ts', 'components/forms/FormRenderer.tsx'];
+        const files = ['lib/formSchema.ts', 'components/forms/FormRenderer.tsx', 'components/verein/ApplicationForm.tsx', 'components/verein/JoinClubCard.tsx'];
         const used = files.flatMap((f) => [...readFileSync(join(root, f), 'utf8').matchAll(/'(forms\.[\w.]+)'/g)].map((m) => m[1]!));
         expect(used.length).toBeGreaterThan(20);
         for (const key of used) expect(FormsTranslation.de[key], key).toBeTruthy();

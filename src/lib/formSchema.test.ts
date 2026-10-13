@@ -16,6 +16,7 @@ vi.mock('./api-client', () => {
 
 import { ApiError } from './api-client';
 import {
+    allowedModes,
     applyPatch,
     carryAnswers,
     checkFieldFile,
@@ -27,7 +28,9 @@ import {
     formatBytes,
     formErrorKey,
     outdatedFrom,
+    type MySubmission,
     privacyNoticeIndex,
+    selectApplicationState,
     validateAnswers,
     visibleAnswers,
     visibleFieldKeys,
@@ -165,6 +168,10 @@ describe('diffAnswers / applyPatch', () => {
         expect(diffAnswers({}, { a_field: '  ', b_field: false, c_field: [] })).toEqual({});
         expect(diffAnswers({ a_field: 'x' }, { a_field: '' })).toEqual({ a_field: null });
     });
+    it('does not resend an untouched answer that the server stored trimmed', () => {
+        expect(diffAnswers({ a_field: 'abc' }, { a_field: 'abc ' })).toEqual({});
+        expect(diffAnswers({ a_field: 'abc' }, { a_field: 'abcd ' })).toEqual({ a_field: 'abcd ' });
+    });
     it('skips refused keys', () => {
         expect(diffAnswers({}, { a_field: 'x', b_field: 'y' }, new Set(['a_field']))).toEqual({ b_field: 'y' });
     });
@@ -269,5 +276,34 @@ describe('file helpers', () => {
         expect(formatBytes(500)).toBe('500 B');
         expect(formatBytes(2048, 'en')).toBe('2 KB');
         expect(formatBytes(1536 * 1024, 'en')).toBe('1.5 MB');
+    });
+});
+
+describe('application state', () => {
+    const base = { formVersionId: 'v', answers: {}, files: [], submittedAt: null, decidedAt: null, decisionNote: null, purpose: 'aufnahme', version: 1, club: { id: 'c', name: 'C', slug: 'demo' } };
+    const sub = (over: Partial<MySubmission>): MySubmission => ({ id: 'x', onBehalfOf: 'self', status: 'draft', createdAt: '2026-10-01T10:00:00Z', ...base, ...over }) as MySubmission;
+
+    it('picks the newest draft per mode and the submitted ones of this club only', () => {
+        const mine = [
+            sub({ id: 'old', createdAt: '2026-10-01T10:00:00Z' }),
+            sub({ id: 'new', createdAt: '2026-10-02T10:00:00Z' }),
+            sub({ id: 'kid', onBehalfOf: 'guardian' }),
+            sub({ id: 'other-club', club: { id: 'd', name: 'D', slug: 'other' } }),
+            sub({ id: 'exit', purpose: 'austritt' }),
+            sub({ id: 'sent', status: 'submitted' }),
+            sub({ id: 'gone', status: 'withdrawn' }),
+        ];
+        const state = selectApplicationState(mine, 'demo');
+        expect(state.drafts.self?.id).toBe('new');
+        expect(state.drafts.guardian?.id).toBe('kid');
+        expect(state.submitted.map((s) => s.id)).toEqual(['sent']);
+    });
+
+    it('blocks a second application for oneself and offers the child mode only if the form supports it', () => {
+        expect(allowedModes({ childApplication: true }, [])).toEqual(['self', 'guardian']);
+        expect(allowedModes({ childApplication: false }, [])).toEqual(['self']);
+        expect(allowedModes({ childApplication: true }, [{ onBehalfOf: 'self' }])).toEqual(['guardian']);
+        expect(allowedModes({ childApplication: false }, [{ onBehalfOf: 'self' }])).toEqual([]);
+        expect(allowedModes({ childApplication: true }, [{ onBehalfOf: 'guardian' }])).toEqual(['self', 'guardian']);
     });
 });

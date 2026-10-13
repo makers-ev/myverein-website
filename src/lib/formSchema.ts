@@ -271,7 +271,9 @@ export function visibleAnswers(fields: readonly FormField[], answers: Answers): 
     return out;
 }
 
-const sameValue = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+/** Strings are compared trimmed: the server stores them trimmed, so an untouched answer is not sent again. */
+const normalize = (v: unknown): unknown => (typeof v === 'string' ? v.trim() : v);
+const sameValue = (a: unknown, b: unknown) => JSON.stringify(normalize(a)) === JSON.stringify(normalize(b));
 
 /**
  * The PATCH body for `/form-submissions/:id`: keys whose value differs between the last saved state and the current one.
@@ -395,6 +397,46 @@ export function formErrorKey(err: unknown): string {
         if (err.code === 'APPLICATION_PENDING') return 'forms.err.applicationPending';
     }
     return memberErrorKey(err);
+}
+
+export type OnBehalfOf = 'self' | 'guardian';
+
+/** A submission as the applicant routes return it (`submission` of `/form-submissions`). */
+export interface Submission {
+    id: string;
+    formVersionId: string;
+    onBehalfOf: OnBehalfOf;
+    status: 'draft' | 'submitted' | 'accepted' | 'rejected' | 'withdrawn';
+    answers: Answers;
+    files: FormFile[];
+    submittedAt: string | null;
+    decidedAt: string | null;
+    decisionNote: string | null;
+    createdAt: string;
+}
+
+/** An entry of `GET /form-submissions/mine`. */
+export interface MySubmission extends Submission {
+    purpose: string;
+    version: number;
+    club: { id: string; name: string; slug: string };
+}
+
+/** The newest open draft (per `onBehalfOf`) and the pending (submitted, undecided) applications of one club's application form. */
+export function selectApplicationState(mine: readonly MySubmission[], slug: string): { drafts: Partial<Record<OnBehalfOf, MySubmission>>; submitted: MySubmission[] } {
+    const own = mine.filter((m) => m.purpose === 'aufnahme' && m.club.slug === slug);
+    const newestFirst = [...own].sort((a, b) => (a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0));
+    const drafts: Partial<Record<OnBehalfOf, MySubmission>> = {};
+    for (const m of newestFirst) if (m.status === 'draft' && !drafts[m.onBehalfOf]) drafts[m.onBehalfOf] = m;
+    return { drafts, submitted: newestFirst.filter((m) => m.status === 'submitted') };
+}
+
+/** Which applicant modes are open: one pending application for oneself blocks another; the child mode needs `childApplication`. */
+export function allowedModes(definition: Pick<FormDefinition, 'childApplication'>, submitted: readonly Pick<Submission, 'onBehalfOf'>[]): OnBehalfOf[] {
+    const modes: OnBehalfOf[] = [];
+    if (!submitted.some((s) => s.onBehalfOf === 'self')) modes.push('self');
+    if (definition.childApplication) modes.push('guardian');
+    return modes;
 }
 
 /** Warnings of a child application (`warnings[]` of submit / review) with their translation key. */
