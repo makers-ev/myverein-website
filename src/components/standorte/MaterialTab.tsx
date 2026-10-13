@@ -103,6 +103,7 @@ function ItemChips({ item, t }: { item: InventoryItem; t: T }) {
 }
 
 function MaintenanceOverview({ items, t, onSelect }: { items: InventoryItem[]; t: T; onSelect: (id: string) => void }) {
+    const { language } = useLanguage();
     const dueItems = items.filter((i) => i.maintenanceDue);
 
     return (
@@ -122,7 +123,7 @@ function MaintenanceOverview({ items, t, onSelect }: { items: InventoryItem[]; t
                             >
                                 <Wrench className="h-4 w-4 text-warning" />
                                 <span className="font-medium text-foreground">{item.name}</span>
-                                {item.maintenanceDueAt && <span className="text-xs text-muted-foreground">{formatDate(item.maintenanceDueAt)}</span>}
+                                {item.maintenanceDueAt && <span className="text-xs text-muted-foreground">{formatDate(item.maintenanceDueAt, language)}</span>}
                             </button>
                         </li>
                     ))}
@@ -379,6 +380,7 @@ function LoansSection({
     isGuest: boolean;
     t: T;
 }) {
+    const { language } = useLanguage();
     const [loans, setLoans] = useState<InventoryLoan[] | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
@@ -459,9 +461,9 @@ function LoansSection({
                             {loans.map((loan) => (
                                 <tr key={loan.id} className={`border-b border-border last:border-b-0 ${loan.status === 'ueberfaellig' ? 'bg-destructive/5' : ''}`}>
                                     <td className="whitespace-nowrap px-3 py-2 text-foreground">{nameFor(loan.memberId)}</td>
-                                    <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">{formatDate(loan.borrowedAt)}</td>
-                                    <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">{formatDate(loan.dueAt)}</td>
-                                    <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">{formatDate(loan.returnedAt)}</td>
+                                    <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">{formatDate(loan.borrowedAt, language)}</td>
+                                    <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">{formatDate(loan.dueAt, language)}</td>
+                                    <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">{formatDate(loan.returnedAt, language)}</td>
                                     <td className="px-3 py-2">
                                         <Chip tone={loanTone[loan.status] ?? 'muted'}>{t(`standorte.loans.status.${loan.status}`)}</Chip>
                                     </td>
@@ -488,6 +490,7 @@ function LoansSection({
 }
 
 function DamageReportsSection({ itemId, clubId, canWrite, t }: { itemId: string; clubId: string; canWrite: boolean; t: T }) {
+    const { language } = useLanguage();
     const [reports, setReports] = useState<InventoryDamageReport[] | null>(null);
     const [error, setError] = useState<string | null>(null);
 
@@ -527,8 +530,8 @@ function DamageReportsSection({ itemId, clubId, canWrite, t }: { itemId: string;
                                 <div className="min-w-0">
                                     <p className="whitespace-pre-line text-foreground">{report.description}</p>
                                     <p className="mt-1 text-xs text-muted-foreground">
-                                        {formatDate(report.createdAt)}
-                                        {report.resolvedAt && ` → ${formatDate(report.resolvedAt)}`}
+                                        {formatDate(report.createdAt, language)}
+                                        {report.resolvedAt && ` → ${formatDate(report.resolvedAt, language)}`}
                                     </p>
                                     {report.photoUrl && (
                                         <a href={report.photoUrl} target="_blank" rel="noreferrer" className="mt-1 inline-block text-xs text-primary hover:underline">
@@ -593,6 +596,7 @@ function ItemDetail({
     onBack: () => void;
     onItemsChanged: () => void;
 }) {
+    const { language } = useLanguage();
     const run = useRun();
     const [item, setItem] = useState<InventoryItem | null>(null);
     const [editing, setEditing] = useState(false);
@@ -615,10 +619,10 @@ function ItemDetail({
         [t('standorte.items.table.category'), item.category ?? '—'],
         [t('standorte.items.table.location'), locations.find((l) => l.id === item.locationId)?.name ?? '—'],
         [t('standorte.items.table.value'), formatEuros(item.acquisitionValueCents)],
-        [t('standorte.items.new.acquiredAt'), formatDate(item.acquiredAt)],
+        [t('standorte.items.new.acquiredAt'), formatDate(item.acquiredAt, language)],
         [t('standorte.items.new.maintenanceInterval'), item.maintenanceIntervalDays !== null ? String(item.maintenanceIntervalDays) : '—'],
-        [t('standorte.items.new.lastMaintenance'), formatDate(item.lastMaintenanceAt)],
-        [t('standorte.items.detail.maintenanceDueAt'), formatDate(item.maintenanceDueAt)],
+        [t('standorte.items.new.lastMaintenance'), formatDate(item.lastMaintenanceAt, language)],
+        [t('standorte.items.detail.maintenanceDueAt'), formatDate(item.maintenanceDueAt, language)],
     ];
 
     return (

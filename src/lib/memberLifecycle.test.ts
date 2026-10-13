@@ -20,6 +20,7 @@ import {
     canWithdraw,
     clearInviteToken,
     errorDetailsCode,
+    INVALID_INVITE_LINK,
     INVITE_TOKEN_STORAGE_KEY,
     INVITE_TOKEN_TTL_MS,
     isOwnerOrgRole,
@@ -184,7 +185,10 @@ describe('invite token handling', () => {
         const store = memoryStore({ [INVITE_TOKEN_STORAGE_KEY]: 'not json' });
         expect(resolveInviteToken('', [store])).toBeNull();
         expect(resolveInviteToken(`?token=${TOKEN}`, [store])).toBe(TOKEN);
-        expect(resolveInviteToken('?token=nope', [memoryStore()])).toBeNull();
+        expect(resolveInviteToken('?token=nope', [memoryStore()])).toBe(INVALID_INVITE_LINK);
+        // A broken token in the URL never falls back to an older stash, and an empty one counts as no token.
+        expect(resolveInviteToken('?token=abc', [store])).toBe(INVALID_INVITE_LINK);
+        expect(resolveInviteToken('?token=', [store])).toBe(TOKEN);
         const broken: TokenStore = {
             getItem: () => {
                 throw new Error('blocked');

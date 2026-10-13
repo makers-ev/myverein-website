@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-import { memberErrorKey } from '@/lib/clubMembers';
+import { formatDate, memberErrorKey } from '@/lib/clubMembers';
 import { apiFetch, ApiError } from '@/lib/api-client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import LoadingText from '@/components/LoadingText';
@@ -34,7 +34,7 @@ export default function ApplicationsPanel({
     clubId: string;
     onDecided: () => Promise<void> | void;
 }) {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const [busyId, setBusyId] = useState<string | null>(null);
     const [confirmId, setConfirmId] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -95,12 +95,12 @@ export default function ApplicationsPanel({
                                         </p>
                                         <p className="truncate text-xs text-muted-foreground">
                                             {a.email ?? '—'} · {t('verein.applications.submitted')}{' '}
-                                            {new Date(a.createdAt).toLocaleDateString('de-DE')}
+                                            {formatDate(a.createdAt, language)}
                                             {a.birthDate && (
                                                 <>
                                                     {' · '}
                                                     {t('verein.applications.birthDate')}{' '}
-                                                    {new Date(`${a.birthDate.slice(0, 10)}T00:00`).toLocaleDateString('de-DE')}
+                                                    {formatDate(a.birthDate, language)}
                                                 </>
                                             )}
                                         </p>

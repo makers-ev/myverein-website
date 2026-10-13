@@ -35,10 +35,18 @@ interface ApiFetchOptions {
  * from `headers()`); a Client Component omits `cookie` and relies on the
  * browser sending it.
  */
+/** Plain `JSON.parse` (no Date revival); an empty body is `null` like better-fetch's own parser. */
+export function parseJsonPlain(text: string): unknown {
+    return text === '' ? null : JSON.parse(text);
+}
+
 export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise<T> {
     const { data, error } = await authClient.$fetch<T>(`${backendUrl}${path}`, {
         method: options.method ?? 'GET',
         body: options.body,
+        // better-fetch's default parser revives ISO date strings into Date objects; all date helpers (and the types)
+        // expect the strings the backend sent, so parse plain.
+        jsonParser: parseJsonPlain,
         ...(options.cookie ? { headers: { cookie: options.cookie } } : {}),
     });
 

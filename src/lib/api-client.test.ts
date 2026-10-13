@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const fetchMock = vi.fn();
 vi.mock('@/lib/auth-client', () => ({ authClient: { $fetch: (...args: unknown[]) => fetchMock(...args) }, backendUrl: 'http://backend.test' }));
 
-import { ApiError, apiFetch } from './api-client';
+import { ApiError, apiFetch, parseJsonPlain } from './api-client';
 
 beforeEach(() => fetchMock.mockReset());
 
@@ -36,5 +36,23 @@ describe('apiFetch error parsing', () => {
         expect(err.message).toBe('Request failed');
         fetchMock.mockResolvedValueOnce({ data: { ok: true }, error: null });
         await expect(apiFetch('/y')).resolves.toEqual({ ok: true });
+    });
+});
+
+describe('apiFetch date handling', () => {
+    it('hands better-fetch a plain parser, so ISO date strings stay strings (its default revives them into Date objects)', async () => {
+        const iso = '2026-10-12T10:00:00.000Z';
+        fetchMock.mockResolvedValue({ data: { data: { expiresAt: iso } }, error: null });
+        await apiFetch('/club-members/invites/preview', { method: 'POST', body: { token: 'x' } });
+        const options = fetchMock.mock.calls[0]![1] as { jsonParser: (text: string) => unknown };
+        const parsed = options.jsonParser(JSON.stringify({ data: { expiresAt: iso, day: '2026-10-12' } })) as { data: { expiresAt: unknown; day: unknown } };
+        expect(parsed.data.expiresAt).toBe(iso);
+        expect(typeof parsed.data.expiresAt).toBe('string');
+        expect(parsed.data.day).toBe('2026-10-12');
+    });
+
+    it('parses plain JSON, an empty body as null', () => {
+        expect(parseJsonPlain('{"a":"2026-10-12T10:00:00.000Z"}')).toEqual({ a: '2026-10-12T10:00:00.000Z' });
+        expect(parseJsonPlain('')).toBeNull();
     });
 });

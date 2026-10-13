@@ -113,7 +113,8 @@ export interface MemberCategory {
 
 export interface StatusHistoryEntry {
     id: string;
-    fromStatus: string;
+    /** `null` for the first entry (member created / imported). */
+    fromStatus: string | null;
     toStatus: string;
     fromCategoryId: string | null;
     toCategoryId: string | null;
@@ -121,6 +122,36 @@ export interface StatusHistoryEntry {
     reason: string | null;
     changedBy: string | null;
     createdAt: string;
+}
+
+const HISTORY_REASONS: Record<string, string> = {
+    created: 'verein.history.reason.created',
+    merged: 'verein.history.reason.merged',
+    import: 'verein.history.reason.import',
+    reopen: 'verein.history.reason.reopen',
+    'Altersübergang': 'verein.history.reason.ageTransition',
+    'Kategorie archiviert': 'verein.history.reason.categoryArchived',
+    'Konto verknüpft (Einladung)': 'verein.history.reason.accountLinked',
+    'Konto-Mitgliedschaft wiederhergestellt': 'verein.history.reason.accountRestored',
+    'Konto-Verknüpfung getrennt': 'verein.history.reason.accountUnlinked',
+    'Konto-Mitgliedschaft entfernt': 'verein.history.reason.accountRemoved',
+};
+
+/** Translation key of a status-history reason the backend writes as a code/fixed text; `null` = free text, show as is. */
+export function historyReasonKey(reason: string): string | null {
+    return Object.prototype.hasOwnProperty.call(HISTORY_REASONS, reason) ? HISTORY_REASONS[reason]! : null;
+}
+
+/** Heading of a history entry that changed neither status nor category: only the reason `created` is "Mitglied angelegt". */
+export function historyUnchangedHeadingKey(reason: string | null | undefined): string {
+    if (reason === 'created') return 'verein.history.created';
+    if (reason === 'merged') return 'verein.history.merged';
+    return 'verein.history.unchanged';
+}
+
+/** Translation key of a status in the history; `null` for the missing "from" status of the first entry. */
+export function historyStatusKey(status: string | null | undefined): string | null {
+    return status ? `verein.status.${status}` : null;
 }
 
 /** Today as `YYYY-MM-DD` in the club's time zone (Europe/Berlin), not the browser's -- matches the backend's "today". */
@@ -143,8 +174,12 @@ export function dateLocale(language: string): string {
  * start) as the calendar day in the club's time zone (Europe/Berlin) -- a timestamp near midnight UTC must not show the
  * neighbouring day.
  */
-export function formatDate(iso: string | null | undefined, language: string): string {
-    if (!iso) return '—';
+export function formatDate(value: string | Date | null | undefined, language: string): string {
+    if (!value) return '—';
+    if (value instanceof Date) {
+        return Number.isNaN(value.getTime()) ? '—' : value.toLocaleDateString(dateLocale(language), { timeZone: 'Europe/Berlin' });
+    }
+    const iso = String(value);
     if (iso.length > 10 && iso.includes('T')) {
         const instant = new Date(iso);
         if (!Number.isNaN(instant.getTime())) {

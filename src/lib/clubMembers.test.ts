@@ -16,7 +16,7 @@ vi.mock('./api-client', () => {
 });
 
 import { ApiError } from './api-client';
-import { allowedStatusesFromError, applyConflictKind, formatDate, hasPendingExit, memberCountFromError, memberErrorKey, STATUS_TRANSITIONS } from './clubMembers';
+import { allowedStatusesFromError, applyConflictKind, formatDate, hasPendingExit, historyReasonKey, historyStatusKey, historyUnchangedHeadingKey, memberCountFromError, memberErrorKey, STATUS_TRANSITIONS } from './clubMembers';
 
 describe('memberErrorKey', () => {
     it('maps known backend conflicts to plain-language keys instead of raw strings', () => {
@@ -98,5 +98,32 @@ describe('applyConflictKind', () => {
         expect(applyConflictKind(new ApiError(409, 'CONFLICT', 'x'))).toBe('other');
         expect(applyConflictKind(new ApiError(404, 'NOT_FOUND', 'x'))).toBeNull();
         expect(applyConflictKind(new Error('offline'))).toBeNull();
+    });
+});
+
+describe('date helpers accept Date and string', () => {
+    it('formatDate formats Date objects like their ISO strings', () => {
+        const iso = '2026-03-05T23:30:00.000Z';
+        expect(formatDate(new Date(iso), 'de')).toBe(formatDate(iso, 'de'));
+        expect(formatDate(new Date(iso), 'de')).toBe('6.3.2026');
+        expect(formatDate(new Date('x'), 'de')).toBe('—');
+        expect(formatDate('2026-03-05', 'de')).toBe('5.3.2026');
+    });
+});
+
+describe('status history labels', () => {
+    it('maps reason codes, keeps free text and handles a missing from status', () => {
+        expect(historyReasonKey('created')).toBe('verein.history.reason.created');
+        expect(historyReasonKey('merged')).toBe('verein.history.reason.merged');
+        expect(historyReasonKey('import')).toBe('verein.history.reason.import');
+        expect(historyReasonKey('reopen')).toBe('verein.history.reason.reopen');
+        expect(historyReasonKey('Weil er umzieht')).toBeNull();
+        expect(historyReasonKey('toString')).toBeNull();
+        expect(historyUnchangedHeadingKey('created')).toBe('verein.history.created');
+        expect(historyUnchangedHeadingKey('merged')).toBe('verein.history.merged');
+        expect(historyUnchangedHeadingKey('import')).toBe('verein.history.unchanged');
+        expect(historyUnchangedHeadingKey(null)).toBe('verein.history.unchanged');
+        expect(historyStatusKey(null)).toBeNull();
+        expect(historyStatusKey('aktiv')).toBe('verein.status.aktiv');
     });
 });

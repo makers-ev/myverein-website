@@ -441,7 +441,7 @@ export default function MemberList({
                                             <td className="px-3 py-2 text-muted-foreground">{depts.length > 0 ? depts.map((d) => d.name).join(', ') : '—'}</td>
                                             <td className="px-3 py-2">
                                                 {m.hasAccount ? (
-                                                    <MemberRoleCell memberId={m.id} roles={m.roles} clubId={clubId} canEdit={canRoles} onChange={reload} />
+                                                    <MemberRoleCell memberId={m.id} roles={m.roles} clubId={clubId} canEdit={canRoles && !left} onChange={reload} />
                                                 ) : (
                                                     <span className="text-muted-foreground" title={t('verein.members.roles.noAccount')}>
                                                         —

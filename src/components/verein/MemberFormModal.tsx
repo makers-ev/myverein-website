@@ -14,6 +14,9 @@ import {
     CREATE_STATUSES,
     currentDepartments,
     formatDate,
+    historyReasonKey,
+    historyUnchangedHeadingKey,
+    historyStatusKey,
     hasPendingExit,
     inputClass,
     memberErrorKey,
@@ -111,13 +114,17 @@ function HistoryList({ entries, categories, loading, error }: { entries: StatusH
         <ul className="space-y-2">
             {entries.map((h) => {
                 const statusChanged = h.fromStatus !== h.toStatus;
+                const fromKey = historyStatusKey(h.fromStatus);
+                const reasonKey = h.reason ? historyReasonKey(h.reason) : null;
                 const categoryChanged = h.fromCategoryId !== h.toCategoryId;
                 return (
                     <li key={h.id} className="rounded-lg border border-border px-3 py-2 text-sm">
                         <p className="text-xs text-muted-foreground">{formatDate(h.effectiveOn, language)}</p>
                         {statusChanged && (
                             <p className="text-foreground">
-                                {t('verein.history.status', { from: t(`verein.status.${h.fromStatus}`), to: t(`verein.status.${h.toStatus}`) })}
+                                {fromKey
+                                    ? t('verein.history.status', { from: t(fromKey), to: t(`verein.status.${h.toStatus}`) })
+                                    : t('verein.history.statusInitial', { to: t(`verein.status.${h.toStatus}`) })}
                             </p>
                         )}
                         {categoryChanged && (
@@ -125,8 +132,8 @@ function HistoryList({ entries, categories, loading, error }: { entries: StatusH
                                 {t('verein.history.category', { from: categoryName(h.fromCategoryId), to: categoryName(h.toCategoryId) })}
                             </p>
                         )}
-                        {!statusChanged && !categoryChanged && <p className="text-foreground">{t('verein.history.created')}</p>}
-                        {h.reason && <p className="text-xs text-muted-foreground">{t('verein.history.reason', { reason: h.reason })}</p>}
+                        {!statusChanged && !categoryChanged && <p className="text-foreground">{t(historyUnchangedHeadingKey(h.reason))}</p>}
+                        {h.reason && <p className="text-xs text-muted-foreground">{t('verein.history.reason', { reason: reasonKey ? t(reasonKey) : h.reason })}</p>}
                     </li>
                 );
             })}
