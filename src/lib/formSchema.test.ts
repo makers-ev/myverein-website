@@ -1,0 +1,273 @@
+import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('./api-client', () => {
+    class ApiError extends Error {
+        constructor(
+            readonly status: number,
+            readonly code: string,
+            message: string,
+            readonly details?: unknown,
+        ) {
+            super(message);
+        }
+    }
+    return { ApiError };
+});
+
+import { ApiError } from './api-client';
+import {
+    applyPatch,
+    carryAnswers,
+    checkFieldFile,
+    childWarningKey,
+    diffAnswers,
+    droppedLabels,
+    fieldErrorsFromError,
+    type FormField,
+    formatBytes,
+    formErrorKey,
+    outdatedFrom,
+    privacyNoticeIndex,
+    validateAnswers,
+    visibleAnswers,
+    visibleFieldKeys,
+    visibleFields,
+} from './formSchema';
+
+const FIELDS: FormField[] = [
+    { key: 'first_name', type: 'text', label: 'Vorname', required: true, validation: { maxLength: 10 } },
+    { key: 'category', type: 'select', label: 'Kategorie', required: true, options: [{ value: 'aktiv', label: 'Aktiv' }, { value: 'jugend', label: 'Jugend' }] },
+    { key: 'parent_note', type: 'text', label: 'Hinweis Eltern', required: true, visibleIf: { fieldKey: 'category', op: 'eq', value: 'jugend' } },
+    { key: 'sports', type: 'multiselect', label: 'Sport', options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }] },
+    { key: 'sports_detail', type: 'text', label: 'Details', visibleIf: { fieldKey: 'sports', op: 'in', value: ['a'] } },
+    { key: 'newsletter', type: 'checkbox', label: 'Newsletter' },
+    { key: 'newsletter_mail', type: 'text', label: 'Mail', visibleIf: { fieldKey: 'newsletter', op: 'checked' }, validation: { pattern: 'email' } },
+    { key: 'privacy', type: 'info', label: 'Datenschutz', infoKind: 'privacy_notice', text: '' },
+    { key: 'agree', type: 'consent', label: 'Ich stimme zu', required: true },
+    { key: 'age', type: 'number', label: 'Alter', validation: { min: 3, max: 99 } },
+    { key: 'born', type: 'date', label: 'Geburtstag', validation: { minDate: '1900-01-01', maxDate: '2030-12-31' } },
+    { key: 'photo', type: 'image', label: 'Foto', required: true },
+];
+
+describe('visibility', () => {
+    it('shows a conditional field only when its condition holds', () => {
+        expect(visibleFieldKeys(FIELDS, {}).has('parent_note')).toBe(false);
+        expect(visibleFieldKeys(FIELDS, { category: 'jugend' }).has('parent_note')).toBe(true);
+        expect(visibleFieldKeys(FIELDS, { category: 'aktiv' }).has('parent_note')).toBe(false);
+    });
+
+    it('supports in (single and multi value), checked and neq', () => {
+        expect(visibleFieldKeys(FIELDS, { sports: ['b'] }).has('sports_detail')).toBe(false);
+        expect(visibleFieldKeys(FIELDS, { sports: ['b', 'a'] }).has('sports_detail')).toBe(true);
+        expect(visibleFieldKeys(FIELDS, { newsletter: false }).has('newsletter_mail')).toBe(false);
+        expect(visibleFieldKeys(FIELDS, { newsletter: true }).has('newsletter_mail')).toBe(true);
+        const neq: FormField[] = [
+            { key: 'a_field', type: 'select', label: 'A', options: [{ value: 'x', label: 'X' }] },
+            { key: 'b_field', type: 'text', label: 'B', visibleIf: { fieldKey: 'a_field', op: 'neq', value: 'x' } },
+        ];
+        expect(visibleFieldKeys(neq, {}).has('b_field')).toBe(true);
+        expect(visibleFieldKeys(neq, { a_field: 'x' }).has('b_field')).toBe(false);
+    });
+
+    it('hides a field behind a hidden field', () => {
+        const chain: FormField[] = [
+            { key: 'a_field', type: 'checkbox', label: 'A' },
+            { key: 'b_field', type: 'checkbox', label: 'B', visibleIf: { fieldKey: 'a_field', op: 'checked' } },
+            { key: 'c_field', type: 'text', label: 'C', visibleIf: { fieldKey: 'b_field', op: 'checked' } },
+        ];
+        // b is hidden, so its stale `true` must not reveal c.
+        expect(visibleFieldKeys(chain, { b_field: true }).has('c_field')).toBe(false);
+        expect(visibleFieldKeys(chain, { a_field: true, b_field: true }).has('c_field')).toBe(true);
+    });
+
+    it('ignores prototype keys in answers', () => {
+        const answers = JSON.parse('{"__proto__": {"category": "jugend"}}') as Record<string, unknown>;
+        expect(visibleFieldKeys(FIELDS, answers).has('parent_note')).toBe(false);
+    });
+
+    it('keeps info blocks in the visible list', () => {
+        expect(visibleFields(FIELDS, {}).some((f) => f.key === 'privacy')).toBe(true);
+        expect(visibleFields(FIELDS, {}).some((f) => f.key === 'parent_note')).toBe(false);
+    });
+});
+
+describe('privacyNoticeIndex', () => {
+    it('is null without a notice or when an info block without text carries it', () => {
+        expect(privacyNoticeIndex(FIELDS, null)).toBeNull();
+        expect(privacyNoticeIndex(FIELDS, '  ')).toBeNull();
+        expect(privacyNoticeIndex(FIELDS, 'Text')).toBeNull();
+    });
+    it('goes above the first consent, else to the end', () => {
+        const noInfo = FIELDS.filter((f) => f.type !== 'info');
+        expect(privacyNoticeIndex(noInfo, 'Text')).toBe(noInfo.findIndex((f) => f.type === 'consent'));
+        const noConsent = noInfo.filter((f) => f.type !== 'consent');
+        expect(privacyNoticeIndex(noConsent, 'Text')).toBe(noConsent.length);
+    });
+});
+
+describe('validateAnswers (client mirror)', () => {
+    const ok = { first_name: 'Anna', category: 'aktiv', agree: true };
+
+    it('requires visible required fields on submit only', () => {
+        expect(validateAnswers(FIELDS, {}, { mode: 'draft' })).toEqual({});
+        const errors = validateAnswers(FIELDS, {}, { mode: 'submit' });
+        expect(errors).toMatchObject({ first_name: 'required', category: 'required', agree: 'required', photo: 'required' });
+        expect(errors.parent_note).toBeUndefined();
+    });
+
+    it('makes a hidden required field optional and a visible one required', () => {
+        expect(validateAnswers(FIELDS, { ...ok, category: 'jugend' }, { mode: 'submit', uploadedFieldKeys: new Set(['photo']) })).toEqual({ parent_note: 'required' });
+        expect(validateAnswers(FIELDS, ok, { mode: 'submit', uploadedFieldKeys: new Set(['photo']) })).toEqual({});
+    });
+
+    it('accepts an uploaded required file', () => {
+        expect(validateAnswers(FIELDS, ok, { mode: 'submit', uploadedFieldKeys: new Set(['photo']) })).toEqual({});
+    });
+
+    it('requires a required consent to be true', () => {
+        expect(validateAnswers(FIELDS, { ...ok, agree: false }, { mode: 'submit', uploadedFieldKeys: new Set(['photo']) })).toEqual({ agree: 'required' });
+    });
+
+    it('checks lengths, presets, ranges, dates and options', () => {
+        const e = (answers: Record<string, unknown>) => validateAnswers(FIELDS, answers, { mode: 'draft' });
+        expect(e({ first_name: 'x'.repeat(11) })).toEqual({ first_name: 'too_long' });
+        expect(e({ newsletter: true, newsletter_mail: 'nope' })).toEqual({ newsletter_mail: 'invalid_format' });
+        expect(e({ newsletter: true, newsletter_mail: 'a@b.de' })).toEqual({});
+        expect(e({ age: 2 })).toEqual({ age: 'too_small' });
+        expect(e({ age: 100 })).toEqual({ age: 'too_large' });
+        expect(e({ age: '5' })).toEqual({ age: 'invalid_type' });
+        expect(e({ born: '1899-12-31' })).toEqual({ born: 'too_small' });
+        expect(e({ born: '2031-01-01' })).toEqual({ born: 'too_large' });
+        expect(e({ born: '2020-02-30' })).toEqual({ born: 'invalid_value' });
+        expect(e({ category: 'other' })).toEqual({ category: 'not_an_option' });
+        expect(e({ sports: ['a', 'z'] })).toEqual({ sports: 'not_an_option' });
+        expect(e({ sports: ['a', 'a'] })).toEqual({ sports: 'invalid_value' });
+    });
+
+    it('does not validate hidden fields', () => {
+        expect(validateAnswers(FIELDS, { newsletter: false, newsletter_mail: 'nope' }, { mode: 'draft' })).toEqual({});
+    });
+});
+
+describe('visibleAnswers', () => {
+    it('drops hidden and empty answers', () => {
+        expect(visibleAnswers(FIELDS, { first_name: 'A', parent_note: 'x', age: 5, newsletter: false, sports: [] })).toEqual({ first_name: 'A', age: 5 });
+    });
+});
+
+describe('diffAnswers / applyPatch', () => {
+    it('sends only changed keys and null for emptied ones', () => {
+        const saved = { a_field: 'x', b_field: 'y', c_field: true };
+        const current = { a_field: 'x', b_field: 'z', c_field: false, d_field: [] as string[], e_field: 'n' };
+        expect(diffAnswers(saved, current)).toEqual({ b_field: 'z', c_field: null, e_field: 'n' });
+    });
+    it('treats empty strings, false and empty lists as not answered', () => {
+        expect(diffAnswers({}, { a_field: '  ', b_field: false, c_field: [] })).toEqual({});
+        expect(diffAnswers({ a_field: 'x' }, { a_field: '' })).toEqual({ a_field: null });
+    });
+    it('skips refused keys', () => {
+        expect(diffAnswers({}, { a_field: 'x', b_field: 'y' }, new Set(['a_field']))).toEqual({ b_field: 'y' });
+    });
+    it('compares lists by content', () => {
+        expect(diffAnswers({ s: ['a', 'b'] }, { s: ['a', 'b'] })).toEqual({});
+        expect(diffAnswers({ s: ['a', 'b'] }, { s: ['b'] })).toEqual({ s: ['b'] });
+    });
+    it('applyPatch mirrors the server merge (null removes)', () => {
+        expect(applyPatch({ a_field: 'x', b_field: 'y' }, { a_field: null, c_field: 1 })).toEqual({ b_field: 'y', c_field: 1 });
+    });
+    it('a patch applied to the baseline reproduces the current answers', () => {
+        const saved = { a_field: 'x', b_field: 'y' };
+        const current = { a_field: 'q', c_field: true };
+        expect(applyPatch(saved, diffAnswers(saved, current))).toEqual(current);
+    });
+});
+
+describe('carryAnswers / droppedLabels', () => {
+    const next: FormField[] = [
+        { key: 'first_name', type: 'text', label: 'Vorname' },
+        { key: 'photo', type: 'image', label: 'Foto' },
+        { key: 'info_block', type: 'info', label: 'Info' },
+    ];
+    it('keeps answers of answerable fields and reports the rest', () => {
+        const r = carryAnswers(next, { first_name: 'A', category: 'aktiv', photo: 'x', empty_field: '' }, []);
+        expect(r.answers).toEqual({ first_name: 'A' });
+        expect(r.dropped.sort()).toEqual(['category', 'photo']);
+    });
+    it('drops keys the server dropped as well', () => {
+        expect(carryAnswers(next, { first_name: 'A' }, ['first_name'])).toEqual({ answers: {}, dropped: ['first_name'] });
+    });
+    it('labels dropped keys from the old definition', () => {
+        expect(droppedLabels(FIELDS, ['category', 'gone', 'category'])).toEqual(['Kategorie', 'gone']);
+    });
+});
+
+describe('error mapping', () => {
+    it('reads field errors of a 422', () => {
+        const err = new ApiError(422, 'UNPROCESSABLE_ENTITY', 'Answers do not match the form', { fields: { first_name: 'too_long', other: 'weird' } });
+        expect(fieldErrorsFromError(err)).toEqual({ first_name: 'too_long', other: 'invalid_value' });
+        expect(fieldErrorsFromError(new ApiError(422, 'X', 'm', { fields: {} }))).toBeNull();
+        expect(fieldErrorsFromError(new ApiError(409, 'X', 'm', { fields: { a: 'required' } }))).toBeNull();
+        expect(fieldErrorsFromError(new Error('x'))).toBeNull();
+    });
+
+    it('extracts FORM_VERSION_OUTDATED with the new definition', () => {
+        const current = { formId: 'f', formVersionId: 'v2', version: 2, purpose: 'aufnahme', name: 'n', privacyNotice: null, childApplication: false, fields: [] };
+        const info = outdatedFrom(new ApiError(409, 'FORM_VERSION_OUTDATED', 'm', { submissionId: 's1', currentVersion: current }));
+        expect(info).toEqual({ current, submissionId: 's1' });
+        // the club has no form any more
+        expect(outdatedFrom(new ApiError(409, 'FORM_VERSION_OUTDATED', 'm', { currentVersion: null }))).toEqual({ current: null, submissionId: null });
+        expect(outdatedFrom(new ApiError(409, 'CONFLICT', 'm'))).toBeNull();
+        expect(outdatedFrom(new ApiError(422, 'FORM_VERSION_OUTDATED', 'm'))).toBeNull();
+    });
+
+    it('maps every documented code to its own text', () => {
+        const key = (status: number, code: string, details?: unknown, message = 'm') => formErrorKey(new ApiError(status, code, message, details));
+        expect(key(409, 'FORM_VERSION_OUTDATED')).toBe('forms.err.outdated');
+        expect(key(409, 'CONFLICT', { code: 'draft_limit' })).toBe('forms.err.draftLimit');
+        expect(key(409, 'CONFLICT', { code: 'draft_limit_user' })).toBe('forms.err.draftLimitUser');
+        expect(key(422, 'QUOTA_EXCEEDED', { code: 'draft_upload_cap' })).toBe('forms.err.draftUploadCap');
+        expect(key(422, 'QUOTA_EXCEEDED', { code: 'club_quota' })).toBe('forms.err.clubQuota');
+        expect(key(422, 'QUOTA_EXCEEDED', { code: 'unattached_cap' })).toBe('forms.err.unattachedCap');
+        expect(key(409, 'CONFLICT', { code: 'child_application_limit' })).toBe('forms.err.childLimit');
+        expect(key(409, 'CONFLICT', { code: 'club_child_application_limit' })).toBe('forms.err.clubChildLimit');
+        expect(key(409, 'CONFLICT', { code: 'child_application_unsupported' })).toBe('forms.err.childUnsupported');
+        expect(key(403, 'FORBIDDEN', { code: 'email_not_verified' })).toBe('forms.err.emailNotVerified');
+        expect(key(409, 'CONFLICT', { code: 'guardian_not_active' })).toBe('forms.err.guardianNotActive');
+        expect(key(409, 'CONFLICT', { code: 'form_required' })).toBe('forms.err.formRequired');
+        expect(key(409, 'CONFLICT', { code: 'submission_not_editable' })).toBe('forms.err.notEditable');
+        expect(key(409, 'CONFLICT', { code: 'submission_not_withdrawable' })).toBe('forms.err.notWithdrawable');
+        expect(key(409, 'CONFLICT', { code: 'application_withdrawn' })).toBe('forms.err.applicationWithdrawn');
+        expect(key(409, 'CONFLICT', { code: 'member_rejoin_blocked' })).toBe('verein.err.rejoinBlocked');
+        expect(key(409, 'ALREADY_MEMBER')).toBe('verein.err.alreadyMember');
+        expect(key(409, 'APPLICATION_PENDING')).toBe('forms.err.applicationPending');
+        expect(key(422, 'UNPROCESSABLE_ENTITY', { fields: { a: 'required' } })).toBe('forms.err.fieldsInvalid');
+        expect(key(413, 'X')).toBe('forms.err.fileSize');
+        expect(key(422, 'X', undefined, 'File exceeds maximum size of 10485760 bytes')).toBe('forms.err.fileSize');
+        expect(key(422, 'X', undefined, 'Unsupported file type')).toBe('forms.err.fileType');
+        expect(key(422, 'X', undefined, 'At most 5 files per submission')).toBe('forms.err.fileCount');
+        expect(key(429, 'TOO_MANY_REQUESTS')).toBe('verein.err.rateLimit');
+        expect(key(500, 'INTERNAL')).toBe('verein.err.server');
+        expect(formErrorKey(new TypeError('network'))).toBe('verein.err.network');
+    });
+
+    it('maps child warnings and refuses unknown ones', () => {
+        expect(childWarningKey('child_is_adult')).toBe('forms.warn.child_is_adult');
+        expect(childWarningKey('something_else')).toBeNull();
+        expect(childWarningKey(null)).toBeNull();
+    });
+});
+
+describe('file helpers', () => {
+    it('accepts PDF, JPEG and PNG up to 10 MB', () => {
+        expect(checkFieldFile({ type: 'application/pdf', size: 1000 })).toBeNull();
+        expect(checkFieldFile({ type: 'image/png', size: 10 * 1024 * 1024 })).toBeNull();
+        expect(checkFieldFile({ type: 'image/gif', size: 1000 })).toBe('file_type');
+        expect(checkFieldFile({ type: 'image/png', size: 10 * 1024 * 1024 + 1 })).toBe('file_size');
+        expect(checkFieldFile({ type: 'image/png', size: 0 })).toBe('file_size');
+    });
+    it('formats sizes', () => {
+        expect(formatBytes(500)).toBe('500 B');
+        expect(formatBytes(2048, 'en')).toBe('2 KB');
+        expect(formatBytes(1536 * 1024, 'en')).toBe('1.5 MB');
+    });
+});
