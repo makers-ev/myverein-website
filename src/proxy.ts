@@ -66,14 +66,15 @@ export function proxy(request: NextRequest) {
     // The backend's origin must be reachable from `connect-src` since the
     // Better Auth client (src/lib/auth-client.ts) fetches it directly from
     // the browser (sign-in/sign-up/session calls never go through this app's
-    // own server).
+    // own server). `img-src` needs it too: member/location photos are signed
+    // `<backend>/media/...` URLs (media security layer), loaded by plain <img>.
     const backendOrigin = process.env.NEXT_PUBLIC_BACKEND_URL ?? "'self'";
 
     const cspHeader = `
         default-src 'self';
         script-src 'self' ${isDev ? "'unsafe-inline' 'unsafe-eval'" : `'nonce-${nonce}' 'strict-dynamic'`};
         style-src 'self' ${isDev ? "'unsafe-inline'" : `'nonce-${nonce}'`};
-        img-src 'self' blob: data:;
+        img-src 'self' blob: data: ${backendOrigin};
         font-src 'self';
         connect-src 'self' ${backendOrigin};
         object-src 'none';
@@ -98,7 +99,9 @@ export function proxy(request: NextRequest) {
     response.headers.set('Content-Security-Policy', contentSecurityPolicyHeaderValue);
     response.headers.set('X-Frame-Options', 'DENY');
     response.headers.set('X-Content-Type-Options', 'nosniff');
-    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    // The invitation landing page carries a secret token in its URL: never send that URL on as Referer.
+    const invitationPage = request.nextUrl.pathname === '/einladung' || request.nextUrl.pathname.startsWith('/einladung/');
+    response.headers.set('Referrer-Policy', invitationPage ? 'no-referrer' : 'strict-origin-when-cross-origin');
 
     return response;
 }

@@ -135,4 +135,51 @@ export const CHANGELOG_RELEASES: ChangelogRelease[] = [
             },
         ],
     },
+    {
+        id: '2026-09-24-ui-paritaet',
+        date: '2026-09-24',
+        title: { de: 'Kalenderansicht & App-Website-Parität', en: 'Calendar view & app/website parity' },
+        changes: [
+            {
+                type: 'feature',
+                title: { de: 'Monatskalender', en: 'Month calendar' },
+                description: {
+                    de: 'Termine als Monatsansicht mit Abteilungsfarben auf Website und App; Tag antippen legt einen Termin an.',
+                    en: 'Events in a month view with department colors on website and app; tap a day to create an event.',
+                },
+            },
+            {
+                type: 'feature',
+                title: { de: 'Mehr Funktionen in der App', en: 'More features in the app' },
+                description: {
+                    de: 'Termine, Kalender, Inventar, Standorte sowie WLAN-Netze und Links lassen sich jetzt auch mobil anlegen und bearbeiten.',
+                    en: 'Events, calendars, inventory, locations, WiFi networks and links can now be created and edited on mobile too.',
+                },
+            },
+            {
+                type: 'feature',
+                title: { de: 'Mehr Funktionen auf der Website', en: 'More features on the website' },
+                description: {
+                    de: 'Selbstauskunft pflegen, Aufnahmeantrag stellen und WLAN-QR-Codes anzeigen, jetzt auch im Browser.',
+                    en: 'Maintain your self-disclosure, submit a membership application and show WiFi QR codes, now in the browser too.',
+                },
+            },
+            {
+                type: 'improvement',
+                title: { de: 'Neue Bedienelemente', en: 'New UI components' },
+                description: {
+                    de: 'Datums-/Zeitauswahl, Formular-Dialoge, Status-Chips und Leerzustände statt einfacher Eingabefelder.',
+                    en: 'Date/time pickers, form dialogs, status chips and empty states instead of plain input fields.',
+                },
+            },
+            {
+                type: 'fix',
+                title: { de: 'Rollen nicht mehr doppelt vergebbar', en: 'Roles can no longer be assigned twice' },
+                description: {
+                    de: 'Eine Rolle kann einem Mitglied nur noch einmal zugewiesen werden.',
+                    en: 'A role can only be assigned to a member once.',
+                },
+            },
+        ],
+    },
 ];

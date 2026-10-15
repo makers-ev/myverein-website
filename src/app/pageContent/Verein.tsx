@@ -2,8 +2,22 @@
 
 import { useEffect, useState } from 'react';
 
-import { apiFetch, ApiError } from '@/lib/api-client';
+import { apiFetch } from '@/lib/api-client';
+import { useThrottledCallback } from '@/lib/useThrottledCallback';
+import { memberErrorKey } from '@/lib/clubMembers';
 import { useLanguage } from '@/contexts/LanguageContext';
+import ApplicationsPanel, { type ClubApplication } from '@/components/verein/ApplicationsPanel';
+import NoClubSection from '@/components/verein/NoClubSection';
+import CategoriesPanel from '@/components/verein/CategoriesPanel';
+import ClubSettingsPanel from '@/components/verein/ClubSettingsPanel';
+import ClubStatsPanel from '@/components/verein/ClubStatsPanel';
+import ExitQueuePanel from '@/components/verein/ExitQueuePanel';
+import MemberList from '@/components/verein/MemberList';
+import MemberAvatar from '@/components/verein/MemberAvatar';
+import RoleBadge from '@/components/verein/RoleBadge';
+import ProfilTab, { type OwnMembership } from '@/components/verein/ProfilTab';
+import LoadingText from '@/components/LoadingText';
+import LoadError from '@/components/LoadError';
 
 interface MyClub {
     clubId: string;
@@ -17,6 +31,8 @@ interface BoardMember {
     name: string | null;
     roleType: string;
     termEndsAt: string | null;
+    /** Signed short-lived URL; only for own row / members:write / read_sensitive, else `null`. */
+    photoUrl?: string | null;
 }
 
 interface Department {
@@ -39,56 +55,7 @@ interface ClubInfo {
     pages: ClubInfoPage[];
 }
 
-interface ClubMemberRole {
-    id: string;
-    roleType: string;
-    departmentId: string | null;
-    termEndsAt: string | null;
-}
-
-interface ClubMember {
-    id: string;
-    userId: string;
-    name: string | null;
-    email: string | null;
-    category: string | null;
-    joinedAt: string | null;
-    roles: ClubMemberRole[];
-}
-
-type Tab = 'info' | 'mitglieder' | 'abteilungen';
-
-// Mirrors the backend's CLUB_ROLE_TYPES (src/lib/club-permissions.ts) --
-// kept in sync by hand, same as the verein.role.* translation keys already
-// are for display strings.
-const CLUB_ROLE_TYPES = [
-    'vorsitz',
-    'stellv_vorsitz',
-    'kassenwart',
-    'schriftfuehrer',
-    'beisitzer',
-    'abteilungsleitung',
-    'trainer',
-    'erziehungsberechtigt',
-] as const;
-
-function RoleBadge({ roleType, onRemove }: { roleType: string; onRemove?: () => void }) {
-    const { t } = useLanguage();
-    return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
-            {t(`verein.role.${roleType}`)}
-            {onRemove && (
-                <button
-                    onClick={onRemove}
-                    className="rounded-full text-primary/70 hover:text-destructive"
-                    aria-label={t('verein.roles.remove')}
-                >
-                    ×
-                </button>
-            )}
-        </span>
-    );
-}
+type Tab = 'info' | 'profil' | 'mitglieder' | 'austritte' | 'abteilungen' | 'kennzahlen' | 'einstellungen';
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
     return (
@@ -99,7 +66,7 @@ function SectionCard({ title, children }: { title: string; children: React.React
     );
 }
 
-function VereinsinfoTab({ info, t }: { info: ClubInfo; t: (key: string) => string }) {
+function VereinsinfoTab({ info, t, onPhotoExpired }: { info: ClubInfo; t: (key: string) => string; onPhotoExpired: () => void }) {
     return (
         <div className="grid gap-4 sm:grid-cols-2">
             <SectionCard title={t('verein.info.board')}>
@@ -109,7 +76,10 @@ function VereinsinfoTab({ info, t }: { info: ClubInfo; t: (key: string) => strin
                     <ul className="space-y-2">
                         {info.board.map((m) => (
                             <li key={m.memberId} className="flex items-center justify-between gap-2">
-                                <span className="text-sm text-foreground">{m.name ?? '—'}</span>
+                                <span className="flex min-w-0 items-center gap-2 text-sm text-foreground">
+                                    <MemberAvatar name={m.name} photoUrl={m.photoUrl} onExpired={onPhotoExpired} />
+                                    <span className="truncate">{m.name ?? '—'}</span>
+                                </span>
                                 <RoleBadge roleType={m.roleType} />
                             </li>
                         ))}
@@ -134,142 +104,16 @@ function VereinsinfoTab({ info, t }: { info: ClubInfo; t: (key: string) => strin
     );
 }
 
-function MemberRoleCell({
-    member,
-    clubId,
-    t,
-    onChange,
-}: {
-    member: ClubMember;
-    clubId: string;
-    t: (key: string) => string;
-    onChange: () => void;
-}) {
-    const [adding, setAdding] = useState(false);
-    const [newRole, setNewRole] = useState<(typeof CLUB_ROLE_TYPES)[number]>('beisitzer');
-    const [error, setError] = useState<string | null>(null);
-
-    async function handleAdd() {
-        setError(null);
-        try {
-            await apiFetch(`/club-members/${member.id}/roles?clubId=${clubId}`, {
-                method: 'POST',
-                body: { roleType: newRole },
-            });
-            setAdding(false);
-            onChange();
-        } catch (err) {
-            // Same "surface a 403 inline instead of a silent no-op" pattern
-            // as AbteilungenTab's create form.
-            setError(err instanceof ApiError ? err.message : 'Request failed');
-        }
-    }
-
-    async function handleRemove(roleId: string) {
-        setError(null);
-        try {
-            await apiFetch(`/club-members/${member.id}/roles/${roleId}?clubId=${clubId}`, { method: 'DELETE' });
-            onChange();
-        } catch (err) {
-            setError(err instanceof ApiError ? err.message : 'Request failed');
-        }
-    }
-
-    return (
-        <div>
-            <div className="flex flex-wrap gap-1">
-                {member.roles.map((r) => (
-                    <RoleBadge key={r.id} roleType={r.roleType} onRemove={() => void handleRemove(r.id)} />
-                ))}
-            </div>
-            {adding ? (
-                <div className="mt-1.5 flex items-center gap-1">
-                    <select
-                        value={newRole}
-                        onChange={(e) => setNewRole(e.target.value as (typeof CLUB_ROLE_TYPES)[number])}
-                        className="rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground focus:border-primary focus:outline-none"
-                    >
-                        {CLUB_ROLE_TYPES.map((rt) => (
-                            <option key={rt} value={rt}>
-                                {t(`verein.role.${rt}`)}
-                            </option>
-                        ))}
-                    </select>
-                    <button
-                        onClick={() => void handleAdd()}
-                        className="rounded-md bg-primary px-2 py-1 text-xs font-semibold text-primary-foreground"
-                    >
-                        {t('verein.roles.add.confirm')}
-                    </button>
-                    <button onClick={() => setAdding(false)} className="text-xs text-muted-foreground hover:text-foreground">
-                        {t('verein.roles.add.cancel')}
-                    </button>
-                </div>
-            ) : (
-                <button onClick={() => setAdding(true)} className="mt-1.5 text-xs font-medium text-primary hover:underline">
-                    {t('verein.roles.add')}
-                </button>
-            )}
-            {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
-        </div>
-    );
-}
-
-function MitgliederTab({
-    members,
-    clubId,
-    t,
-    onChange,
-}: {
-    members: ClubMember[];
-    clubId: string;
-    t: (key: string) => string;
-    onChange: () => void;
-}) {
-    if (members.length === 0) {
-        return <p className="text-sm text-muted-foreground">{t('verein.members.empty')}</p>;
-    }
-
-    return (
-        <div className="overflow-x-auto rounded-xl border border-border">
-            <table className="w-full text-sm">
-                <thead>
-                    <tr className="border-b border-border bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
-                        <th className="px-3 py-2">{t('verein.members.table.name')}</th>
-                        <th className="px-3 py-2">{t('verein.members.table.category')}</th>
-                        <th className="px-3 py-2">{t('verein.members.table.roles')}</th>
-                        <th className="px-3 py-2">{t('verein.members.table.joined')}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {members.map((m) => (
-                        <tr key={m.id} className="border-b border-border last:border-b-0 align-top">
-                            <td className="px-3 py-2 text-foreground">{m.name ?? '—'}</td>
-                            <td className="px-3 py-2 text-muted-foreground">
-                                {m.category ? t(`verein.category.${m.category}`) : '—'}
-                            </td>
-                            <td className="px-3 py-2">
-                                <MemberRoleCell member={m} clubId={clubId} t={t} onChange={onChange} />
-                            </td>
-                            <td className="px-3 py-2 text-muted-foreground">
-                                {m.joinedAt ? new Date(m.joinedAt).toLocaleDateString('de-DE') : '—'}
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
-    );
-}
-
 function AbteilungenTab({
     departments,
     clubId,
+    canEdit,
     t,
     onChange,
 }: {
     departments: Department[];
     clubId: string;
+    canEdit: boolean;
     t: (key: string) => string;
     onChange: () => void;
 }) {
@@ -290,7 +134,7 @@ function AbteilungenTab({
             // ForbiddenError surfaces here for a caller without
             // departments:write -- shown inline instead of a silent no-op,
             // so a non-board member understands why the form didn't work.
-            setError(err instanceof ApiError ? err.message : 'Request failed');
+            setError(t(memberErrorKey(err)));
         } finally {
             setSubmitting(false);
         }
@@ -298,22 +142,24 @@ function AbteilungenTab({
 
     return (
         <div className="space-y-4">
-            <form onSubmit={(e) => void handleCreate(e)} className="flex gap-2">
-                <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder={t('verein.departments.new.placeholder')}
-                    className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-                />
-                <button
-                    type="submit"
-                    disabled={submitting || !name.trim()}
-                    className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
-                >
-                    {t('verein.departments.new.submit')}
-                </button>
-            </form>
+            {canEdit && (
+                <form onSubmit={(e) => void handleCreate(e)} className="flex gap-2">
+                    <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder={t('verein.departments.new.placeholder')}
+                        className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                    />
+                    <button
+                        type="submit"
+                        disabled={submitting || !name.trim()}
+                        className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+                    >
+                        {t('verein.departments.new.submit')}
+                    </button>
+                </form>
+            )}
             {error && <p className="text-sm text-destructive">{error}</p>}
 
             {departments.length === 0 ? (
@@ -334,26 +180,71 @@ function AbteilungenTab({
 export default function VereinPageContent() {
     const { t } = useLanguage();
     const [clubs, setClubs] = useState<MyClub[] | null>(null);
+    const [clubsError, setClubsError] = useState(false);
     const [info, setInfo] = useState<ClubInfo | null>(null);
-    const [members, setMembers] = useState<ClubMember[] | null>(null);
+    const [me, setMe] = useState<OwnMembership | null>(null);
     const [tab, setTab] = useState<Tab>('info');
+    const [applications, setApplications] = useState<ClubApplication[] | null>(null);
+    const [applicationsError, setApplicationsError] = useState(false);
+    // Open exit requests (badge on the "Austritte" tab); null = unknown / no permission.
+    const [exitPending, setExitPending] = useState<number | null>(null);
+    // Bumped whenever the member list must reload (an application was decided, ...).
+    const [membersReload, setMembersReload] = useState(0);
 
     const activeClub = clubs?.[0] ?? null;
 
-    useEffect(() => {
-        // setClubs runs inside the .then() callback, not synchronously in
-        // the effect body, so this doesn't need the same disable comment
-        // the synchronous refreshClubData effect below does.
-        void apiFetch<{ data: MyClub[] }>('/my-clubs').then(({ data }) => setClubs(data));
-    }, []);
+    // Signed photo URLs expire: a failed image load refetches only the resource that carried the URL, throttled.
+    const refetchBoardPhotos = useThrottledCallback(async () => {
+        if (!activeClub) return;
+        const res = await apiFetch<{ data: ClubInfo }>(`/club-info?clubId=${activeClub.clubId}`);
+        setInfo(res.data);
+    });
+    const refetchOwnPhoto = useThrottledCallback(async () => {
+        if (!activeClub) return;
+        const res = await apiFetch<{ data: OwnMembership }>(`/club-members/me?clubId=${activeClub.clubId}`);
+        setMe(res.data);
+    });
+
+    function loadClubs() {
+        apiFetch<{ data: MyClub[] }>('/my-clubs')
+            .then(({ data }) => {
+                setClubs(data);
+                setClubsError(false);
+            })
+            .catch(() => setClubsError(true));
+    }
+
+    // setClubs runs inside the .then() callback, not synchronously in the effect body.
+    useEffect(loadClubs, []);
 
     async function refreshClubData(clubId: string) {
-        const [infoRes, membersRes] = await Promise.all([
+        const [infoRes, meRes] = await Promise.all([
             apiFetch<{ data: ClubInfo }>(`/club-info?clubId=${clubId}`),
-            apiFetch<{ data: ClubMember[] }>(`/club-members?clubId=${clubId}`),
+            apiFetch<{ data: OwnMembership }>(`/club-members/me?clubId=${clubId}`),
         ]);
         setInfo(infoRes.data);
-        setMembers(membersRes.data);
+        setMe(meRes.data);
+        setMembersReload((n) => n + 1);
+        // Open applications are only readable with members:write.
+        if (meRes.data.permissions.includes('members:write')) {
+            try {
+                const appsRes = await apiFetch<{ data: ClubApplication[] }>(`/club-applications?clubId=${clubId}`);
+                setApplications(appsRes.data);
+                setApplicationsError(false);
+            } catch {
+                setApplicationsError(true);
+            }
+            try {
+                const exitRes = await apiFetch<{ total: number }>(`/club-exit-requests?clubId=${clubId}&status=pending&pageSize=1`);
+                setExitPending(exitRes.total);
+            } catch {
+                setExitPending(null);
+            }
+        } else {
+            setApplications(null);
+            setApplicationsError(false);
+            setExitPending(null);
+        }
     }
 
     useEffect(() => {
@@ -363,59 +254,109 @@ export default function VereinPageContent() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeClub?.clubId]);
 
+    const permissions = me?.permissions ?? [];
+    // Every tab beyond the basics hangs on a permission from GET /club-members/me (the backend enforces them too).
+    // Guardians (external role) have no right to the member list; hide the tab instead of showing a 403.
+    const guardianOnly = !!me && permissions.length === 0 && me.roles.length > 0 && me.roles.every((r) => r.roleType === 'erziehungsberechtigt');
+    const tabs: Tab[] = guardianOnly ? ['info', 'profil', 'abteilungen'] : ['info', 'profil', 'mitglieder', 'abteilungen'];
+    if (permissions.includes('members:write')) tabs.push('austritte');
+    if (permissions.includes('club_stats:read')) tabs.push('kennzahlen');
+    if (permissions.includes('members:write')) tabs.push('einstellungen');
+    const currentTab: Tab = tabs.includes(tab) ? tab : 'info';
+
     return (
-        <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
             <h1 className="text-2xl font-bold text-foreground">
                 {activeClub?.clubName ?? t('verein.page.title')}
             </h1>
 
-            {clubs === null ? (
-                <p className="mt-6 text-sm text-muted-foreground">…</p>
+            {clubsError ? (
+                <LoadError className="mt-6" onRetry={loadClubs} />
+            ) : clubs === null ? (
+                <LoadingText className="mt-6" />
             ) : !activeClub ? (
-                <div className="mt-6 rounded-xl border border-border bg-card p-4">
-                    <p className="text-sm font-semibold text-foreground">{t('verein.no-club.title')}</p>
-                    <p className="mt-1 text-sm text-muted-foreground">{t('verein.no-club.body')}</p>
-                </div>
+                <NoClubSection onRefreshClubs={loadClubs} />
             ) : (
                 <>
-                    <div className="mt-6 flex gap-2 border-b border-border">
-                        {(['info', 'mitglieder', 'abteilungen'] as const).map((value) => (
+                    <div className="mt-6 flex gap-2 overflow-x-auto border-b border-border">
+                        {tabs.map((value) => (
                             <button
                                 key={value}
                                 onClick={() => setTab(value)}
-                                className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
-                                    tab === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
+                                className={`whitespace-nowrap px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
+                                    currentTab === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
                                 }`}
                             >
                                 {t(`verein.tab.${value}`)}
+                                {value === 'austritte' && exitPending !== null && exitPending > 0 && (
+                                    <span className="ml-1.5 rounded-full bg-primary px-1.5 py-0.5 text-xs font-semibold text-primary-foreground">
+                                        {exitPending}
+                                    </span>
+                                )}
+                                {value === 'mitglieder' && applications && applications.length > 0 && (
+                                    <span className="ml-1.5 rounded-full bg-primary px-1.5 py-0.5 text-xs font-semibold text-primary-foreground">
+                                        {applications.length}
+                                    </span>
+                                )}
                             </button>
                         ))}
                     </div>
 
                     <div className="mt-4">
-                        {tab === 'info' && (info ? <VereinsinfoTab info={info} t={t} /> : <p className="text-sm text-muted-foreground">…</p>)}
-                        {tab === 'mitglieder' &&
-                            (members ? (
-                                <MitgliederTab
-                                    members={members}
+                        {currentTab === 'info' && (info ? <VereinsinfoTab info={info} t={t} onPhotoExpired={refetchBoardPhotos} /> : <LoadingText />)}
+                        {currentTab === 'profil' &&
+                            (me ? (
+                                <ProfilTab me={me} clubId={activeClub.clubId} onSaved={() => void refreshClubData(activeClub.clubId)} onPhotoExpired={refetchOwnPhoto} />
+                            ) : (
+                                <LoadingText />
+                            ))}
+                        {currentTab === 'mitglieder' && permissions.includes('members:write') && (
+                            <ApplicationsPanel
+                                applications={applications}
+                                loadError={applicationsError}
+                                clubId={activeClub.clubId}
+                                onDecided={() => refreshClubData(activeClub.clubId)}
+                            />
+                        )}
+                        {currentTab === 'mitglieder' &&
+                            (me && info ? (
+                                <MemberList
                                     clubId={activeClub.clubId}
-                                    t={t}
-                                    onChange={() => void refreshClubData(activeClub.clubId)}
+                                    permissions={permissions}
+                                    departments={info.departments.map((d) => ({ id: d.id, name: d.name }))}
+                                    reloadToken={membersReload}
                                 />
                             ) : (
-                                <p className="text-sm text-muted-foreground">…</p>
+                                <LoadingText />
                             ))}
-                        {tab === 'abteilungen' &&
+                        {currentTab === 'austritte' && permissions.includes('members:write') && (
+                            <ExitQueuePanel
+                                clubId={activeClub.clubId}
+                                ownMemberId={me?.memberId ?? null}
+                                ownClubMemberId={me?.clubMemberId ?? null}
+                                canProtectedExit={permissions.includes('roles:write')}
+                                onChanged={() => void refreshClubData(activeClub.clubId)}
+                            />
+                        )}
+                        {currentTab === 'abteilungen' &&
                             (info ? (
                                 <AbteilungenTab
                                     departments={info.departments}
                                     clubId={activeClub.clubId}
+                                    canEdit={permissions.includes('departments:write')}
                                     t={t}
                                     onChange={() => void refreshClubData(activeClub.clubId)}
                                 />
                             ) : (
-                                <p className="text-sm text-muted-foreground">…</p>
+                                <LoadingText />
                             ))}
+                        {currentTab === 'kennzahlen' && <ClubStatsPanel clubId={activeClub.clubId} />}
+                        {currentTab === 'einstellungen' && (
+                            <div className="space-y-6">
+                                <ClubSettingsPanel clubId={activeClub.clubId} />
+                                <CategoriesPanel clubId={activeClub.clubId} onChanged={() => setMembersReload((n) => n + 1)} />
+                            </div>
+                        )}
                     </div>
                 </>
             )}

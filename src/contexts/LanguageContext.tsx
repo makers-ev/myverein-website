@@ -21,6 +21,10 @@ import RoadmapTranslation from './RoadmapTranslation';
 import ChangelogTranslation from './ChangelogTranslation';
 import FeaturesTranslation from './FeaturesTranslation';
 import AboutTranslation from './AboutTranslation';
+import MarketingTranslation from './MarketingTranslation';
+import MarketingHeroTranslation from './MarketingHeroTranslation';
+import MarketingStoryTranslation from './MarketingStoryTranslation';
+import MarketingTrustTranslation from './MarketingTrustTranslation';
 
 interface LanguageContextType {
     language: Language;
@@ -52,6 +56,10 @@ export const translations: Record<Language, Record<string, string>> = supportedL
             ...(id === 'de' || id === 'en' ? ChangelogTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? FeaturesTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? AboutTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? MarketingTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? MarketingHeroTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? MarketingStoryTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? MarketingTrustTranslation[id] : {}),
         };
         return acc;
     },

@@ -35,15 +35,33 @@ interface ApiFetchOptions {
  * from `headers()`); a Client Component omits `cookie` and relies on the
  * browser sending it.
  */
+/** Plain `JSON.parse` (no Date revival); an empty body is `null` like better-fetch's own parser. */
+export function parseJsonPlain(text: string): unknown {
+    return text === '' ? null : JSON.parse(text);
+}
+
 export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise<T> {
     const { data, error } = await authClient.$fetch<T>(`${backendUrl}${path}`, {
         method: options.method ?? 'GET',
         body: options.body,
+        // better-fetch's default parser revives ISO date strings into Date objects; all date helpers (and the types)
+        // expect the strings the backend sent, so parse plain.
+        jsonParser: parseJsonPlain,
         ...(options.cookie ? { headers: { cookie: options.cookie } } : {}),
     });
 
     if (error) {
-        throw new ApiError(error.status, (error as { code?: string }).code ?? 'UNKNOWN', error.message ?? 'Request failed');
+        // The Hono backend answers `{ error: { code, message, details? } }` (AppError.toJSON), Better Auth's own
+        // routes answer flat `{ code, message }` -- read the nested form first so `code`/`details` (e.g. the
+        // `allowed` list of a 409 status change) are not lost.
+        const body = error as { code?: string; message?: string; details?: unknown; error?: unknown };
+        const nested = body.error && typeof body.error === 'object' ? (body.error as { code?: string; message?: string; details?: unknown }) : null;
+        throw new ApiError(
+            error.status,
+            nested?.code ?? body.code ?? 'UNKNOWN',
+            nested?.message ?? body.message ?? 'Request failed',
+            nested?.details ?? body.details,
+        );
     }
 
     return data as T;

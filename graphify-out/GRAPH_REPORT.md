@@ -1,13 +1,18 @@
-# Graph Report - C:\GitHub\makers-ev\myverein\myverein-website  (2026-09-18)
+# Graph Report - myverein-website  (2026-09-24)
 
 ## Corpus Check
-- 0 files · ~99,999 words
+- 124 files · ~62,100 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 695 nodes · 1092 edges · 76 communities (45 shown, 31 thin omitted)
-- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 31 edges (avg confidence: 0.82)
+- 871 nodes · 1490 edges · 98 communities (63 shown, 35 thin omitted)
+- Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 79 edges (avg confidence: 0.81)
 - Token cost: 0 input · 0 output
+
+## Graph Freshness
+- Built from commit: `2017e8e0`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - [[_COMMUNITY_Community 0|Community 0]]
@@ -85,18 +90,38 @@
 - [[_COMMUNITY_Community 73|Community 73]]
 - [[_COMMUNITY_Community 74|Community 74]]
 - [[_COMMUNITY_Community 75|Community 75]]
+- [[_COMMUNITY_Community 76|Community 76]]
+- [[_COMMUNITY_Community 77|Community 77]]
+- [[_COMMUNITY_Community 78|Community 78]]
+- [[_COMMUNITY_Community 79|Community 79]]
+- [[_COMMUNITY_Community 80|Community 80]]
+- [[_COMMUNITY_Community 81|Community 81]]
+- [[_COMMUNITY_Community 82|Community 82]]
+- [[_COMMUNITY_Community 83|Community 83]]
+- [[_COMMUNITY_Community 84|Community 84]]
+- [[_COMMUNITY_Community 85|Community 85]]
+- [[_COMMUNITY_Community 86|Community 86]]
+- [[_COMMUNITY_Community 87|Community 87]]
+- [[_COMMUNITY_Community 88|Community 88]]
+- [[_COMMUNITY_Community 89|Community 89]]
+- [[_COMMUNITY_Community 90|Community 90]]
+- [[_COMMUNITY_Community 91|Community 91]]
+- [[_COMMUNITY_Community 92|Community 92]]
+- [[_COMMUNITY_Community 93|Community 93]]
+- [[_COMMUNITY_Community 94|Community 94]]
+- [[_COMMUNITY_Community 95|Community 95]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `useLanguage()` - 48 edges
-2. `compilerOptions` - 17 edges
+1. `useLanguage()` - 72 edges
+2. `T` - 68 edges
 3. `compilerOptions` - 16 edges
-4. `Website Template README` - 14 edges
-5. `Language` - 13 edges
-6. `AuthClient` - 12 edges
-7. `proxy() (CSP + host validation)` - 11 edges
-8. `Pages Table` - 11 edges
-9. `login-signup page` - 11 edges
-10. `Merged translations Object` - 11 edges
+4. `url` - 14 edges
+5. `Language` - 14 edges
+6. `apiFetch()` - 13 edges
+7. `createSiteMetadata()` - 13 edges
+8. `Website Template README` - 13 edges
+9. `AuthClient` - 12 edges
+10. `keywords` - 11 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `resolveCallbackUrl test suite` --references--> `CI GitHub Actions Workflow`  [INFERRED]
@@ -115,27 +140,27 @@
 - **SEO Metadata Pipeline for Public Pages** — readme_seo_metadata_system, readme_json_ld, readme_og_image_gen, readme_sitemap [EXTRACTED 0.90]
 - **Brand Logo Rebrand Asset Set** — myverein_logo_png, myverein_logo_svg, readme_project_config [INFERRED 0.80]
 
-## Communities (76 total, 31 thin omitted)
+## Communities (98 total, 35 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.05
-Nodes (54): size, size, alt, size, jsonLd, metadata, metadataValues, ICONS (+46 more)
+Cohesion: 0.18
+Nodes (11): jsonLd, metadata, metadataValues, author, authorUrl, logoUrl, author, authorUrl (+3 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.08
-Nodes (42): ADR-007: static prerender via CSP hash reverted, ADR-009 (i18n jsonb / DE-EN legal copy decision), {{appName}} interpolation mechanism, authClient, authClient.requestPasswordReset, AuthNav, admin-notification-templates.ts (backend), cid: logo attachment mechanism for email (+34 more)
+Nodes (40): ADR-007: static prerender via CSP hash reverted, ADR-009 (i18n jsonb / DE-EN legal copy decision), {{appName}} interpolation mechanism, authClient, authClient.requestPasswordReset, AuthNav, cid: logo attachment mechanism for email, buildAdminNotificationEmail (+32 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.06
-Nodes (28): ClubMember, Meeting, MEETING_STATUSES, MeetingInvitee, MeetingResolution, OverlapCandidate, TreffenPanel(), ApiError (+20 more)
+Cohesion: 0.08
+Nodes (37): CalendarFormModal(), CalendarManager(), CLUB_ROLE_TYPES, ModalState, VisibilityModal(), Calendar, CalendarEvent, CalendarVisibility (+29 more)
 
 ### Community 3 - "Community 3"
-Cohesion: 0.05
-Nodes (38): compilerOptions, allowJs, esModuleInterop, incremental, isolatedModules, jsx, lib, module (+30 more)
+Cohesion: 0.10
+Nodes (19): compilerOptions, allowJs, esModuleInterop, incremental, isolatedModules, jsx, lib, module (+11 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.09
-Nodes (31): resolveAcceptLanguage, resolveAcceptLanguage test suite, ADR-008: Custom Palette Derivation, No WCAG Enforcement, ADR-009: Language Registry, LTR-only, Per-key EN Fallback, DE/EN-only Legal Copy, AuthTranslation Dictionary, twoFactor() plugin config (backend), ComponentTranslation Dictionary, deriveTokens() (+23 more)
+Cohesion: 0.10
+Nodes (29): resolveAcceptLanguage, resolveAcceptLanguage test suite, ADR-008: Custom Palette Derivation, No WCAG Enforcement, ADR-009: Language Registry, LTR-only, Per-key EN Fallback, DE/EN-only Legal Copy, AuthTranslation Dictionary, ComponentTranslation Dictionary, deriveTokens(), HomeTranslation Dictionary (+21 more)
 
 ### Community 5 - "Community 5"
 Cohesion: 0.08
@@ -150,32 +175,32 @@ Cohesion: 0.14
 Nodes (18): CATEGORIES, ContactForm(), mailtoFallback(), buildTransporter(), CATEGORIES, ContactCategory, ContactPayload, LOGO_PATH (+10 more)
 
 ### Community 8 - "Community 8"
-Cohesion: 0.12
-Nodes (11): BoardMember, CLUB_ROLE_TYPES, ClubInfo, ClubInfoPage, ClubMember, ClubMemberRole, Department, MyClub (+3 more)
+Cohesion: 0.11
+Nodes (16): AbteilungenTab(), BoardMember, CLUB_ROLE_TYPES, ClubInfo, ClubInfoPage, ClubMember, ClubMemberRole, Department (+8 more)
 
 ### Community 9 - "Community 9"
 Cohesion: 0.16
-Nodes (9): geistMono, geistSans, metadata, RootLayout(), Footer(), ThemeProvider(), LanguageProvider(), isSupportedLanguage() (+1 more)
+Nodes (8): geistMono, geistSans, metadata, Footer(), ThemeProvider(), LanguageProvider(), defaultLanguage, defaultLanguage
 
 ### Community 10 - "Community 10"
-Cohesion: 0.14
-Nodes (11): Language, LanguageContext, enKeys, langKeys, nonLegalEnKeys, translations, LegalTranslation, Translation (+3 more)
+Cohesion: 0.15
+Nodes (10): Language, LanguageContext, enKeys, langKeys, nonLegalEnKeys, translations, LegalTranslation, Translation (+2 more)
 
 ### Community 11 - "Community 11"
-Cohesion: 0.22
-Nodes (6): NotificationBell(), TwoFactorPrompt(), TwoFactorPromptProps, AuthClient, Session, ResetPasswordPageInner()
+Cohesion: 0.18
+Nodes (8): APP_LINK_ICONS, AuthNav(), AuthNavAppLink, EmailVerificationPromptProps, NotificationBell(), AuthClient, Session, ResetPasswordPageInner()
 
 ### Community 12 - "Community 12"
-Cohesion: 0.21
-Nodes (8): NotFound(), AuthNav(), CookieCategory, CookieConsent(), DEFAULT_CATEGORIES, useLanguage(), HomepagePageContent(), VerifyEmailPageInner()
+Cohesion: 0.12
+Nodes (18): NotFound(), useLanguage(), BugStatus, KNOWN_BUGS, KnownBug, ROADMAP_ITEMS, RoadmapItem, RoadmapStatus (+10 more)
 
 ### Community 13 - "Community 13"
-Cohesion: 0.22
-Nodes (8): EmailVerificationPrompt(), EmailVerificationPromptProps, ForgotPasswordPrompt(), ForgotPasswordPromptProps, resolveCallbackUrl(), LoginSignupForm(), LoginSignupFormInner(), Mode
+Cohesion: 0.20
+Nodes (9): EmailVerificationPrompt(), ForgotPasswordPrompt(), ForgotPasswordPromptProps, TwoFactorPrompt(), TwoFactorPromptProps, resolveCallbackUrl(), LoginSignupForm(), LoginSignupFormInner() (+1 more)
 
 ### Community 14 - "Community 14"
-Cohesion: 0.15
-Nodes (12): authClient, backendUrl, Backend Better Auth Config (auth.ts), Protected-by-Default Routing Pattern, LanguageProvider Component, useLanguage() Hook, Navbar, Adding a New API Request Pattern (+4 more)
+Cohesion: 0.17
+Nodes (11): authClient, backendUrl, Protected-by-Default Routing Pattern, LanguageProvider Component, useLanguage() Hook, Navbar, Adding a New API Request Pattern, Pages & Route Access Pattern (+3 more)
 
 ### Community 15 - "Community 15"
 Cohesion: 0.17
@@ -186,8 +211,8 @@ Cohesion: 0.17
 Nodes (12): devDependencies, eslint, eslint-config-next, tailwindcss, @tailwindcss/postcss, @types/js-cookie, @types/node, @types/nodemailer (+4 more)
 
 ### Community 17 - "Community 17"
-Cohesion: 0.18
-Nodes (11): dependencies, better-auth, @heroicons/react, js-cookie, lucide-react, next, next-themes, @next/third-parties (+3 more)
+Cohesion: 0.17
+Nodes (12): dependencies, better-auth, @heroicons/react, js-cookie, lucide-react, next, next-themes, @next/third-parties (+4 more)
 
 ### Community 18 - "Community 18"
 Cohesion: 0.18
@@ -202,8 +227,8 @@ Cohesion: 0.22
 Nodes (11): Adding a Protected Page (Guide), authClient.getSession(), Cross-Origin Cookie Forwarding (layout), /notifications, page.tsx / pageContent Split, Protected-by-Default Routing, Next.js Route Groups, Server Component Cookie Forwarding (+3 more)
 
 ### Community 21 - "Community 21"
-Cohesion: 0.18
-Nodes (8): ComponentTranslation, Translation, LanguageContextType, NotificationTranslation, Translation, Language, Translation, VerfuegbarkeitTranslation
+Cohesion: 0.14
+Nodes (10): AuthTranslation, Translation, HomeTranslation, Translation, KalenderTranslation, Translation, LanguageContextType, NotificationTranslation (+2 more)
 
 ### Community 22 - "Community 22"
 Cohesion: 0.22
@@ -234,8 +259,8 @@ Cohesion: 0.33
 Nodes (6): /api/contact route (ContactCategory), Contact Email Templates, /contact, ContactForm component, handleSubmit(), LPJ IT-Solutions Generic Branding
 
 ### Community 29 - "Community 29"
-Cohesion: 0.43
-Nodes (4): REGION_ALIASES, resolveAcceptLanguage(), SupportedLanguage, supportedLanguageIds
+Cohesion: 0.33
+Nodes (6): RootLayout(), REGION_ALIASES, resolveAcceptLanguage(), isSupportedLanguage(), SupportedLanguage, supportedLanguageIds
 
 ### Community 30 - "Community 30"
 Cohesion: 0.47
@@ -254,8 +279,8 @@ Cohesion: 0.40
 Nodes (4): HeaderProps, Navbar(), NavItem, ThemeToggle()
 
 ### Community 34 - "Community 34"
-Cohesion: 0.40
-Nodes (4): IntroModal(), STEPS, Modal(), ModalProps
+Cohesion: 0.24
+Nodes (7): IntroModal(), STEPS, Modal(), ModalProps, CATEGORIES, EditableMember, MemberEditModal()
 
 ### Community 35 - "Community 35"
 Cohesion: 0.40
@@ -289,29 +314,93 @@ Nodes (3): CookieConsent, Footer, Logo
 Cohesion: 0.67
 Nodes (3): Color Palette & Theming System, CSP Nonce Security Pattern, Dynamic Rendering Limitation (ADR-007)
 
+### Community 50 - "Community 50"
+Cohesion: 0.09
+Nodes (29): ClubMember, conditionTone(), DAMAGE_STATUSES, DamageStatus, damageText, damageTone, formatEuros(), InventoryDamageReport (+21 more)
+
+### Community 51 - "Community 51"
+Cohesion: 0.12
+Nodes (21): buildWifiQrPayload(), escapeWifiField(), DamageReportsSection(), ItemFormModal(), ClubMember, CopyButton(), KeyHoldersSection(), LinkFormModal() (+13 more)
+
+### Community 52 - "Community 52"
+Cohesion: 0.17
+Nodes (11): metadata, metadata, metadata, metadata, description, keywords, url, metadata (+3 more)
+
 ### Community 53 - "Community 53"
 Cohesion: 1.00
 Nodes (3): Orchestration Workflow, web-dev Subagent, web-reviewer Subagent
 
+### Community 57 - "Community 57"
+Cohesion: 0.10
+Nodes (19): Adding a new API request, Adding a protected page, Better Auth Website Template, code:ts (const { data, error } = await authClient.$fetch<{ data: Widg), code:ts (const incomingHeaders = await headers();), code:block3 (npm install), code:block4 (open http://localhost:3001), code:block5 (docker build -f Dockerfile.base -t web-auth-base-image .) (+11 more)
+
+### Community 76 - "Community 76"
+Cohesion: 0.15
+Nodes (13): ApiError, apiFetch(), ApiFetchOptions, AvailabilityException, AvailabilitySlot, DEFAULT_ROW, MyClub, RowState (+5 more)
+
+### Community 77 - "Community 77"
+Cohesion: 0.17
+Nodes (7): ICONS, LegalDocument(), metadata, metadata, metadata, description, title
+
+### Community 78 - "Community 78"
+Cohesion: 0.18
+Nodes (7): metadata, title, createNoIndexMetadata(), NoIndexMetadataParams, metadata, metadata, metadata
+
+### Community 79 - "Community 79"
+Cohesion: 0.12
+Nodes (13): ClubMember, Meeting, MEETING_STATUSES, MeetingDetail(), MeetingInvitee, MeetingList(), MeetingResolution, OverlapCandidate (+5 more)
+
+### Community 80 - "Community 80"
+Cohesion: 0.18
+Nodes (7): size, size, alt, size, logoPath, primaryColor, logoPath
+
+### Community 81 - "Community 81"
+Cohesion: 0.18
+Nodes (9): JsonLdProps, jsonLd, metadata, metadataValues, createJsonLd(), JsonLdParams, jsonLd, metadata (+1 more)
+
+### Community 82 - "Community 82"
+Cohesion: 0.24
+Nodes (8): localizeDeEn(), BUILT_FEATURE_AREAS, BuiltCapability, BuiltFeatureArea, BuiltPlatform, FeaturesPageContent(), PLATFORM_STYLES, PlatformBadge()
+
+### Community 83 - "Community 83"
+Cohesion: 0.32
+Nodes (6): CHANGELOG_RELEASES, ChangelogChange, ChangelogChangeType, ChangelogRelease, ChangelogPageContent(), TYPE_STYLES
+
+### Community 84 - "Community 84"
+Cohesion: 0.40
+Nodes (4): Available subagents in this repo, Graphify, Orchestration, Protected-by-default routing
+
+### Community 85 - "Community 85"
+Cohesion: 0.40
+Nodes (4): HomepagePageContent(), NEXT_CARDS, OVERVIEW_CARDS, PERSONA_CARDS
+
+### Community 86 - "Community 86"
+Cohesion: 0.40
+Nodes (4): MyClub, StandortePageContent(), Tab, Location
+
+### Community 88 - "Community 88"
+Cohesion: 0.50
+Nodes (3): CookieCategory, CookieConsent(), DEFAULT_CATEGORIES
+
 ## Knowledge Gaps
-- **282 isolated node(s):** `eslintConfig`, `nextConfig`, `name`, `version`, `private` (+277 more)
+- **339 isolated node(s):** `eslintConfig`, `nextConfig`, `name`, `version`, `private` (+334 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **31 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **35 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `ContactPage()` connect `Community 5` to `Community 0`, `Community 1`?**
-  _High betweenness centrality (0.179) - this node is a cross-community bridge._
+- **Why does `ContactPage()` connect `Community 5` to `Community 1`, `Community 52`?**
+  _High betweenness centrality (0.175) - this node is a cross-community bridge._
 - **Why does `login-signup page` connect `Community 1` to `Community 26`, `Community 19`, `Community 5`?**
-  _High betweenness centrality (0.129) - this node is a cross-community bridge._
-- **Why does `Pages Table` connect `Community 26` to `Community 1`, `Community 19`, `Community 20`, `Community 23`, `Community 28`?**
-  _High betweenness centrality (0.084) - this node is a cross-community bridge._
+  _High betweenness centrality (0.114) - this node is a cross-community bridge._
+- **Why does `useLanguage()` connect `Community 12` to `Community 2`, `Community 6`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 11`, `Community 13`, `Community 33`, `Community 34`, `Community 35`, `Community 50`, `Community 51`, `Community 76`, `Community 77`, `Community 79`, `Community 82`, `Community 83`, `Community 85`, `Community 86`, `Community 87`, `Community 88`?**
+  _High betweenness centrality (0.111) - this node is a cross-community bridge._
+- **Are the 48 inferred relationships involving `T` (e.g. with `AboutPageContent()` and `NotFound()`) actually correct?**
+  _`T` has 48 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `eslintConfig`, `nextConfig`, `name` to the rest of the system?**
-  _293 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.053763440860215055 - nodes in this community are weakly interconnected._
+  _350 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.07575757575757576 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.07751937984496124 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**
-  _Cohesion score 0.05807200929152149 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08333333333333333 - nodes in this community are weakly interconnected._

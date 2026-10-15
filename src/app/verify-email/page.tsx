@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 
 import { useLanguage } from '@/contexts/LanguageContext';
+import { loginHrefWithCallback } from '@/lib/resolveCallbackUrl';
 
 /**
  * Landing page for the verification email link. Better Auth has already
@@ -16,6 +17,7 @@ function VerifyEmailPageInner() {
     const { t } = useLanguage();
     const searchParams = useSearchParams();
     const hasError = Boolean(searchParams.get('error'));
+    const loginHref = loginHrefWithCallback(searchParams.get('callbackUrl'));
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
@@ -44,7 +46,7 @@ function VerifyEmailPageInner() {
                     </p>
 
                     <Link
-                        href="/login-signup"
+                        href={loginHref}
                         className="block w-full rounded-lg bg-primary px-5 py-3 text-center text-sm font-semibold text-primary-foreground transition-transform duration-200 hover:-translate-y-1 hover:brightness-110 active:scale-95"
                     >
                         {t('auth.verifyEmail.page.cta')}
