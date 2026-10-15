@@ -38,7 +38,7 @@ export default function RolePicker() {
                                 type="button"
                                 aria-pressed={role === r}
                                 onClick={() => setRole(r)}
-                                className={`min-h-11 rounded-full border-2 px-4 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${
+                                className={`min-h-11 rounded-full border-2 px-4 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
                                     isSoon ? 'border-dashed' : 'border-solid'
                                 } ${
                                     role === r

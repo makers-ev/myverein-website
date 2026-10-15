@@ -158,7 +158,7 @@ export default function WeekStage() {
                                         goTo(index);
                                     }}
                                     onKeyDown={(event) => onKeyDown(event, index)}
-                                    className={`flex min-h-11 items-center justify-center rounded-md border-2 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${
+                                    className={`flex min-h-11 items-center justify-center rounded-md border-2 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
                                         active === index
                                             ? 'border-foreground/70 bg-accent text-accent-foreground'
                                             : 'border-border bg-card text-muted-foreground hover:text-foreground'

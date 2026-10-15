@@ -58,7 +58,7 @@ export default function Person({ pose, tone, size = 120, dashed = false, classNa
             {ARMS[pose].map((d) => (
                 <path key={d} d={d} fill="none" strokeLinecap="round" strokeLinejoin="round" className={arm} />
             ))}
-            <circle cx={30} cy={17} r={pose === 'child' ? 12 : 10} className={dashed ? outline : 'fill-muted stroke-border'} />
+            <circle cx={30} cy={17} r={pose === 'child' ? 12 : 10} className={dashed ? outline : 'fill-muted stroke-foreground/30'} />
             {pose === 'carry' && <rect x={20} y={58} width={20} height={14} rx={1.5} className={dashed ? outline : 'fill-accent'} />}
             {pose === 'lead' && (
                 <>

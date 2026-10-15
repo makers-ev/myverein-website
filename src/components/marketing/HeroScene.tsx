@@ -110,13 +110,13 @@ export default function HeroScene() {
             <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
                 <Link
                     href="/contact#beta"
-                    className="btn-shimmer inline-flex min-h-11 items-center rounded-xl bg-primary px-6 py-3 font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition hover:-translate-y-0.5 hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    className="btn-shimmer inline-flex min-h-11 items-center rounded-xl bg-primary px-6 py-3 font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition hover:-translate-y-0.5 hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 >
                     {t('home.cta-primary')}
                 </Link>
                 <a
                     href="#woche"
-                    className="inline-flex min-h-11 items-center rounded-xl border border-border px-6 py-3 font-semibold text-foreground transition hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    className="inline-flex min-h-11 items-center rounded-xl border border-border px-6 py-3 font-semibold text-foreground transition hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 >
                     {t('mk.hero.cta-week')}
                 </a>
@@ -163,7 +163,7 @@ export default function HeroScene() {
                         setTouched(true);
                         setTidy((v) => !v);
                     }}
-                    className={`inline-flex min-h-11 items-center gap-2 rounded-xl border-2 border-foreground/70 px-6 py-2 font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${
+                    className={`inline-flex min-h-11 items-center gap-2 rounded-xl border-2 border-foreground/70 px-6 py-2 font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
                         tidy ? 'bg-accent text-accent-foreground' : 'bg-card text-foreground hover:bg-muted'
                     }`}
                 >

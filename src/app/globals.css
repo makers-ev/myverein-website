@@ -326,7 +326,7 @@ body {
 /* mk:b2 */
 /* Week stage: the active day stays full strength, the others step back a little (only once JS runs). */
 @media (prefers-reduced-motion: no-preference) {
-  .mk-week-js .mk-day { opacity: 0.65; transition: opacity 0.3s ease; }
+  .mk-week-js .mk-day { opacity: 0.85; transition: opacity 0.3s ease; }
   .mk-week-js .mk-day.is-active,
   .mk-week-js .mk-day:focus-within { opacity: 1; }
 }

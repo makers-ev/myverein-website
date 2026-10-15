@@ -45,7 +45,7 @@ export default function ClubTypes() {
                             type="button"
                             aria-pressed={clubId === c.id}
                             onClick={() => setClubId(c.id)}
-                            className={`min-h-11 rounded-full border-2 px-4 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${
+                            className={`min-h-11 rounded-full border-2 px-4 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
                                 clubId === c.id ? 'border-foreground/70 bg-accent text-accent-foreground' : 'border-border bg-card text-foreground hover:bg-muted'
                             }`}
                         >
