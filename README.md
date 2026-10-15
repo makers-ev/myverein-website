@@ -20,7 +20,7 @@ has no local `/api/auth` route and no session store of its own.
 
 | Route | Access | Content |
 |---|---|---|
-| `/` | public | Homepage |
+| `/` | public | Marketing homepage "Der Verein als Gemeinschaft": 9 chapters (hero with club network and "Aufräumen" tool chaos, five tools -> one app, a week in the club, role picker on a collage group photo, club types, trust, planned-feature sketches, tool quiz, finale). Built from `src/components/marketing/`, see [Marketing homepage](#marketing-homepage) |
 | `/features` | public | Marketing feature overview: what's already built today (`builtFeaturesData.ts`), grouped by feature area, each capability tagged Website / App / Website & App via `PlatformBadge` |
 | `/about` | public | "Über uns": what MyVerein is, the Makers e.V. project context (link to the-makers.space) and the two developers as cards with GitHub links (avatars are static files in `public/about/`, no external requests); texts in `AboutTranslation.ts` (DE/EN) |
 | `/changelog` | public | Release notes page (`ChangelogPageContent.tsx`) |
@@ -93,6 +93,17 @@ not a silent no-op).
 - `src/components/Modal.tsx` — optional `size="lg"` for form-heavy dialogs.
 - `src/lib/memberPhoto.ts`, `src/lib/meetings.ts`, `src/lib/loans.ts`, `src/lib/locationVisibility.ts` — pure helpers behind the photo upload, the Treffen attendance patch/type/date handling, the self-loan rules and the Orte visibility levels (each with a `*.test.ts`).
 - `vitest.config.ts` — resolves the `@/*` alias for tests. `LanguageContext.test.ts` exempts the keys of the documented DE/EN-only translation modules.
+
+### Marketing homepage
+
+The homepage (`pageContent/Homepage.tsx`) only composes chapters from `src/components/marketing/`. Visual language: paper-collage people, a growing club network and a few stick-figure moments; **solid frame = available today, dashed frame = "we are sketching this" (never presented as available)**.
+
+- **Single source of truth:** `marketingData.ts` lists every feature item with `status: 'live' | 'soon'`, `featureRef` (vault Feature List ids) and, for `soon`, the `wave` (kept internally for the roadmap grouping, never shown on the page). Flipping `soon` -> `live` turns the dashed sketch into ink everywhere (roadmap sketches, media breaks, quiz, role picker). `marketingData.test.ts` checks unique ids, wave/featureRef presence and DE+EN keys.
+- **Copy:** `MarketingTranslation.ts`, `MarketingHeroTranslation.ts`, `MarketingStoryTranslation.ts`, `MarketingTrustTranslation.ts` (DE/EN only, other languages fall back to English like the other marketing pages; key prefix `mk.`).
+- **Building blocks:** `Person`, `GroupPhoto`, `Network`, `Sketch` (`PaperCard`, `StatusSketch`, `StatusBadge`, `Marker`, `Draw`), `useInView`; chapters `HeroScene`, `MediaBreaks`, `WeekStage` (`#woche`), `RolePicker` (`#fuer-wen`), `ClubTypes` (`#vielfalt`), `TrustSection` (`#vertrauen`), `RoadmapSketches` (`#roadmap-teaser`), `ToolQuiz` (`#werkzeuge`), `Finale` (`#finale`).
+- **Constraints:** pure SVG + CSS (`mk-` classes in `globals.css`), no new dependency, no `style=` props (nonce-only CSP), `prefers-reduced-motion` shows the finished state, SSR renders readable end state without JS, colours only via theme tokens (works in dark mode and with every palette). Quiz state is local only, nothing is tracked.
+- **Honesty rule:** billing (SEPA, dunning, cash book, receipts) is shown as deliberately out of scope; consents, parent access, communication, voting, member card etc. appear only as `soon`.
+- The old `home.*` strings in `HomeTranslation.ts` (icon cards, stats, persona cards) are no longer used by the homepage except `home.cta-primary`; they can be removed in a cleanup.
 
 ### Adding a protected page
 
