@@ -18,6 +18,7 @@ import {
     lockViolations,
     type MemberCustomField,
     nextSortOrder,
+    partitionFields,
     readOnlyFields,
     toFormField,
     valuesPatch,
@@ -184,6 +185,13 @@ describe('values of a member', () => {
         expect(editableFields(fields).map((f) => f.key)).toEqual(['trikot', 'haken', 'leer']);
         expect(readOnlyFields(fields).map((f) => f.key)).toEqual(['notiz_text']);
         expect(editableFields([field({ editable: true, archived: true })])).toEqual([]);
+    });
+
+    it('shows everything read-only in a read-only view, whatever the server says about editing', () => {
+        expect(partitionFields(fields, true)).toEqual({ editable: [], readOnly: fields });
+        const normal = partitionFields(fields, false);
+        expect(normal.editable.map((f) => f.key)).toEqual(['trikot', 'haken', 'leer']);
+        expect(normal.readOnly.map((f) => f.key)).toEqual(['notiz_text']);
     });
 
     it('builds the answers and form fields for the shared renderer', () => {

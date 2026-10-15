@@ -3,13 +3,13 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { AlertTriangle, Baby, Check, FileText, Lock, ShieldCheck, X } from 'lucide-react';
 
+import AnswerList from '@/components/forms/AnswerList';
 import LoadError from '@/components/LoadError';
 import LoadingText from '@/components/LoadingText';
 import { Modal } from '@/components/Modal';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api-client';
 import {
-    answerText,
     type ApplicationReview,
     type ApproveResult,
     approveBody,
@@ -320,24 +320,7 @@ export default function ApplicationReviewDialog({
                             ) : review.answers.length === 0 ? (
                                 <p className="text-sm text-muted-foreground">{t('forms.review.answers.none')}</p>
                             ) : (
-                                <dl className="space-y-2">
-                                    {review.answers.map((a) => (
-                                        <div key={a.key} className="rounded-lg border border-border px-3 py-2">
-                                            <dt className="break-words text-xs font-semibold text-muted-foreground">{a.label}</dt>
-                                            {/* Plain text: answers are applicant input and are never interpreted as HTML. */}
-                                            <dd className={`mt-0.5 whitespace-pre-line break-words text-sm ${a.answered && !a.redacted ? 'text-foreground' : 'text-muted-foreground'}`}>
-                                                {a.redacted ? (
-                                                    <span className="inline-flex items-center gap-1.5 italic">
-                                                        <Lock className="h-3.5 w-3.5" aria-hidden="true" />
-                                                        {t('forms.review.redacted')}
-                                                    </span>
-                                                ) : (
-                                                    answerText(a, t)
-                                                )}
-                                            </dd>
-                                        </div>
-                                    ))}
-                                </dl>
+                                <AnswerList answers={review.answers} />
                             )}
                         </Section>
                     )}

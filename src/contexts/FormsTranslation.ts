@@ -212,6 +212,10 @@ const FormsTranslation: Translation = {
         'forms.warn.child_is_adult': 'Das angegebene Geburtsdatum liegt 18 Jahre oder länger zurück – bitte prüfe, ob der Antrag wirklich für ein Kind gilt.',
         'forms.warn.birth_date_missing': 'Es wurde kein Geburtsdatum angegeben. Der Vorstand kann das Alter deshalb nicht prüfen.',
         'forms.warn.child_name_matches_guardian': 'Der Name des Kindes stimmt mit deinem Namen überein.',
+        'forms.exit.outdated': 'Der Verein hat das Austrittsformular geändert. Bitte prüfe deine Angaben und sende die Kündigung erneut ab. Bisher wurde nichts übermittelt.',
+        'forms.exit.outdated.lost': 'Der Verein hat das Austrittsformular geändert. Diese Angaben gibt es nicht mehr und sie wurden entfernt: {{fields}}. Bitte prüfe alles und sende die Kündigung erneut ab. Bisher wurde nichts übermittelt.',
+        'forms.exit.answers.title': 'Angaben aus dem Austrittsformular',
+        'forms.exit.answers.hint': 'Formular Version {{version}}, abgeschickt am {{date}}. Die Angaben ändern weder Fristen noch Datum.',
     },
     en: {
         'forms.required': 'required',
@@ -411,6 +415,10 @@ const FormsTranslation: Translation = {
         'forms.warn.child_is_adult': 'The given date of birth is 18 years ago or more – please check that the application is really for a child.',
         'forms.warn.birth_date_missing': 'No date of birth was given, so the board cannot check the age.',
         'forms.warn.child_name_matches_guardian': 'The child’s name is the same as your name.',
+        'forms.exit.outdated': 'The club has changed the exit form. Please check your answers and submit the cancellation again. Nothing has been sent yet.',
+        'forms.exit.outdated.lost': 'The club has changed the exit form. These answers no longer exist and were removed: {{fields}}. Please check everything and submit the cancellation again. Nothing has been sent yet.',
+        'forms.exit.answers.title': 'Answers from the exit form',
+        'forms.exit.answers.hint': 'Form version {{version}}, submitted on {{date}}. The answers change neither notice periods nor dates.',
     },
 };
 

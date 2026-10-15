@@ -9,7 +9,7 @@ import LoadingText from '@/components/LoadingText';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ApiError, apiFetch } from '@/lib/api-client';
 import { formatDate, primaryButtonClass } from '@/lib/clubMembers';
-import { customFieldErrorKey, displayValue, editableFields, type MemberCustomField, readOnlyFields, toFormField, valuesPatch, valuesToAnswers } from '@/lib/customFields';
+import { customFieldErrorKey, displayValue, type MemberCustomField, partitionFields, toFormField, valuesPatch, valuesToAnswers } from '@/lib/customFields';
 import { type Answers, type FieldErrorCode, fieldErrorsFromError, validateAnswers } from '@/lib/formSchema';
 
 interface Props {
@@ -22,6 +22,8 @@ interface Props {
     showSensitiveNote?: boolean;
     /** Reports unsaved edits to the surrounding dialog. */
     onDirtyChange?: (dirty: boolean) => void;
+    /** Show everything as plain values (details for people without `members:write`); nothing can be changed here. */
+    readOnlyView?: boolean;
 }
 
 /**
@@ -29,7 +31,7 @@ interface Props {
  * edit. Editable fields are rendered with the shared FormRenderer, the rest read-only with option labels; protected fields carry a
  * lock marker. Only changed editable values are sent. External guests (403) and clubs without visible fields render nothing.
  */
-export default function MemberCustomFields({ clubId, target, title, showSensitiveNote, onDirtyChange }: Props) {
+export default function MemberCustomFields({ clubId, target, title, showSensitiveNote, onDirtyChange, readOnlyView = false }: Props) {
     const { t, language } = useLanguage();
     const own = target === 'me';
     const path = `/club-members/${encodeURIComponent(target)}/custom-fields?clubId=${clubId}`;
@@ -76,10 +78,10 @@ export default function MemberCustomFields({ clubId, target, title, showSensitiv
         };
     }, [path, attempt, apply]);
 
-    const editable = useMemo(() => editableFields(fields ?? []), [fields]);
-    const readOnly = useMemo(() => readOnlyFields(fields ?? []), [fields]);
+    const parts = useMemo(() => partitionFields(fields ?? [], readOnlyView), [fields, readOnlyView]);
+    const { editable, readOnly } = parts;
     const renderFields = useMemo(() => editable.map(toFormField), [editable]);
-    const patch = valuesPatch(fields ?? [], saved, answers);
+    const patch = readOnlyView ? null : valuesPatch(fields ?? [], saved, answers);
     const dirty = patch !== null;
     useEffect(() => {
         onDirtyChange?.(dirty);
@@ -143,8 +145,8 @@ export default function MemberCustomFields({ clubId, target, title, showSensitiv
                                     )}
                                 </dt>
                                 <dd className={`mt-0.5 whitespace-pre-line break-words text-sm ${text === null ? 'text-muted-foreground' : 'text-foreground'}`}>{text ?? '—'}</dd>
-                                {!own && !f.editable && <dd className="mt-0.5 text-xs text-muted-foreground">{f.sensitive ? t('forms.cf.values.readonlySensitive') : f.editableBy === 'vorstand' ? t('forms.cf.values.readonlyBoard') : t('forms.cf.values.readonlySelf')}</dd>}
-                                {own && f.editableBy === 'vorstand' && <dd className="mt-0.5 text-xs text-muted-foreground">{t('forms.cf.values.readonlyBoard')}</dd>}
+                                {!readOnlyView && !own && !f.editable && <dd className="mt-0.5 text-xs text-muted-foreground">{f.sensitive ? t('forms.cf.values.readonlySensitive') : f.editableBy === 'vorstand' ? t('forms.cf.values.readonlyBoard') : t('forms.cf.values.readonlySelf')}</dd>}
+                                {!readOnlyView && own && f.editableBy === 'vorstand' && <dd className="mt-0.5 text-xs text-muted-foreground">{t('forms.cf.values.readonlyBoard')}</dd>}
                             </div>
                         );
                     })}

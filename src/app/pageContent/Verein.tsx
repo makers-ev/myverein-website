@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { useThrottledCallback } from '@/lib/useThrottledCallback';
 import { memberErrorKey } from '@/lib/clubMembers';
+import { type ClubTab, formsGate, visibleTabs } from '@/lib/clubPermissions';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ApplicationsPanel from '@/components/verein/ApplicationsPanel';
 import NoClubSection from '@/components/verein/NoClubSection';
@@ -57,7 +58,7 @@ interface ClubInfo {
     pages: ClubInfoPage[];
 }
 
-type Tab = 'info' | 'profil' | 'mitglieder' | 'austritte' | 'abteilungen' | 'kennzahlen' | 'formulare' | 'zusatzfelder' | 'einstellungen';
+type Tab = ClubTab;
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
     return (
@@ -258,14 +259,10 @@ export default function VereinPageContent() {
     }, [activeClub?.clubId]);
 
     const permissions = me?.permissions ?? [];
+    const gate = formsGate(permissions);
     // Every tab beyond the basics hangs on a permission from GET /club-members/me (the backend enforces them too).
     // Guardians (external role) have no right to the member list; hide the tab instead of showing a 403.
-    const guardianOnly = !!me && permissions.length === 0 && me.roles.length > 0 && me.roles.every((r) => r.roleType === 'erziehungsberechtigt');
-    const tabs: Tab[] = guardianOnly ? ['info', 'profil', 'abteilungen'] : ['info', 'profil', 'mitglieder', 'abteilungen'];
-    if (permissions.includes('members:write')) tabs.push('austritte');
-    if (permissions.includes('club_stats:read')) tabs.push('kennzahlen');
-    if (permissions.includes('forms:write')) tabs.push('formulare', 'zusatzfelder');
-    if (permissions.includes('members:write')) tabs.push('einstellungen');
+    const tabs: Tab[] = visibleTabs(permissions, me?.roles ?? []);
     const currentTab: Tab = tabs.includes(tab) ? tab : 'info';
 
     function selectTab(next: Tab) {
@@ -361,8 +358,8 @@ export default function VereinPageContent() {
                                 <LoadingText />
                             ))}
                         {currentTab === 'kennzahlen' && <ClubStatsPanel clubId={activeClub.clubId} />}
-                        {currentTab === 'formulare' && permissions.includes('forms:write') && <FormsPanel clubId={activeClub.clubId} permissions={permissions} onDirtyChange={onFormsDirty} />}
-                        {currentTab === 'zusatzfelder' && permissions.includes('forms:write') && <CustomFieldsPanel clubId={activeClub.clubId} permissions={permissions} />}
+                        {currentTab === 'formulare' && gate.manage && <FormsPanel clubId={activeClub.clubId} permissions={permissions} onDirtyChange={onFormsDirty} />}
+                        {currentTab === 'zusatzfelder' && gate.manage && <CustomFieldsPanel clubId={activeClub.clubId} permissions={permissions} />}
                         {currentTab === 'einstellungen' && (
                             <div className="space-y-6">
                                 <ClubSettingsPanel clubId={activeClub.clubId} />

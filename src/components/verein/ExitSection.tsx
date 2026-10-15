@@ -3,11 +3,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import { DoorOpen } from 'lucide-react';
 
+import FormRenderer, { focusField } from '@/components/forms/FormRenderer';
+import LoadError from '@/components/LoadError';
+import LoadingText from '@/components/LoadingText';
 import { Modal } from '@/components/Modal';
 import { Chip, EmptyState, errorMessage, SectionCard, type Tone } from '@/components/standorte/ui';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api-client';
-import { formatDate, inputClass, memberErrorKey, isLeftStatus, secondaryButtonClass, todayIso } from '@/lib/clubMembers';
+import { formatDate, inputClass, isLeftStatus, secondaryButtonClass, todayIso } from '@/lib/clubMembers';
+import { exitDialogTouched, exitRequestBody, repinExit } from '@/lib/exitForm';
+import { type Answers, type FieldErrorCode, fieldErrorsFromError, type FormDefinition, formErrorKey, validateAnswers } from '@/lib/formSchema';
 import { selfExitErrorKey, canWithdraw, type ExitRequest, isOwnerOrgRole, type NoticePreview, noticeRuleText } from '@/lib/memberLifecycle';
 
 const statusTone: Record<ExitRequest['status'], Tone> = { pending: 'warning', approved: 'primary', rejected: 'destructive', withdrawn: 'muted' };
@@ -211,23 +216,69 @@ function CancelDialog({
     onDone: (adjustedToEarliest: boolean, earliest: string | null) => void;
 }) {
     const { t, language } = useLanguage();
+    const [definition, setDefinition] = useState<FormDefinition | null>(null);
+    const [loadFailed, setLoadFailed] = useState(false);
+    const [attempt, setAttempt] = useState(0);
     const [desired, setDesired] = useState('');
-    const [reason, setReason] = useState('');
+    const [answers, setAnswers] = useState<Answers>({});
+    const [errors, setErrors] = useState<Record<string, FieldErrorCode>>({});
+    const [notice, setNotice] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const rule = noticeRuleText(preview);
 
+    // The club's published exit form (default: optional reason + confirmation). Loaded when the dialog opens.
+    useEffect(() => {
+        let cancelled = false;
+        apiFetch<{ data: FormDefinition }>(`/club-exit-requests/form?clubId=${clubId}`)
+            .then((res) => {
+                if (cancelled) return;
+                setDefinition(res.data);
+                setLoadFailed(false);
+            })
+            .catch(() => {
+                if (!cancelled) setLoadFailed(true);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [clubId, attempt]);
+
+    function requestClose() {
+        if (exitDialogTouched(desired, answers) && !window.confirm(t('verein.form.discard'))) return;
+        onClose();
+    }
+
     async function submit() {
+        if (!definition) return;
+        const local = validateAnswers(definition.fields, answers, { mode: 'submit' });
+        if (Object.keys(local).length > 0) {
+            setErrors(local);
+            setError(t('forms.err.fieldsInvalid'));
+            focusField('exit', Object.keys(local)[0]!);
+            return;
+        }
         setBusy(true);
         setError(null);
+        setErrors({});
         try {
             const res = await apiFetch<{ data: ExitRequest & { adjustedToEarliest?: boolean } }>(`/club-exit-requests?clubId=${clubId}`, {
                 method: 'POST',
-                body: { ...(desired ? { desiredEffectiveOn: desired } : {}), ...(reason.trim() ? { reason: reason.trim() } : {}) },
+                body: exitRequestBody(desired, definition, answers),
             });
             onDone(res.data.adjustedToEarliest === true, res.data.earliestEffectiveOn);
         } catch (err) {
-            setError(t(selfExitErrorKey(err, memberErrorKey)));
+            const repin = repinExit(err, definition, answers);
+            if (repin) {
+                // The club changed the form meanwhile: show the new one with the answers that still fit, nothing was filed.
+                setDefinition(repin.definition);
+                setAnswers(repin.answers);
+                setNotice(repin.dropped.length > 0 ? t('forms.exit.outdated.lost', { fields: repin.dropped.join(', ') }) : t('forms.exit.outdated'));
+            } else {
+                const fieldErrors = fieldErrorsFromError(err);
+                if (fieldErrors) setErrors(fieldErrors);
+                setError(t(selfExitErrorKey(err, formErrorKey)));
+            }
             setBusy(false);
         }
     }
@@ -235,14 +286,15 @@ function CancelDialog({
     return (
         <Modal
             open
-            onClose={busy ? () => {} : onClose}
+            size="lg"
+            onClose={busy ? () => {} : requestClose}
             title={t('verein.exit.dialog.title')}
             footer={
                 <div className="flex justify-end gap-2">
-                    <button type="button" onClick={onClose} disabled={busy} className={secondaryButtonClass}>
+                    <button type="button" onClick={requestClose} disabled={busy} className={secondaryButtonClass}>
                         {t('verein.roles.add.cancel')}
                     </button>
-                    <button type="button" onClick={() => void submit()} disabled={busy} className={dangerButtonClass}>
+                    <button type="button" onClick={() => void submit()} disabled={busy || !definition} className={dangerButtonClass}>
                         {t('verein.exit.dialog.submit')}
                     </button>
                 </div>
@@ -257,10 +309,28 @@ function CancelDialog({
                 <input type="date" value={desired} min={preview.earliestEffectiveOn} onChange={(e) => setDesired(e.target.value)} className={`mt-1 ${inputClass}`} />
                 <span className="mt-1 block text-xs font-normal">{t('verein.exit.dialog.desiredHint')}</span>
             </label>
-            <label className="mt-4 block text-xs font-semibold text-muted-foreground">
-                {t('verein.exit.dialog.reason')}
-                <textarea value={reason} maxLength={2000} rows={3} onChange={(e) => setReason(e.target.value)} className={`mt-1 ${inputClass}`} />
-            </label>
+            {notice && (
+                <p role="status" className="mt-4 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm text-foreground">
+                    {notice}
+                </p>
+            )}
+            <div className="mt-4">
+                {loadFailed ? (
+                    <LoadError onRetry={() => { setLoadFailed(false); setAttempt((n) => n + 1); }} />
+                ) : !definition ? (
+                    <LoadingText />
+                ) : (
+                    <FormRenderer fields={definition.fields} privacyNotice={definition.privacyNotice} answers={answers} errors={errors} idPrefix="exit" disabled={busy} onChange={(key, value) => {
+                        setAnswers((a) => ({ ...a, [key]: value }));
+                        setErrors((e) => {
+                            if (!(key in e)) return e;
+                            const copy = { ...e };
+                            delete copy[key];
+                            return copy;
+                        });
+                    }} />
+                )}
+            </div>
             <p className="mt-3 text-xs text-muted-foreground">{t('verein.exit.dialog.approvalHint')}</p>
             {error && (
                 <p role="alert" className="mt-3 text-sm text-destructive">

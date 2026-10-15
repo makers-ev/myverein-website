@@ -1,4 +1,5 @@
 import { ApiError } from './api-client';
+import type { ExitSubmission } from './exitForm';
 
 /**
  * Pure types and helpers for the Wave 7 account-linking (B4), exit workflow and club settings (B6) UI. Everything
@@ -101,6 +102,8 @@ export interface ExitChecklist {
 
 export interface ExitRequestDetail extends ExitRequest {
     checklist: ExitChecklist;
+    /** Exit form answers rendered against the version the member filled in (protected answers redacted); `null`/absent = no form was filled in. */
+    submission?: ExitSubmission | null;
 }
 
 /** Withdrawable: still pending, or an approved cancellation whose exit date has not been reached yet. */

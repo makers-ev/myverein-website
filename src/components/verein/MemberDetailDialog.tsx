@@ -25,7 +25,7 @@ export default function MemberDetailDialog({ clubId, memberId, name, onClose }: 
                 </div>
             }
         >
-            <MemberCustomFields clubId={clubId} target={memberId} />
+            <MemberCustomFields clubId={clubId} target={memberId} readOnlyView />
             <p className="mt-3 text-xs text-muted-foreground">{t('forms.cf.detail.hint')}</p>
         </Modal>
     );

@@ -221,6 +221,16 @@ export function toFormField(field: MemberCustomField): FormField {
 export const editableFields = (fields: readonly MemberCustomField[]): MemberCustomField[] => fields.filter((f) => f.editable && !f.archived);
 export const readOnlyFields = (fields: readonly MemberCustomField[]): MemberCustomField[] => fields.filter((f) => !f.editable);
 
+/**
+ * Which fields are shown as inputs and which as plain values. In a read-only view (details of a member for somebody without
+ * `members:write`) nothing is an input, whatever the server says about the person's own row: own values are maintained in
+ * "Mein Profil", and a write from a read-only view would go to the board route and be refused.
+ */
+export function partitionFields(fields: readonly MemberCustomField[], readOnlyView: boolean): { editable: MemberCustomField[]; readOnly: MemberCustomField[] } {
+    if (readOnlyView) return { editable: [], readOnly: [...fields] };
+    return { editable: editableFields(fields), readOnly: readOnlyFields(fields) };
+}
+
 /** Answers (key -> value) of the fields that have a value; empty values are left out like on the server. */
 export function valuesToAnswers(fields: readonly MemberCustomField[]): Answers {
     const out: Answers = {};
