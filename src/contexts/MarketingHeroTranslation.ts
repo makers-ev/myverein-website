@@ -7,8 +7,9 @@ type Translation = {
 const MarketingHeroTranslation: Translation = {
     de: {
         'mk.hero.title-1': 'Dein Verein. Ein Ort.',
-        'mk.hero.title-2': 'Alles digital – außer die Abrechnung.',
+        'mk.hero.title-2': 'Alles, was ihr braucht.',
         'mk.hero.subtitle': 'Mitglieder, Termine, Sitzungen und Material an einem Platz, damit mehr Zeit für das bleibt, wofür ihr euch trefft.',
+        'mk.hero.cta': 'Beta-Zugang anfragen',
         'mk.hero.eg': 'Zum Beispiel:',
         'mk.hero.words.sr': 'Für jede Art von Verein: {{words}}.',
         'mk.hero.word.0': 'Sportverein',
@@ -45,8 +46,9 @@ const MarketingHeroTranslation: Translation = {
     },
     en: {
         'mk.hero.title-1': 'Your club. One place.',
-        'mk.hero.title-2': 'Everything digital – except billing.',
+        'mk.hero.title-2': 'Everything you need.',
         'mk.hero.subtitle': 'Members, events, meetings and equipment in one place, so there is more time for what you meet for.',
+        'mk.hero.cta': 'Request beta access',
         'mk.hero.eg': 'For example:',
         'mk.hero.words.sr': 'For every kind of club: {{words}}.',
         'mk.hero.word.0': 'Sports club',

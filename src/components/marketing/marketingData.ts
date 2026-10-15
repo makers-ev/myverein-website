@@ -69,7 +69,6 @@ export const marketingItems: MarketingItem[] = defineItems([
     { id: 'sensitive-audit', status: 'live', group: 'rights', featureRef: ['11.33'], icon: 'log' },
     { id: 'found-club', status: 'live', group: 'club', featureRef: ['10.1'], icon: 'flag' },
     { id: 'club-switcher', status: 'live', group: 'club', featureRef: ['2.5', '11.19'], icon: 'switch' },
-    { id: 'web-and-app', status: 'live', group: 'club', featureRef: ['8.2'], icon: 'devices' },
     // ---- planned (gap analysis / waves) ----
     { id: 'bulletin-board', status: 'soon', group: 'communication', wave: 9, icon: 'pin-board' },
     { id: 'broadcast', status: 'soon', group: 'communication', wave: 9, icon: 'megaphone' },
@@ -131,3 +130,14 @@ export function roleWave(role: Role): number | undefined {
     const gate = roleGate[role];
     return gate ? getItem(gate).wave : undefined;
 }
+
+/** Ids the marketing components build dynamic i18n keys from; the test checks every key exists in DE and EN. */
+export const weekDayIds = ['mo', 'di', 'mi', 'do', 'fr', 'sa', 'so'] as const;
+export const heroWordCount = 7;
+export const heroToolIds = ['excel', 'whatsapp', 'doodle', 'zettel', 'anwesenheit'] as const;
+export const heroCardLineCount = 4;
+export const rolePointCount = 4;
+export const clubIds = ['sport', 'chor', 'feuerwehr', 'schach', 'tanz', 'schuetzen', 'kleingarten', 'musik'] as const;
+export const clubListKeys = ['cat', 'dep', 'rol'] as const;
+export const roadmapGroups = ['communication', 'consent', 'voting', 'planning', 'documents', 'forms', 'public'] as const;
+export const quizToolIds = ['excel', 'whatsapp', 'doodle', 'attendance', 'notes'] as const;

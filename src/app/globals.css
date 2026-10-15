@@ -324,11 +324,11 @@ body {
 /* mk:b1 end */
 
 /* mk:b2 */
-/* Week stage: the active day stays full strength, the others step back a little (only once JS runs). */
+/* Week stage: inactive days only soften frame and illustration; text keeps full contrast (only once JS runs). */
+.mk-week-js .mk-day:not(.is-active):not(:focus-within) > * { border-color: color-mix(in srgb, var(--foreground) 35%, transparent); }
+.mk-week-js .mk-day:not(.is-active):not(:focus-within) svg { opacity: 0.55; }
 @media (prefers-reduced-motion: no-preference) {
-  .mk-week-js .mk-day { opacity: 0.85; transition: opacity 0.3s ease; }
-  .mk-week-js .mk-day.is-active,
-  .mk-week-js .mk-day:focus-within { opacity: 1; }
+  .mk-week-js .mk-day > *, .mk-week-js .mk-day svg { transition: border-color 0.3s ease, opacity 0.3s ease; }
 }
 /* mk:b2 end */
 

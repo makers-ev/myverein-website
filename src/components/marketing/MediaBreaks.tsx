@@ -37,7 +37,7 @@ export default function MediaBreaks() {
                             const entry = getItem(item);
                             return (
                                 <li key={tool} className={`mk-b1-fly mk-b1-fly-${i + 1} mk-d${i + 1} sm:last:col-span-2`}>
-                                    <StatusSketch status={entry.status} wave={entry.wave} className="h-full">
+                                    <StatusSketch status={entry.status} className="h-full">
                                         <p className="flex items-center gap-2 text-sm text-muted-foreground">
                                             <ToolIcon tool={tool} className="size-6" />
                                             <span>

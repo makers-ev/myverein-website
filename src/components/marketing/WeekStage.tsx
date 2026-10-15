@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 
-import { getItem } from './marketingData';
+import { getItem, weekDayIds } from './marketingData';
 import { Draw, Marker, StatusSketch } from './Sketch';
 import { useInView } from './useInView';
 
@@ -60,17 +60,17 @@ const SCENES: Record<string, Scene> = {
     },
 };
 
-type Day = { id: keyof typeof SCENES; item: string; extras: string[] };
+type Day = { id: (typeof weekDayIds)[number]; item: string; extras: string[] };
 
 // Each day shows one live feature from marketingData (never a copy of its own) plus related ones as small extras.
 const DAYS: Day[] = [
-    { id: 'mo', item: 'application', extras: ['member-number'] },
+    { id: 'mo', item: 'application', extras: ['member-number', 'account-invite'] },
     { id: 'di', item: 'calendar', extras: ['ical'] },
     { id: 'mi', item: 'meetings', extras: ['scheduling-poll'] },
     { id: 'do', item: 'material-lending', extras: ['damage-report', 'keys'] },
     { id: 'fr', item: 'wifi-qr', extras: ['places'] },
-    { id: 'sa', item: 'members-no-account', extras: ['csv-import-export'] },
-    { id: 'so', item: 'club-stats', extras: ['exit-checklist'] },
+    { id: 'sa', item: 'members-no-account', extras: ['csv-import-export', 'member-search'] },
+    { id: 'so', item: 'club-stats', extras: ['exit-checklist', 'status-lifecycle'] },
 ];
 
 function DayScene({ id }: { id: string }) {
@@ -93,6 +93,11 @@ export default function WeekStage() {
     const locked = useRef(false);
     const unlockTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
+    const unlock = useCallback(() => {
+        locked.current = false;
+        clearTimeout(unlockTimer.current);
+    }, []);
+
     useEffect(() => {
         if (!ready || typeof IntersectionObserver === 'undefined') return;
         const io = new IntersectionObserver(
@@ -104,20 +109,39 @@ export default function WeekStage() {
             { rootMargin: '-40% 0px -50% 0px' },
         );
         dayRefs.current.forEach((el) => el && io.observe(el));
+
+        // The observer only reports days crossing the reading line; above the first and below the last day nothing crosses.
+        let frame = 0;
+        const clampToEdges = () => {
+            frame = 0;
+            if (locked.current) return;
+            const first = dayRefs.current[0];
+            const last = dayRefs.current[DAYS.length - 1];
+            if (!first || !last) return;
+            if (first.getBoundingClientRect().top > window.innerHeight * 0.4) setActive(0);
+            else if (last.getBoundingClientRect().bottom < window.innerHeight * 0.5) setActive(DAYS.length - 1);
+        };
+        const onScroll = () => {
+            if (!frame) frame = requestAnimationFrame(clampToEdges);
+        };
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('scrollend', unlock);
         return () => {
             io.disconnect();
+            window.removeEventListener('scroll', onScroll);
+            window.removeEventListener('scrollend', unlock);
+            cancelAnimationFrame(frame);
             clearTimeout(unlockTimer.current);
         };
-    }, [ready]);
+    }, [ready, unlock]);
 
     const goTo = (index: number, focus = false) => {
         const next = (index + DAYS.length) % DAYS.length;
         setActive(next);
         locked.current = true;
         clearTimeout(unlockTimer.current);
-        unlockTimer.current = setTimeout(() => {
-            locked.current = false;
-        }, 900);
+        // `scrollend` releases the lock; the timeout covers browsers without it and scrolls that do not move.
+        unlockTimer.current = setTimeout(unlock, 1500);
         const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         dayRefs.current[next]?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
         if (focus) tabRefs.current[next]?.focus();
@@ -183,7 +207,7 @@ export default function WeekStage() {
                                 }}
                                 className={`mk-day scroll-mt-36 ${active === index ? 'is-active' : ''}`}
                             >
-                                <StatusSketch status={item.status} wave={item.wave} className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
+                                <StatusSketch status={item.status} className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
                                     <DayScene id={day.id} />
                                     <div className="min-w-0">
                                         <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{t(`mk.week.${day.id}.name`)}</h3>
@@ -203,7 +227,7 @@ export default function WeekStage() {
                                                         }`}
                                                     >
                                                         {t(`${extra.i18nKey}.title`)}
-                                                        {extra.status === 'soon' && ` · ${t('mk.status.soon', { wave: extra.wave ?? 0 })}`}
+                                                        {extra.status === 'soon' && ` · ${t('mk.status.soon')}`}
                                                     </li>
                                                 );
                                             })}

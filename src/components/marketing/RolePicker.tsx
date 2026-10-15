@@ -5,16 +5,15 @@ import { useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 import GroupPhoto from './GroupPhoto';
-import { roles, roleStatus, roleWave, type Role } from './marketingData';
+import { rolePointCount, roles, roleStatus, type Role } from './marketingData';
 import { Marker, StatusBadge } from './Sketch';
 
-const POINTS = [1, 2, 3, 4];
+const POINTS = Array.from({ length: rolePointCount }, (_, i) => i + 1);
 
 export default function RolePicker() {
     const { t } = useLanguage();
     const [role, setRole] = useState<Role>('mitglied');
     const status = roleStatus(role);
-    const wave = roleWave(role);
     const planned = status === 'soon';
 
     return (
@@ -47,7 +46,7 @@ export default function RolePicker() {
                                 }`}
                             >
                                 {t(`mk.role.${r}.name`)}
-                                {isSoon && <span className="ml-1 font-normal">· {t('mk.roles.soonShort', { wave: roleWave(r) ?? 0 })}</span>}
+                                {isSoon && <span className="ml-1 font-normal">· {t('mk.roles.soonShort')}</span>}
                             </button>
                         );
                     })}
@@ -59,7 +58,7 @@ export default function RolePicker() {
                 >
                     <div className="flex flex-wrap items-center gap-3">
                         <h3 className="text-xl font-bold text-foreground">{t(`mk.role.${role}.name`)}</h3>
-                        <StatusBadge status={status} wave={wave} />
+                        <StatusBadge status={status} />
                     </div>
                     <p className="mt-2 text-muted-foreground">{t(`mk.roles.${role}.lead`)}</p>
                     <ul className="mt-4 space-y-2">

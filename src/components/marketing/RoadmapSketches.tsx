@@ -4,21 +4,12 @@ import Link from 'next/link';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 
-import { outOfScopeItems, soonItems, type MarketingItem } from './marketingData';
+import { outOfScopeItems, roadmapGroups, soonItems } from './marketingData';
 import { Marker, PaperCard, StatusSketch } from './Sketch';
-
-function groupByWave(items: MarketingItem[]): [number, MarketingItem[]][] {
-    const waves = new Map<number, MarketingItem[]>();
-    for (const item of items) {
-        const wave = item.wave ?? 0;
-        waves.set(wave, [...(waves.get(wave) ?? []), item]);
-    }
-    return [...waves.entries()].sort(([a], [b]) => a - b);
-}
 
 export default function RoadmapSketches() {
     const { t } = useLanguage();
-    const waves = groupByWave(soonItems);
+    const groups = roadmapGroups.map((group) => [group, soonItems.filter((item) => item.group === group)] as const).filter(([, items]) => items.length > 0);
 
     return (
         <section id="roadmap-teaser" className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24" aria-labelledby="mk-road-title">
@@ -28,12 +19,12 @@ export default function RoadmapSketches() {
             <p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">{t('mk.road.intro')}</p>
 
             <div className="mt-10 space-y-10">
-                {waves.map(([wave, items]) => (
-                    <div key={wave}>
-                        <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-muted-foreground">{t('mk.road.wave', { wave })}</h3>
+                {groups.map(([group, items]) => (
+                    <div key={group}>
+                        <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-muted-foreground">{t(`mk.road.group.${group}`)}</h3>
                         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                             {items.map((item) => (
-                                <StatusSketch key={item.id} as="li" status={item.status} wave={item.wave} className="h-full">
+                                <StatusSketch key={item.id} as="li" status={item.status} className="h-full">
                                     <h4 className="font-bold">{t(`${item.i18nKey}.title`)}</h4>
                                     <p className="mt-1.5 text-sm leading-relaxed">{t(`${item.i18nKey}.body`)}</p>
                                 </StatusSketch>

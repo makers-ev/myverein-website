@@ -39,7 +39,7 @@ export function Marker({ children, className = '' }: { children: ReactNode; clas
 }
 
 /** Small label that always states the status in words and shape, so it never relies on colour alone. */
-export function StatusBadge({ status, wave, className = '' }: { status: Status; wave?: number; className?: string }) {
+export function StatusBadge({ status, className = '' }: { status: Status; className?: string }) {
     const { t } = useLanguage();
     const live = status === 'live';
     return (
@@ -49,7 +49,7 @@ export function StatusBadge({ status, wave, className = '' }: { status: Status; 
             } ${className}`}
         >
             <span aria-hidden="true" className={`size-2 rounded-full ${live ? 'bg-success' : 'border border-dashed border-muted-foreground'}`} />
-            {live ? t('mk.status.live') : t('mk.status.soon', { wave: wave ?? 0 })}
+            {live ? t('mk.status.live') : t('mk.status.soon')}
         </span>
     );
 }
@@ -60,14 +60,12 @@ export function StatusBadge({ status, wave, className = '' }: { status: Status; 
  */
 export function StatusSketch({
     status,
-    wave,
     children,
     badge = true,
     as: Tag = 'div',
     className = '',
 }: {
     status: Status;
-    wave?: number;
     children: ReactNode;
     badge?: boolean;
     as?: ElementType;
@@ -79,10 +77,10 @@ export function StatusSketch({
         <Tag
             ref={ref}
             className={`relative rounded-md p-5 ${
-                live ? 'mk-ink border-2 border-solid border-foreground/70 bg-card text-card-foreground' : `mk-sketch border-2 border-dashed ${stateClass}`
+                live ? 'border-2 border-solid border-foreground/70 bg-card text-card-foreground' : `mk-sketch border-2 border-dashed ${stateClass}`
             } ${className}`}
         >
-            {badge && <StatusBadge status={status} wave={wave} className="mb-3" />}
+            {badge && <StatusBadge status={status} className="mb-3" />}
             {children}
         </Tag>
     );
@@ -117,7 +115,7 @@ export function Draw({
             ref={ref}
             viewBox={viewBox}
             fill="none"
-            className={`mk-drawn ${stateClass} ${className}`}
+            className={`${stateClass} ${className}`}
             {...(label ? { role: 'img', 'aria-label': label } : { 'aria-hidden': true, focusable: false })}
         >
             {list.map((d) => (

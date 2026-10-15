@@ -4,10 +4,10 @@ import { useState } from 'react';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 
-import { getItem } from './marketingData';
+import { clubIds, clubListKeys, getItem } from './marketingData';
 import { Draw, Marker, PaperCard, StatusSketch } from './Sketch';
 
-const CLUBS: { id: string; prop: string[] }[] = [
+const CLUBS: { id: (typeof clubIds)[number]; prop: string[] }[] = [
     { id: 'sport', prop: ['M6 20 a14 14 0 1 0 28 0 a14 14 0 1 0 -28 0', 'M6 20 h28 M20 6 v28'] },
     { id: 'chor', prop: ['M12 32 a5 4 0 1 0 10 0 a5 4 0 1 0 -10 0', 'M22 32 V8 q9 2 9 12'] },
     { id: 'feuerwehr', prop: ['M8 26 q0 -16 12 -16 q12 0 12 16 z', 'M4 26 h32 M20 10 v-4'] },
@@ -18,11 +18,11 @@ const CLUBS: { id: string; prop: string[] }[] = [
     { id: 'musik', prop: ['M6 18 h28 v14 h-28 z', 'M6 18 q14 -6 28 0', 'M12 6 l8 12 M28 6 l-8 12'] },
 ];
 
-const LISTS = [
+const LISTS: { key: (typeof clubListKeys)[number]; item: string }[] = [
     { key: 'cat', item: 'categories' },
     { key: 'dep', item: 'departments' },
     { key: 'rol', item: 'rights-deny-default' },
-] as const;
+];
 
 export default function ClubTypes() {
     const { t } = useLanguage();
@@ -79,7 +79,7 @@ export default function ClubTypes() {
                     </PaperCard>
                 </div>
 
-                <StatusSketch status={forms.status} wave={forms.wave} className="mt-6">
+                <StatusSketch status={forms.status} className="mt-6">
                     <p className="font-semibold text-foreground">{t(`${forms.i18nKey}.title`)}</p>
                     <p className="text-muted-foreground">{t('mk.clubs.forms')}</p>
                 </StatusSketch>

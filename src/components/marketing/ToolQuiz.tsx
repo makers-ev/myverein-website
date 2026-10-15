@@ -4,12 +4,12 @@ import { useState } from 'react';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 
-import { getItem } from './marketingData';
+import { getItem, quizToolIds } from './marketingData';
 import Person, { type PersonPose } from './Person';
 import { Marker, PaperCard, StatusBadge } from './Sketch';
 
 /** Each tool lists the items that replace (parts of) it. Status always comes from marketingData, never from here. */
-const TOOLS: { id: string; items: string[] }[] = [
+const TOOLS: { id: (typeof quizToolIds)[number]; items: string[] }[] = [
     { id: 'excel', items: ['csv-import-export', 'members-no-account'] },
     { id: 'whatsapp', items: ['calendar', 'broadcast'] },
     { id: 'doodle', items: ['scheduling-poll'] },
@@ -17,7 +17,7 @@ const TOOLS: { id: string; items: string[] }[] = [
     { id: 'notes', items: ['bulletin-board', 'places'] },
 ];
 
-// The figure relaxes with every tick: weighed down, then upright, then waving, finally sitting back.
+// The figure relaxes with every tool that is fully replaced today (not merely ticked): weighed down, then upright, waving, sitting back.
 const POSES: PersonPose[] = ['carry', 'shrug', 'stand', 'stand', 'wave', 'sit'];
 
 export default function ToolQuiz() {
@@ -40,7 +40,7 @@ export default function ToolQuiz() {
 
             <div className="mt-10 grid gap-8 lg:grid-cols-[auto_1fr_1.2fr] lg:items-start">
                 <div className="mx-auto" role="img" aria-label={t('mk.quiz.figure.alt')}>
-                    <Person pose={POSES[picked.length]} tone={picked.length === 5 ? 3 : 2} size={150} />
+                    <Person pose={POSES[nowCount]} tone={nowCount === 5 ? 3 : 2} size={150} />
                 </div>
 
                 <fieldset className="space-y-3">
@@ -66,11 +66,10 @@ export default function ToolQuiz() {
                         <p className="mk-note text-muted-foreground">{t('mk.quiz.empty')}</p>
                     ) : (
                         <PaperCard tilt="r" tape>
-                            <p className="text-xl font-extrabold text-foreground">{t('mk.quiz.result', { n: picked.length })}</p>
-                            <p className="mt-1 text-sm text-muted-foreground">
-                                {nowCount > 0 && <span className="block">{t('mk.quiz.now', { n: nowCount })}</span>}
-                                {soonCount > 0 && <span className="block">{t('mk.quiz.soon', { n: soonCount })}</span>}
+                            <p className="text-xl font-extrabold text-foreground">
+                                {nowCount > 0 ? t('mk.quiz.result', { n: nowCount, total: picked.length }) : t('mk.quiz.none')}
                             </p>
+                            {soonCount > 0 && <p className="mt-1 text-sm text-muted-foreground">{t('mk.quiz.soon', { n: soonCount })}</p>}
                             <ul className="mt-4 space-y-4">
                                 {picked.map((tool) => (
                                     <li key={tool.id}>
@@ -80,7 +79,7 @@ export default function ToolQuiz() {
                                                 const item = getItem(id);
                                                 return (
                                                     <li key={id} className="flex flex-wrap items-center gap-2 text-sm">
-                                                        <StatusBadge status={item.status} wave={item.wave} />
+                                                        <StatusBadge status={item.status} />
                                                         <span className="text-foreground">{t(`${item.i18nKey}.title`)}</span>
                                                     </li>
                                                 );

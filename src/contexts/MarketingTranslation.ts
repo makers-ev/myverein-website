@@ -9,7 +9,7 @@ type Translation = {
 const MarketingTranslation: Translation = {
     de: {
         'mk.status.live': 'Gibt es schon',
-        'mk.status.soon': 'Wir zeichnen gerade · Wave {{wave}}',
+        'mk.status.soon': 'Wir zeichnen gerade',
         'mk.role.mitglied.name': 'Mitglied',
         'mk.role.vorstand.name': 'Vorstand',
         'mk.role.abteilungsleitung.name': 'Abteilungsleitung',
@@ -40,8 +40,8 @@ const MarketingTranslation: Translation = {
         'mk.item.exit-checklist.body': 'Kündigungsfrist im Blick, und der Schlüssel samt Trikot kommt auch wirklich zurück.',
         'mk.item.calendar.title': 'Kalender mit Zu- und Absage',
         'mk.item.calendar.body': 'Jede Gruppe sieht ihre Termine. Wer zusagt, ist dabei, und wenn es voll ist, rückt die Warteliste nach.',
-        'mk.item.ical.title': 'Termine im eigenen Kalender',
-        'mk.item.ical.body': 'Per iCal landen die Vereinstermine im Handy-Kalender, den du ohnehin benutzt.',
+        'mk.item.ical.title': 'Termine als iCal-Datei exportieren',
+        'mk.item.ical.body': 'Die Vereinstermine lassen sich als iCal-Datei exportieren und in Kalender-Programmen öffnen. Ein automatisch aktualisiertes Abo ist das noch nicht.',
         'mk.item.scheduling-poll.title': 'Terminfindung statt Doodle',
         'mk.item.scheduling-poll.body': 'Schlag Termine vor, alle stimmen ab, der beste gewinnt. Ganz ohne fremde Plattform.',
         'mk.item.meetings.title': 'Sitzungen ohne Zettelchaos',
@@ -72,8 +72,6 @@ const MarketingTranslation: Translation = {
         'mk.item.found-club.body': 'Neuen Verein anlegen, Nachweis einreichen, prüfen lassen und loslegen.',
         'mk.item.club-switcher.title': 'Mehrere Vereine, ein Zugang',
         'mk.item.club-switcher.body': 'Du bist in Chor und Sportverein? In der App wechselst du mit einem Tipp.',
-        'mk.item.web-and-app.title': 'Web und App',
-        'mk.item.web-and-app.body': 'Am Rechner im Browser und unterwegs in der App, mit denselben Daten.',
 
         // ---- planned ----
         'mk.item.bulletin-board.title': 'Schwarzes Brett',
@@ -131,7 +129,7 @@ const MarketingTranslation: Translation = {
     },
     en: {
         'mk.status.live': 'Available now',
-        'mk.status.soon': 'Sketching now · Wave {{wave}}',
+        'mk.status.soon': 'Sketching now',
         'mk.role.mitglied.name': 'Member',
         'mk.role.vorstand.name': 'Board',
         'mk.role.abteilungsleitung.name': 'Department lead',
@@ -162,8 +160,8 @@ const MarketingTranslation: Translation = {
         'mk.item.exit-checklist.body': 'Notice periods in sight, and the key and the jersey actually come back.',
         'mk.item.calendar.title': 'Calendar with RSVP',
         'mk.item.calendar.body': 'Every group sees its own events. Say yes and you are in, and when it is full the waiting list moves up.',
-        'mk.item.ical.title': 'Events in your own calendar',
-        'mk.item.ical.body': 'Via iCal, club events land in the phone calendar you already use.',
+        'mk.item.ical.title': 'Export events as an iCal file',
+        'mk.item.ical.body': 'Club events can be exported as an iCal file and opened in calendar apps. It is not an automatically updating subscription yet.',
         'mk.item.scheduling-poll.title': 'Scheduling polls instead of Doodle',
         'mk.item.scheduling-poll.body': 'Propose dates, everyone votes, the best one wins. No outside platform.',
         'mk.item.meetings.title': 'Meetings without paper chaos',
@@ -194,8 +192,6 @@ const MarketingTranslation: Translation = {
         'mk.item.found-club.body': 'Create a new club, submit proof, get it checked and get going.',
         'mk.item.club-switcher.title': 'Several clubs, one login',
         'mk.item.club-switcher.body': 'In a choir and a sports club? In the app you switch with one tap.',
-        'mk.item.web-and-app.title': 'Web and app',
-        'mk.item.web-and-app.body': 'In the browser at your desk and in the app on the go, with the same data.',
 
         // ---- planned ----
         'mk.item.bulletin-board.title': 'Bulletin board',

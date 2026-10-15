@@ -1,20 +1,22 @@
 'use client';
 
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 
+import { heroCardLineCount, heroToolIds, heroWordCount } from './marketingData';
 import Network from './Network';
 import { Marker, PaperCard } from './Sketch';
 import { useInView } from './useInView';
 
 export type ToolId = 'excel' | 'whatsapp' | 'doodle' | 'zettel' | 'anwesenheit';
 
-const WORD_COUNT = 7;
+const WORD_COUNT = heroWordCount;
+const WORD_CYCLES = 2;
 const WORD_KEYS = Array.from({ length: WORD_COUNT }, (_, i) => `mk.hero.word.${i}`);
-const TOOLS: ToolId[] = ['excel', 'whatsapp', 'doodle', 'zettel', 'anwesenheit'];
-const CARD_LINES = ['mk.hero.card.l1', 'mk.hero.card.l2', 'mk.hero.card.l3', 'mk.hero.card.l4'];
+const TOOLS: ToolId[] = [...heroToolIds];
+const CARD_LINES = Array.from({ length: heroCardLineCount }, (_, i) => `mk.hero.card.l${i + 1}`);
 
 const ICONS: Record<ToolId, ReactNode> = {
     excel: (
@@ -80,16 +82,31 @@ export default function HeroScene() {
     const [touched, setTouched] = useState(false);
     const messy = ready && !tidy;
 
+    // Hovering or focusing inside the hero holds the word; after two full rounds it stays put for good.
+    const [wordPaused, setWordPaused] = useState(false);
+    const [wordDone, setWordDone] = useState(false);
+    const wordSteps = useRef(0);
+
     useEffect(() => {
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-        const id = window.setInterval(() => setWordIndex((i) => (i + 1) % WORD_COUNT), 2600);
+        if (wordPaused || wordDone || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const id = window.setInterval(() => {
+            wordSteps.current += 1;
+            setWordIndex(wordSteps.current % WORD_COUNT);
+            if (wordSteps.current >= WORD_COUNT * WORD_CYCLES) setWordDone(true);
+        }, 2600);
         return () => window.clearInterval(id);
-    }, []);
+    }, [wordPaused, wordDone]);
 
     const allWords = WORD_KEYS.map((key) => t(key)).join(', ');
 
     return (
-        <section className="relative mx-auto max-w-5xl px-4 pb-10 pt-8 text-center sm:px-6 sm:pt-12 lg:px-8">
+        <section
+            className="relative mx-auto max-w-5xl px-4 pb-10 pt-8 text-center sm:px-6 sm:pt-12 lg:px-8"
+            onMouseEnter={() => setWordPaused(true)}
+            onMouseLeave={() => setWordPaused(false)}
+            onFocus={() => setWordPaused(true)}
+            onBlur={() => setWordPaused(false)}
+        >
             <h1 className="text-4xl font-extrabold leading-[1.05] tracking-tight text-foreground sm:text-6xl">
                 {t('mk.hero.title-1')}
                 <span className="mt-2 block">
@@ -112,7 +129,7 @@ export default function HeroScene() {
                     href="/contact#beta"
                     className="btn-shimmer inline-flex min-h-11 items-center rounded-xl bg-primary px-6 py-3 font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition hover:-translate-y-0.5 hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 >
-                    {t('home.cta-primary')}
+                    {t('mk.hero.cta')}
                 </Link>
                 <a
                     href="#woche"

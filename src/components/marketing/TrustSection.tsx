@@ -58,7 +58,7 @@ export default function TrustSection() {
                     return (
                         <li key={id}>
                             <PaperCard tilt={tilt} tape className="h-full">
-                                <StatusBadge status={item.status} wave={item.wave} className="mb-3" />
+                                <StatusBadge status={item.status} className="mb-3" />
                                 <h3 className="text-lg font-bold text-foreground">{t(`${item.i18nKey}.title`)}</h3>
                                 <p className="mt-2 leading-relaxed text-muted-foreground">{t(`${item.i18nKey}.body`)}</p>
                                 <p className="mk-note mt-3 border-t border-dashed border-border pt-3 text-sm text-foreground">
@@ -73,7 +73,7 @@ export default function TrustSection() {
             <p className="mx-auto mt-8 max-w-2xl text-center text-sm text-muted-foreground">{t('mk.trust.honest')}</p>
 
             {consents.status === 'soon' && (
-                <StatusSketch status="soon" wave={consents.wave} className="mx-auto mt-8 max-w-2xl">
+                <StatusSketch status="soon" className="mx-auto mt-8 max-w-2xl">
                     <h3 className="text-lg font-bold">{t('mk.trust.soon.title')}</h3>
                     <p className="mt-2 leading-relaxed">{t('mk.trust.soon.body')}</p>
                 </StatusSketch>

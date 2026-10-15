@@ -51,7 +51,7 @@ export default function Network({ className = '', label }: { className?: string;
     const a11y = label !== undefined ? { role: 'img', 'aria-label': label || t('mk.net.alt') } : { 'aria-hidden': true as const };
 
     return (
-        <svg ref={ref} viewBox="0 0 600 360" focusable="false" className={`mk-net ${stateClass} ${className}`} {...a11y}>
+        <svg ref={ref} viewBox="0 0 600 360" focusable="false" className={`${stateClass} ${className}`} {...a11y}>
             <g>
                 {EDGES.map(([a, b]) => {
                     const from = NODES[a];
