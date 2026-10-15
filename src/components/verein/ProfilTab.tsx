@@ -8,6 +8,7 @@ import { apiFetch } from '@/lib/api-client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import MemberPhotoSection from '@/components/verein/MemberPhotoSection';
 import ExitSection from '@/components/verein/ExitSection';
+import MemberCustomFields from '@/components/verein/MemberCustomFields';
 
 export interface OwnMembership {
     id: string;
@@ -159,6 +160,7 @@ export default function ProfilTab({ me, clubId, onSaved, onPhotoExpired }: { me:
                     </div>
                 </form>
             </div>
+        <MemberCustomFields clubId={clubId} target="me" title={t('forms.cf.values.titleOwn')} />
         <ExitSection clubId={clubId} orgRole={me.orgRole} effectiveStatus={me.effectiveStatus} onChanged={onSaved} />
         </div>
     );

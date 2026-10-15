@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { History, Info } from 'lucide-react';
 
 import MemberAccountSection from '@/components/verein/MemberAccountSection';
+import MemberCustomFields from '@/components/verein/MemberCustomFields';
 import MemberPhotoSection from '@/components/verein/MemberPhotoSection';
 import MemberStatusDialog from '@/components/verein/MemberStatusDialog';
 import { Modal } from '@/components/Modal';
@@ -189,6 +190,8 @@ export default function MemberFormModal({
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [statusOpen, setStatusOpen] = useState(false);
+    // Unsaved edits of the custom fields section (it saves with its own button).
+    const [customDirty, setCustomDirty] = useState(false);
 
     // Which sensitive fields the backend delivered for this member (edit); in create everything the caller may write.
     const has = (key: SensitiveKey | 'memberNumber') => (isCreate ? key !== 'memberNumber' || canReadSensitive : member?.[key] !== undefined);
@@ -345,7 +348,7 @@ export default function MemberFormModal({
     }
 
     const dirty = isCreate || JSON.stringify(values) !== JSON.stringify(original);
-    const touched = JSON.stringify(values) !== JSON.stringify(original) || (isCreate && (status !== 'aktiv' || joinedAt !== ''));
+    const touched = JSON.stringify(values) !== JSON.stringify(original) || (isCreate && (status !== 'aktiv' || joinedAt !== '')) || customDirty;
 
     // Esc, the X and a click on the backdrop all end up here: never drop typed input without asking.
     function requestClose() {
@@ -553,6 +556,12 @@ export default function MemberFormModal({
                     </div>
                 ) : (
                     <p className="mt-5 rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">{t('verein.form.sensitiveHidden')}</p>
+                )}
+
+                {!isCreate && member && (
+                    <div className="mt-5">
+                        <MemberCustomFields clubId={clubId} target={member.id} showSensitiveNote={!canReadSensitive} onDirtyChange={setCustomDirty} />
+                    </div>
                 )}
 
                 {!isCreate && member && (
