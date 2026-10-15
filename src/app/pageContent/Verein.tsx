@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { apiFetch } from '@/lib/api-client';
 import { useThrottledCallback } from '@/lib/useThrottledCallback';
@@ -11,6 +11,7 @@ import NoClubSection from '@/components/verein/NoClubSection';
 import CategoriesPanel from '@/components/verein/CategoriesPanel';
 import ClubSettingsPanel from '@/components/verein/ClubSettingsPanel';
 import ClubStatsPanel from '@/components/verein/ClubStatsPanel';
+import FormsPanel from '@/components/verein/FormsPanel';
 import ExitQueuePanel from '@/components/verein/ExitQueuePanel';
 import MemberList from '@/components/verein/MemberList';
 import MemberAvatar from '@/components/verein/MemberAvatar';
@@ -55,7 +56,7 @@ interface ClubInfo {
     pages: ClubInfoPage[];
 }
 
-type Tab = 'info' | 'profil' | 'mitglieder' | 'austritte' | 'abteilungen' | 'kennzahlen' | 'einstellungen';
+type Tab = 'info' | 'profil' | 'mitglieder' | 'austritte' | 'abteilungen' | 'kennzahlen' | 'formulare' | 'einstellungen';
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
     return (
@@ -190,6 +191,9 @@ export default function VereinPageContent() {
     const [exitPending, setExitPending] = useState<number | null>(null);
     // Bumped whenever the member list must reload (an application was decided, ...).
     const [membersReload, setMembersReload] = useState(0);
+    // The form editor holds unsaved changes (guards the tab switch).
+    const [formsDirty, setFormsDirty] = useState(false);
+    const onFormsDirty = useCallback((dirty: boolean) => setFormsDirty(dirty), []);
 
     const activeClub = clubs?.[0] ?? null;
 
@@ -259,8 +263,15 @@ export default function VereinPageContent() {
     const tabs: Tab[] = guardianOnly ? ['info', 'profil', 'abteilungen'] : ['info', 'profil', 'mitglieder', 'abteilungen'];
     if (permissions.includes('members:write')) tabs.push('austritte');
     if (permissions.includes('club_stats:read')) tabs.push('kennzahlen');
+    if (permissions.includes('forms:write')) tabs.push('formulare');
     if (permissions.includes('members:write')) tabs.push('einstellungen');
     const currentTab: Tab = tabs.includes(tab) ? tab : 'info';
+
+    function selectTab(next: Tab) {
+        // Unsaved form edits survive only inside the editor: leaving the tab needs a confirmation.
+        if (formsDirty && currentTab === 'formulare' && next !== 'formulare' && !window.confirm(t('forms.editor.leaveConfirm'))) return;
+        setTab(next);
+    }
 
     return (
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
@@ -280,7 +291,9 @@ export default function VereinPageContent() {
                         {tabs.map((value) => (
                             <button
                                 key={value}
-                                onClick={() => setTab(value)}
+                                type="button"
+                                aria-current={currentTab === value ? 'page' : undefined}
+                                onClick={() => selectTab(value)}
                                 className={`whitespace-nowrap px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
                                     currentTab === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
                                 }`}
@@ -347,6 +360,7 @@ export default function VereinPageContent() {
                                 <LoadingText />
                             ))}
                         {currentTab === 'kennzahlen' && <ClubStatsPanel clubId={activeClub.clubId} />}
+                        {currentTab === 'formulare' && permissions.includes('forms:write') && <FormsPanel clubId={activeClub.clubId} permissions={permissions} onDirtyChange={onFormsDirty} />}
                         {currentTab === 'einstellungen' && (
                             <div className="space-y-6">
                                 <ClubSettingsPanel clubId={activeClub.clubId} />

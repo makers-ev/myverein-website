@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import AboutTranslation from './AboutTranslation';
 import ChangelogTranslation from './ChangelogTranslation';
 import FeaturesTranslation from './FeaturesTranslation';
+import FormBuilderTranslation from './FormBuilderTranslation';
 import FormsTranslation from './FormsTranslation';
 import KalenderTranslation from './KalenderTranslation';
 import { translations } from './LanguageContext';
@@ -15,7 +16,7 @@ import VerfuegbarkeitTranslation from './VerfuegbarkeitTranslation';
 // Modules that are DE/EN-only by design (documented in each file's header; other languages fall back to English
 // per key via t()). Their keys are exempt from the "every language has every key" check.
 const DE_EN_ONLY_KEYS = new Set(
-  [AboutTranslation, ChangelogTranslation, FeaturesTranslation, FormsTranslation, KalenderTranslation, RoadmapTranslation, StandorteTranslation, TreffenTranslation, VereinTranslation, VerfuegbarkeitTranslation].flatMap(
+  [AboutTranslation, ChangelogTranslation, FeaturesTranslation, FormBuilderTranslation, FormsTranslation, KalenderTranslation, RoadmapTranslation, StandorteTranslation, TreffenTranslation, VereinTranslation, VerfuegbarkeitTranslation].flatMap(
     (m) => Object.keys(m.en ?? {}),
   ),
 );

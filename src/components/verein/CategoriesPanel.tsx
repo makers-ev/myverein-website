@@ -28,6 +28,7 @@ interface FormState {
     name: string;
     key: string;
     votingRight: boolean;
+    applicantSelectable: boolean;
     minAge: string;
     maxAge: string;
     autoTransitionToKey: string;
@@ -52,6 +53,7 @@ function CategoryFormModal({
         name: category?.name ?? '',
         key: '',
         votingRight: category?.votingRight ?? true,
+        applicantSelectable: category?.applicantSelectable ?? false,
         minAge: category?.minAge?.toString() ?? '',
         maxAge: category?.maxAge?.toString() ?? '',
         autoTransitionToKey: category?.autoTransitionToKey ?? '',
@@ -103,7 +105,7 @@ function CategoryFormModal({
             if (category) {
                 await apiFetch(`/club-members/categories/${category.id}?clubId=${clubId}`, {
                     method: 'PATCH',
-                    body: { name, votingRight: form.votingRight, minAge, maxAge, autoTransitionToKey: auto },
+                    body: { name, votingRight: form.votingRight, applicantSelectable: form.applicantSelectable, minAge, maxAge, autoTransitionToKey: auto },
                 });
             } else {
                 await apiFetch(`/club-members/categories?clubId=${clubId}`, {
@@ -112,6 +114,7 @@ function CategoryFormModal({
                         name,
                         ...(form.key.trim() ? { key: form.key.trim().toLowerCase() } : {}),
                         votingRight: form.votingRight,
+                        applicantSelectable: form.applicantSelectable,
                         ...(minAge !== null ? { minAge } : {}),
                         ...(maxAge !== null ? { maxAge } : {}),
                         ...(auto ? { autoTransitionToKey: auto } : {}),
@@ -177,6 +180,19 @@ function CategoryFormModal({
                     <span>
                         {t('verein.categories.field.voting')}
                         <span className="block text-xs text-muted-foreground">{t('verein.categories.voting.hint')}</span>
+                    </span>
+                </label>
+
+                <label className="flex items-start gap-2 text-sm text-foreground">
+                    <input
+                        type="checkbox"
+                        checked={form.applicantSelectable}
+                        onChange={(e) => setForm({ ...form, applicantSelectable: e.target.checked })}
+                        className="mt-0.5 h-4 w-4 accent-primary"
+                    />
+                    <span>
+                        {t('forms.category.applicantSelectable')}
+                        <span className="block text-xs text-muted-foreground">{t('forms.category.applicantSelectable.hint')}</span>
                     </span>
                 </label>
 
@@ -411,6 +427,7 @@ export default function CategoriesPanel({ clubId, onChanged }: { clubId: string;
                                             <p className="text-sm font-semibold text-foreground">
                                                 {c.name}
                                                 {c.archived && <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs font-normal text-muted-foreground">{t('verein.categories.archived')}</span>}
+                                                {!c.archived && c.applicantSelectable && <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-normal text-primary">{t('forms.category.applicantSelectable.chip')}</span>}
                                             </p>
                                             <p className="mt-0.5 text-xs text-muted-foreground">
                                                 <code>{c.key}</code> · {c.votingRight ? t('verein.categories.voting.yes') : t('verein.categories.voting.no')} · {ageRangeText(c, t)}

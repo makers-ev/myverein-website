@@ -102,6 +102,8 @@ export interface MemberCategory {
     key: string;
     name: string;
     votingRight: boolean;
+    /** Applicants may choose it in the application form (`false` = only the board assigns it). Absent in old responses. */
+    applicantSelectable?: boolean;
     minAge: number | null;
     maxAge: number | null;
     autoTransitionToKey: string | null;

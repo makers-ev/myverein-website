@@ -41,11 +41,14 @@ export function parseJsonPlain(text: string): unknown {
 }
 
 /**
- * Applicant drafts, uploads and the board's application review carry personal data and change between requests: the browser
+ * Applicant drafts, uploads, the board's application review, the form editor, custom fields and exit requests carry personal data and change between requests: the browser
  * must never answer them from its HTTP cache (the backend's `Cache-Control` is set separately and is not relied upon here).
  */
 export function cachePolicyFor(path: string): RequestCache | undefined {
-    return /^\/(form-submissions|club-forms|club-applications)(\/|\?|$)/.test(path) ? 'no-store' : undefined;
+    // Form definitions (drafts hold unpublished wording), custom field definitions/values (may be sensitive) and exit requests with answers.
+    return /^\/(form-submissions|club-forms|club-applications|forms|member-fields|club-exit-requests)(\/|\?|$)/.test(path) || /^\/club-members\/[^/?]+\/custom-fields(\/|\?|$)/.test(path)
+        ? 'no-store'
+        : undefined;
 }
 
 export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise<T> {

@@ -46,6 +46,12 @@ export interface FormField {
     infoKind?: 'privacy_notice';
     text?: string;
     sensitive?: boolean;
+    /** Options come from the club's applicant-selectable member categories (resolved server-side for applicants). */
+    optionsSource?: 'member_categories';
+    /** Editor only (never sent to applicants): master data target of the answer on acceptance. */
+    mapsTo?: string;
+    /** Editor only: key of the custom field the answer is written to on acceptance. */
+    customField?: string;
 }
 
 /** The applicant view of a form version (`data` of `GET /club-forms/:clubSlug/aufnahme`). */

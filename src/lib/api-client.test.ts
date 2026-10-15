@@ -66,6 +66,14 @@ describe('cache policy of personal-data routes', () => {
         expect(cachePolicyFor('/form-submissionsX')).toBeUndefined();
     });
 
+    it('never uses the HTTP cache for the form editor, custom fields and exit requests', () => {
+        for (const path of ['/forms?clubId=c', '/forms/1/draft?clubId=c', '/member-fields?clubId=c', '/club-members/me/custom-fields?clubId=c', '/club-members/abc/custom-fields?clubId=c', '/club-exit-requests/form?clubId=c', '/club-exit-requests/1']) {
+            expect(cachePolicyFor(path), path).toBe('no-store');
+        }
+        expect(cachePolicyFor('/formsX')).toBeUndefined();
+        expect(cachePolicyFor('/club-members/abc?clubId=c')).toBeUndefined();
+    });
+
     it('passes the policy to the fetch call', async () => {
         fetchMock.mockResolvedValue({ data: { data: [] }, error: null });
         await apiFetch('/form-submissions/mine');
