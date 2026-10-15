@@ -1,3 +1,4 @@
+import { notFound } from 'next/navigation';
 import { connection } from 'next/server';
 
 import { createSiteMetadata } from '@/seo/createSiteMetadata';
@@ -13,6 +14,9 @@ export const metadata = createSiteMetadata({
 });
 
 export default async function ContactPage() {
+    // Contact page hidden on the public-only site; remove this line to re-enable.
+    notFound();
+
     // Forces dynamic rendering so the proxy's per-request CSP nonce applies -- see login-signup/page.tsx.
     await connection();
 
