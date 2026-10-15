@@ -1,11 +1,96 @@
+// Copy for the trust, roadmap-teaser, tool-quiz and finale chapters of the marketing homepage (B3).
 type Translation = {
     de: Record<string, string>;
     en: Record<string, string>;
 };
 
 const MarketingTrustTranslation: Translation = {
-    de: {},
-    en: {},
+    de: {
+        'mk.trust.title.pre': 'Vertrauen statt',
+        'mk.trust.title.mark': 'Kleingedrucktes',
+        'mk.trust.intro': 'In deinem Verein stecken Namen, Fotos und manchmal Kinder. Darum bauen wir Schutz ein, den du selbst nachprüfen kannst.',
+        'mk.trust.lock.alt': 'Ein Vorhängeschloss aus Papier mit Schlüsselloch',
+        'mk.trust.check.rights-deny-default': 'Prüf es nach: Lege eine Testperson an und schau in der Rollen-Sicht, was sie sieht.',
+        'mk.trust.check.profile-photo-minors': 'Prüf es nach: Bei Kindern greift beim Profilfoto die strengere Regel.',
+        'mk.trust.check.signed-links': 'Prüf es nach: Ein kopierter Bildlink funktioniert nach kurzer Zeit nicht mehr.',
+        'mk.trust.check.sensitive-audit': 'Prüf es nach: Das Öffnen sensibler Dokumente steht im Protokoll.',
+        'mk.trust.honest': 'Wir werben nicht mit Siegeln oder Zertifikaten. Wir zeigen dir, was passiert, und du entscheidest, ob dir das reicht.',
+        'mk.trust.soon.title': 'Noch auf dem Zeichentisch: Einwilligungen',
+        'mk.trust.soon.body': 'Die Verwaltung von Foto- und Video-Einwilligungen, samt Widerruf, folgt. Bis dahin gilt: Das gibt es noch nicht.',
+
+        'mk.road.title.pre': 'Das zeichnen wir',
+        'mk.road.title.mark': 'gerade',
+        'mk.road.intro': 'Gestrichelt heißt: noch nicht fertig. Beim Drüberfahren malen wir schon mal aus, wie es aussehen soll. Verfügbar ist es deshalb nicht.',
+        'mk.road.wave': 'Wave {{wave}}',
+        'mk.road.billing.title': 'Bewusst nicht dabei: die Abrechnung',
+        'mk.road.billing.body': 'Beiträge, Mahnungen und Kassenbuch lassen wir mit gutem Gewissen aus. Dein Kassenwart hat dafür seine Werkzeuge, wir sorgen für den Rest vom Vereinsleben.',
+        'mk.road.link': 'Alle Pläne ansehen',
+
+        'mk.quiz.title.pre': 'Wie viele Tools ersetzt MyVerein',
+        'mk.quiz.title.mark': 'bei euch?',
+        'mk.quiz.intro': 'Hak an, was ihr heute benutzt. Wir sagen ehrlich, was davon schon geht und was noch kommt.',
+        'mk.quiz.legend': 'Das nutzt ihr heute',
+        'mk.quiz.tool.excel': 'Excel-Mitgliederliste',
+        'mk.quiz.tool.whatsapp': 'WhatsApp-Gruppe',
+        'mk.quiz.tool.doodle': 'Doodle',
+        'mk.quiz.tool.attendance': 'Papier-Anwesenheitsliste',
+        'mk.quiz.tool.notes': 'Zettel und Aushang',
+        'mk.quiz.figure.alt': 'Eine Figur, die mit jedem Häkchen entspannter wird',
+        'mk.quiz.empty': 'Noch kein Häkchen? Dann trägt die Figur gerade alles allein.',
+        'mk.quiz.result': 'Ihr würdet {{n}} von 5 Tools los.',
+        'mk.quiz.now': 'Schon heute komplett ersetzt: {{n}}',
+        'mk.quiz.soon': 'Zum Teil ersetzt, den Rest zeichnen wir gerade: {{n}}',
+        'mk.quiz.privacy': 'Deine Auswahl bleibt in diesem Browser. Wir speichern und zählen nichts.',
+
+        'mk.finale.title.pre': 'Dein Verein hat es verdient,',
+        'mk.finale.title.mark': 'ein Ort zu sein',
+        'mk.finale.body': 'Wir suchen Pilotvereine, die mit uns zusammen das letzte Stück zeichnen. Egal ob Chor, Feuerwehr oder Kleingartenverein.',
+        'mk.finale.cta': 'Pilotverein werden',
+        'mk.finale.honest': 'MyVerein ist noch nicht öffentlich verfügbar. Du bekommst frühen Zugang, wenn du dich meldest.',
+    },
+    en: {
+        'mk.trust.title.pre': 'Trust instead of',
+        'mk.trust.title.mark': 'fine print',
+        'mk.trust.intro': 'Your club holds names, photos and sometimes children. That is why we build in protection you can check yourself.',
+        'mk.trust.lock.alt': 'A paper padlock with a keyhole',
+        'mk.trust.check.rights-deny-default': 'Check it yourself: create a test person and look at the role view to see what they see.',
+        'mk.trust.check.profile-photo-minors': 'Check it yourself: for children, the stricter rule applies to the profile photo.',
+        'mk.trust.check.signed-links': 'Check it yourself: a copied image link stops working after a short time.',
+        'mk.trust.check.sensitive-audit': 'Check it yourself: opening sensitive documents shows up in the log.',
+        'mk.trust.honest': 'We do not advertise seals or certificates. We show you what happens and you decide whether that is enough.',
+        'mk.trust.soon.title': 'Still on the drawing board: consents',
+        'mk.trust.soon.body': 'Managing photo and video consents, including withdrawal, is coming. Until then: this does not exist yet.',
+
+        'mk.road.title.pre': 'What we are',
+        'mk.road.title.mark': 'sketching now',
+        'mk.road.intro': 'Dashed means not finished yet. When you hover over one we colour it in to show the idea, but that does not make it available.',
+        'mk.road.wave': 'Wave {{wave}}',
+        'mk.road.billing.title': 'Left out on purpose: billing',
+        'mk.road.billing.body': 'Dues, reminders and the cash book we leave out with a clear conscience. Your treasurer has their own tools, we take care of the rest of club life.',
+        'mk.road.link': 'See all plans',
+
+        'mk.quiz.title.pre': 'How many tools does MyVerein replace',
+        'mk.quiz.title.mark': 'for you?',
+        'mk.quiz.intro': 'Tick what you use today. We tell you honestly what already works and what is still coming.',
+        'mk.quiz.legend': 'What you use today',
+        'mk.quiz.tool.excel': 'Excel member list',
+        'mk.quiz.tool.whatsapp': 'WhatsApp group',
+        'mk.quiz.tool.doodle': 'Doodle',
+        'mk.quiz.tool.attendance': 'Paper attendance sheet',
+        'mk.quiz.tool.notes': 'Notes and notice boards',
+        'mk.quiz.figure.alt': 'A figure that gets more relaxed with every tick',
+        'mk.quiz.empty': 'No tick yet? Then the figure is carrying everything alone.',
+        'mk.quiz.result': 'You would drop {{n}} of 5 tools.',
+        'mk.quiz.now': 'Fully replaced today: {{n}}',
+        'mk.quiz.soon': 'Partly replaced, we are sketching the rest: {{n}}',
+        'mk.quiz.privacy': 'Your choice stays in this browser. We store and count nothing.',
+
+        'mk.finale.title.pre': 'Your club deserves',
+        'mk.finale.title.mark': 'to be one place',
+        'mk.finale.body': 'We are looking for pilot clubs to draw the last stretch with us. Choir, fire brigade or allotment club, all welcome.',
+        'mk.finale.cta': 'Become a pilot club',
+        'mk.finale.honest': 'MyVerein is not publicly available yet. Get in touch and you get early access.',
+    },
 };
 
 export default MarketingTrustTranslation;
