@@ -271,10 +271,70 @@ body {
 }
 
 /* mk:b1 */
+/* Hero stage: tool objects are hidden inside the card (tidy = SSR/no-JS state) and spread out when `.mk-b1-messy` is set. */
+.mk-b1-obj {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0.3);
+}
+.mk-b1-o1 { --b1-x: 17%; --b1-y: 11%; --b1-rot: -9deg; }
+.mk-b1-o2 { --b1-x: 83%; --b1-y: 14%; --b1-rot: 7deg; }
+.mk-b1-o3 { --b1-x: 14%; --b1-y: 52%; --b1-rot: 5deg; }
+.mk-b1-o4 { --b1-x: 86%; --b1-y: 55%; --b1-rot: -6deg; }
+.mk-b1-o5 { --b1-x: 50%; --b1-y: 90%; --b1-rot: 3deg; }
+.mk-b1-messy .mk-b1-obj {
+  left: var(--b1-x);
+  top: var(--b1-y);
+  opacity: 1;
+  transform: translate(-50%, -50%) rotate(var(--b1-rot));
+}
+.mk-b1-messy .mk-b1-card { opacity: 0.5; transform: scale(0.94); }
+
+/* Fly-in rows (MediaBreaks): SSR and reduced motion show them in place. */
+.mk-b1-fly { transform: none; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .mk-b1-obj {
+    transition: left 0.9s cubic-bezier(0.34, 1.4, 0.64, 1) var(--mk-delay, 0s),
+      top 0.9s cubic-bezier(0.34, 1.4, 0.64, 1) var(--mk-delay, 0s),
+      transform 0.9s cubic-bezier(0.34, 1.4, 0.64, 1) var(--mk-delay, 0s),
+      opacity 0.5s ease var(--mk-delay, 0s);
+  }
+  .mk-b1-card { transition: opacity 0.5s ease, transform 0.5s ease; }
+
+  .mk-b1-word { display: inline-block; animation: mk-b1-word 0.5s ease-out both; }
+  @keyframes mk-b1-word {
+    from { opacity: 0; transform: translateY(0.4em) rotate(-2deg); }
+    to { opacity: 1; transform: none; }
+  }
+
+  .mk-b1-fly {
+    transition: transform 0.9s cubic-bezier(0.34, 1.3, 0.64, 1) var(--mk-delay, 0s), opacity 0.6s ease var(--mk-delay, 0s);
+  }
+  .mk-ready:not(.is-in) .mk-b1-fly { opacity: 0; }
+  .mk-ready:not(.is-in) .mk-b1-fly-1 { transform: translate(-55%, -40%) rotate(-10deg); }
+  .mk-ready:not(.is-in) .mk-b1-fly-2 { transform: translate(60%, -30%) rotate(8deg); }
+  .mk-ready:not(.is-in) .mk-b1-fly-3 { transform: translate(-60%, 20%) rotate(6deg); }
+  .mk-ready:not(.is-in) .mk-b1-fly-4 { transform: translate(55%, 30%) rotate(-7deg); }
+  .mk-ready:not(.is-in) .mk-b1-fly-5 { transform: translate(0, 70%) rotate(4deg); }
+}
 /* mk:b1 end */
 
 /* mk:b2 */
+/* Week stage: the active day stays full strength, the others step back a little (only once JS runs). */
+@media (prefers-reduced-motion: no-preference) {
+  .mk-week-js .mk-day { opacity: 0.65; transition: opacity 0.3s ease; }
+  .mk-week-js .mk-day.is-active,
+  .mk-week-js .mk-day:focus-within { opacity: 1; }
+}
 /* mk:b2 end */
 
 /* mk:b3 */
+@media (prefers-reduced-motion: no-preference) {
+  .mk-shackle { transition: transform 0.3s ease-out; }
+  .mk-trust:hover .mk-shackle { transform: translateY(-4px); }
+}
 /* mk:b3 end */
