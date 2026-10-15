@@ -105,6 +105,9 @@ const CustomFieldsTranslation: Translation = {
         'forms.cf.export.title': 'Zusatzfelder',
         'forms.cf.export.none': 'Es gibt keine Zusatzfelder, die du exportieren darfst.',
         'forms.cf.export.hint': 'Zusatzfelder erscheinen als eigene Spalten, technisch „cf:Schlüssel“. Sensible Felder kann nur exportieren, wer „Sensible Mitgliedsdaten lesen“ darf.',
+        'forms.cf.options.protected': 'Diese Option ist bei Mitgliedern gespeichert und kann nicht entfernt werden.',
+        'forms.cf.options.removeProtected': 'Option {{number}} kann nicht entfernt werden (gespeichert)',
+        'forms.cf.values.leaveConfirm': 'Du hast ungespeicherte Änderungen an den Zusatzfeldern. Wirklich verlassen?',
     },
     en: {
         'verein.tab.zusatzfelder': 'Custom fields',
@@ -204,6 +207,9 @@ const CustomFieldsTranslation: Translation = {
         'forms.cf.export.title': 'Custom fields',
         'forms.cf.export.none': 'There are no custom fields you can export.',
         'forms.cf.export.hint': 'Custom fields appear as extra columns, technically “cf:key”. Only people with “Read sensitive member data” can export sensitive fields.',
+        'forms.cf.options.protected': 'This option is stored for members and cannot be removed.',
+        'forms.cf.options.removeProtected': 'Option {{number}} cannot be removed (stored)',
+        'forms.cf.values.leaveConfirm': 'You have unsaved changes to the custom fields. Leave anyway?',
     },
 };
 

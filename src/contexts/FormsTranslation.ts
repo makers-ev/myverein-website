@@ -216,6 +216,8 @@ const FormsTranslation: Translation = {
         'forms.exit.outdated.lost': 'Der Verein hat das Austrittsformular geändert. Diese Angaben gibt es nicht mehr und sie wurden entfernt: {{fields}}. Bitte prüfe alles und sende die Kündigung erneut ab. Bisher wurde nichts übermittelt.',
         'forms.exit.answers.title': 'Angaben aus dem Austrittsformular',
         'forms.exit.answers.hint': 'Formular Version {{version}}, abgeschickt am {{date}}. Die Angaben ändern weder Fristen noch Datum.',
+        'forms.exit.withoutForm': 'Das Austrittsformular konnte nicht geladen werden. Du kannst die Kündigung trotzdem ohne Formular abschicken, nur mit Wunschdatum und einer Begründung.',
+        'forms.exit.skipForm': 'Ohne Formular kündigen',
     },
     en: {
         'forms.required': 'required',
@@ -419,6 +421,8 @@ const FormsTranslation: Translation = {
         'forms.exit.outdated.lost': 'The club has changed the exit form. These answers no longer exist and were removed: {{fields}}. Please check everything and submit the cancellation again. Nothing has been sent yet.',
         'forms.exit.answers.title': 'Answers from the exit form',
         'forms.exit.answers.hint': 'Form version {{version}}, submitted on {{date}}. The answers change neither notice periods nor dates.',
+        'forms.exit.withoutForm': 'The exit form could not be loaded. You can still submit the cancellation without the form, with just the wished date and a reason.',
+        'forms.exit.skipForm': 'Cancel without the form',
     },
 };
 

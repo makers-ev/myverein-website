@@ -139,7 +139,16 @@ export function uniqueOptionValue(label: string, taken: readonly string[]): stri
 export interface FieldOption {
     value: string;
     label: string;
+    /** Client-only stable id (React key, never sent: the cleaning functions copy `value` and `label` only). */
+    uid?: string;
 }
+
+let uidCounter = 0;
+/** A fresh client-side id for a field or an option (stable list keys and focus tracking while items move). */
+export const makeUid = (): string => `u${++uidCounter}`;
+
+/** Options with a `uid` each (existing ones keep theirs). */
+export const withOptionUids = (options: readonly FieldOption[]): FieldOption[] => options.map((o) => (o.uid ? o : { ...o, uid: makeUid() }));
 
 /**
  * New label for option `index`: its value follows the label (`Rot` -> `rot`) as long as it was derived from the old label
@@ -152,12 +161,12 @@ export function renameOption(options: readonly FieldOption[], index: number, lab
     const derived = current.value === '' || current.value === (slugify(current.label) || 'option') || /^option(_\d+)?$/.test(current.value);
     const follows = derived && !locked.has(current.value);
     const value = follows ? uniqueOptionValue(label, others) : current.value;
-    return options.map((o, i) => (i === index ? { value, label } : o));
+    return options.map((o, i) => (i === index ? { ...o, value, label } : o));
 }
 
 /** Appends an empty option with a placeholder value that is replaced by the label as soon as it is typed. */
 export function addOption(options: readonly FieldOption[]): FieldOption[] {
-    return [...options, { value: uniqueOptionValue('option', options.map((o) => o.value)), label: '' }];
+    return [...options, { value: uniqueOptionValue('option', options.map((o) => o.value)), label: '', uid: makeUid() }];
 }
 
 // ---- field construction and type changes ----------------------------------------------------------------------
@@ -180,7 +189,7 @@ export const isChoiceType = (type: FieldType): boolean => type === 'select' || t
 
 /** A fresh field of `type` with a unique key; mandatory choices start empty (flagged until the board fills them in). */
 export function newField(type: FieldType, taken: readonly string[]): FormField {
-    const base: FormField = { key: uniqueKey(type === 'info' ? 'hinweis' : type === 'consent' ? 'einwilligung' : 'feld', taken), type, label: '' };
+    const base: FormField = { key: uniqueKey(type === 'info' ? 'hinweis' : type === 'consent' ? 'einwilligung' : 'feld', taken), type, label: '', uid: makeUid() };
     if (isChoiceType(type)) base.options = [];
     return base;
 }
@@ -455,6 +464,9 @@ export const KNOWN_PROBLEM_CODES = [
     'mapping_twice',
     'custom_twice',
     'invalid_definition',
+    'name_missing',
+    'name_invalid',
+    'privacy_invalid',
     // publish rules (server codes)
     'privacy_notice_missing',
     'privacy_notice_text_missing',
@@ -540,6 +552,16 @@ export function shapeProblems(fields: readonly FormField[]): EditorProblem[] {
     return problems;
 }
 
+/** Name and privacy notice of the form: the same character policy as the server (single-line name, multi-line notice). */
+export function textProblems(name: string, privacyNotice: string): EditorProblem[] {
+    const problems: EditorProblem[] = [];
+    const trimmed = name.trim();
+    if (trimmed === '' || trimmed.length > MAX_FORM_NAME) problems.push({ code: 'name_missing' });
+    else if (!isCleanText(trimmed)) problems.push({ code: 'name_invalid' });
+    if (privacyNotice.length > MAX_PRIVACY_NOTICE || !isCleanText(privacyNotice.trim(), true)) problems.push({ code: 'privacy_invalid' });
+    return problems;
+}
+
 /** Whether the draft can be saved: no shape problem. */
 export const canSaveDraft = (fields: readonly FormField[]): boolean => shapeProblems(fields).length === 0;
 
@@ -547,7 +569,7 @@ export const canSaveDraft = (fields: readonly FormField[]): boolean => shapeProb
  * Publish checks that need no server data (what the server checks too): the standard rules of the purpose. Shown as a
  * live checklist; they do not block saving a draft.
  */
-export function publishChecks(fields: readonly FormField[], privacyNotice: string, purpose: string): EditorProblem[] {
+export function publishChecks(fields: readonly FormField[], privacyNotice: string, purpose: string, customFields?: readonly CustomFieldRef[]): EditorProblem[] {
     const problems: EditorProblem[] = [];
     if (purpose === 'aufnahme') {
         const notice = fields.find((f) => f.type === 'info' && f.infoKind === 'privacy_notice');
@@ -560,6 +582,13 @@ export function publishChecks(fields: readonly FormField[], privacyNotice: strin
         if (purpose !== 'aufnahme' && (f.mapsTo !== undefined || f.customField !== undefined)) problems.push({ code: 'mapping_not_allowed', fieldKey: f.key });
         // The cancellation dialog has no upload: a file or photo field there could never be answered.
         if (purpose === 'austritt' && (f.type === 'file' || f.type === 'image')) problems.push({ code: 'file_not_supported', fieldKey: f.key });
+        // Custom field links, when the definitions are known (the server checks the same on publishing).
+        if (purpose === 'aufnahme' && f.customField !== undefined && customFields) {
+            const def = customFields.find((c) => c.key === f.customField);
+            if (!def || def.archived) problems.push({ code: 'custom_field_unknown', fieldKey: f.key });
+            else if (def.type !== customFieldTypeFor(f.type)) problems.push({ code: 'custom_field_type_mismatch', fieldKey: f.key });
+            else if (f.sensitive && !def.sensitive) problems.push({ code: 'custom_field_not_sensitive', fieldKey: f.key });
+        }
     }
     return problems;
 }
@@ -590,7 +619,19 @@ const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'obj
  * (`422 details.issues`, path `[fieldIndex, ...]`). `null` = the error carries no such list.
  */
 export function problemsFromError(err: unknown, fields: readonly FormField[]): EditorProblem[] | null {
-    if (!(err instanceof ApiError) || err.status !== 422 || !isRecord(err.details)) return null;
+    if (!(err instanceof ApiError) || err.status !== 422) return null;
+    // Body validation (`validationHook`): `details` is the array of schema issues, `path[0]` names the property.
+    if (Array.isArray(err.details)) {
+        const out = new Map<string, EditorProblem>();
+        for (const issue of err.details) {
+            if (!isRecord(issue) || !Array.isArray(issue.path)) continue;
+            const head = issue.path[0];
+            const code = head === 'name' ? 'name_invalid' : head === 'privacyNotice' ? 'privacy_invalid' : head === 'fields' ? 'invalid_definition' : null;
+            if (code) out.set(code, { code });
+        }
+        return out.size > 0 ? [...out.values()] : null;
+    }
+    if (!isRecord(err.details)) return null;
     const details = err.details;
     if (Array.isArray(details.problems)) {
         const out: EditorProblem[] = [];
@@ -644,6 +685,30 @@ export function editorErrorKey(err: unknown): string {
     return memberErrorKey(err);
 }
 
+// ---- saving the draft ------------------------------------------------------------------------------------------
+
+/**
+ * Where the editor saves: a loaded draft is saved by its number (`PUT /forms/:id/versions/:n`, the server answers `409
+ * version_immutable` when that draft was changed, published or replaced meanwhile -- nothing is overwritten silently); without a
+ * loaded draft, or when the person chose to keep their version (`force`), `PUT /forms/:id/draft` saves into the current draft or
+ * starts a new one.
+ */
+export function saveTarget(formId: string, clubId: string, draftVersion: number | null, force = false): string {
+    const base = `/forms/${formId}`;
+    return draftVersion !== null && !force ? `${base}/versions/${draftVersion}?clubId=${clubId}` : `${base}/draft?clubId=${clubId}`;
+}
+
+/**
+ * The saved or published draft is not the one the editor loaded: it was changed, published or discarded elsewhere
+ * (`409 version_immutable` / `no_draft`, or `404` for the draft number that no longer exists).
+ */
+export function isSaveConflict(err: unknown, savedByNumber: boolean): boolean {
+    if (!(err instanceof ApiError)) return false;
+    const code = (err.details as { code?: unknown } | undefined)?.code;
+    if (err.status === 409 && (code === 'version_immutable' || code === 'no_draft')) return true;
+    return savedByNumber && err.status === 404;
+}
+
 // ---- editor state ---------------------------------------------------------------------------------------------
 
 export interface EditorState {
@@ -652,6 +717,8 @@ export interface EditorState {
     privacyNotice: string;
     /** Keys of fields that lost their condition through the last structural change (shown once as a notice). */
     droppedConditions: string[];
+    /** The fields before the last move/delete: "Rückgängig" restores them (one level). */
+    undo: { kind: 'move' | 'remove'; fields: FormField[]; label: string; keys: string[] } | null;
 }
 
 export type EditorAction =
@@ -662,10 +729,11 @@ export type EditorAction =
     | { type: 'move'; index: number; direction: 'up' | 'down' }
     | { type: 'setName'; name: string }
     | { type: 'setPrivacyNotice'; privacyNotice: string }
+    | { type: 'undo' }
     | { type: 'ackDropped' };
 
 export function initialEditorState(name: string, fields: readonly FormField[], privacyNotice: string | null | undefined): EditorState {
-    return { name, fields: fields.map((f) => ({ ...f })), privacyNotice: privacyNotice ?? '', droppedConditions: [] };
+    return { name, fields: fields.map((f) => ({ ...f, uid: f.uid ?? makeUid(), ...(f.options ? { options: withOptionUids(f.options) } : {}) })), privacyNotice: privacyNotice ?? '', droppedConditions: [], undo: null };
 }
 
 export const canMove = (index: number, length: number, direction: 'up' | 'down'): boolean => (direction === 'up' ? index > 0 : index < length - 1);
@@ -690,24 +758,48 @@ function withRepair(state: EditorState, fields: FormField[]): EditorState {
     return { ...state, fields: repaired.fields, droppedConditions: [...new Set([...state.droppedConditions, ...repaired.dropped])] };
 }
 
+/** Fields whose `visibleIf` refers to the field with `key` (they lose the condition when it is deleted or moved behind them). */
+export function dependentsOf(fields: readonly FormField[], key: string): FormField[] {
+    return fields.filter((f) => f.visibleIf?.fieldKey === key);
+}
+
+/** Fields that would lose their condition if the field at `index` moved one place (their labels are named in the confirmation). */
+export function conditionsLostByMove(fields: readonly FormField[], index: number, direction: 'up' | 'down'): FormField[] {
+    if (!canMove(index, fields.length, direction)) return [];
+    const dropped = new Set(repairConditions(moveItem(fields, index, direction)).dropped);
+    return fields.filter((f) => dropped.has(f.key));
+}
+
+function withUndo(state: EditorState, kind: 'move' | 'remove', label: string, keys: string[]): EditorState['undo'] {
+    return { kind, fields: state.fields, label, keys };
+}
+
 export function editorReducer(state: EditorState, action: EditorAction): EditorState {
     switch (action.type) {
         case 'reset':
             return initialEditorState(action.name, action.fields, action.privacyNotice);
         case 'add':
-            return state.fields.length >= MAX_FIELDS ? state : withRepair(state, [...state.fields, action.field]);
+            return state.fields.length >= MAX_FIELDS ? state : { ...withRepair(state, [...state.fields, action.field.uid ? action.field : { ...action.field, uid: makeUid() }]), undo: null };
         case 'update': {
             const old = state.fields[action.index];
             if (!old) return state;
             const renamed = renameConditionRefs(state.fields, old.key, action.field.key);
-            return withRepair(state, renamed.map((f, i) => (i === action.index ? action.field : f)));
+            return { ...withRepair(state, renamed.map((f, i) => (i === action.index ? { ...action.field, uid: old.uid ?? action.field.uid } : f))), undo: null };
         }
-        case 'remove':
-            if (action.index < 0 || action.index >= state.fields.length) return state;
-            return withRepair(state, state.fields.filter((_, i) => i !== action.index));
-        case 'move':
+        case 'remove': {
+            const removed = state.fields[action.index];
+            if (!removed) return state;
+            const next = withRepair(state, state.fields.filter((_, i) => i !== action.index));
+            return { ...next, undo: withUndo(state, 'remove', removed.label, [removed.key]) };
+        }
+        case 'move': {
             if (!canMove(action.index, state.fields.length, action.direction)) return state;
-            return withRepair(state, moveItem(state.fields, action.index, action.direction));
+            const moved = state.fields[action.index]!;
+            const next = withRepair(state, moveItem(state.fields, action.index, action.direction));
+            return { ...next, undo: withUndo(state, 'move', moved.label, [moved.key]) };
+        }
+        case 'undo':
+            return state.undo ? { ...state, fields: state.undo.fields, droppedConditions: [], undo: null } : state;
         case 'setName':
             return { ...state, name: action.name };
         case 'setPrivacyNotice':

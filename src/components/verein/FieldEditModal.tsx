@@ -5,6 +5,7 @@ import { Info, Lock } from 'lucide-react';
 
 import OptionsEditor from '@/components/forms/OptionsEditor';
 import { Modal } from '@/components/Modal';
+import { useConfirm } from '@/components/useConfirm';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { inputClass, primaryButtonClass, secondaryButtonClass } from '@/lib/clubMembers';
 import {
@@ -150,6 +151,7 @@ export default function FieldEditModal({
     onClose: () => void;
 }) {
     const { t } = useLanguage();
+    const { confirm, dialog } = useConfirm();
     const ids = useId();
     const isNew = field === null;
     const otherKeys = fields.filter((_, i) => i !== index).map((f) => f.key);
@@ -212,8 +214,8 @@ export default function FieldEditModal({
         });
     }
 
-    function requestClose() {
-        if (dirty && !window.confirm(t('forms.editor.field.discard'))) return;
+    async function requestClose() {
+        if (dirty && !(await confirm({ title: t('forms.confirm.discard.title'), body: t('forms.editor.field.discard'), confirmLabel: t('forms.confirm.discard.confirm'), danger: true }))) return;
         onClose();
     }
 
@@ -238,11 +240,11 @@ export default function FieldEditModal({
         <Modal
             open
             size="lg"
-            onClose={requestClose}
+            onClose={() => void requestClose()}
             title={isNew ? t('forms.editor.field.add') : t('forms.editor.field.edit', { label: field?.label.trim() || field?.key || '' })}
             footer={
                 <div className="flex justify-end gap-2">
-                    <button type="button" onClick={requestClose} className={secondaryButtonClass}>
+                    <button type="button" onClick={() => void requestClose()} className={secondaryButtonClass}>
                         {t('forms.editor.field.cancel')}
                     </button>
                     <button type="button" onClick={save} className={primaryButtonClass}>
@@ -403,18 +405,27 @@ export default function FieldEditModal({
                 )}
 
                 {!isInfo && (
-                    <Check
-                        checked={draft.sensitive === true}
-                        disabled={draft.mapsTo !== undefined}
-                        onChange={(v) => {
-                            const next = { ...draft };
-                            if (v) next.sensitive = true;
-                            else delete next.sensitive;
-                            setDraft(next);
-                        }}
-                        label={t('forms.editor.field.sensitive')}
-                        hint={draft.mapsTo !== undefined ? t('forms.editor.field.sensitiveMapped') : t('forms.editor.field.sensitiveHint')}
-                    />
+                    <div>
+                        <Check
+                            checked={draft.sensitive === true}
+                            onChange={(v) => {
+                                const next = { ...draft };
+                                if (v) next.sensitive = true;
+                                else delete next.sensitive;
+                                setDraft(next);
+                            }}
+                            label={t('forms.editor.field.sensitive')}
+                            hint={t('forms.editor.field.sensitiveHint')}
+                        />
+                        {draft.sensitive === true && draft.mapsTo !== undefined && (
+                            <div role="alert" className="mt-2 rounded-lg border border-warning/40 bg-warning/10 p-2 text-xs text-foreground">
+                                <p>{t('forms.editor.field.sensitiveMapped')}</p>
+                                <button type="button" onClick={() => setDraft(applyMappingSelection(draft, ''))} className="mt-1 font-semibold text-primary underline">
+                                    {t('forms.editor.field.mapping.remove')}
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 )}
 
                 <fieldset className="space-y-2 rounded-lg border border-border p-3">
@@ -486,7 +497,7 @@ export default function FieldEditModal({
                     <fieldset className="space-y-2 rounded-lg border border-border p-3">
                         <legend className="px-1 text-xs font-semibold text-muted-foreground">{t('forms.editor.field.mapping')}</legend>
                         <p className="text-xs text-muted-foreground">{t('forms.editor.field.mappingHint')}</p>
-                        <select aria-label={t('forms.editor.field.mapping')} value={mappingValue} disabled={draft.sensitive === true} onChange={(e) => setDraft(applyMappingSelection(draft, e.target.value))} className={inputClass}>
+                        <select aria-label={t('forms.editor.field.mapping')} value={mappingValue} onChange={(e) => setDraft(applyMappingSelection(draft, e.target.value))} className={inputClass}>
                             <option value="">{t('forms.editor.field.mapping.none')}</option>
                             {mappingTargets.length > 0 && (
                                 <optgroup label={t('forms.editor.field.mapping.master')}>
@@ -506,6 +517,8 @@ export default function FieldEditModal({
                                     ))}
                                 </optgroup>
                             )}
+                            {/* A master data target that is no longer offered (sensitive answer) stays visible so it can be changed. */}
+                            {draft.mapsTo && !mappingTargets.includes(draft.mapsTo as (typeof mappingTargets)[number]) && <option value={`master:${draft.mapsTo}`}>{t(`forms.review.target.${draft.mapsTo}`)}</option>}
                             {/* A mapping that is no longer offered (custom field archived) stays visible so it can be removed. */}
                             {draft.customField && !customChoices.some((c) => c.key === draft.customField) && <option value={`custom:${draft.customField}`}>{draft.customField}</option>}
                         </select>
@@ -535,6 +548,7 @@ export default function FieldEditModal({
                     </div>
                 )}
             </div>
+            {dialog}
         </Modal>
     );
 }

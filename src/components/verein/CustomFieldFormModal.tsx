@@ -5,6 +5,7 @@ import { Lock } from 'lucide-react';
 
 import OptionsEditor from '@/components/forms/OptionsEditor';
 import { Modal } from '@/components/Modal';
+import { useConfirm } from '@/components/useConfirm';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api-client';
 import { inputClass, primaryButtonClass, secondaryButtonClass } from '@/lib/clubMembers';
@@ -51,6 +52,7 @@ export default function CustomFieldFormModal({
     onSaved: () => void;
 }) {
     const { t } = useLanguage();
+    const { confirm, dialog } = useConfirm();
     const ids = useId();
     const isNew = definition === null;
     const [initial] = useState<DefinitionForm>(() => (definition ? formFromDefinition(definition) : emptyDefinitionForm()));
@@ -73,8 +75,8 @@ export default function CustomFieldFormModal({
         setForm((f) => ({ ...f, label, ...(isNew && !keyTouched ? { key: label.trim() === '' ? '' : uniqueKey(label, existingKeys) } : {}) }));
     }
 
-    function requestClose() {
-        if (dirty && !window.confirm(t('verein.form.discard'))) return;
+    async function requestClose() {
+        if (dirty && !(await confirm({ title: t('forms.confirm.discard.title'), body: t('verein.form.discard'), confirmLabel: t('forms.confirm.discard.confirm'), danger: true }))) return;
         onClose();
     }
 
@@ -108,11 +110,11 @@ export default function CustomFieldFormModal({
         <Modal
             open
             size="lg"
-            onClose={saving ? () => {} : requestClose}
+            onClose={saving ? () => {} : () => void requestClose()}
             title={definition ? t('forms.cf.edit.title', { label: definition.label }) : t('forms.cf.create.title')}
             footer={
                 <div className="flex justify-end gap-2">
-                    <button type="button" onClick={requestClose} disabled={saving} className={secondaryButtonClass}>
+                    <button type="button" onClick={() => void requestClose()} disabled={saving} className={secondaryButtonClass}>
                         {t('forms.editor.field.cancel')}
                     </button>
                     <button type="button" onClick={() => void save()} disabled={saving} className={primaryButtonClass}>
@@ -184,6 +186,7 @@ export default function CustomFieldFormModal({
                         <OptionsEditor
                             options={form.options}
                             lockedValues={lockedOptionValues}
+                            protectLocked
                             onChange={(options) => setForm({ ...form, options })}
                             error={attempted && (problems.includes('options_missing') || problems.includes('option_label') || problems.includes('option_duplicate')) ? t('forms.editor.field.optionsInvalid') : null}
                         />
@@ -252,6 +255,7 @@ export default function CustomFieldFormModal({
                     </p>
                 )}
             </div>
+            {dialog}
         </Modal>
     );
 }

@@ -14,6 +14,12 @@ import {
     cleanField,
     compatibleCustomFields,
     conditionProblem,
+    conditionsLostByMove,
+    dependentsOf,
+    isSaveConflict,
+    saveTarget,
+    textProblems,
+    withOptionUids,
     conditionSources,
     defaultCondition,
     describeProblems,
@@ -95,11 +101,11 @@ describe('options', () => {
         let options = addOption([]);
         expect(options).toHaveLength(1);
         options = renameOption(options, 0, 'Rot');
-        expect(options[0]).toEqual({ value: 'rot', label: 'Rot' });
+        expect(options[0]).toMatchObject({ value: 'rot', label: 'Rot' });
         options = renameOption(options, 0, 'Dunkelrot');
         expect(options[0]!.value).toBe('dunkelrot');
         const locked = renameOption(options, 0, 'Anders', new Set(['dunkelrot']));
-        expect(locked[0]).toEqual({ value: 'dunkelrot', label: 'Anders' });
+        expect(locked[0]).toMatchObject({ value: 'dunkelrot', label: 'Anders' });
         const custom = renameOption([{ value: 'xl', label: 'Extra groß' }], 0, 'Extra Extra groß');
         expect(custom[0]!.value).toBe('xl');
     });
@@ -231,7 +237,7 @@ describe('editor reducer', () => {
         expect(s.name).toBe('Neu');
         expect(s.privacyNotice).toBe('Text');
         s = editorReducer(s, { type: 'reset', name: 'A', fields: [], privacyNotice: null as unknown as string });
-        expect(s).toEqual({ name: 'A', fields: [], privacyNotice: '', droppedConditions: [] });
+        expect(s).toEqual({ name: 'A', fields: [], privacyNotice: '', droppedConditions: [], undo: null });
     });
 
     it('does not mutate its input', () => {
@@ -552,5 +558,132 @@ describe('preview and lists', () => {
     it('lists the standard forms first, aufnahme before austritt, without archived and other purposes', () => {
         const mk = (id: string, purpose: string, archivedAt: string | null = null) => ({ id, purpose, name: id, archivedAt, createdAt: '', updatedAt: '', publishedVersion: 1, draftVersion: null, versionCount: 1 });
         expect(editableForms([mk('a', 'austritt'), mk('b', 'umfrage'), mk('c', 'aufnahme'), mk('d', 'aufnahme', '2026-01-01')]).map((f) => f.id)).toEqual(['c', 'a']);
+    });
+});
+
+describe('stable ids', () => {
+    it('gives every field and option a unique id that survives moving and renaming, and never sends it', () => {
+        const s = initialEditorState('F', [select('art', ['a', 'b']), text('x')], null);
+        const uids = s.fields.map((f) => f.uid);
+        expect(new Set(uids).size).toBe(2);
+        expect(s.fields[0]!.options!.every((o) => o.uid)).toBe(true);
+        const moved = editorReducer(s, { type: 'move', index: 0, direction: 'down' });
+        expect(moved.fields.map((f) => f.uid)).toEqual([uids[1], uids[0]]);
+        const renamed = editorReducer(moved, { type: 'update', index: 1, field: { ...moved.fields[1]!, key: 'kategorie' } });
+        expect(renamed.fields[1]!.uid).toBe(uids[0]);
+        const added = editorReducer(renamed, { type: 'add', field: text('neu') });
+        expect(added.fields[2]!.uid).toBeTruthy();
+        expect(new Set(added.fields.map((f) => f.uid)).size).toBe(3);
+        const cleaned = cleanField(s.fields[0]!);
+        expect(JSON.stringify(cleaned)).not.toContain('uid');
+        expect(fieldsEqual(s.fields, [select('art', ['a', 'b']), text('x')])).toBe(true);
+    });
+
+    it('keeps the id of an option while its label changes', () => {
+        const options = withOptionUids([{ value: 'rot', label: 'Rot' }]);
+        const renamed = renameOption(options, 0, 'Dunkelrot');
+        expect(renamed[0]!.uid).toBe(options[0]!.uid);
+    });
+});
+
+describe('undo, dependents and confirmations', () => {
+    const fields = (): FormField[] => [select('art', ['a']), text('x', { visibleIf: { fieldKey: 'art', op: 'eq', value: 'a' } }), text('y')];
+
+    it('names the fields that depend on a field', () => {
+        expect(dependentsOf(fields(), 'art').map((f) => f.key)).toEqual(['x']);
+        expect(dependentsOf(fields(), 'y')).toEqual([]);
+    });
+
+    it('names the fields that would lose their condition by a move', () => {
+        expect(conditionsLostByMove(fields(), 0, 'down').map((f) => f.key)).toEqual(['x']);
+        expect(conditionsLostByMove(fields(), 1, 'up').map((f) => f.key)).toEqual(['x']);
+        expect(conditionsLostByMove(fields(), 2, 'up')).toEqual([]);
+        expect(conditionsLostByMove(fields(), 0, 'up')).toEqual([]);
+    });
+
+    it('restores the fields (and their conditions) after a delete or a move', () => {
+        const s = initialEditorState('F', fields(), null);
+        const removed = editorReducer(s, { type: 'remove', index: 0 });
+        expect(removed.fields).toHaveLength(2);
+        expect(removed.fields[0]!.visibleIf).toBeUndefined();
+        expect(removed.undo?.kind).toBe('remove');
+        const back = editorReducer(removed, { type: 'undo' });
+        expect(back.fields.map((f) => f.key)).toEqual(['art', 'x', 'y']);
+        expect(back.fields[1]!.visibleIf).toEqual({ fieldKey: 'art', op: 'eq', value: 'a' });
+        expect(back.undo).toBeNull();
+        expect(back.droppedConditions).toEqual([]);
+        const moved = editorReducer(s, { type: 'move', index: 0, direction: 'down' });
+        expect(moved.undo?.kind).toBe('move');
+        expect(editorReducer(moved, { type: 'undo' }).fields.map((f) => f.key)).toEqual(['art', 'x', 'y']);
+    });
+
+    it('does nothing without something to undo and forgets the undo after an edit', () => {
+        const s = initialEditorState('F', fields(), null);
+        expect(editorReducer(s, { type: 'undo' })).toBe(s);
+        const removed = editorReducer(s, { type: 'remove', index: 2 });
+        expect(editorReducer(removed, { type: 'add', field: text('neu') }).undo).toBeNull();
+        expect(editorReducer(removed, { type: 'update', index: 0, field: select('art', ['a', 'b']) }).undo).toBeNull();
+    });
+});
+
+describe('saving by draft number and conflicts', () => {
+    it('saves a loaded draft by its number and everything else into the draft route', () => {
+        expect(saveTarget('f1', 'c1', 3)).toBe('/forms/f1/versions/3?clubId=c1');
+        expect(saveTarget('f1', 'c1', null)).toBe('/forms/f1/draft?clubId=c1');
+        expect(saveTarget('f1', 'c1', 3, true)).toBe('/forms/f1/draft?clubId=c1');
+    });
+
+    it('recognises a changed, published or discarded draft as a conflict, nothing else', () => {
+        expect(isSaveConflict(new ApiError(409, 'CONFLICT', 'm', { code: 'version_immutable' }), true)).toBe(true);
+        expect(isSaveConflict(new ApiError(409, 'CONFLICT', 'm', { code: 'no_draft' }), false)).toBe(true);
+        expect(isSaveConflict(new ApiError(404, 'NOT_FOUND', 'm'), true)).toBe(true);
+        expect(isSaveConflict(new ApiError(404, 'NOT_FOUND', 'm'), false)).toBe(false);
+        expect(isSaveConflict(new ApiError(409, 'CONFLICT', 'm', { code: 'form_archived' }), true)).toBe(false);
+        expect(isSaveConflict(new ApiError(422, 'X', 'm'), true)).toBe(false);
+        expect(isSaveConflict(new Error('offline'), true)).toBe(false);
+    });
+});
+
+describe('name and privacy notice checks', () => {
+    it('applies the server character policy to the name and the notice', () => {
+        expect(textProblems('Aufnahme', 'Text\nmit Zeilenumbruch')).toEqual([]);
+        expect(textProblems('  ', '')).toEqual([{ code: 'name_missing' }]);
+        expect(textProblems('x'.repeat(121), '')).toEqual([{ code: 'name_missing' }]);
+        expect(textProblems('Na\u0007me', '')).toEqual([{ code: 'name_invalid' }]);
+        expect(textProblems('Name\nzwei', '')).toEqual([{ code: 'name_invalid' }]);
+        expect(textProblems('Name', 'a\u0007b')).toEqual([{ code: 'privacy_invalid' }]);
+        expect(textProblems('Name', 'a\u202eb')).toEqual([{ code: 'privacy_invalid' }]);
+        expect(textProblems('Name', 'x'.repeat(10_001))).toEqual([{ code: 'privacy_invalid' }]);
+    });
+
+    it('maps the schema issues of a refused body onto name, notice and fields', () => {
+        const err = new ApiError(422, 'VALIDATION_ERROR', 'Invalid request body', [{ path: ['name'], message: 'x' }, { path: ['privacyNotice'], message: 'y' }, { path: ['fields'], message: 'z' }, { path: ['other'], message: 'q' }]);
+        expect(problemsFromError(err, [])).toEqual([{ code: 'name_invalid' }, { code: 'privacy_invalid' }, { code: 'invalid_definition' }]);
+        expect(problemsFromError(new ApiError(422, 'X', 'm', [{ path: ['other'] }]), [])).toBeNull();
+        expect(problemsFromError(new ApiError(422, 'X', 'm', []), [])).toBeNull();
+    });
+});
+
+describe('local custom field checks on publishing', () => {
+    const defs = [
+        { key: 'trikot', label: 'T', type: 'text', sensitive: false, archived: false },
+        { key: 'allergie', label: 'A', type: 'text', sensitive: true, archived: false },
+        { key: 'alt', label: 'Alt', type: 'text', sensitive: false, archived: true },
+    ];
+    const notice: FormField = { key: 'datenschutz', type: 'info', label: 'DS', infoKind: 'privacy_notice' };
+    const consent: FormField = { key: 'einwilligung', type: 'consent', label: 'Ok', required: true };
+    const codes = (fields: FormField[], customFields = defs) => publishChecks([notice, consent, ...fields], 'T', 'aufnahme', customFields).map((p) => `${p.code}@${p.fieldKey}`);
+
+    it('finds unknown, archived, mistyped and unprotected targets', () => {
+        expect(codes([text('a_field', { customField: 'trikot' })])).toEqual([]);
+        expect(codes([text('a_field', { customField: 'nope' })])).toEqual(['custom_field_unknown@a_field']);
+        expect(codes([text('a_field', { customField: 'alt' })])).toEqual(['custom_field_unknown@a_field']);
+        expect(codes([{ key: 'z', type: 'number', label: 'Z', customField: 'trikot' }])).toEqual(['custom_field_type_mismatch@z']);
+        expect(codes([text('s_field', { customField: 'trikot', sensitive: true })])).toEqual(['custom_field_not_sensitive@s_field']);
+        expect(codes([text('s_field', { customField: 'allergie', sensitive: true })])).toEqual([]);
+    });
+
+    it('stays silent when the definitions are not known', () => {
+        expect(publishChecks([notice, consent, text('a_field', { customField: 'nope' })], 'T', 'aufnahme')).toEqual([]);
     });
 });

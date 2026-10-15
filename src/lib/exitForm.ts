@@ -1,4 +1,4 @@
-import { type Answers, carryAnswers, droppedLabels, type FormDefinition, isEmptyAnswer, outdatedFrom, visibleAnswers } from './formSchema';
+import { type Answers, carryAnswers, droppedLabels, type FormDefinition, type FormField, isEmptyAnswer, outdatedFrom, visibleAnswers } from './formSchema';
 import type { RenderedAnswer } from './applicationReview';
 
 /**
@@ -24,7 +24,7 @@ export interface ExitSubmission {
 export function exitRequestBody(desiredEffectiveOn: string, definition: Pick<FormDefinition, 'fields' | 'formVersionId'>, answers: Answers): Record<string, unknown> {
     return {
         ...(desiredEffectiveOn ? { desiredEffectiveOn } : {}),
-        answers: visibleAnswers(definition.fields, answers),
+        answers: visibleAnswers(exitFormFields(definition.fields), answers),
         formVersionId: definition.formVersionId,
     };
 }
@@ -48,7 +48,21 @@ export function repinExit(err: unknown, definition: Pick<FormDefinition, 'fields
     return { definition: info.current, answers: carried.answers, dropped: droppedLabels(definition.fields, carried.dropped) };
 }
 
+/**
+ * The fields the cancellation dialog can show: the dialog has no upload, so file and photo fields are left out (they are neither
+ * rendered, nor validated, nor required -- a required upload field must never block a cancellation).
+ */
+export function exitFormFields(fields: readonly FormField[]): FormField[] {
+    return fields.filter((f) => f.type !== 'file' && f.type !== 'image');
+}
+
 /** Whether the person typed anything into the dialog (closing then asks for confirmation). */
 export function exitDialogTouched(desiredEffectiveOn: string, answers: Answers): boolean {
     return desiredEffectiveOn !== '' || Object.values(answers).some((v) => !isEmptyAnswer(v));
+}
+
+/** Body of a cancellation without the form (the form could not be loaded): the wished date and an optional plain reason. */
+export function plainExitBody(desiredEffectiveOn: string, reason: string): Record<string, unknown> {
+    const text = reason.trim();
+    return { ...(desiredEffectiveOn ? { desiredEffectiveOn } : {}), ...(text ? { reason: text } : {}) };
 }

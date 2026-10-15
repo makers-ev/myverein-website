@@ -39,6 +39,8 @@ describe('FormBuilderTranslation', () => {
         const files = [
             'components/verein/FieldEditModal.tsx',
             'components/verein/FormEditor.tsx',
+            'components/verein/FormConflictDialog.tsx',
+            'components/useConfirm.tsx',
             'components/verein/FormPublishDialog.tsx',
             'components/verein/FormVersionsDialog.tsx',
             'components/verein/FormsPanel.tsx',

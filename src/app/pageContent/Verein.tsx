@@ -20,6 +20,7 @@ import MemberAvatar from '@/components/verein/MemberAvatar';
 import RoleBadge from '@/components/verein/RoleBadge';
 import ProfilTab, { type OwnMembership } from '@/components/verein/ProfilTab';
 import LoadingText from '@/components/LoadingText';
+import { useConfirm } from '@/components/useConfirm';
 import LoadError from '@/components/LoadError';
 
 interface MyClub {
@@ -196,6 +197,10 @@ export default function VereinPageContent() {
     // The form editor holds unsaved changes (guards the tab switch).
     const [formsDirty, setFormsDirty] = useState(false);
     const onFormsDirty = useCallback((dirty: boolean) => setFormsDirty(dirty), []);
+    // Own custom field edits in "Mein Profil" (separate save button).
+    const [profilDirty, setProfilDirty] = useState(false);
+    const onProfilDirty = useCallback((dirty: boolean) => setProfilDirty(dirty), []);
+    const { confirm, dialog: confirmDialog } = useConfirm();
 
     const activeClub = clubs?.[0] ?? null;
 
@@ -265,9 +270,10 @@ export default function VereinPageContent() {
     const tabs: Tab[] = visibleTabs(permissions, me?.roles ?? []);
     const currentTab: Tab = tabs.includes(tab) ? tab : 'info';
 
-    function selectTab(next: Tab) {
-        // Unsaved form edits survive only inside the editor: leaving the tab needs a confirmation.
-        if (formsDirty && currentTab === 'formulare' && next !== 'formulare' && !window.confirm(t('forms.editor.leaveConfirm'))) return;
+    async function selectTab(next: Tab) {
+        // Unsaved edits (form editor, own custom fields) survive only inside their tab: leaving it needs a confirmation.
+        const unsaved = next !== currentTab && ((currentTab === 'formulare' && formsDirty) || (currentTab === 'profil' && profilDirty));
+        if (unsaved && !(await confirm({ title: t('forms.editor.leave.title'), body: t(currentTab === 'formulare' ? 'forms.editor.leaveConfirm' : 'forms.cf.values.leaveConfirm'), confirmLabel: t('forms.editor.leave.confirm'), danger: true }))) return;
         setTab(next);
     }
 
@@ -291,7 +297,7 @@ export default function VereinPageContent() {
                                 key={value}
                                 type="button"
                                 aria-current={currentTab === value ? 'page' : undefined}
-                                onClick={() => selectTab(value)}
+                                onClick={() => void selectTab(value)}
                                 className={`whitespace-nowrap px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
                                     currentTab === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
                                 }`}
@@ -315,7 +321,7 @@ export default function VereinPageContent() {
                         {currentTab === 'info' && (info ? <VereinsinfoTab info={info} t={t} onPhotoExpired={refetchBoardPhotos} /> : <LoadingText />)}
                         {currentTab === 'profil' &&
                             (me ? (
-                                <ProfilTab me={me} clubId={activeClub.clubId} onSaved={() => void refreshClubData(activeClub.clubId)} onPhotoExpired={refetchOwnPhoto} />
+                                <ProfilTab me={me} clubId={activeClub.clubId} onDirtyChange={onProfilDirty} onSaved={() => void refreshClubData(activeClub.clubId)} onPhotoExpired={refetchOwnPhoto} />
                             ) : (
                                 <LoadingText />
                             ))}
@@ -369,6 +375,7 @@ export default function VereinPageContent() {
                     </div>
                 </>
             )}
+            {confirmDialog}
         </div>
     );
 }

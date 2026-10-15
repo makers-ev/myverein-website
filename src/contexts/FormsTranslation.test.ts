@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { FIELD_ERROR_CODES } from '@/lib/formSchema';
 
 import FormsTranslation from './FormsTranslation';
+import { translations } from './LanguageContext';
 
 const placeholders = (text: string) => [...text.matchAll(/\{\{(\w+)\}\}/g)].map((m) => m[1]).sort();
 
@@ -33,7 +34,7 @@ describe('FormsTranslation', () => {
         const files = ['lib/formSchema.ts', 'components/forms/FormRenderer.tsx', 'components/verein/ApplicationForm.tsx', 'components/verein/JoinClubCard.tsx', 'components/verein/ApplicationReviewDialog.tsx', 'components/verein/ApplicationsPanel.tsx', 'components/verein/ExitSection.tsx', 'components/verein/ExitQueuePanel.tsx', 'components/forms/AnswerList.tsx', 'lib/applicationReview.ts'];
         const used = files.flatMap((f) => [...readFileSync(join(root, f), 'utf8').matchAll(/'(forms\.[\w.]+)'/g)].map((m) => m[1]!));
         expect(used.length).toBeGreaterThan(20);
-        for (const key of used) expect(FormsTranslation.de[key], key).toBeTruthy();
+        for (const key of used) expect(translations.de[key], key).toBeTruthy();
     });
 
     it('has the dynamically built review keys (mapping reasons, targets, statuses, warnings)', () => {

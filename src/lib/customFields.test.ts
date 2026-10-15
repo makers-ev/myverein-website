@@ -194,6 +194,25 @@ describe('values of a member', () => {
         expect(normal.readOnly.map((f) => f.key)).toEqual(['notiz_text']);
     });
 
+    it('treats board fields as read-only in the own profile even if the server flags them editable', () => {
+        const own = partitionFields(fields, false, true);
+        expect(own.editable.map((f) => f.key)).toEqual([]);
+        const mixed: MemberCustomField[] = [field({ key: 'a_self', editableBy: 'self', editable: true }), field({ key: 'b_board', editableBy: 'vorstand', editable: true }), field({ key: 'c_self_locked', editableBy: 'self', editable: false })];
+        const part = partitionFields(mixed, false, true);
+        expect(part.editable.map((f) => f.key)).toEqual(['a_self']);
+        expect(part.readOnly.map((f) => f.key)).toEqual(['b_board', 'c_self_locked']);
+        // The board dialog (not own) edits everything the server flags editable.
+        expect(partitionFields(mixed, false, false).editable.map((f) => f.key)).toEqual(['a_self', 'b_board']);
+    });
+
+    it('never puts a board field into the own-values request', () => {
+        const mixed: MemberCustomField[] = [field({ key: 'a_self', type: 'text', options: null, editableBy: 'self', editable: true }), field({ key: 'b_board', type: 'text', options: null, editableBy: 'vorstand', editable: true })];
+        const saved = {};
+        expect(valuesPatch(mixed, saved, { a_self: 'x', b_board: 'y' }, true)).toEqual({ a_self: 'x' });
+        expect(valuesPatch(mixed, saved, { b_board: 'y' }, true)).toBeNull();
+        expect(valuesPatch(mixed, saved, { a_self: 'x', b_board: 'y' }, false)).toEqual({ a_self: 'x', b_board: 'y' });
+    });
+
     it('builds the answers and form fields for the shared renderer', () => {
         expect(valuesToAnswers(fields)).toEqual({ trikot: 'm', notiz_text: 'Hallo', haken: true });
         expect(toFormField(fields[0]!)).toEqual({ key: 'trikot', type: 'select', label: 'Trikotgröße', options: [{ value: 'm', label: 'M' }, { value: 'l', label: 'L' }] });

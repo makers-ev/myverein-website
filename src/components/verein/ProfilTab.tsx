@@ -37,7 +37,7 @@ const inputClass =
     'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none';
 
 /** Self-service Selbstauskunft: PATCH /club-members/me (birth date + emergency contact). */
-export default function ProfilTab({ me, clubId, onSaved, onPhotoExpired }: { me: OwnMembership; clubId: string; onSaved: () => void; onPhotoExpired?: () => void }) {
+export default function ProfilTab({ me, clubId, onSaved, onPhotoExpired, onDirtyChange }: { me: OwnMembership; clubId: string; onSaved: () => void; onPhotoExpired?: () => void; onDirtyChange?: (dirty: boolean) => void }) {
     const { t, language } = useLanguage();
     const [birthDate, setBirthDate] = useState(me.birthDate ?? '');
     const [contactName, setContactName] = useState(me.emergencyContactName ?? '');
@@ -160,7 +160,7 @@ export default function ProfilTab({ me, clubId, onSaved, onPhotoExpired }: { me:
                     </div>
                 </form>
             </div>
-        <MemberCustomFields clubId={clubId} target="me" title={t('forms.cf.values.titleOwn')} />
+        <MemberCustomFields clubId={clubId} target="me" title={t('forms.cf.values.titleOwn')} onDirtyChange={onDirtyChange} />
         <ExitSection clubId={clubId} orgRole={me.orgRole} effectiveStatus={me.effectiveStatus} onChanged={onSaved} />
         </div>
     );

@@ -15,12 +15,15 @@ export default function OptionsEditor({
     options,
     onChange,
     lockedValues,
+    protectLocked = false,
     error,
 }: {
     options: readonly FieldOption[];
     onChange: (next: FieldOption[]) => void;
     /** Values that already exist in a published version / with stored values: their value never follows the label. */
     lockedValues?: ReadonlySet<string>;
+    /** Locked options cannot be removed (their value is stored for members): the button is disabled and the reason is announced. */
+    protectLocked?: boolean;
     error?: string | null;
 }) {
     const { t } = useLanguage();
@@ -33,7 +36,7 @@ export default function OptionsEditor({
             ) : (
                 <ol className="space-y-2">
                     {options.map((option, index) => (
-                        <li key={index} className="flex items-center gap-1.5">
+                        <li key={option.uid ?? index} className="flex items-center gap-1.5">
                             <input
                                 value={option.label}
                                 maxLength={200}
@@ -63,9 +66,11 @@ export default function OptionsEditor({
                             </button>
                             <button
                                 type="button"
+                                disabled={protectLocked && locked.has(option.value)}
+                                title={protectLocked && locked.has(option.value) ? t('forms.cf.options.protected') : undefined}
                                 onClick={() => onChange(options.filter((_, i) => i !== index))}
-                                aria-label={t('forms.editor.options.remove', { number: index + 1 })}
-                                className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive"
+                                aria-label={protectLocked && locked.has(option.value) ? t('forms.cf.options.removeProtected', { number: index + 1 }) : t('forms.editor.options.remove', { number: index + 1 })}
+                                className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive disabled:opacity-30 disabled:hover:text-muted-foreground"
                             >
                                 <Trash2 className="h-4 w-4" aria-hidden="true" />
                             </button>

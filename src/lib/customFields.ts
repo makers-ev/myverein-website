@@ -1,6 +1,6 @@
 import { ApiError } from './api-client';
 import { memberErrorKey } from './clubMembers';
-import { type FieldOption, isValidFieldKey, keyProblem, MAX_LABEL, MAX_OPTIONS } from './formEditor';
+import { type FieldOption, isValidFieldKey, keyProblem, MAX_LABEL, MAX_OPTIONS, withOptionUids } from './formEditor';
 import { type Answers, diffAnswers, type FormField, isCleanText, isEmptyAnswer } from './formSchema';
 
 /**
@@ -61,7 +61,7 @@ export interface DefinitionForm {
 export const emptyDefinitionForm = (): DefinitionForm => ({ key: '', label: '', type: 'text', options: [], visibleTo: 'vorstand', editableBy: 'vorstand', sensitive: false });
 
 export function formFromDefinition(def: CustomFieldDefinition): DefinitionForm {
-    return { key: def.key, label: def.label, type: def.type, options: (def.options ?? []).map((o) => ({ ...o })), visibleTo: def.visibleTo, editableBy: def.editableBy, sensitive: def.sensitive };
+    return { key: def.key, label: def.label, type: def.type, options: withOptionUids((def.options ?? []).map((o) => ({ ...o }))), visibleTo: def.visibleTo, editableBy: def.editableBy, sensitive: def.sensitive };
 }
 
 export type DefinitionProblem = 'label' | 'label_text' | 'key_format' | 'key_reserved' | 'key_duplicate' | 'options_missing' | 'option_label' | 'option_duplicate' | 'too_many_options';
@@ -222,13 +222,17 @@ export const editableFields = (fields: readonly MemberCustomField[]): MemberCust
 export const readOnlyFields = (fields: readonly MemberCustomField[]): MemberCustomField[] => fields.filter((f) => !f.editable);
 
 /**
- * Which fields are shown as inputs and which as plain values. In a read-only view (details of a member for somebody without
- * `members:write`) nothing is an input, whatever the server says about the person's own row: own values are maintained in
- * "Mein Profil", and a write from a read-only view would go to the board route and be refused.
+ * Which fields are shown as inputs and which as plain values.
+ * - Read-only view (details of a member for somebody without `members:write`): nothing is an input.
+ * - Own record (`own`, `PATCH /club-members/me/custom-fields`): only fields with `editableBy = self`. The server also flags board
+ *   fields `editable` for a person with `members:write`, but the own-values route refuses the WHOLE request with 403 as soon as one
+ *   such field is in it -- so those stay read-only here (the board edits them in the member dialog).
+ * - Otherwise (board dialog, `PUT`): what the server marks `editable`.
  */
-export function partitionFields(fields: readonly MemberCustomField[], readOnlyView: boolean): { editable: MemberCustomField[]; readOnly: MemberCustomField[] } {
+export function partitionFields(fields: readonly MemberCustomField[], readOnlyView: boolean, own = false): { editable: MemberCustomField[]; readOnly: MemberCustomField[] } {
     if (readOnlyView) return { editable: [], readOnly: [...fields] };
-    return { editable: editableFields(fields), readOnly: readOnlyFields(fields) };
+    const canEdit = (f: MemberCustomField) => f.editable && !f.archived && (!own || f.editableBy === 'self');
+    return { editable: fields.filter(canEdit), readOnly: fields.filter((f) => !canEdit(f)) };
 }
 
 /** Answers (key -> value) of the fields that have a value; empty values are left out like on the server. */
@@ -242,8 +246,8 @@ export function valuesToAnswers(fields: readonly MemberCustomField[]): Answers {
  * The write body of a value edit: only the editable fields whose answer changed; a cleared answer is `null` (the server removes
  * the value). Read-only fields are never part of it. `null` = nothing changed.
  */
-export function valuesPatch(fields: readonly MemberCustomField[], saved: Answers, current: Answers): Record<string, unknown> | null {
-    const editable = new Set(editableFields(fields).map((f) => f.key));
+export function valuesPatch(fields: readonly MemberCustomField[], saved: Answers, current: Answers, own = false): Record<string, unknown> | null {
+    const editable = new Set(partitionFields(fields, false, own).editable.map((f) => f.key));
     const restrict = (a: Answers): Answers => Object.fromEntries(Object.entries(a).filter(([k]) => editable.has(k)));
     const patch = diffAnswers(restrict(saved), restrict(current));
     return Object.keys(patch).length === 0 ? null : patch;

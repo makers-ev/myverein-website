@@ -7,9 +7,12 @@ import LoadError from '@/components/LoadError';
 import LoadingText from '@/components/LoadingText';
 import FormRenderer from '@/components/forms/FormRenderer';
 import FieldEditModal from '@/components/verein/FieldEditModal';
+import FormConflictDialog from '@/components/verein/FormConflictDialog';
 import FormPublishDialog, { ProblemList } from '@/components/verein/FormPublishDialog';
 import FormVersionsDialog from '@/components/verein/FormVersionsDialog';
 import { Modal } from '@/components/Modal';
+import { useConfirm } from '@/components/useConfirm';
+import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api-client';
 import { formatDate, inputClass, primaryButtonClass, secondaryButtonClass } from '@/lib/clubMembers';
@@ -17,6 +20,11 @@ import {
     canMove,
     canSaveDraft,
     cleanFields,
+    conditionsLostByMove,
+    dependentsOf,
+    isSaveConflict,
+    saveTarget,
+    textProblems,
     type CustomFieldRef,
     describeProblems,
     type DescribedProblem,
@@ -89,7 +97,12 @@ export default function FormEditor({
     const [publishOpen, setPublishOpen] = useState(false);
     const [publishError, setPublishError] = useState<string | null>(null);
     const [versionsOpen, setVersionsOpen] = useState(false);
-    const [confirm, setConfirm] = useState<'discard' | 'archive' | null>(null);
+    const [panel, setConfirm] = useState<'discard' | 'archive' | null>(null);
+    const { confirm: ask, dialog: confirmDialog } = useConfirm();
+    // The draft on the server is not the one that was loaded (changed, published or discarded elsewhere): the person decides.
+    const [conflict, setConflict] = useState<{ latest: FormDetail | null } | null>(null);
+    // After a move the focus follows the item (button of the same direction, else the other one) and a live message says where it went.
+    const [moved, setMoved] = useState<{ uid: string; direction: 'up' | 'down'; text: string } | null>(null);
     const [previewAnswers, setPreviewAnswers] = useState<Record<string, unknown>>({});
     const changedRef = useRef(false);
 
@@ -123,18 +136,18 @@ export default function FormEditor({
         onDirtyChange(dirty);
     }, [dirty, onDirtyChange]);
     useEffect(() => () => onDirtyChange(false), [onDirtyChange]);
-    useEffect(() => {
-        if (!dirty) return;
-        const handler = (e: BeforeUnloadEvent) => {
-            e.preventDefault();
-            e.returnValue = '';
-        };
-        window.addEventListener('beforeunload', handler);
-        return () => window.removeEventListener('beforeunload', handler);
-    }, [dirty]);
+    useUnsavedGuard(dirty, () => ask({ title: t('forms.editor.leave.title'), body: t('forms.editor.leaveConfirm'), confirmLabel: t('forms.editor.leave.confirm'), danger: true }));
 
-    function leave() {
-        if (dirty && !window.confirm(t('forms.editor.leaveConfirm'))) return;
+    // Focus follows a moved field.
+    useEffect(() => {
+        if (!moved) return;
+        const preferred = document.getElementById(`mv-${moved.uid}-${moved.direction}`) as HTMLButtonElement | null;
+        const other = document.getElementById(`mv-${moved.uid}-${moved.direction === 'up' ? 'down' : 'up'}`) as HTMLButtonElement | null;
+        (preferred && !preferred.disabled ? preferred : other)?.focus();
+    }, [moved, state.fields]);
+
+    async function leave() {
+        if (dirty && !(await ask({ title: t('forms.editor.leave.title'), body: t('forms.editor.leaveConfirm'), confirmLabel: t('forms.editor.leave.confirm'), danger: true }))) return;
         onBack(changedRef.current);
     }
 
@@ -145,18 +158,41 @@ export default function FormEditor({
     const hasDraft = detail.draft !== null;
     const locked = lockedKeysOf(published);
     const shape = shapeProblems(state.fields);
-    const checks = publishChecks(state.fields, state.privacyNotice, purpose);
-    const nameInvalid = state.name.trim() === '' || state.name.trim().length > MAX_FORM_NAME;
-    const saveBlocked = !canSaveDraft(state.fields) || nameInvalid;
+    const checks = publishChecks(state.fields, state.privacyNotice, purpose, customFieldsFailed ? undefined : customFields);
+    const textIssues = textProblems(state.name, state.privacyNotice);
+    const nameIssue = textIssues.find((p) => p.code === 'name_missing' || p.code === 'name_invalid');
+    const privacyIssue = textIssues.find((p) => p.code === 'privacy_invalid');
+    const nameInvalid = nameIssue !== undefined;
+    const saveBlocked = !canSaveDraft(state.fields) || textIssues.length > 0;
     const describedShape = describeProblems(shape, state.fields);
     const describedChecks = describeProblems(checks, state.fields);
     const summary = summarizeChanges(published, state);
     const problemKeys = new Set(shape.map((p) => p.fieldKey));
     const fieldCount = state.fields.length;
 
-    async function persistDraft(): Promise<FormVersion | null> {
+    /** The draft on the server right now, to show what differs after a conflict (`null` if it cannot be read). */
+    async function loadLatest(): Promise<FormDetail | null> {
         try {
-            const res = await apiFetch<{ data: { form: FormDetail['form']; draft: FormVersion } }>(`/forms/${form.id}/draft?clubId=${clubId}`, {
+            return (await apiFetch<{ data: FormDetail }>(`/forms/${form.id}?clubId=${clubId}`)).data;
+        } catch {
+            return null;
+        }
+    }
+
+    async function raiseConflict() {
+        setPublishOpen(false);
+        setConflict({ latest: await loadLatest() });
+    }
+
+    /**
+     * Saves the draft BY ITS NUMBER (the server refuses with 409 when that draft changed, was published or was discarded meanwhile);
+     * `force` = the person chose to keep their version: save into the current draft / start a new one. Returns the saved draft or `null`
+     * (failure or conflict, already reported).
+     */
+    async function persistDraft(force = false): Promise<FormVersion | null> {
+        const loadedNumber = detail?.draft?.version ?? null;
+        try {
+            const res = await apiFetch<{ data: { form: FormDetail['form']; draft: FormVersion } }>(saveTarget(form.id, clubId, loadedNumber, force), {
                 method: 'PUT',
                 body: { fields: cleanFields(state.fields), name: state.name.trim(), privacyNotice: state.privacyNotice.trim() === '' ? null : state.privacyNotice.trim() },
             });
@@ -166,9 +202,26 @@ export default function FormEditor({
             changedRef.current = true;
             return draft;
         } catch (err) {
+            if (!force && isSaveConflict(err, loadedNumber !== null)) {
+                await raiseConflict();
+                return null;
+            }
             reportFailure(err);
             return null;
         }
+    }
+
+    /** Publishing acts on the CURRENT draft: it must still be the one that was loaded/saved here, else the person decides first. */
+    async function draftIsCurrent(): Promise<boolean> {
+        const latest = await loadLatest();
+        if (latest === null) return true; // cannot tell: the server's own checks (no_draft, problems) still apply
+        const mine = detail?.draft;
+        if (!mine || !latest.draft || latest.draft.version !== mine.version || latest.draft.updatedAt !== mine.updatedAt) {
+            setPublishOpen(false);
+            setConflict({ latest });
+            return false;
+        }
+        return true;
     }
 
     function reportFailure(err: unknown, inDialog = false) {
@@ -203,10 +256,12 @@ export default function FormEditor({
             if (dirty) {
                 const draft = await persistDraft();
                 if (!draft) {
-                    // The save itself was refused: show its problems inside the dialog as well.
+                    // The save itself was refused or conflicted: it has been reported, nothing is published.
                     setPublishOpen(false);
                     return;
                 }
+            } else if (!(await draftIsCurrent())) {
+                return;
             }
             const res = await apiFetch<{ data: { version: FormVersion } }>(`/forms/${form.id}/publish?clubId=${clubId}`, { method: 'POST', body: {} });
             changedRef.current = true;
@@ -216,10 +271,28 @@ export default function FormEditor({
             // Reload the published state (the draft is gone, the new version is live).
             setAttempt((n) => n + 1);
         } catch (err) {
-            reportFailure(err, true);
+            if (isSaveConflict(err, false)) await raiseConflict();
+            else reportFailure(err, true);
         } finally {
             setBusy(false);
         }
+    }
+
+    async function keepMine() {
+        setBusy(true);
+        setError(null);
+        const draft = await persistDraft(true);
+        if (draft) {
+            setConflict(null);
+            setFlash(t('forms.editor.conflict.kept', { version: draft.version }));
+        }
+        setBusy(false);
+    }
+
+    function reloadTheirs() {
+        setConflict(null);
+        setFlash(null);
+        setAttempt((n) => n + 1);
     }
 
     async function discard() {
@@ -259,10 +332,39 @@ export default function FormEditor({
         }
     }
 
-    function removeField(index: number) {
-        const label = fieldTitle(state.fields[index]!, t('forms.editor.field.untitled'));
-        if (!window.confirm(t('forms.editor.field.deleteConfirm', { label }))) return;
-        dispatch({ type: 'remove', index });
+    async function removeField(index: number) {
+        const field = state.fields[index]!;
+        const label = fieldTitle(field, t('forms.editor.field.untitled'));
+        const dependents = dependentsOf(state.fields, field.key).map((f) => fieldTitle(f, f.key));
+        const ok = await ask({
+            title: t('forms.editor.field.deleteTitle'),
+            body: (
+                <>
+                    <p>{t('forms.editor.field.deleteConfirm', { label })}</p>
+                    {dependents.length > 0 && <p className="mt-2 font-medium">{t('forms.editor.field.deleteDependents', { fields: dependents.join(', ') })}</p>}
+                </>
+            ),
+            confirmLabel: t('forms.editor.field.deleteSubmit'),
+            danger: true,
+        });
+        if (ok) dispatch({ type: 'remove', index });
+    }
+
+    async function moveField(index: number, direction: 'up' | 'down') {
+        const field = state.fields[index]!;
+        const label = fieldTitle(field, t('forms.editor.field.untitled'));
+        const lost = conditionsLostByMove(state.fields, index, direction).map((f) => fieldTitle(f, f.key));
+        if (lost.length > 0) {
+            const ok = await ask({
+                title: t('forms.editor.field.moveTitle'),
+                body: t('forms.editor.field.moveConditions', { label, fields: lost.join(', ') }),
+                confirmLabel: t('forms.editor.field.moveSubmit'),
+            });
+            if (!ok) return;
+        }
+        const position = direction === 'up' ? index : index + 2;
+        dispatch({ type: 'move', index, direction });
+        setMoved({ uid: field.uid ?? '', direction, text: t('forms.editor.field.moved', { label, position, count: state.fields.length }) });
     }
 
     function goToField(key: string) {
@@ -281,8 +383,8 @@ export default function FormEditor({
         dispatch({ type: 'add', field });
     }
 
-    function insertTemplate() {
-        if (state.privacyNotice.trim() !== '' && !window.confirm(t('forms.editor.privacy.replaceConfirm'))) return;
+    async function insertTemplate() {
+        if (state.privacyNotice.trim() !== '' && !(await ask({ title: t('forms.editor.privacy.replaceTitle'), body: t('forms.editor.privacy.replaceConfirm'), confirmLabel: t('forms.editor.privacy.replaceSubmit') }))) return;
         dispatch({ type: 'setPrivacyNotice', privacyNotice: t('forms.editor.privacy.template') });
     }
 
@@ -301,7 +403,7 @@ export default function FormEditor({
     return (
         <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
-                <button type="button" onClick={leave} className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
+                <button type="button" onClick={() => void leave()} className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
                     <ArrowLeft className="h-4 w-4" aria-hidden="true" />
                     {t('forms.editor.back')}
                 </button>
@@ -334,9 +436,15 @@ export default function FormEditor({
                     value={state.name}
                     maxLength={MAX_FORM_NAME}
                     aria-invalid={nameInvalid || undefined}
+                    aria-describedby={nameInvalid ? 'form-editor-name-err' : undefined}
                     onChange={(e) => dispatch({ type: 'setName', name: e.target.value })}
                     className={`mt-1 sm:max-w-md ${inputClass}`}
                 />
+                {nameIssue && (
+                    <p id="form-editor-name-err" role="alert" className="mt-1 text-xs text-destructive">
+                        {t(nameIssue.code === 'name_missing' ? 'forms.editor.checks.name' : 'forms.editor.checks.nameText')}
+                    </p>
+                )}
                 <p className="mt-1 text-xs text-muted-foreground">{purpose === 'aufnahme' ? t('forms.editor.purpose.aufnahme.hint') : t('forms.editor.purpose.austritt.hint')}</p>
             </div>
 
@@ -373,6 +481,19 @@ export default function FormEditor({
                             </button>
                         </div>
 
+                        <p className="sr-only" role="status" aria-live="polite">
+                            {moved?.text ?? ''}
+                        </p>
+
+                        {state.undo && (
+                            <div role="status" className="mb-3 flex items-start justify-between gap-2 rounded-lg border border-border bg-muted/50 p-2 text-xs text-foreground">
+                                <p>{state.undo.kind === 'remove' ? t('forms.editor.undo.removed', { label: fieldTitle({ key: state.undo.keys[0] ?? '', label: state.undo.label }, t('forms.editor.field.untitled')) }) : t('forms.editor.undo.moved', { label: fieldTitle({ key: state.undo.keys[0] ?? '', label: state.undo.label }, t('forms.editor.field.untitled')) })}</p>
+                                <button type="button" onClick={() => dispatch({ type: 'undo' })} className="shrink-0 font-semibold text-primary underline">
+                                    {t('forms.editor.undo.action')}
+                                </button>
+                            </div>
+                        )}
+
                         {state.droppedConditions.length > 0 && (
                             <div role="status" className="mb-3 flex items-start justify-between gap-2 rounded-lg border border-warning/40 bg-warning/10 p-2 text-xs text-foreground">
                                 <p>
@@ -394,7 +515,7 @@ export default function FormEditor({
                                     const title = fieldTitle(field, t('forms.editor.field.untitled'));
                                     const map = mappingChip(field);
                                     return (
-                                        <li key={`${field.key}-${index}`} className="rounded-lg border border-border bg-background p-3">
+                                        <li key={field.uid ?? `${field.key}-${index}`} className="rounded-lg border border-border bg-background p-3">
                                             <div className="flex flex-wrap items-start justify-between gap-2">
                                                 <div className="min-w-0">
                                                     <p className="break-words text-sm font-semibold text-foreground">
@@ -420,8 +541,9 @@ export default function FormEditor({
                                                 <div className="flex shrink-0 items-center gap-0.5">
                                                     <button
                                                         type="button"
+                                                        id={`mv-${field.uid}-up`}
                                                         disabled={!canMove(index, fieldCount, 'up')}
-                                                        onClick={() => dispatch({ type: 'move', index, direction: 'up' })}
+                                                        onClick={() => void moveField(index, 'up')}
                                                         aria-label={t('forms.editor.field.up', { label: title })}
                                                         className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30"
                                                     >
@@ -429,8 +551,9 @@ export default function FormEditor({
                                                     </button>
                                                     <button
                                                         type="button"
+                                                        id={`mv-${field.uid}-down`}
                                                         disabled={!canMove(index, fieldCount, 'down')}
-                                                        onClick={() => dispatch({ type: 'move', index, direction: 'down' })}
+                                                        onClick={() => void moveField(index, 'down')}
                                                         aria-label={t('forms.editor.field.down', { label: title })}
                                                         className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30"
                                                     >
@@ -446,7 +569,7 @@ export default function FormEditor({
                                                     </button>
                                                     <button
                                                         type="button"
-                                                        onClick={() => removeField(index)}
+                                                        onClick={() => void removeField(index)}
                                                         aria-label={t('forms.editor.field.deleteNamed', { label: title })}
                                                         className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive"
                                                     >
@@ -471,11 +594,18 @@ export default function FormEditor({
                             rows={8}
                             maxLength={MAX_PRIVACY_NOTICE}
                             value={state.privacyNotice}
+                            aria-invalid={privacyIssue ? true : undefined}
+                            aria-describedby={privacyIssue ? 'form-editor-privacy-err' : undefined}
                             onChange={(e) => dispatch({ type: 'setPrivacyNotice', privacyNotice: e.target.value })}
                             className={`mt-2 ${inputClass}`}
                         />
+                        {privacyIssue && (
+                            <p id="form-editor-privacy-err" role="alert" className="mt-1 text-xs text-destructive">
+                                {t('forms.editor.privacy.invalid')}
+                            </p>
+                        )}
                         <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                            <button type="button" onClick={insertTemplate} className={secondaryButtonClass}>
+                            <button type="button" onClick={() => void insertTemplate()} className={secondaryButtonClass}>
                                 {t('forms.editor.privacy.insertTemplate')}
                             </button>
                             <span className="text-xs text-muted-foreground">{t('forms.editor.privacy.count', { count: state.privacyNotice.length, max: MAX_PRIVACY_NOTICE })}</span>
@@ -483,14 +613,14 @@ export default function FormEditor({
                         <p className="mt-2 text-xs text-muted-foreground">{t('forms.editor.privacy.plain')}</p>
                     </section>
 
-                    {(describedShape.length > 0 || describedChecks.length > 0 || nameInvalid) && (
+                    {(describedShape.length > 0 || describedChecks.length > 0) && (
                         <section className="rounded-xl border border-border bg-card p-4" aria-labelledby="form-editor-checks">
                             <h3 id="form-editor-checks" className="text-sm font-bold text-foreground">
                                 {t('forms.editor.checks.title')}
                             </h3>
                             <p className="mt-1 text-xs text-muted-foreground">{t('forms.editor.checks.hint')}</p>
                             <div className="mt-2 space-y-2">
-                                {nameInvalid && <p className="text-sm text-foreground">{t('forms.editor.checks.name')}</p>}
+                                
                                 <ProblemList problems={[...describedShape, ...describedChecks]} onGoToField={goToField} goLabel={t('forms.editor.problem.goto')} />
                                 {checks.some((p) => p.code === 'privacy_notice_missing') && (
                                     <button type="button" onClick={addPrivacyBlock} className={secondaryButtonClass}>
@@ -597,9 +727,21 @@ export default function FormEditor({
                 />
             )}
 
+            {conflict && (
+                <FormConflictDialog
+                    latest={conflict.latest}
+                    mine={state}
+                    busy={busy}
+                    onKeep={() => void keepMine()}
+                    onReload={reloadTheirs}
+                />
+            )}
+
+            {confirmDialog}
+
             {versionsOpen && <FormVersionsDialog clubId={clubId} formId={form.id} categories={categories} onClose={() => setVersionsOpen(false)} />}
 
-            {confirm === 'discard' && (
+            {panel === 'discard' && (
                 <Modal
                     open
                     onClose={busy ? () => {} : () => setConfirm(null)}
@@ -619,7 +761,7 @@ export default function FormEditor({
                 </Modal>
             )}
 
-            {confirm === 'archive' && (
+            {panel === 'archive' && (
                 <Modal
                     open
                     onClose={busy ? () => {} : () => setConfirm(null)}

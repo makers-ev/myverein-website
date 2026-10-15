@@ -11,7 +11,8 @@ import { Chip, EmptyState, errorMessage, SectionCard, type Tone } from '@/compon
 import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api-client';
 import { formatDate, inputClass, isLeftStatus, secondaryButtonClass, todayIso } from '@/lib/clubMembers';
-import { exitDialogTouched, exitRequestBody, repinExit } from '@/lib/exitForm';
+import { exitDialogTouched, exitFormFields, exitRequestBody, plainExitBody, repinExit } from '@/lib/exitForm';
+import { useConfirm } from '@/components/useConfirm';
 import { type Answers, type FieldErrorCode, fieldErrorsFromError, type FormDefinition, formErrorKey, validateAnswers } from '@/lib/formSchema';
 import { selfExitErrorKey, canWithdraw, type ExitRequest, isOwnerOrgRole, type NoticePreview, noticeRuleText } from '@/lib/memberLifecycle';
 
@@ -223,6 +224,10 @@ function CancelDialog({
     const [answers, setAnswers] = useState<Answers>({});
     const [errors, setErrors] = useState<Record<string, FieldErrorCode>>({});
     const [notice, setNotice] = useState<string | null>(null);
+    // The form could not be loaded even after a retry: the person may cancel without it (date and plain reason only).
+    const [withoutForm, setWithoutForm] = useState(false);
+    const [reason, setReason] = useState('');
+    const { confirm, dialog } = useConfirm();
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const rule = noticeRuleText(preview);
@@ -244,14 +249,17 @@ function CancelDialog({
         };
     }, [clubId, attempt]);
 
-    function requestClose() {
-        if (exitDialogTouched(desired, answers) && !window.confirm(t('verein.form.discard'))) return;
+    async function requestClose() {
+        const touched = exitDialogTouched(desired, answers) || reason.trim() !== '';
+        if (touched && !(await confirm({ title: t('forms.confirm.discard.title'), body: t('verein.form.discard'), confirmLabel: t('forms.confirm.discard.confirm'), danger: true }))) return;
         onClose();
     }
 
     async function submit() {
-        if (!definition) return;
-        const local = validateAnswers(definition.fields, answers, { mode: 'submit' });
+        if (!definition && !withoutForm) return;
+        // Upload fields are neither shown nor required here: the dialog has no upload, and a cancellation must never be blocked by one.
+        const fields = definition ? exitFormFields(definition.fields) : [];
+        const local = definition ? validateAnswers(fields, answers, { mode: 'submit' }) : {};
         if (Object.keys(local).length > 0) {
             setErrors(local);
             setError(t('forms.err.fieldsInvalid'));
@@ -264,12 +272,14 @@ function CancelDialog({
         try {
             const res = await apiFetch<{ data: ExitRequest & { adjustedToEarliest?: boolean } }>(`/club-exit-requests?clubId=${clubId}`, {
                 method: 'POST',
-                body: exitRequestBody(desired, definition, answers),
+                body: definition ? exitRequestBody(desired, definition, answers) : plainExitBody(desired, reason),
             });
             onDone(res.data.adjustedToEarliest === true, res.data.earliestEffectiveOn);
         } catch (err) {
-            const repin = repinExit(err, definition, answers);
+            const repin = definition ? repinExit(err, definition, answers) : null;
             if (repin) {
+                setError(null);
+                setErrors({});
                 // The club changed the form meanwhile: show the new one with the answers that still fit, nothing was filed.
                 setDefinition(repin.definition);
                 setAnswers(repin.answers);
@@ -287,14 +297,14 @@ function CancelDialog({
         <Modal
             open
             size="lg"
-            onClose={busy ? () => {} : requestClose}
+            onClose={busy ? () => {} : () => void requestClose()}
             title={t('verein.exit.dialog.title')}
             footer={
                 <div className="flex justify-end gap-2">
-                    <button type="button" onClick={requestClose} disabled={busy} className={secondaryButtonClass}>
+                    <button type="button" onClick={() => void requestClose()} disabled={busy} className={secondaryButtonClass}>
                         {t('verein.roles.add.cancel')}
                     </button>
-                    <button type="button" onClick={() => void submit()} disabled={busy || !definition} className={dangerButtonClass}>
+                    <button type="button" onClick={() => void submit()} disabled={busy || (!definition && !withoutForm)} className={dangerButtonClass}>
                         {t('verein.exit.dialog.submit')}
                     </button>
                 </div>
@@ -315,12 +325,29 @@ function CancelDialog({
                 </p>
             )}
             <div className="mt-4">
-                {loadFailed ? (
-                    <LoadError onRetry={() => { setLoadFailed(false); setAttempt((n) => n + 1); }} />
+                {withoutForm ? (
+                    <div>
+                        <p role="status" className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm text-foreground">
+                            {t('forms.exit.withoutForm')}
+                        </p>
+                        <label className="mt-3 block text-xs font-semibold text-muted-foreground">
+                            {t('verein.exit.dialog.reason')}
+                            <textarea value={reason} maxLength={2000} rows={3} onChange={(e) => setReason(e.target.value)} className={`mt-1 ${inputClass}`} />
+                        </label>
+                    </div>
+                ) : loadFailed ? (
+                    <div>
+                        <LoadError onRetry={() => { setLoadFailed(false); setAttempt((n) => n + 1); }} />
+                        {attempt >= 1 && (
+                            <button type="button" onClick={() => setWithoutForm(true)} className={`mt-3 ${secondaryButtonClass}`}>
+                                {t('forms.exit.skipForm')}
+                            </button>
+                        )}
+                    </div>
                 ) : !definition ? (
                     <LoadingText />
                 ) : (
-                    <FormRenderer fields={definition.fields} privacyNotice={definition.privacyNotice} answers={answers} errors={errors} idPrefix="exit" disabled={busy} onChange={(key, value) => {
+                    <FormRenderer fields={exitFormFields(definition.fields)} privacyNotice={definition.privacyNotice} answers={answers} errors={errors} idPrefix="exit" disabled={busy} onChange={(key, value) => {
                         setAnswers((a) => ({ ...a, [key]: value }));
                         setErrors((e) => {
                             if (!(key in e)) return e;
@@ -337,6 +364,7 @@ function CancelDialog({
                     {error}
                 </p>
             )}
+            {dialog}
         </Modal>
     );
 }

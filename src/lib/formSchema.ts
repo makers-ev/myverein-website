@@ -32,7 +32,7 @@ export interface FormField {
     label: string;
     helpText?: string;
     required?: boolean;
-    options?: Array<{ value: string; label: string }>;
+    options?: Array<{ value: string; label: string; uid?: string }>;
     validation?: {
         minLength?: number;
         maxLength?: number;
@@ -52,6 +52,8 @@ export interface FormField {
     mapsTo?: string;
     /** Editor only: key of the custom field the answer is written to on acceptance. */
     customField?: string;
+    /** Editor only, client-side: stable id of the field in the editor (never sent; `cleanField` drops it). */
+    uid?: string;
 }
 
 /** The applicant view of a form version (`data` of `GET /club-forms/:clubSlug/aufnahme`). */

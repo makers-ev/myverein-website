@@ -11,6 +11,7 @@ import type { RenderedAnswer } from '@/lib/applicationReview';
 import type { FormField } from '@/lib/formSchema';
 
 import CustomFieldsPanel from './CustomFieldsPanel';
+import FormConflictDialog from './FormConflictDialog';
 import FormPublishDialog, { ProblemList } from './FormPublishDialog';
 import FormsPanel from './FormsPanel';
 
@@ -103,5 +104,31 @@ describe('plain-text rendering of definition text', () => {
         expect(html).not.toMatch(/<b>Grund|<i>x/);
         expect(html).toContain('&lt;i&gt;x&lt;/i&gt;');
         expect(html).toContain('Geschützt');
+    });
+});
+
+describe('save conflict dialog', () => {
+    const detail = (fields: FormField[]) => ({
+        form: { id: 'f', purpose: 'aufnahme', name: 'A', archivedAt: null, createdAt: '', updatedAt: '' },
+        published: null,
+        draft: { id: 'd', version: 2, status: 'draft' as const, fields, privacyNotice: null, publishedAt: null, publishedBy: null, createdAt: '', updatedAt: '' },
+    });
+
+    it('offers reload and keep, names what differs as plain text and overwrites nothing by itself', () => {
+        const theirs: FormField[] = [{ key: 'vorname', type: 'text', label: 'Vorname' }];
+        const mine: FormField[] = [{ key: 'vorname', type: 'text', label: 'Vorname' }, { key: 'evil', type: 'text', label: '<img src=x onerror=alert(1)>' }];
+        const html = wrap(<FormConflictDialog latest={detail(theirs)} mine={{ fields: mine, privacyNotice: '' }} busy={false} onKeep={() => {}} onReload={() => {}} />);
+        expect(html).toContain('Neu laden (meine Änderungen verwerfen)');
+        expect(html).toContain('Meine Version behalten');
+        expect(html).toContain('Nur in deiner Version');
+        expect(html).toContain('&lt;img src=x onerror=alert(1)&gt;');
+        expect(html).not.toMatch(/<img/);
+        expect(html).not.toMatch(/<button(?![^>]*type="button")[^>]*>/);
+    });
+
+    it('says so when the current state cannot be loaded', () => {
+        const html = wrap(<FormConflictDialog latest={null} mine={{ fields: [], privacyNotice: '' }} busy onKeep={() => {}} onReload={() => {}} />);
+        expect(html).toContain('ein Vergleich ist nicht möglich');
+        expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Neu laden/);
     });
 });

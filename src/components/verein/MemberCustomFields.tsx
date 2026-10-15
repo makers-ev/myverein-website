@@ -7,6 +7,8 @@ import FormRenderer, { focusField } from '@/components/forms/FormRenderer';
 import LoadError from '@/components/LoadError';
 import LoadingText from '@/components/LoadingText';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useConfirm } from '@/components/useConfirm';
+import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
 import { ApiError, apiFetch } from '@/lib/api-client';
 import { formatDate, primaryButtonClass } from '@/lib/clubMembers';
 import { customFieldErrorKey, displayValue, type MemberCustomField, partitionFields, toFormField, valuesPatch, valuesToAnswers } from '@/lib/customFields';
@@ -44,6 +46,7 @@ export default function MemberCustomFields({ clubId, target, title, showSensitiv
     const [busy, setBusy] = useState(false);
     const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
     const alive = useRef(true);
+    const { confirm, dialog } = useConfirm();
 
     useEffect(() => {
         alive.current = true;
@@ -78,15 +81,17 @@ export default function MemberCustomFields({ clubId, target, title, showSensitiv
         };
     }, [path, attempt, apply]);
 
-    const parts = useMemo(() => partitionFields(fields ?? [], readOnlyView), [fields, readOnlyView]);
+    const parts = useMemo(() => partitionFields(fields ?? [], readOnlyView, own), [fields, readOnlyView, own]);
     const { editable, readOnly } = parts;
     const renderFields = useMemo(() => editable.map(toFormField), [editable]);
-    const patch = readOnlyView ? null : valuesPatch(fields ?? [], saved, answers);
+    const patch = readOnlyView ? null : valuesPatch(fields ?? [], saved, answers, own);
     const dirty = patch !== null;
     useEffect(() => {
         onDirtyChange?.(dirty);
     }, [dirty, onDirtyChange]);
     useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
+    // Reload / close / Back with unsaved custom field edits asks first (tab switches are guarded by the page via onDirtyChange).
+    useUnsavedGuard(dirty, () => confirm({ title: t('forms.editor.leave.title'), body: t('forms.cf.values.leaveConfirm'), confirmLabel: t('forms.editor.leave.confirm'), danger: true }));
 
     if (state === 'loading') return <LoadingText />;
     if (state === 'hidden') return null;
@@ -197,6 +202,7 @@ export default function MemberCustomFields({ clubId, target, title, showSensitiv
             )}
 
             {showSensitiveNote && <p className="mt-3 text-xs text-muted-foreground">{t('forms.cf.values.sensitiveHidden')}</p>}
+            {dialog}
         </section>
     );
 }
