@@ -12,6 +12,7 @@ import {
     type Department,
     type TFn,
     errorMessage,
+    isLockedDefaultCalendar,
     inputClass,
     labelClass,
     primaryBtn,
@@ -36,6 +37,7 @@ function CalendarFormModal({
     clubId,
     departments,
     calendar,
+    locked,
     t,
     onClose,
     onSaved,
@@ -43,6 +45,7 @@ function CalendarFormModal({
     clubId: string;
     departments: Department[];
     calendar?: Calendar;
+    locked?: boolean;
     t: TFn;
     onClose: () => void;
     onSaved: () => void;
@@ -105,7 +108,7 @@ function CalendarFormModal({
                     <label htmlFor="cal-department" className={labelClass}>
                         {t('kalender.calendars.new.department')}
                     </label>
-                    <select id="cal-department" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)} className={inputClass}>
+                    <select id="cal-department" disabled={locked} value={departmentId} onChange={(e) => setDepartmentId(e.target.value)} className={inputClass}>
                         <option value="">{t('kalender.calendars.new.department.none')}</option>
                         {departments.map((d) => (
                             <option key={d.id} value={d.id}>
@@ -115,9 +118,10 @@ function CalendarFormModal({
                     </select>
                 </div>
                 <label className="flex items-center gap-2 text-sm text-foreground">
-                    <input type="checkbox" checked={isDefault} onChange={(e) => setIsDefault(e.target.checked)} className="h-4 w-4 accent-primary" />
+                    <input type="checkbox" disabled={locked} checked={isDefault} onChange={(e) => setIsDefault(e.target.checked)} className="h-4 w-4 accent-primary" />
                     {t('kalender.calendars.new.is-default')}
                 </label>
+                {locked && <p className="text-xs text-muted-foreground">{t('kalender.calendars.default.locked')}</p>}
                 {error && (
                     <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
                         {error}
@@ -348,7 +352,14 @@ export default function CalendarManager({
                             <button type="button" onClick={() => setModal({ kind: 'edit', calendar: cal })} className={iconBtn} aria-label={t('kalender.calendars.edit')} title={t('kalender.calendars.edit')}>
                                 <Pencil className="h-4 w-4" />
                             </button>
-                            <button type="button" onClick={() => void handleDelete(cal)} className={`${iconBtn} hover:!text-destructive`} aria-label={t('kalender.calendars.delete')} title={t('kalender.calendars.delete')}>
+                            <button
+                                type="button"
+                                onClick={() => void handleDelete(cal)}
+                                disabled={isLockedDefaultCalendar(cal, calendars)}
+                                className={`${iconBtn} hover:!text-destructive disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:!text-muted-foreground`}
+                                aria-label={t('kalender.calendars.delete')}
+                                title={isLockedDefaultCalendar(cal, calendars) ? t('kalender.calendars.delete.locked') : t('kalender.calendars.delete')}
+                            >
                                 <Trash2 className="h-4 w-4" />
                             </button>
                         </li>
@@ -358,7 +369,7 @@ export default function CalendarManager({
 
             {modal?.kind === 'create' && <CalendarFormModal clubId={clubId} departments={departments} t={t} onClose={() => setModal(null)} onSaved={saved} />}
             {modal?.kind === 'edit' && (
-                <CalendarFormModal clubId={clubId} departments={departments} calendar={modal.calendar} t={t} onClose={() => setModal(null)} onSaved={saved} />
+                <CalendarFormModal clubId={clubId} departments={departments} calendar={modal.calendar} locked={isLockedDefaultCalendar(modal.calendar, calendars)} t={t} onClose={() => setModal(null)} onSaved={saved} />
             )}
             {modal?.kind === 'visibility' && (
                 <VisibilityModal clubId={clubId} calendar={modal.calendar} departments={departments} t={t} onClose={() => setModal(null)} />

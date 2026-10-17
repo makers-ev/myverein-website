@@ -5,8 +5,11 @@ import { AlertTriangle, CheckCircle2, Download, Loader2, Lock } from 'lucide-rea
 
 import { Modal } from '@/components/Modal';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { apiFetch } from '@/lib/api-client';
+import { localizedTexts, textLang, withLang } from '@/lib/profileTexts';
+import type { CustomFieldDefinition } from '@/lib/customFields';
 import { inputClass, MEMBER_STATUSES, memberErrorKey, primaryButtonClass, secondaryButtonClass, todayIso, type MemberCategory } from '@/lib/clubMembers';
-import { buildExportQuery, defaultExportColumns, EXPORT_COLUMNS, fetchCsvBlob, isRateLimited, saveBlob, selectableColumns, toggleExportColumn } from '@/lib/memberCsv';
+import { buildExportQuery, exportableCustomFields, defaultExportColumns, EXPORT_COLUMNS, fetchCsvBlob, isRateLimited, saveBlob, selectableColumns, toggleExportColumn } from '@/lib/memberCsv';
 
 /**
  * CSV export of the member list (Wave 7 W6) for `members:write` or `members:read_sensitive`. Sensitive columns are shown
@@ -26,7 +29,7 @@ export default function MemberExportDialog({
     departments: { id: string; name: string }[];
     onClose: () => void;
 }) {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const canSensitive = permissions.includes('members:read_sensitive');
 
     const [columns, setColumns] = useState<string[]>(() => defaultExportColumns(canSensitive));
@@ -37,11 +40,29 @@ export default function MemberExportDialog({
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [done, setDone] = useState(false);
+    // Custom fields (opt-in `cf:<key>` columns); the list is a convenience, a failed load just leaves the standard columns.
+    const [customDefs, setCustomDefs] = useState<CustomFieldDefinition[]>([]);
+    const [customKeys, setCustomKeys] = useState<string[]>([]);
     const [rateLimited, setRateLimited] = useState(false);
     const abortRef = useRef<AbortController | null>(null);
 
     // Leaving the dialog (or the page) cancels a running download: no late file save, no state update after unmount.
     useEffect(() => () => abortRef.current?.abort(), []);
+
+    useEffect(() => {
+        let cancelled = false;
+        apiFetch<{ data: CustomFieldDefinition[] }>(withLang(`/member-fields?clubId=${clubId}`, textLang(language)))
+            .then((res) => {
+                if (!cancelled) // Labels are shown in the UI language; the export columns stay the technical `cf:<key>`.
+                    setCustomDefs(exportableCustomFields(res.data, canSensitive).map((d) => ({ ...d, label: localizedTexts(d, textLang(language)).label })));
+            })
+            .catch(() => {
+                if (!cancelled) setCustomDefs([]);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [clubId, canSensitive, language]);
 
     const allowed = selectableColumns(canSensitive);
     const allSelected = columns.length === allowed.length;
@@ -56,7 +77,7 @@ export default function MemberExportDialog({
         setDone(false);
         setRateLimited(false);
         try {
-            const query = buildExportQuery(clubId, columns, { status, category, departmentId, includeFormer }, canSensitive);
+            const query = buildExportQuery(clubId, columns, { status, category, departmentId, includeFormer }, canSensitive, customKeys);
             const { blob, filename } = await fetchCsvBlob(`/club-members/export?${query}`, `mitglieder-${todayIso()}.csv`, controller.signal);
             if (controller.signal.aborted) return;
             saveBlob(blob, filename);
@@ -141,6 +162,30 @@ export default function MemberExportDialog({
                     </ul>
                     {!canSensitive && <p className="mt-2 text-xs text-muted-foreground">{t('verein.export.sensitive.hint')}</p>}
                     {columns.length === 0 && <p role="alert" className="mt-2 text-xs text-destructive">{t('verein.export.columns.required')}</p>}
+                </fieldset>
+
+                <fieldset>
+                    <legend className="mb-1 text-sm font-bold text-foreground">{t('forms.cf.export.title')}</legend>
+                    {customDefs.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">{t('forms.cf.export.none')}</p>
+                    ) : (
+                        <ul className="grid gap-1 sm:grid-cols-2">
+                            {customDefs.map((d) => (
+                                <li key={d.key}>
+                                    <label className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm text-foreground hover:bg-muted">
+                                        <input
+                                            type="checkbox"
+                                            checked={customKeys.includes(d.key)}
+                                            onChange={() => setCustomKeys((keys) => (keys.includes(d.key) ? keys.filter((k) => k !== d.key) : [...keys, d.key]))}
+                                            className="h-4 w-4 accent-[var(--primary)]"
+                                        />
+                                        <span className="min-w-0 flex-1 break-words">{d.label}</span>
+                                    </label>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                    <p className="mt-1 text-xs text-muted-foreground">{t('forms.cf.export.hint')}</p>
                 </fieldset>
 
                 <fieldset className="grid gap-3 sm:grid-cols-3">

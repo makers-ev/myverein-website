@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Download, Pencil, Search, Upload, UserPlus, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Download, Eye, Pencil, Search, Upload, UserPlus, X } from 'lucide-react';
 
 import MemberAvatar from '@/components/verein/MemberAvatar';
 import MemberExportDialog from '@/components/verein/MemberExportDialog';
+import MemberDetailDialog from '@/components/verein/MemberDetailDialog';
 import MemberFormModal from '@/components/verein/MemberFormModal';
 import MemberImportDialog from '@/components/verein/MemberImportDialog';
 import MemberRoleCell from '@/components/verein/MemberRoleCell';
@@ -12,6 +13,8 @@ import TransitionSuggestions from '@/components/verein/TransitionSuggestions';
 import { useThrottledCallback } from '@/lib/useThrottledCallback';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ApiError, apiFetch } from '@/lib/api-client';
+import { textLang, withLang } from '@/lib/profileTexts';
+import { type CustomFieldDefinition, hasVisibleFields } from '@/lib/customFields';
 import {
     categoryLabel,
     currentDepartments,
@@ -94,8 +97,26 @@ export default function MemberList({
     const [creating, setCreating] = useState(false);
     const [importing, setImporting] = useState(false);
     const [exporting, setExporting] = useState(false);
+    // Read-only details (custom fields) for people without members:write; offered only if the club has fields they may see.
+    const [detail, setDetail] = useState<ClubMember | null>(null);
+    const [hasCustomFields, setHasCustomFields] = useState(false);
 
     const reload = () => setLocalReload((n) => n + 1);
+
+    useEffect(() => {
+        if (canWrite) return;
+        let cancelled = false;
+        apiFetch<{ data: CustomFieldDefinition[] }>(withLang(`/member-fields?clubId=${clubId}`, textLang(language)))
+            .then((res) => {
+                if (!cancelled) setHasCustomFields(hasVisibleFields(res.data));
+            })
+            .catch(() => {
+                if (!cancelled) setHasCustomFields(false);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [canWrite, clubId, language]);
 
     // Signed photo URLs expire: a failed image load refetches the list once (all avatars fail together, so debounce).
     const onPhotoExpired = useThrottledCallback(() => setLocalReload((n) => n + 1));
@@ -401,7 +422,7 @@ export default function MemberList({
                 </div>
             ) : (
                 <>
-                    <div className={`overflow-x-auto rounded-xl border border-border transition-opacity ${loading ? 'opacity-60' : ''}`} aria-busy={loading}>
+                    <div className={`relative overflow-x-auto rounded-xl border border-border transition-opacity ${loading ? 'opacity-60' : ''}`} aria-busy={loading}>
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="border-b border-border bg-muted/50 text-left text-xs text-muted-foreground">
@@ -413,7 +434,7 @@ export default function MemberList({
                                     <th className="px-3 py-2 uppercase tracking-wide">{t('verein.members.table.roles')}</th>
                                     {sortHeader(t('verein.members.table.joined'), 'joinedAt')}
                                     {canSensitive && sortHeader(t('verein.members.table.number'), 'memberNumber')}
-                                    {canWrite && <th className="px-3 py-2" />}
+                                    {(canWrite || hasCustomFields) && <th className="px-3 py-2"><span className="sr-only">{t('forms.cf.detail.column')}</span></th>}
                                 </tr>
                             </thead>
                             <tbody>
@@ -450,6 +471,18 @@ export default function MemberList({
                                             </td>
                                             <td className="px-3 py-2 text-muted-foreground">{formatDate(m.joinedAt, language)}</td>
                                             {canSensitive && <td className="px-3 py-2 text-muted-foreground">{m.memberNumber ?? '—'}</td>}
+                                            {!canWrite && hasCustomFields && (
+                                                <td className="px-3 py-2 text-right">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setDetail(m)}
+                                                        className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                                                        aria-label={t('forms.cf.detail.open', { name: m.name ?? '—' })}
+                                                    >
+                                                        <Eye className="h-4 w-4" aria-hidden="true" />
+                                                    </button>
+                                                </td>
+                                            )}
                                             {canWrite && (
                                                 <td className="px-3 py-2 text-right">
                                                     <button
@@ -542,6 +575,7 @@ export default function MemberList({
                     onChanged={reload}
                 />
             )}
+            {detail && !canWrite && <MemberDetailDialog clubId={clubId} memberId={detail.id} name={detail.name} onClose={() => setDetail(null)} />}
             {importing && canWrite && <MemberImportDialog clubId={clubId} categories={categories} onClose={() => setImporting(false)} onImported={reload} />}
             {exporting && (canWrite || canSensitive) && (
                 <MemberExportDialog clubId={clubId} permissions={permissions} categories={categories} departments={departments} onClose={() => setExporting(false)} />

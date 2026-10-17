@@ -76,6 +76,9 @@ export interface ClubMember {
     roles: MemberRole[];
     departments: MemberDepartment[];
     email?: string | null;
+    /** Separate name parts; absent on older backends (read as empty). */
+    firstName?: string | null;
+    lastName?: string | null;
     contactEmail?: string | null;
     memberNumber?: string | null;
     birthDate?: string | null;
@@ -102,6 +105,8 @@ export interface MemberCategory {
     key: string;
     name: string;
     votingRight: boolean;
+    /** Applicants may choose it in the application form (`false` = only the board assigns it). Absent in old responses. */
+    applicantSelectable?: boolean;
     minAge: number | null;
     maxAge: number | null;
     autoTransitionToKey: string | null;
@@ -246,10 +251,16 @@ export function memberErrorKey(err: unknown): string {
             return 'verein.err.exitPending';
         case 'exit_already_scheduled':
             return 'verein.err.exitScheduled';
-        case 'merge_not_supported':
-            return 'verein.err.mergeNotSupported';
+        case 'merge_conflict':
+            return 'verein.err.mergeConflict';
+        case 'merge_busy':
+            return 'verein.err.mergeBusy';
+        case 'already_member':
+            return 'verein.err.alreadyMember';
         case 'account_has_open_items':
             return 'verein.err.accountOpenItems';
+        case 'default_calendar_required':
+            return 'kalender.err.defaultCalendarRequired';
         case 'export_too_large':
             return 'verein.err.exportTooLarge';
         case 'unknown_column':

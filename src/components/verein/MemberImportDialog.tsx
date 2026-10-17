@@ -441,7 +441,7 @@ export default function MemberImportDialog({
                                     {t('verein.import.rows.empty')}
                                 </p>
                             ) : (
-                                <div className={`overflow-x-auto rounded-lg border border-border ${stale ? 'opacity-60' : ''}`}>
+                                <div className={`relative overflow-x-auto rounded-lg border border-border ${stale ? 'opacity-60' : ''}`}>
                                     <table className="w-full text-left text-sm">
                                         <caption className="sr-only">{t('verein.import.rows.title')}</caption>
                                         <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">

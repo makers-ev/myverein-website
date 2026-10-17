@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, DoorOpen, Gavel, KeyRound, Package } from 'lucide-react';
 
+import AnswerList from '@/components/forms/AnswerList';
 import { Modal } from '@/components/Modal';
 import { Chip, EmptyState, errorMessage, type Tone } from '@/components/standorte/ui';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -282,6 +283,25 @@ export default function ExitQueuePanel({
 }
 
 /** Return checklist: open loans and key entries of the member's account (computed live by the backend). */
+/** Answers of the exit form the member filled in (redacted marker for protected ones); nothing here influences the dates. */
+function ExitAnswers({ detail }: { detail: ExitRequestDetail }) {
+    const { t, language } = useLanguage();
+    const submission = detail.submission;
+    if (!submission) return null;
+    return (
+        <section className="mt-4" aria-labelledby={`exit-answers-${detail.id}`}>
+            <h3 id={`exit-answers-${detail.id}`} className="text-sm font-bold text-foreground">
+                {t('forms.exit.answers.title')}
+            </h3>
+            <p className="mt-0.5 text-xs text-muted-foreground">{t('forms.exit.answers.hint', { version: submission.version, date: formatDate(submission.submittedAt, language) })}</p>
+            <div className="mt-2">
+                {submission.answers.length === 0 ? <p className="text-sm text-muted-foreground">{t('forms.review.answers.none')}</p> : <AnswerList answers={submission.answers} />}
+            </div>
+            {submission.answers.some((a) => a.redacted) && <p className="mt-2 text-xs text-muted-foreground">{t('forms.review.redacted.note')}</p>}
+        </section>
+    );
+}
+
 function Checklist({ detail }: { detail: ExitRequestDetail }) {
     const { t, language } = useLanguage();
     const list = detail.checklist;
@@ -465,6 +485,8 @@ function ReviewDialog({
                             </div>
                         )}
                     </dl>
+
+                    <ExitAnswers detail={detail} />
 
                     <Checklist detail={detail} />
 

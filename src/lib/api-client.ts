@@ -40,6 +40,17 @@ export function parseJsonPlain(text: string): unknown {
     return text === '' ? null : JSON.parse(text);
 }
 
+/**
+ * Applicant drafts, uploads, the board's application review, the form editor, custom fields and exit requests carry personal data and change between requests: the browser
+ * must never answer them from its HTTP cache (the backend's `Cache-Control` is set separately and is not relied upon here).
+ */
+export function cachePolicyFor(path: string): RequestCache | undefined {
+    // Form definitions (drafts hold unpublished wording), custom field definitions/values, the module catalog (`/member-fields/catalog`) and the credential overview (`/club-members/credentials`) (may be sensitive) and exit requests with answers.
+    return /^\/(form-submissions|club-forms|club-applications|forms|member-fields|club-exit-requests)(\/|\?|$)/.test(path) || /^\/club-members\/[^/?]+\/custom-fields(\/|\?|$)/.test(path) || /^\/club-members\/credentials(\/|\?|$)/.test(path) || /^\/club-members\/me\/children(\/|\?|$)/.test(path)
+        ? 'no-store'
+        : undefined;
+}
+
 export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise<T> {
     const { data, error } = await authClient.$fetch<T>(`${backendUrl}${path}`, {
         method: options.method ?? 'GET',
@@ -47,6 +58,7 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
         // better-fetch's default parser revives ISO date strings into Date objects; all date helpers (and the types)
         // expect the strings the backend sent, so parse plain.
         jsonParser: parseJsonPlain,
+        ...(cachePolicyFor(path) ? { cache: cachePolicyFor(path) } : {}),
         ...(options.cookie ? { headers: { cookie: options.cookie } } : {}),
     });
 

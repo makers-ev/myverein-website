@@ -269,11 +269,31 @@ export interface ExportFilters {
     includeFormer: boolean;
 }
 
-/** Query string of `GET /club-members/export`; no `columns` param when the selection equals the default. */
-export function buildExportQuery(clubId: string, columns: readonly string[], filters: ExportFilters, canSensitive: boolean): string {
+/** Export column of a custom field (`cf:<key>`, opt-in, header = the field's label); `null` for a key that cannot be a field key. */
+export function customExportColumn(key: string): string | null {
+    return /^[a-z][a-z0-9_]{1,40}$/.test(key) ? `cf:${key}` : null;
+}
+
+/**
+ * Custom fields an exporter may pick: live ones, protected (`sensitive`) ones only with `members:read_sensitive` (the server
+ * answers every other key with `422 unknown_column`).
+ */
+export function exportableCustomFields<T extends { key: string; archived: boolean; sensitive: boolean }>(defs: readonly T[], canSensitive: boolean): T[] {
+    return defs.filter((d) => !d.archived && (canSensitive || !d.sensitive) && customExportColumn(d.key) !== null);
+}
+
+/**
+ * Query string of `GET /club-members/export`; no `columns` param when the selection equals the default. `customKeys` are the
+ * keys of custom fields to add as `cf:<key>` columns after the standard ones (never part of the default selection).
+ */
+export function buildExportQuery(clubId: string, columns: readonly string[], filters: ExportFilters, canSensitive: boolean, customKeys: readonly string[] = []): string {
     const p = new URLSearchParams({ clubId });
     const allowed = new Set(selectableColumns(canSensitive));
-    const picked = EXPORT_COLUMNS.map((c) => c.key).filter((k) => columns.includes(k) && allowed.has(k));
+    const picked: string[] = EXPORT_COLUMNS.map((c) => c.key).filter((k) => columns.includes(k) && allowed.has(k));
+    for (const key of customKeys) {
+        const column = customExportColumn(key);
+        if (column && !picked.includes(column)) picked.push(column);
+    }
     p.set('columns', picked.join(','));
     if (filters.status) p.set('status', filters.status);
     if (filters.category) p.set('category', filters.category);

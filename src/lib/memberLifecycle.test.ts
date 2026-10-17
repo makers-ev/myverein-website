@@ -17,7 +17,14 @@ vi.mock('./api-client', () => {
 import { ApiError } from './api-client';
 import { memberErrorKey } from './clubMembers';
 import {
+    acceptedNoticeKey,
     canWithdraw,
+    classifyAcceptError,
+    isMergeBusy,
+    resolveLostAccept,
+    MERGE_CONFLICT_KINDS,
+    mergeConflictKindKey,
+    mergeConflictKinds,
     clearInviteToken,
     errorDetailsCode,
     INVALID_INVITE_LINK,
@@ -114,7 +121,9 @@ describe('error codes', () => {
         expect(key(403, 'self_approval')).toBe('verein.err.selfApproval');
         expect(key(409, 'exit_request_pending')).toBe('verein.err.exitPending');
         expect(key(409, 'exit_already_scheduled')).toBe('verein.err.exitScheduled');
-        expect(key(409, 'merge_not_supported')).toBe('verein.err.mergeNotSupported');
+        expect(key(409, 'merge_conflict')).toBe('verein.err.mergeConflict');
+        expect(key(409, 'merge_busy')).toBe('verein.err.mergeBusy');
+        expect(key(409, 'already_member')).toBe('verein.err.alreadyMember');
     });
 
     it('maps the message based cases of the new endpoints', () => {
@@ -224,5 +233,50 @@ describe('context specific error keys', () => {
     it('explains the owner protection to the cancelling owner', () => {
         expect(selfExitErrorKey(new ApiError(409, 'CONFLICT', 'x', { code: 'owner_protected' }), fallback)).toBe('verein.exit.owner');
         expect(selfExitErrorKey(new ApiError(409, 'CONFLICT', 'x'), fallback)).toBe('fallback');
+    });
+});
+
+describe('account merge on accept', () => {
+    const conflict = (conflicts: unknown) => new ApiError(409, 'CONFLICT', 'English', { code: 'merge_conflict', conflicts });
+
+    it('picks the success text by the merged flag', () => {
+        expect(acceptedNoticeKey({ merged: true })).toBe('verein.invite.done.merged');
+        expect(acceptedNoticeKey({ merged: false })).toBe('verein.invite.done.body');
+        expect(acceptedNoticeKey({})).toBe('verein.invite.done.body');
+    });
+
+    it('maps conflict kinds, dropping unknown and duplicate ones', () => {
+        expect(mergeConflictKinds(conflict(['photo', 'departments', 'weird', 'photo']))).toEqual(['departments', 'photo']);
+        expect(mergeConflictKinds(conflict('nope'))).toEqual([]);
+        expect(mergeConflictKinds(new ApiError(409, 'X', 'y', { code: 'merge_busy' }))).toBeNull();
+        expect(mergeConflictKinds(new Error('x'))).toBeNull();
+        expect(mergeConflictKindKey('guest_account')).toBe('verein.invite.conflict.guest_account');
+        expect(MERGE_CONFLICT_KINDS).toHaveLength(7);
+    });
+
+    it('classifies accept failures', () => {
+        expect(classifyAcceptError(new ApiError(404, 'X', 'y'), memberErrorKey)).toEqual({ kind: 'invalid' });
+        expect(classifyAcceptError(new ApiError(403, 'X', 'y'), memberErrorKey)).toMatchObject({ textKey: 'verein.invite.err.emailMismatch' });
+        expect(classifyAcceptError(conflict(['photo', 'member_number']), memberErrorKey)).toEqual({
+            kind: 'message',
+            textKey: 'verein.err.mergeConflict',
+            conflictKeys: ['verein.invite.conflict.member_number', 'verein.invite.conflict.photo'],
+            retry: false,
+        });
+        const busy = classifyAcceptError(new ApiError(409, 'X', 'y', { code: 'merge_busy' }), memberErrorKey);
+        expect(busy).toMatchObject({ textKey: 'verein.err.mergeBusy', retry: true });
+        expect(isMergeBusy(new ApiError(409, 'X', 'y', { code: 'already_member' }))).toBe(false);
+        expect(classifyAcceptError(new ApiError(429, 'X', 'y'), memberErrorKey)).toMatchObject({ textKey: 'verein.invite.err.rateLimit', retry: true });
+        expect(classifyAcceptError(new ApiError(409, 'X', 'Member already has an account'), memberErrorKey)).toMatchObject({
+            textKey: 'verein.invite.err.alreadyLinked',
+            retry: false,
+        });
+    });
+
+    it('decides a 404 on accept by the own membership', async () => {
+        expect(await resolveLostAccept(async () => ({ data: { memberId: 'm1' } }))).toBe('linked');
+        expect(await resolveLostAccept(async () => ({ data: { memberId: null } }))).toBe('invalid');
+        expect(await resolveLostAccept(async () => ({}))).toBe('invalid');
+        expect(await resolveLostAccept(async () => { throw new ApiError(404, 'X', 'no'); })).toBe('invalid');
     });
 });

@@ -1,22 +1,27 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { apiFetch } from '@/lib/api-client';
 import { useThrottledCallback } from '@/lib/useThrottledCallback';
 import { memberErrorKey } from '@/lib/clubMembers';
+import { type ClubTab, canSeeCredentialOverview, formsGate, visibleTabs } from '@/lib/clubPermissions';
 import { useLanguage } from '@/contexts/LanguageContext';
-import ApplicationsPanel, { type ClubApplication } from '@/components/verein/ApplicationsPanel';
+import ApplicationsPanel from '@/components/verein/ApplicationsPanel';
 import NoClubSection from '@/components/verein/NoClubSection';
 import CategoriesPanel from '@/components/verein/CategoriesPanel';
 import ClubSettingsPanel from '@/components/verein/ClubSettingsPanel';
+import CredentialsPanel from '@/components/verein/CredentialsPanel';
 import ClubStatsPanel from '@/components/verein/ClubStatsPanel';
+import CustomFieldsPanel from '@/components/verein/CustomFieldsPanel';
+import FormsPanel from '@/components/verein/FormsPanel';
 import ExitQueuePanel from '@/components/verein/ExitQueuePanel';
 import MemberList from '@/components/verein/MemberList';
 import MemberAvatar from '@/components/verein/MemberAvatar';
 import RoleBadge from '@/components/verein/RoleBadge';
 import ProfilTab, { type OwnMembership } from '@/components/verein/ProfilTab';
 import LoadingText from '@/components/LoadingText';
+import { useConfirm } from '@/components/useConfirm';
 import LoadError from '@/components/LoadError';
 
 interface MyClub {
@@ -55,7 +60,7 @@ interface ClubInfo {
     pages: ClubInfoPage[];
 }
 
-type Tab = 'info' | 'profil' | 'mitglieder' | 'austritte' | 'abteilungen' | 'kennzahlen' | 'einstellungen';
+type Tab = ClubTab;
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
     return (
@@ -184,12 +189,22 @@ export default function VereinPageContent() {
     const [info, setInfo] = useState<ClubInfo | null>(null);
     const [me, setMe] = useState<OwnMembership | null>(null);
     const [tab, setTab] = useState<Tab>('info');
-    const [applications, setApplications] = useState<ClubApplication[] | null>(null);
-    const [applicationsError, setApplicationsError] = useState(false);
+    // Number of open applications (badge on the "Mitglieder" tab); the panel itself pages through them.
+    const [applicationsTotal, setApplicationsTotal] = useState<number | null>(null);
     // Open exit requests (badge on the "Austritte" tab); null = unknown / no permission.
     const [exitPending, setExitPending] = useState<number | null>(null);
     // Bumped whenever the member list must reload (an application was decided, ...).
     const [membersReload, setMembersReload] = useState(0);
+    // The form editor holds unsaved changes (guards the tab switch).
+    const [formsDirty, setFormsDirty] = useState(false);
+    const onFormsDirty = useCallback((dirty: boolean) => setFormsDirty(dirty), []);
+    // Own custom field edits in "Mein Profil" (separate save button).
+    const [profilDirty, setProfilDirty] = useState(false);
+    const onProfilDirty = useCallback((dirty: boolean) => setProfilDirty(dirty), []);
+    // "Qualifikationen" next to the member list: offered by role, hidden once the endpoint says 403/404.
+    const [credentialsDenied, setCredentialsDenied] = useState(false);
+    const [memberView, setMemberView] = useState<'list' | 'credentials'>('list');
+    const { confirm, dialog: confirmDialog } = useConfirm();
 
     const activeClub = clubs?.[0] ?? null;
 
@@ -228,11 +243,10 @@ export default function VereinPageContent() {
         // Open applications are only readable with members:write.
         if (meRes.data.permissions.includes('members:write')) {
             try {
-                const appsRes = await apiFetch<{ data: ClubApplication[] }>(`/club-applications?clubId=${clubId}`);
-                setApplications(appsRes.data);
-                setApplicationsError(false);
+                const appsRes = await apiFetch<{ total: number }>(`/club-applications?clubId=${clubId}&pageSize=1`);
+                setApplicationsTotal(appsRes.total);
             } catch {
-                setApplicationsError(true);
+                setApplicationsTotal(null);
             }
             try {
                 const exitRes = await apiFetch<{ total: number }>(`/club-exit-requests?clubId=${clubId}&status=pending&pageSize=1`);
@@ -241,8 +255,7 @@ export default function VereinPageContent() {
                 setExitPending(null);
             }
         } else {
-            setApplications(null);
-            setApplicationsError(false);
+            setApplicationsTotal(null);
             setExitPending(null);
         }
     }
@@ -255,14 +268,23 @@ export default function VereinPageContent() {
     }, [activeClub?.clubId]);
 
     const permissions = me?.permissions ?? [];
+    const gate = formsGate(permissions);
     // Every tab beyond the basics hangs on a permission from GET /club-members/me (the backend enforces them too).
     // Guardians (external role) have no right to the member list; hide the tab instead of showing a 403.
-    const guardianOnly = !!me && permissions.length === 0 && me.roles.length > 0 && me.roles.every((r) => r.roleType === 'erziehungsberechtigt');
-    const tabs: Tab[] = guardianOnly ? ['info', 'profil', 'abteilungen'] : ['info', 'profil', 'mitglieder', 'abteilungen'];
-    if (permissions.includes('members:write')) tabs.push('austritte');
-    if (permissions.includes('club_stats:read')) tabs.push('kennzahlen');
-    if (permissions.includes('members:write')) tabs.push('einstellungen');
+    const tabs: Tab[] = visibleTabs(permissions, me?.roles ?? []);
     const currentTab: Tab = tabs.includes(tab) ? tab : 'info';
+
+    // The switch comes from permissions/roles alone (no request on opening the tab); the view itself asks the endpoint and reports
+    // 403/404 as "not for you", which hides the switch again.
+    const credentialsAvailable = !credentialsDenied && canSeeCredentialOverview(permissions, me?.roles ?? []);
+    const view: 'list' | 'credentials' = credentialsAvailable ? memberView : 'list';
+
+    async function selectTab(next: Tab) {
+        // Unsaved edits (form editor, own custom fields) survive only inside their tab: leaving it needs a confirmation.
+        const unsaved = next !== currentTab && ((currentTab === 'formulare' && formsDirty) || (currentTab === 'profil' && profilDirty));
+        if (unsaved && !(await confirm({ title: t('forms.editor.leave.title'), body: t(currentTab === 'formulare' ? 'forms.editor.leaveConfirm' : 'verein.profil.leaveConfirm'), confirmLabel: t('forms.editor.leave.confirm'), danger: true }))) return;
+        setTab(next);
+    }
 
     return (
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
@@ -282,7 +304,9 @@ export default function VereinPageContent() {
                         {tabs.map((value) => (
                             <button
                                 key={value}
-                                onClick={() => setTab(value)}
+                                type="button"
+                                aria-current={currentTab === value ? 'page' : undefined}
+                                onClick={() => void selectTab(value)}
                                 className={`whitespace-nowrap px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
                                     currentTab === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
                                 }`}
@@ -293,9 +317,9 @@ export default function VereinPageContent() {
                                         {exitPending}
                                     </span>
                                 )}
-                                {value === 'mitglieder' && applications && applications.length > 0 && (
+                                {value === 'mitglieder' && applicationsTotal !== null && applicationsTotal > 0 && (
                                     <span className="ml-1.5 rounded-full bg-primary px-1.5 py-0.5 text-xs font-semibold text-primary-foreground">
-                                        {applications.length}
+                                        {applicationsTotal}
                                     </span>
                                 )}
                             </button>
@@ -306,19 +330,35 @@ export default function VereinPageContent() {
                         {currentTab === 'info' && (info ? <VereinsinfoTab info={info} t={t} onPhotoExpired={refetchBoardPhotos} /> : <LoadingText />)}
                         {currentTab === 'profil' &&
                             (me ? (
-                                <ProfilTab me={me} clubId={activeClub.clubId} onSaved={() => void refreshClubData(activeClub.clubId)} onPhotoExpired={refetchOwnPhoto} />
+                                <ProfilTab me={me} clubId={activeClub.clubId} onDirtyChange={onProfilDirty} onSaved={() => void refreshClubData(activeClub.clubId)} onPhotoExpired={refetchOwnPhoto} onOpenCustomFields={() => void selectTab('zusatzfelder')} />
                             ) : (
                                 <LoadingText />
                             ))}
-                        {currentTab === 'mitglieder' && permissions.includes('members:write') && (
+                        {currentTab === 'mitglieder' && credentialsAvailable && (
+                            <div role="group" aria-label={t('verein.members.view.label')} className="mb-4 inline-flex rounded-lg border border-border p-0.5">
+                                {(['list', 'credentials'] as const).map((value) => (
+                                    <button
+                                        key={value}
+                                        type="button"
+                                        aria-pressed={view === value}
+                                        onClick={() => setMemberView(value)}
+                                        className={`rounded-md px-3 py-1.5 text-sm font-medium ${view === value ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                    >
+                                        {t(`verein.members.view.${value}`)}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                        {currentTab === 'mitglieder' && view === 'credentials' && (
+                            <CredentialsPanel clubId={activeClub.clubId} onUnavailable={() => setCredentialsDenied(true)} canIncludeFormer={permissions.includes('members:write') || permissions.includes('members:read_sensitive')} />
+                        )}
+                        {currentTab === 'mitglieder' && view === 'list' && permissions.includes('members:write') && (
                             <ApplicationsPanel
-                                applications={applications}
-                                loadError={applicationsError}
                                 clubId={activeClub.clubId}
                                 onDecided={() => refreshClubData(activeClub.clubId)}
                             />
                         )}
-                        {currentTab === 'mitglieder' &&
+                        {currentTab === 'mitglieder' && view === 'list' &&
                             (me && info ? (
                                 <MemberList
                                     clubId={activeClub.clubId}
@@ -351,6 +391,8 @@ export default function VereinPageContent() {
                                 <LoadingText />
                             ))}
                         {currentTab === 'kennzahlen' && <ClubStatsPanel clubId={activeClub.clubId} />}
+                        {currentTab === 'formulare' && gate.manage && <FormsPanel clubId={activeClub.clubId} permissions={permissions} onDirtyChange={onFormsDirty} onOpenCategorySettings={tabs.includes('einstellungen') ? () => void selectTab('einstellungen') : undefined} />}
+                        {currentTab === 'zusatzfelder' && gate.manage && <CustomFieldsPanel clubId={activeClub.clubId} permissions={permissions} />}
                         {currentTab === 'einstellungen' && (
                             <div className="space-y-6">
                                 <ClubSettingsPanel clubId={activeClub.clubId} />
@@ -360,6 +402,7 @@ export default function VereinPageContent() {
                     </div>
                 </>
             )}
+            {confirmDialog}
         </div>
     );
 }

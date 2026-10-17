@@ -13,6 +13,10 @@ import AuthTranslation from './AuthTranslation';
 import LegalTranslation from './LegalTranslation';
 import NotificationTranslation from './NotificationTranslation';
 import VereinTranslation from './VereinTranslation';
+import FormsTranslation from './FormsTranslation';
+import FormBuilderTranslation from './FormBuilderTranslation';
+import CustomFieldsTranslation from './CustomFieldsTranslation';
+import ProfileModulesTranslation from './ProfileModulesTranslation';
 import KalenderTranslation from './KalenderTranslation';
 import TreffenTranslation from './TreffenTranslation';
 import VerfuegbarkeitTranslation from './VerfuegbarkeitTranslation';
@@ -48,6 +52,10 @@ export const translations: Record<Language, Record<string, string>> = supportedL
             ...NotificationTranslation[id],
             ...(id === 'de' || id === 'en' ? LegalTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? VereinTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? FormsTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? FormBuilderTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? CustomFieldsTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? ProfileModulesTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? KalenderTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? TreffenTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? VerfuegbarkeitTranslation[id] : {}),
