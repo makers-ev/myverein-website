@@ -6,11 +6,13 @@ import { apiFetch } from '@/lib/api-client';
 import { useThrottledCallback } from '@/lib/useThrottledCallback';
 import { memberErrorKey } from '@/lib/clubMembers';
 import { type ClubTab, formsGate, visibleTabs } from '@/lib/clubPermissions';
+import { asOverview, hasCredentialFields } from '@/lib/credentialOverview';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ApplicationsPanel from '@/components/verein/ApplicationsPanel';
 import NoClubSection from '@/components/verein/NoClubSection';
 import CategoriesPanel from '@/components/verein/CategoriesPanel';
 import ClubSettingsPanel from '@/components/verein/ClubSettingsPanel';
+import CredentialsPanel from '@/components/verein/CredentialsPanel';
 import ClubStatsPanel from '@/components/verein/ClubStatsPanel';
 import CustomFieldsPanel from '@/components/verein/CustomFieldsPanel';
 import FormsPanel from '@/components/verein/FormsPanel';
@@ -200,6 +202,9 @@ export default function VereinPageContent() {
     // Own custom field edits in "Mein Profil" (separate save button).
     const [profilDirty, setProfilDirty] = useState(false);
     const onProfilDirty = useCallback((dirty: boolean) => setProfilDirty(dirty), []);
+    // "Qualifikationen" next to the member list: offered only if the endpoint answers with credential fields (403/404/none = hidden).
+    const [credentialsAvailable, setCredentialsAvailable] = useState(false);
+    const [memberView, setMemberView] = useState<'list' | 'credentials'>('list');
     const { confirm, dialog: confirmDialog } = useConfirm();
 
     const activeClub = clubs?.[0] ?? null;
@@ -270,6 +275,24 @@ export default function VereinPageContent() {
     const tabs: Tab[] = visibleTabs(permissions, me?.roles ?? []);
     const currentTab: Tab = tabs.includes(tab) ? tab : 'info';
 
+    const probeClubId = activeClub?.clubId ?? null;
+    const probeCredentials = currentTab === 'mitglieder' && probeClubId !== null;
+    useEffect(() => {
+        if (!probeCredentials || !probeClubId) return;
+        let cancelled = false;
+        apiFetch<unknown>(`/club-members/credentials?clubId=${probeClubId}&pageSize=1`)
+            .then((res) => {
+                if (!cancelled) setCredentialsAvailable(hasCredentialFields(asOverview(res)));
+            })
+            .catch(() => {
+                if (!cancelled) setCredentialsAvailable(false);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [probeCredentials, probeClubId]);
+    const view: 'list' | 'credentials' = credentialsAvailable ? memberView : 'list';
+
     async function selectTab(next: Tab) {
         // Unsaved edits (form editor, own custom fields) survive only inside their tab: leaving it needs a confirmation.
         const unsaved = next !== currentTab && ((currentTab === 'formulare' && formsDirty) || (currentTab === 'profil' && profilDirty));
@@ -325,13 +348,31 @@ export default function VereinPageContent() {
                             ) : (
                                 <LoadingText />
                             ))}
-                        {currentTab === 'mitglieder' && permissions.includes('members:write') && (
+                        {currentTab === 'mitglieder' && credentialsAvailable && (
+                            <div role="group" aria-label={t('verein.members.view.label')} className="mb-4 inline-flex rounded-lg border border-border p-0.5">
+                                {(['list', 'credentials'] as const).map((value) => (
+                                    <button
+                                        key={value}
+                                        type="button"
+                                        aria-pressed={view === value}
+                                        onClick={() => setMemberView(value)}
+                                        className={`rounded-md px-3 py-1.5 text-sm font-medium ${view === value ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                    >
+                                        {t(`verein.members.view.${value}`)}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                        {currentTab === 'mitglieder' && view === 'credentials' && (
+                            <CredentialsPanel clubId={activeClub.clubId} canIncludeFormer={permissions.includes('members:write') || permissions.includes('members:read_sensitive')} />
+                        )}
+                        {currentTab === 'mitglieder' && view === 'list' && permissions.includes('members:write') && (
                             <ApplicationsPanel
                                 clubId={activeClub.clubId}
                                 onDecided={() => refreshClubData(activeClub.clubId)}
                             />
                         )}
-                        {currentTab === 'mitglieder' &&
+                        {currentTab === 'mitglieder' && view === 'list' &&
                             (me && info ? (
                                 <MemberList
                                     clubId={activeClub.clubId}

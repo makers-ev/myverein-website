@@ -36,7 +36,7 @@ describe('ProfileModulesTranslation', () => {
 
     it('has every static key used by the profile module components', () => {
         const root = join(__dirname, '..');
-        const files = ['components/verein/ExpiryBadge.tsx', 'components/forms/FormRenderer.tsx', 'components/verein/MemberCustomFields.tsx', 'components/verein/CustomFieldFormModal.tsx', 'components/verein/ProfileModulesDialog.tsx', 'components/verein/CustomFieldsPanel.tsx', 'lib/credentials.ts', 'lib/profileModules.ts'];
+        const files = ['components/verein/ExpiryBadge.tsx', 'components/forms/FormRenderer.tsx', 'components/verein/MemberCustomFields.tsx', 'components/verein/CustomFieldFormModal.tsx', 'components/verein/ProfileModulesDialog.tsx', 'components/verein/CustomFieldsPanel.tsx', 'components/verein/CredentialsPanel.tsx', 'app/pageContent/Verein.tsx', 'lib/credentials.ts', 'lib/profileModules.ts', 'lib/credentialOverview.ts'];
         const used = files.flatMap((f) => [...readFileSync(join(root, f), 'utf8').matchAll(/['"]((?:forms|verein)\.[\w.]+)['"]/g)].map((m) => m[1]!));
         expect(used.length).toBeGreaterThan(15);
         for (const key of used) expect(de[key], key).toBeTruthy();
@@ -68,6 +68,8 @@ describe('ProfileModulesTranslation', () => {
             need(`forms.cf.levels.kind.${k}`);
             need(`forms.cf.levels.kind.${k}.hint`);
         }
+        for (const st of ['expired', 'expiring', 'valid', 'missing']) need(`forms.cred.overview.status.${st}`);
+        for (const v of ['list', 'credentials']) need(`verein.members.view.${v}`);
         for (const e of ['self', 'board']) need(`forms.cred.enteredBy.${e}`);
         for (const type of CUSTOM_FIELD_TYPES) need(`forms.editor.type.${type}`);
     });
