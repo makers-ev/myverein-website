@@ -1,6 +1,7 @@
 import { ApiError } from './api-client';
 import { memberErrorKey } from './clubMembers';
 import { type FieldOption, isValidFieldKey, keyProblem, MAX_LABEL, MAX_OPTIONS, withOptionUids } from './formEditor';
+import { type CredentialExpiry, type CredentialTexts, credentialSummary } from './credentials';
 import { type Answers, diffAnswers, type FormField, isCleanText, isEmptyAnswer } from './formSchema';
 
 /**
@@ -10,7 +11,7 @@ import { type Answers, diffAnswers, type FormField, isCleanText, isEmptyAnswer }
  * server is the authority for visibility and write rights; the UI only hides/disables what it is told is not allowed.
  */
 
-export const CUSTOM_FIELD_TYPES = ['text', 'textarea', 'number', 'date', 'select', 'multiselect', 'checkbox'] as const;
+export const CUSTOM_FIELD_TYPES = ['text', 'textarea', 'number', 'date', 'select', 'multiselect', 'checkbox', 'credential'] as const;
 export type CustomFieldType = (typeof CUSTOM_FIELD_TYPES)[number];
 export const VISIBLE_TO = ['vorstand', 'funktionstraeger', 'mitglied'] as const;
 export type VisibleTo = (typeof VISIBLE_TO)[number];
@@ -21,6 +22,10 @@ export const MAX_CUSTOM_FIELDS = 100;
 
 export const isCustomFieldType = (v: unknown): v is CustomFieldType => typeof v === 'string' && (CUSTOM_FIELD_TYPES as readonly string[]).includes(v);
 export const isChoice = (type: string): boolean => type === 'select' || type === 'multiselect';
+/** Types that carry `options`: the two choices, and `credential` (its optional levels). */
+export const hasOptions = (type: string): boolean => isChoice(type) || type === 'credential';
+/** Longest help text the server accepts. */
+export const MAX_HELP_TEXT = 500;
 
 /** Definition as `GET /member-fields` returns it (`valueCount` only for `forms:write`). */
 export interface CustomFieldDefinition {
@@ -29,6 +34,10 @@ export interface CustomFieldDefinition {
     label: string;
     type: CustomFieldType;
     options: FieldOption[] | null;
+    /** Limits of the field (e.g. `maxLength`: free-text level of a credential); `null` = defaults. Absent on older backends. */
+    validation?: NonNullable<FormField['validation']> | null;
+    /** Explanation shown with the input (plain text). Absent on older backends. */
+    helpText?: string | null;
     visibleTo: VisibleTo;
     editableBy: EditableBy;
     sensitive: boolean;
@@ -44,6 +53,8 @@ export interface MemberCustomField extends Omit<CustomFieldDefinition, 'valueCou
     editable: boolean;
     value: unknown;
     updatedAt: string | null;
+    /** Expiry status of a credential field (90-day window, Berlin day); `null` for every other type, absent on older backends. */
+    expiry?: CredentialExpiry | null;
 }
 
 // ---- definition form ------------------------------------------------------------------------------------------
@@ -53,18 +64,19 @@ export interface DefinitionForm {
     label: string;
     type: CustomFieldType;
     options: FieldOption[];
+    helpText: string;
     visibleTo: VisibleTo;
     editableBy: EditableBy;
     sensitive: boolean;
 }
 
-export const emptyDefinitionForm = (): DefinitionForm => ({ key: '', label: '', type: 'text', options: [], visibleTo: 'vorstand', editableBy: 'vorstand', sensitive: false });
+export const emptyDefinitionForm = (): DefinitionForm => ({ key: '', label: '', type: 'text', options: [], helpText: '', visibleTo: 'vorstand', editableBy: 'vorstand', sensitive: false });
 
 export function formFromDefinition(def: CustomFieldDefinition): DefinitionForm {
-    return { key: def.key, label: def.label, type: def.type, options: withOptionUids((def.options ?? []).map((o) => ({ ...o }))), visibleTo: def.visibleTo, editableBy: def.editableBy, sensitive: def.sensitive };
+    return { key: def.key, label: def.label, type: def.type, options: withOptionUids((def.options ?? []).map((o) => ({ ...o }))), helpText: def.helpText ?? '', visibleTo: def.visibleTo, editableBy: def.editableBy, sensitive: def.sensitive };
 }
 
-export type DefinitionProblem = 'label' | 'label_text' | 'key_format' | 'key_reserved' | 'key_duplicate' | 'options_missing' | 'option_label' | 'option_duplicate' | 'too_many_options';
+export type DefinitionProblem = 'label' | 'label_text' | 'key_format' | 'key_reserved' | 'key_duplicate' | 'options_missing' | 'option_label' | 'option_duplicate' | 'too_many_options' | 'help_text';
 
 /** Local checks of a definition form (the server repeats them); `existingKeys` are the keys of all other definitions of the club (incl. archived). */
 export function definitionProblems(form: DefinitionForm, existingKeys: readonly string[], isNew: boolean): DefinitionProblem[] {
@@ -78,8 +90,11 @@ export function definitionProblems(form: DefinitionForm, existingKeys: readonly 
         else if (kp === 'reserved') problems.push('key_reserved');
         else if (kp === 'duplicate') problems.push('key_duplicate');
     }
-    if (isChoice(form.type)) {
-        if (form.options.length === 0) problems.push('options_missing');
+    const help = form.helpText.trim();
+    if (help.length > MAX_HELP_TEXT || !isCleanText(help, true)) problems.push('help_text');
+    if (hasOptions(form.type)) {
+        // The levels of a credential are optional; a choice needs at least one option.
+        if (isChoice(form.type) && form.options.length === 0) problems.push('options_missing');
         if (form.options.length > MAX_OPTIONS) problems.push('too_many_options');
         if (form.options.some((o) => o.label.trim() === '' || o.value.trim() === '' || !isCleanText(o.label))) problems.push('option_label');
         if (new Set(form.options.map((o) => o.value)).size !== form.options.length) problems.push('option_duplicate');
@@ -135,14 +150,22 @@ export function lockViolations(def: CustomFieldDefinition, form: DefinitionForm,
     return out;
 }
 
+/** Options to send: the choice options, the levels of a credential (none = `null`), nothing for other types. */
+function optionsBody(form: DefinitionForm): Array<{ value: string; label: string }> | null {
+    if (!hasOptions(form.type) || (form.type === 'credential' && form.options.length === 0)) return null;
+    return form.options.map((o) => ({ value: o.value.trim(), label: o.label.trim() }));
+}
+
 /** The PATCH body: only what differs from the stored definition. Empty = nothing to save. */
 export function definitionPatch(def: CustomFieldDefinition, form: DefinitionForm): Record<string, unknown> {
     const patch: Record<string, unknown> = {};
     if (form.label.trim() !== def.label) patch.label = form.label.trim();
     if (form.type !== def.type) patch.type = form.type;
-    const options = isChoice(form.type) ? form.options.map((o) => ({ value: o.value.trim(), label: o.label.trim() })) : null;
+    const options = optionsBody(form);
     const stored = def.options === null ? null : def.options.map((o) => ({ value: o.value, label: o.label }));
     if (JSON.stringify(options) !== JSON.stringify(stored) && (options !== null || stored !== null)) patch.options = options;
+    const help = form.helpText.trim() === '' ? null : form.helpText.trim();
+    if (help !== (def.helpText ?? null)) patch.helpText = help;
     if (form.visibleTo !== def.visibleTo) patch.visibleTo = form.visibleTo;
     if (form.editableBy !== def.editableBy) patch.editableBy = form.editableBy;
     if (form.sensitive !== def.sensitive) patch.sensitive = form.sensitive;
@@ -155,7 +178,8 @@ export function definitionCreateBody(form: DefinitionForm, sortOrder: number): R
         key: form.key.trim(),
         label: form.label.trim(),
         type: form.type,
-        ...(isChoice(form.type) ? { options: form.options.map((o) => ({ value: o.value.trim(), label: o.label.trim() })) } : {}),
+        ...(optionsBody(form) ? { options: optionsBody(form) } : {}),
+        ...(form.helpText.trim() !== '' ? { helpText: form.helpText.trim() } : {}),
         visibleTo: form.visibleTo,
         editableBy: form.editableBy,
         sensitive: form.sensitive,
@@ -182,6 +206,10 @@ export function customFieldErrorKey(err: unknown): string {
                 return 'forms.cf.err.limit';
             case 'custom_field_archived':
                 return 'forms.cf.err.archived';
+            case 'module_never_mandatory':
+                return 'forms.cf.err.neverMandatory';
+            case 'credential_not_supported':
+                return 'forms.cf.err.credentialNotSupported';
         }
         if (err.status === 403) {
             if (/read_sensitive/i.test(err.message)) return 'forms.cf.err.needsSensitive';
@@ -214,7 +242,9 @@ export function toFormField(field: MemberCustomField): FormField {
         key: field.key,
         type: field.type,
         label: field.label,
-        ...(isChoice(field.type) && field.options ? { options: field.options } : {}),
+        ...(field.helpText ? { helpText: field.helpText } : {}),
+        ...(hasOptions(field.type) && field.options && field.options.length > 0 ? { options: field.options } : {}),
+        ...(field.validation ? { validation: field.validation } : {}),
     };
 }
 
@@ -254,8 +284,15 @@ export function valuesPatch(fields: readonly MemberCustomField[], saved: Answers
 }
 
 /** Text of a stored value for the read-only view (option labels instead of values); `null` = no value. */
-export function displayValue(field: Pick<MemberCustomField, 'type' | 'options' | 'value'>, texts: { yes: string; no: string; formatDate: (v: string) => string }): string | null {
+export function displayValue(
+    field: Pick<MemberCustomField, 'type' | 'options' | 'value'>,
+    texts: { yes: string; no: string; formatDate: (v: string) => string; credential?: Omit<CredentialTexts, 'yes'> },
+): string | null {
     const { value } = field;
+    if (field.type === 'credential') {
+        const c = texts.credential ?? { level: (l: string) => l, obtained: (d: string) => d, until: (d: string) => d };
+        return credentialSummary(value, field.options, { yes: texts.yes, ...c }, texts.formatDate);
+    }
     if (isEmptyAnswer(value) && value !== false) return null;
     const label = (v: unknown) => (field.options ?? []).find((o) => o.value === v)?.label ?? String(v);
     switch (field.type) {

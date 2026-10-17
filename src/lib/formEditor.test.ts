@@ -701,3 +701,34 @@ describe('local custom field checks on publishing', () => {
         expect(publishChecks([notice, consent, text('a_field', { customField: 'nope' })], 'T', 'aufnahme')).toEqual([]);
     });
 });
+
+describe('credential fields and never-mandatory modules in forms', () => {
+    const notice: FormField = { key: 'datenschutz', type: 'info', label: 'DS', infoKind: 'privacy_notice' };
+    const consent: FormField = { key: 'einwilligung', type: 'consent', label: 'Ok', required: true };
+
+    it('refuses a credential field in a form with the server code', () => {
+        const credential: FormField = { key: 'lizenz', type: 'credential', label: 'Lizenz' };
+        expect(shapeProblems([credential])).toContainEqual({ code: 'credential_not_supported', fieldKey: 'lizenz' });
+        expect(shapeProblems([text('a_field')]).map((p) => p.code)).not.toContain('credential_not_supported');
+    });
+
+    it('warns before publishing when a required field maps to a driving licence, qualification or Kinderschutz module', () => {
+        const check = (extra: Partial<FormField>) => publishChecks([notice, consent, text('a_field', extra)], 'T', 'aufnahme').map((p) => `${p.code}@${p.fieldKey}`);
+        expect(check({ required: true, customField: 'mod_ks_fuehrungszeugnis' })).toEqual(['module_never_mandatory@a_field']);
+        expect(check({ required: true, customField: 'mod_q_juleica' })).toEqual(['module_never_mandatory@a_field']);
+        expect(check({ required: true, customField: 'mod_fs_stapler' })).toEqual(['module_never_mandatory@a_field']);
+        expect(check({ customField: 'mod_q_juleica' })).toEqual([]);
+        expect(check({ required: true, customField: 'mod_sp_trikot' })).toEqual([]);
+        expect(check({ required: true, customField: 'trikot' })).toEqual([]);
+    });
+
+    it('knows both server codes', () => {
+        expect(problemMessageKey('credential_not_supported')).toBe('forms.editor.problem.credential_not_supported');
+        expect(problemMessageKey('module_never_mandatory')).toBe('forms.editor.problem.module_never_mandatory');
+    });
+
+    it('reads the problem list of a refused publish', () => {
+        const err = new ApiError(422, 'UNPROCESSABLE_ENTITY', 'x', { problems: [{ code: 'module_never_mandatory', fieldKey: 'ks95' }, { code: 'credential_not_supported', fieldKey: 'lizenz' }] });
+        expect(problemsFromError(err, [])).toEqual([{ code: 'module_never_mandatory', fieldKey: 'ks95' }, { code: 'credential_not_supported', fieldKey: 'lizenz' }]);
+    });
+});

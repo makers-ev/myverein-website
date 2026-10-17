@@ -22,8 +22,9 @@ import {
     EDITABLE_BY,
     emptyDefinitionForm,
     formFromDefinition,
-    isChoice,
+    hasOptions,
     lockViolations,
+    MAX_HELP_TEXT,
     nextSortOrder,
     VISIBLE_TO,
     widensVisibility,
@@ -70,6 +71,8 @@ export default function CustomFieldFormModal({
     const dirty = JSON.stringify(form) !== JSON.stringify(initial);
     const patch = definition ? definitionPatch(definition, form) : null;
     const valid = problems.length === 0 && violations.length === 0;
+    // A credential whose level is free text (limit instead of options, e.g. from a profile module) keeps that: levels and free text exclude each other.
+    const freeTextLevel = form.type === 'credential' && definition?.type === 'credential' && typeof definition.validation?.maxLength === 'number';
 
     function setLabel(label: string) {
         setForm((f) => ({ ...f, label, ...(isNew && !keyTouched ? { key: label.trim() === '' ? '' : uniqueKey(label, existingKeys) } : {}) }));
@@ -167,7 +170,7 @@ export default function CustomFieldFormModal({
                         disabled={!!locks?.typeLocked}
                         onChange={(e) => {
                             const type = e.target.value as CustomFieldType;
-                            setForm({ ...form, type, options: isChoice(type) ? form.options : [] });
+                            setForm({ ...form, type, options: hasOptions(type) ? form.options : [] });
                         }}
                         className={`mt-1 ${inputClass}`}
                     >
@@ -180,9 +183,16 @@ export default function CustomFieldFormModal({
                     {locks?.typeLocked && <p className="mt-1 text-xs text-muted-foreground">{t('forms.cf.type.locked', { count: definition?.valueCount ?? 0 })}</p>}
                 </div>
 
-                {isChoice(form.type) && (
+                {form.type === 'credential' && <p className="rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">{t('forms.cf.credential.hint')}</p>}
+
+                {form.type === 'credential' && freeTextLevel && (
+                    <p className="text-xs text-muted-foreground">{t('forms.cf.levels.freeText', { max: definition?.validation?.maxLength ?? 0 })}</p>
+                )}
+
+                {hasOptions(form.type) && !freeTextLevel && (
                     <fieldset className="rounded-lg border border-border p-3">
-                        <legend className="px-1 text-xs font-semibold text-muted-foreground">{t('forms.editor.field.options')}</legend>
+                        <legend className="px-1 text-xs font-semibold text-muted-foreground">{form.type === 'credential' ? t('forms.cf.levels') : t('forms.editor.field.options')}</legend>
+                        {form.type === 'credential' && <p className="mb-2 text-xs text-muted-foreground">{t('forms.cf.levels.hint')}</p>}
                         <OptionsEditor
                             options={form.options}
                             lockedValues={lockedOptionValues}
@@ -193,6 +203,14 @@ export default function CustomFieldFormModal({
                         {(definition?.valueCount ?? 0) > 0 && <p className="mt-2 text-xs text-muted-foreground">{t('forms.cf.options.inUse')}</p>}
                     </fieldset>
                 )}
+
+                <div>
+                    <label htmlFor={`${ids}-help`} className="block text-xs font-semibold text-muted-foreground">
+                        {t('forms.cf.helpText')}
+                    </label>
+                    <textarea id={`${ids}-help`} rows={2} value={form.helpText} maxLength={MAX_HELP_TEXT} aria-invalid={attempted && problems.includes('help_text') ? true : undefined} onChange={(e) => setForm({ ...form, helpText: e.target.value })} className={`mt-1 ${inputClass}`} />
+                    <p className="mt-1 text-xs text-muted-foreground">{t('forms.cf.helpText.hint')}</p>
+                </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
                     <div>

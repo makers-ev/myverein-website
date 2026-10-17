@@ -179,11 +179,15 @@ export const VALIDATION_KEYS_BY_TYPE: Record<FieldType, readonly string[]> = {
     select: [],
     multiselect: [],
     checkbox: [],
+    credential: [],
     consent: [],
     file: [],
     image: [],
     info: [],
 };
+
+/** Keys of profile modules (custom fields `mod_<group>_...`) of the groups Führerschein, Qualifikationen and Kinderschutz: never mandatory. */
+export const isNeverMandatoryModuleKey = (key: string): boolean => /^mod_(fs|q|ks)_/.test(key);
 
 export const isChoiceType = (type: FieldType): boolean => type === 'select' || type === 'multiselect';
 
@@ -479,6 +483,8 @@ export const KNOWN_PROBLEM_CODES = [
     'custom_field_not_sensitive',
     'key_type_immutable',
     'no_selectable_category',
+    'credential_not_supported',
+    'module_never_mandatory',
 ] as const;
 
 const KNOWN_PROBLEMS = new Set<string>(KNOWN_PROBLEM_CODES);
@@ -535,6 +541,9 @@ export function shapeProblems(fields: readonly FormField[]): EditorProblem[] {
             else if (v.minDate !== undefined && v.maxDate !== undefined && v.minDate > v.maxDate) add('validation_range');
             if (field.type === 'text' && v.maxLength !== undefined && v.maxLength > TEXT_FIELD_MAX) add('validation_length');
         }
+
+        // Qualifications with validity are member custom fields only; the server refuses them in a form.
+        if (field.type === 'credential') add('credential_not_supported');
 
         const cp = conditionProblem(fields, index);
         if (cp) add(CONDITION_CODE[cp]);
@@ -594,6 +603,8 @@ export function publishChecks(
         if (purpose !== 'aufnahme' && (f.mapsTo !== undefined || f.customField !== undefined)) problems.push({ code: 'mapping_not_allowed', fieldKey: f.key });
         // The cancellation dialog has no upload: a file or photo field there could never be answered.
         if (purpose === 'austritt' && (f.type === 'file' || f.type === 'image')) problems.push({ code: 'file_not_supported', fieldKey: f.key });
+        // Driving licence, qualification and Kinderschutz modules are never mandatory (server code `module_never_mandatory`).
+        if (purpose === 'aufnahme' && f.required === true && f.customField !== undefined && isNeverMandatoryModuleKey(f.customField)) problems.push({ code: 'module_never_mandatory', fieldKey: f.key });
         // Custom field links, when the definitions are known (the server checks the same on publishing).
         if (purpose === 'aufnahme' && f.customField !== undefined && customFields) {
             const def = customFields.find((c) => c.key === f.customField);

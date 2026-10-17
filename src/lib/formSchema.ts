@@ -1,5 +1,6 @@
 import { ApiError } from './api-client';
 import { memberErrorKey } from './clubMembers';
+import { credentialProblem } from './credentials';
 
 /**
  * Pure helpers of the form builder's applicant side (Wave 8 W1/W3): field types as the backend sends them
@@ -9,7 +10,12 @@ import { memberErrorKey } from './clubMembers';
  */
 
 export const FIELD_TYPES = ['text', 'textarea', 'number', 'date', 'select', 'multiselect', 'checkbox', 'consent', 'file', 'image', 'info'] as const;
-export type FieldType = (typeof FIELD_TYPES)[number];
+/**
+ * `credential` (qualification with validity, profile modules) is a type of member custom fields only: it is NOT in `FIELD_TYPES`
+ * (the form editor never offers it, the server refuses it in forms with `credential_not_supported`), but the shared renderer
+ * and validation know it.
+ */
+export type FieldType = (typeof FIELD_TYPES)[number] | 'credential';
 
 export type PatternPreset = 'email' | 'postal_code' | 'phone';
 
@@ -252,6 +258,8 @@ function cleanValue(field: FormField, value: unknown): FieldErrorCode | null {
         case 'checkbox':
         case 'consent':
             return typeof value === 'boolean' ? null : 'invalid_type';
+        case 'credential':
+            return credentialProblem(field, value, isCleanText);
         default:
             return 'invalid_value';
     }
@@ -309,7 +317,9 @@ export function visibleAnswers(fields: readonly FormField[], answers: Answers): 
 
 /** Strings are compared trimmed: the server stores them trimmed, so an untouched answer is not sent again. */
 const normalize = (v: unknown): unknown => (typeof v === 'string' ? v.trim() : v);
-const sameValue = (a: unknown, b: unknown) => JSON.stringify(normalize(a)) === JSON.stringify(normalize(b));
+/** Objects (credential values) compare independent of key order: the server's JSONB returns the keys in its own order. */
+const canonical = (v: unknown): unknown => (isPlainObject(v) ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, canonical(normalize(v[k]))])) : normalize(v));
+const sameValue = (a: unknown, b: unknown) => JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
 
 /**
  * The PATCH body for `/form-submissions/:id`: keys whose value differs between the last saved state and the current one.

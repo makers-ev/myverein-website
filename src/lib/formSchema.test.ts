@@ -359,3 +359,22 @@ describe('application state', () => {
         expect(allowedModes({ childApplication: true }, [{ onBehalfOf: 'guardian' }])).toEqual(['self', 'guardian']);
     });
 });
+
+describe('credential fields (custom fields only)', () => {
+    const lizenz: FormField = { key: 'lizenz', type: 'credential', label: 'Lizenz', options: [{ value: 'a', label: 'A' }] };
+    it('validates the value like the server', () => {
+        expect(validateAnswers([lizenz], { lizenz: { valid: true, level: 'a', validUntil: '2027-01-01' } }, { mode: 'draft' })).toEqual({});
+        expect(validateAnswers([lizenz], { lizenz: { valid: true, level: 'x' } }, { mode: 'draft' })).toEqual({ lizenz: 'not_an_option' });
+        expect(validateAnswers([lizenz], { lizenz: { valid: true, obtainedOn: '2024-05-02', validUntil: '2024-05-01' } }, { mode: 'draft' })).toEqual({ lizenz: 'invalid_value' });
+        expect(validateAnswers([lizenz], { lizenz: 'ja' }, { mode: 'draft' })).toEqual({ lizenz: 'invalid_type' });
+    });
+    it('treats an unchecked credential as not answered', () => {
+        expect(validateAnswers([lizenz], {}, { mode: 'draft' })).toEqual({});
+        expect(validateAnswers([lizenz], { lizenz: undefined }, { mode: 'draft' })).toEqual({});
+    });
+    it('compares objects independent of key order, so the server order never causes a resend', () => {
+        expect(diffAnswers({ lizenz: { level: 'a', valid: true, validUntil: '2027-01-01' } }, { lizenz: { valid: true, validUntil: '2027-01-01', level: 'a' } })).toEqual({});
+        expect(diffAnswers({ lizenz: { valid: true } }, { lizenz: { valid: true, validUntil: '2027-01-01' } })).toEqual({ lizenz: { valid: true, validUntil: '2027-01-01' } });
+        expect(diffAnswers({ lizenz: { valid: true } }, { lizenz: undefined })).toEqual({ lizenz: null });
+    });
+});

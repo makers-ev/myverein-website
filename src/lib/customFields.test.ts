@@ -5,6 +5,7 @@ vi.mock('@/lib/auth-client', () => ({ backendUrl: 'http://backend.test', authCli
 import { ApiError } from './api-client';
 import {
     changeLocks,
+    CUSTOM_FIELD_TYPES,
     type CustomFieldDefinition,
     customFieldErrorKey,
     definitionCreateBody,
@@ -242,5 +243,65 @@ describe('values of a member', () => {
         expect(displayValue({ ...fields[0]!, type: 'number', value: 3 }, texts)).toBe('3');
         expect(displayValue(fields[3]!, texts)).toBeNull();
         expect(displayValue({ ...fields[3]!, value: '' }, texts)).toBeNull();
+    });
+});
+
+describe('credential fields and help texts', () => {
+    const base = { ...emptyDefinitionForm(), key: 'juleica', label: 'JuLeiCa', type: 'credential' as const };
+
+    it('offers the credential type and needs no levels', () => {
+        expect(CUSTOM_FIELD_TYPES).toContain('credential');
+        expect(definitionProblems(base, [], true)).toEqual([]);
+        expect(definitionProblems({ ...base, options: [{ value: 'a', label: 'A' }] }, [], true)).toEqual([]);
+        expect(definitionProblems({ ...base, options: [{ value: 'a', label: '' }] }, [], true)).toEqual(['option_label']);
+    });
+
+    it('limits the help text', () => {
+        expect(definitionProblems({ ...base, helpText: 'x'.repeat(500) }, [], true)).toEqual([]);
+        expect(definitionProblems({ ...base, helpText: 'x'.repeat(501) }, [], true)).toEqual(['help_text']);
+        expect(definitionProblems({ ...base, helpText: 'a\u202eb' }, [], true)).toEqual(['help_text']);
+    });
+
+    it('creates with levels as options and the trimmed help text only when given', () => {
+        expect(definitionCreateBody({ ...base, options: [{ value: 'c', label: 'C ' }], helpText: ' Nur wenn vorhanden ' }, 10)).toMatchObject({ type: 'credential', options: [{ value: 'c', label: 'C' }], helpText: 'Nur wenn vorhanden' });
+        const plain = definitionCreateBody(base, 10);
+        expect(plain).not.toHaveProperty('options');
+        expect(plain).not.toHaveProperty('helpText');
+    });
+
+    it('patches the help text (null clears it) and the levels', () => {
+        const stored = def({ type: 'credential', options: null, helpText: 'Alt' });
+        expect(definitionPatch(stored, formFromDefinition(stored))).toEqual({});
+        expect(definitionPatch(stored, { ...formFromDefinition(stored), helpText: '' })).toEqual({ helpText: null });
+        expect(definitionPatch(stored, { ...formFromDefinition(stored), helpText: 'Neu' })).toEqual({ helpText: 'Neu' });
+        expect(definitionPatch(stored, { ...formFromDefinition(stored), options: [{ value: 'a', label: 'A' }] })).toMatchObject({ options: [{ value: 'a', label: 'A' }] });
+        // a free-text level (limit instead of options) is not touched
+        const freeText = def({ type: 'credential', options: null, validation: { maxLength: 60 } });
+        expect(definitionPatch(freeText, formFromDefinition(freeText))).toEqual({});
+    });
+
+    it('gives the renderer help text, limits and levels', () => {
+        const f = field({ type: 'credential', options: [{ value: 'a', label: 'A' }], helpText: 'Hilfe', validation: { maxLength: 60 } });
+        expect(toFormField(f)).toMatchObject({ type: 'credential', helpText: 'Hilfe', options: [{ value: 'a', label: 'A' }], validation: { maxLength: 60 } });
+        expect(toFormField(field({ type: 'text', options: null }))).not.toHaveProperty('helpText');
+    });
+
+    it('shows a stored credential as one line and does not resend an unchanged one whatever the key order', () => {
+        const value = { valid: true, level: 'a', validUntil: '2027-01-31' };
+        const f = field({ key: 'juleica', type: 'credential', options: [{ value: 'a', label: 'A' }], value });
+        const text = displayValue(f, { yes: 'Ja', no: 'Nein', formatDate: (v) => `d:${v}` });
+        expect(text).toBe('Ja, A, d:2027-01-31');
+        const own = { ...f, editableBy: 'self' as const, editable: true };
+        const saved = valuesToAnswers([own]);
+        expect(valuesPatch([own], saved, { juleica: { validUntil: '2027-01-31', valid: true, level: 'a' } }, true)).toBeNull();
+        expect(valuesPatch([own], {}, { juleica: { valid: true } }, true)).toEqual({ juleica: { valid: true } });
+        expect(valuesPatch([own], { juleica: { valid: true } }, {}, true)).toEqual({ juleica: null });
+    });
+
+    it('maps the module and credential codes', () => {
+        const err = (code: string) => new ApiError(422, 'UNPROCESSABLE_ENTITY', 'x', { code });
+        expect(customFieldErrorKey(err('module_never_mandatory'))).toBe('forms.cf.err.neverMandatory');
+        expect(customFieldErrorKey(err('credential_not_supported'))).toBe('forms.cf.err.credentialNotSupported');
+        expect(customFieldErrorKey(new ApiError(409, 'CONFLICT', 'x', { code: 'custom_field_limit' }))).toBe('forms.cf.err.limit');
     });
 });

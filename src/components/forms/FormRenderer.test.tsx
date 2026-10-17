@@ -119,4 +119,83 @@ describe('FormRenderer', () => {
         const html = render({ fields: [{ key: 'agree', type: 'consent', label: 'Ok', required: true }], errors: { agree: 'required' } });
         expect(html).toContain('role="alert"');
     });
+
+    describe('credential field (qualification with validity)', () => {
+        const levels: FormField = { key: 'lizenz', type: 'credential', label: 'Übungsleiter-Lizenz', helpText: 'Nur ankreuzen, wenn vorhanden.', options: [{ value: 'c', label: 'C' }, { value: 'b', label: 'B' }] };
+        const free: FormField = { key: 'lizenz', type: 'credential', label: 'Lizenz', validation: { maxLength: 60 } };
+        const plain: FormField = { key: 'lizenz', type: 'credential', label: 'JuLeiCa' };
+
+        it('shows only the "habe ich" checkbox and the help text until it is checked', () => {
+            const html = render({ fields: [levels] });
+            expect(html).toContain('Habe ich');
+            expect(html).toContain('Übungsleiter-Lizenz');
+            expect(html).toContain('Nur ankreuzen, wenn vorhanden.');
+            expect(html).toContain('aria-describedby="t-lizenz-help"');
+            expect(html).not.toContain('Gültig bis');
+            expect(html).not.toContain('<select');
+            expect(html).not.toMatch(/type="checkbox"[^>]*checked/);
+        });
+
+        it('offers the level as a select from the options once checked, plus both dates', () => {
+            const html = render({ fields: [levels], answers: { lizenz: { valid: true, level: 'b', validUntil: '2099-01-31' } } });
+            expect(html).toMatch(/type="checkbox"[^>]*checked/);
+            expect(html).toContain('Stufe');
+            expect(html).toContain('<option value="b" selected="">B</option>');
+            expect(html).toContain('Erworben / vorgelegt am');
+            expect(html).toContain('Gültig bis');
+            expect(html.match(/type="date"/g)).toHaveLength(2);
+            expect(html).toContain('value="2099-01-31"');
+        });
+
+        it('offers a limited text input for a free-text level and no level input without either', () => {
+            const text = render({ fields: [free], answers: { lizenz: { valid: true } } });
+            expect(text).toContain('maxLength="60"');
+            expect(text).toContain('Stufe');
+            const none = render({ fields: [plain], answers: { lizenz: { valid: true } } });
+            expect(none).not.toContain('Stufe');
+            expect(none).toContain('Gültig bis');
+        });
+
+        it('shows the status in words, with an icon that is hidden from assistive technology', () => {
+            const expired = render({ fields: [plain], answers: { lizenz: { valid: true, validUntil: '2000-01-01' } } });
+            expect(expired).toContain('Abgelaufen seit');
+            expect(expired).toContain('data-expiry="expired"');
+            expect(expired).toContain('aria-hidden="true"');
+            const later = render({ fields: [plain], answers: { lizenz: { valid: true, validUntil: '2099-01-01' } } });
+            expect(later).toContain('data-expiry="valid"');
+            expect(later).toContain('Gültig bis 1.1.2099');
+            expect(render({ fields: [plain], answers: { lizenz: { valid: true } } })).toContain('Ohne Ablaufdatum');
+        });
+
+        it('explains "gültig bis" before "erworben am" locally and does not show a status then', () => {
+            const html = render({ fields: [plain], answers: { lizenz: { valid: true, obtainedOn: '2024-05-02', validUntil: '2024-05-01' } }, errors: { lizenz: 'invalid_value' } });
+            expect(html).toContain('darf nicht vor');
+            expect(html).toContain('role="alert"');
+            expect(html).toContain('aria-invalid="true"');
+            expect(html).not.toContain('data-expiry');
+            expect(html).not.toContain('Dieser Wert ist ungültig');
+        });
+
+        it('shows a server error code of the value', () => {
+            const html = render({ fields: [levels], answers: { lizenz: { valid: true, level: 'x' } }, errors: { lizenz: 'not_an_option' } });
+            expect(html).toContain('role="alert"');
+        });
+
+        it('renders texts of the definition as plain text', () => {
+            const html = render({ fields: [{ ...levels, label: '<img src=x onerror=1>', helpText: '<script>1</script>', options: [{ value: 'c', label: '<b>C</b>' }] }], answers: { lizenz: { valid: true } } });
+            expect(html).not.toMatch(/<img src=x/);
+            expect(html).not.toMatch(/<script/);
+            expect(html).not.toMatch(/<b>C/);
+        });
+
+        it('renders in English', () => {
+            const html = renderToStaticMarkup(
+                <LanguageProvider initialLanguage="en">
+                    <FormRenderer fields={[plain]} answers={{ lizenz: { valid: true } }} onChange={() => {}} idPrefix="t" />
+                </LanguageProvider>,
+            );
+            expect(html).toContain('I have this');
+            expect(html).toContain('Valid until');
+        });
+    });
 });
