@@ -364,7 +364,7 @@ export default function VereinPageContent() {
                                 <LoadingText />
                             ))}
                         {currentTab === 'kennzahlen' && <ClubStatsPanel clubId={activeClub.clubId} />}
-                        {currentTab === 'formulare' && gate.manage && <FormsPanel clubId={activeClub.clubId} permissions={permissions} onDirtyChange={onFormsDirty} />}
+                        {currentTab === 'formulare' && gate.manage && <FormsPanel clubId={activeClub.clubId} permissions={permissions} onDirtyChange={onFormsDirty} onOpenCategorySettings={tabs.includes('einstellungen') ? () => void selectTab('einstellungen') : undefined} />}
                         {currentTab === 'zusatzfelder' && gate.manage && <CustomFieldsPanel clubId={activeClub.clubId} permissions={permissions} />}
                         {currentTab === 'einstellungen' && (
                             <div className="space-y-6">

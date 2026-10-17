@@ -17,7 +17,18 @@ import { type CustomFieldRef, editableForms, type FormSummary } from '@/lib/form
  * always present) with their state, and the editor for one of them. Everything under `/forms` needs `forms:write`, so
  * without it nothing is loaded and an explanation is shown instead of a broken page.
  */
-export default function FormsPanel({ clubId, permissions, onDirtyChange }: { clubId: string; permissions: string[]; onDirtyChange: (dirty: boolean) => void }) {
+export default function FormsPanel({
+    clubId,
+    permissions,
+    onDirtyChange,
+    onOpenCategorySettings,
+}: {
+    clubId: string;
+    permissions: string[];
+    onDirtyChange: (dirty: boolean) => void;
+    /** Opens the category settings (where applicants' choice is allowed); omitted when the caller has no access to them. */
+    onOpenCategorySettings?: () => void;
+}) {
     const { t, language } = useLanguage();
     const canWrite = permissions.includes('forms:write');
     const [forms, setForms] = useState<FormSummary[] | null>(null);
@@ -26,6 +37,8 @@ export default function FormsPanel({ clubId, permissions, onDirtyChange }: { clu
     const [customFields, setCustomFields] = useState<CustomFieldRef[]>([]);
     const [customFieldsFailed, setCustomFieldsFailed] = useState(false);
     const [categories, setCategories] = useState<Array<{ key: string; name: string }>>([]);
+    // `null` until the categories are loaded (or when loading failed): the editor then skips the "no selectable category" pre-warning.
+    const [categoriesLoaded, setCategoriesLoaded] = useState(false);
 
     const load = useCallback(() => {
         setFailed(false);
@@ -47,8 +60,14 @@ export default function FormsPanel({ clubId, permissions, onDirtyChange }: { clu
             .catch(() => setCustomFieldsFailed(true));
         // Applicants only get the categories that are live and marked selectable for them.
         apiFetch<{ data: Array<{ key: string; name: string; archived?: boolean; applicantSelectable?: boolean }> }>(`/club-members/categories?clubId=${clubId}`)
-            .then((res) => setCategories(res.data.filter((c) => !c.archived && c.applicantSelectable !== false).map((c) => ({ key: c.key, name: c.name }))))
-            .catch(() => setCategories([]));
+            .then((res) => {
+                setCategories(res.data.filter((c) => !c.archived && c.applicantSelectable !== false).map((c) => ({ key: c.key, name: c.name })));
+                setCategoriesLoaded(true);
+            })
+            .catch(() => {
+                setCategories([]);
+                setCategoriesLoaded(false);
+            });
     }, [canWrite, clubId, load]);
 
     if (!canWrite) {
@@ -72,6 +91,8 @@ export default function FormsPanel({ clubId, permissions, onDirtyChange }: { clu
                 customFields={customFields}
                 customFieldsFailed={customFieldsFailed}
                 categories={categories}
+                selectableCategories={categoriesLoaded ? categories.length : null}
+                onOpenCategorySettings={onOpenCategorySettings}
                 onDirtyChange={onDirtyChange}
                 onBack={(changed) => {
                     setOpenId(null);

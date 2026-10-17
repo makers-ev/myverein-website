@@ -8,7 +8,7 @@ import LoadError from '@/components/LoadError';
 import LoadingText from '@/components/LoadingText';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api-client';
-import { type ApplicationPage, APPLICATIONS_PAGE_SIZE, clampPage, type ClubApplication, listQuery } from '@/lib/applicationReview';
+import { type ApplicationPage, APPLICATIONS_PAGE_SIZE, clampPage, type ClubApplication, displayDate, listQuery } from '@/lib/applicationReview';
 import { formatDate, secondaryButtonClass } from '@/lib/clubMembers';
 import { pageCount } from '@/lib/keyHistory';
 
@@ -133,7 +133,7 @@ export default function ApplicationsPanel({ clubId, onDecided }: { clubId: strin
                                                 <ul className="mt-1.5 flex flex-wrap gap-1.5" aria-label={t('forms.review.list.summary')}>
                                                     {a.summary.map((s) => (
                                                         <li key={s.key} className="max-w-full break-words rounded bg-muted px-2 py-0.5 text-xs text-foreground">
-                                                            <span className="text-muted-foreground">{s.label}:</span> {s.display}
+                                                            <span className="text-muted-foreground">{s.label}:</span> {displayDate(s.display, language)}
                                                         </li>
                                                     ))}
                                                 </ul>

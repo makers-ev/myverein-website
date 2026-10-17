@@ -11,7 +11,7 @@ import { answerText, type RenderedAnswer } from '@/lib/applicationReview';
  * a value. All text is applicant input and rendered as plain text, never as HTML.
  */
 export default function AnswerList({ answers }: { answers: readonly RenderedAnswer[] }) {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     return (
         <dl className="space-y-2">
             {answers.map((a) => (
@@ -24,7 +24,7 @@ export default function AnswerList({ answers }: { answers: readonly RenderedAnsw
                                 {t('forms.review.redacted')}
                             </span>
                         ) : (
-                            answerText(a, t)
+                            answerText(a, t, language)
                         )}
                     </dd>
                 </div>

@@ -48,7 +48,7 @@ describe('LanguageContext translations (S2 fallback data)', () => {
 
   it('resolves the shared common.* texts (used by LoadingText/LoadError on every page) in German and English', () => {
     for (const lang of ['de', 'en'] as const) {
-      for (const key of ['common.loading', 'common.error', 'common.retry']) {
+      for (const key of ['common.loading', 'common.error', 'common.retry', 'common.close']) {
         expect(translations[lang][key], `${lang} ${key}`).toBeTruthy();
       }
     }

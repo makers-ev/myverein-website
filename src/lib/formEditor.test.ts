@@ -433,6 +433,20 @@ describe('publish checks and problem mapping', () => {
     const notice: FormField = { key: 'datenschutz', type: 'info', label: 'DS', infoKind: 'privacy_notice' };
     const consent: FormField = { key: 'einwilligung', type: 'consent', label: 'Ok', required: true };
 
+    it('pre-warns when a category field exists but no category is applicant-selectable', () => {
+        const category: FormField = { key: 'kategorie', type: 'select', label: 'Kategorie', mapsTo: 'category', optionsSource: 'member_categories' };
+        const other: FormField[] = [{ key: 'datenschutz', type: 'info', label: 'DS', infoKind: 'privacy_notice', text: 'x' }, { key: 'ok', type: 'consent', label: 'OK', required: true }];
+        const codes = (cats?: number | null, fields: FormField[] = [category, ...other]) => publishChecks(fields, '', 'aufnahme', undefined, cats).map((p) => p.code);
+        expect(codes(0)).toEqual(['no_selectable_category']);
+        expect(publishChecks([category, ...other], '', 'aufnahme', undefined, 0)[0]).toEqual({ code: 'no_selectable_category', fieldKey: 'kategorie' });
+        expect(codes(2)).toEqual([]);
+        // unknown (not loaded) and forms without a category field are not warned about
+        expect(codes(null)).toEqual([]);
+        expect(codes(undefined)).toEqual([]);
+        expect(codes(0, other)).toEqual([]);
+        expect(publishChecks([category], '', 'austritt', undefined, 0).map((p) => p.code)).not.toContain('no_selectable_category');
+    });
+
     it('requires notice text and an unconditional required consent for the application form', () => {
         expect(publishChecks([], '', 'aufnahme').map((p) => p.code)).toEqual(['privacy_notice_missing', 'required_consent_missing']);
         expect(publishChecks([notice, consent], '', 'aufnahme')).toEqual([{ code: 'privacy_notice_text_missing', fieldKey: 'datenschutz' }]);

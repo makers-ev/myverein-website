@@ -1,12 +1,13 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { CheckCircle2, Clock, UserPlus } from 'lucide-react';
+import { CheckCircle2, Clock, UserPlus, XCircle } from 'lucide-react';
 
 import ApplicationForm, { type SubmittedResult } from '@/components/verein/ApplicationForm';
 import LoadingText from '@/components/LoadingText';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ApiError, apiFetch } from '@/lib/api-client';
+import { decidedSubmissions, decisionMessage, openApplications, readLastClubSlug, rememberClubSlug } from '@/lib/applicantStatus';
 import { type ApplyConflict, formatDate, inputClass, primaryButtonClass, secondaryButtonClass } from '@/lib/clubMembers';
 import {
     allowedModes,
@@ -23,6 +24,8 @@ interface ClubState {
     slug: string;
     definition: FormDefinition;
     submitted: MySubmission[];
+    /** Recently decided applications (rejected / accepted / withdrawn) with the board's message. */
+    decided: MySubmission[];
     modes: OnBehalfOf[];
     mode: OnBehalfOf | null;
     resume?: { submission: Submission; form: FormDefinition; outdated: boolean };
@@ -55,9 +58,28 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
     const bannerRef = useRef<HTMLDivElement>(null);
     const flushRef = useRef<(() => Promise<void>) | null>(null);
     const loadSeq = useRef(0);
+    // Drafts and pending applications over all clubs (`null` = not loaded yet): resuming after a reload needs no club code.
+    const [openApps, setOpenApps] = useState<MySubmission[] | null>(null);
+    const [openFailed, setOpenFailed] = useState(false);
     const alive = useRef(true);
+
+    async function loadOpenApps() {
+        try {
+            const res = await apiFetch<{ data: MySubmission[] }>('/form-submissions/mine');
+            if (!alive.current) return;
+            setOpenApps(openApplications(res.data));
+            setOpenFailed(false);
+        } catch {
+            if (alive.current) setOpenFailed(true);
+        }
+    }
+
     useEffect(() => {
         alive.current = true;
+        // The last used club code (not a secret) is offered again; the open applications come from the server.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setSlug((current) => current || readLastClubSlug());
+        void loadOpenApps();
         return () => {
             alive.current = false;
         };
@@ -78,6 +100,7 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
             ]);
             const definition = formRes.data;
             const { drafts, submitted } = selectApplicationState(mineRes.data, clubSlug);
+            const decided = decidedSubmissions(mineRes.data, clubSlug);
             const modes = allowedModes(definition, submitted);
             const mode = preferred && modes.includes(preferred) ? preferred : (modes[0] ?? null);
             let resume: ClubState['resume'];
@@ -91,11 +114,14 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
                 }
             }
             if (!alive.current || seq !== loadSeq.current) return false;
+            rememberClubSlug(clubSlug);
+            setOpenApps(openApplications(mineRes.data));
+            setOpenFailed(false);
             setClub((prev) =>
                 keepForm && prev && prev.slug === clubSlug
                     ? // Background refresh after a submit: the list changes, the form the person may already be filling in stays.
-                      { ...prev, submitted, modes: allowedModes(prev.definition, submitted) }
-                    : { slug: clubSlug, definition, submitted, modes, mode, resume, formKey: (prev?.formKey ?? 0) + 1 },
+                      { ...prev, submitted, decided, modes: allowedModes(prev.definition, submitted) }
+                    : { slug: clubSlug, definition, submitted, decided, modes, mode, resume, formKey: (prev?.formKey ?? 0) + 1 },
             );
             setPhase('ready');
             setRefreshing(false);
@@ -124,6 +150,14 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
         void load(value);
     }
 
+    function resumeApplication(app: MySubmission) {
+        setSlug(app.club.slug);
+        setBanner(null);
+        setActionErrorKey(null);
+        setWithdrawId(null);
+        void load(app.club.slug, app.onBehalfOf);
+    }
+
     async function changeMode(next: OnBehalfOf) {
         if (!club || next === club.mode) return;
         // A pending autosave of the form that goes away is finished first, so its draft shows up when the other mode loads.
@@ -138,6 +172,7 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
         setClub(null);
         setBanner(null);
         setPhase('slug');
+        void loadOpenApps();
     }
 
     async function withdraw(id: string) {
@@ -251,6 +286,36 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
                     <button type="submit" disabled={phase === 'loading' || !slug.trim()} className={`mt-4 ${primaryButtonClass}`}>
                         {t('forms.apply.load')}
                     </button>
+                    {openFailed && openApps === null && (
+                        <div role="alert" className="mt-4 flex flex-wrap items-center gap-2 text-sm text-destructive">
+                            {t('forms.apply.mine.failed')}
+                            <button type="button" onClick={() => void loadOpenApps()} className={secondaryButtonClass}>
+                                {t('common.retry')}
+                            </button>
+                        </div>
+                    )}
+                    {openApps !== null && openApps.length > 0 && (
+                        <section className="mt-5" aria-label={t('forms.apply.mine.title')}>
+                            <h3 className="text-sm font-bold text-foreground">{t('forms.apply.mine.title')}</h3>
+                            <ul className="mt-2 space-y-2">
+                                {openApps.map((a) => (
+                                    <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border px-3 py-2">
+                                        <div className="min-w-0">
+                                            <p className="break-words text-sm font-medium text-foreground">{t('forms.apply.mine.club', { name: a.club.name || a.club.slug, slug: a.club.slug })}</p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {t(a.onBehalfOf === 'guardian' ? 'forms.apply.open.forChild' : 'forms.apply.open.forSelf')} ·{' '}
+                                                {a.status === 'draft' ? t('forms.apply.mine.draft') : t('forms.apply.open.waiting')} · {formatDate(a.submittedAt ?? a.createdAt, language)}
+                                            </p>
+                                        </div>
+                                        <button type="button" disabled={phase === 'loading'} onClick={() => resumeApplication(a)} className={secondaryButtonClass}>
+                                            {t(a.status === 'draft' ? 'forms.apply.mine.resume' : 'forms.apply.mine.open')}
+                                            <span className="sr-only"> – {a.club.name || a.club.slug}</span>
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        </section>
+                    )}
                 </form>
             ) : (
                 <div className="mt-5">
@@ -290,7 +355,7 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
                         </div>
                     )}
 
-                    {club.submitted.length > 0 && (
+                    {(club.submitted.length > 0 || club.decided.length > 0) && (
                         <section className="mt-4" aria-label={t('forms.apply.open.title')}>
                             <h3 className="text-sm font-bold text-foreground">{t('forms.apply.open.title')}</h3>
                             <ul className="mt-2 space-y-2">
@@ -327,17 +392,25 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
                                         </div>
                                     </li>
                                 ))}
+                                {club.decided.map((s) => (
+                                    <DecidedItem key={s.id} submission={s} language={language} t={t} onRefresh={onRefresh} />
+                                ))}
                             </ul>
+                            {club.decided.some((s) => s.status === 'rejected' || s.status === 'withdrawn') && club.submitted.length === 0 && (
+                                <p className="mt-2 text-xs text-muted-foreground">{t('forms.apply.decided.again')}</p>
+                            )}
                             {actionErrorKey && (
                                 <p role="alert" className="mt-2 text-sm text-destructive">
                                     {t(actionErrorKey)}
                                 </p>
                             )}
-                            <div className="mt-3">
-                                <button type="button" onClick={onRefresh} className={secondaryButtonClass}>
-                                    {t('verein.join.pending.refresh')}
-                                </button>
-                            </div>
+                            {club.submitted.length > 0 && (
+                                <div className="mt-3">
+                                    <button type="button" onClick={onRefresh} className={secondaryButtonClass}>
+                                        {t('verein.join.pending.refresh')}
+                                    </button>
+                                </div>
+                            )}
                         </section>
                     )}
 
@@ -394,5 +467,52 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
                 </div>
             )}
         </div>
+    );
+}
+
+/** A decided application in the applicant's list: status, date (Berlin day), and for a rejection the board's message as plain text. */
+export function DecidedItem({
+    submission: s,
+    language,
+    t,
+    onRefresh,
+}: {
+    submission: MySubmission;
+    language: string;
+    t: (key: string, params?: Record<string, string | number>) => string;
+    onRefresh: () => void;
+}) {
+    const message = decisionMessage(s);
+    const accepted = s.status === 'accepted';
+    const rejected = s.status === 'rejected';
+    return (
+        <li className="rounded-lg border border-border px-3 py-2">
+            <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-foreground">
+                {t(s.onBehalfOf === 'guardian' ? 'forms.apply.open.forChild' : 'forms.apply.open.forSelf')}
+                <span
+                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                        accepted ? 'bg-success/15 text-success' : rejected ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground'
+                    }`}
+                >
+                    {accepted ? <CheckCircle2 className="h-3 w-3" aria-hidden="true" /> : <XCircle className="h-3 w-3" aria-hidden="true" />}
+                    {t(`forms.apply.decided.${s.status}`)}
+                </span>
+            </p>
+            <p className="text-xs text-muted-foreground">{t('forms.apply.decided.on', { date: formatDate(s.decidedAt ?? s.submittedAt ?? s.createdAt, language) })}</p>
+            {rejected && (
+                <div className="mt-2 rounded-md bg-muted/50 px-3 py-2 text-sm">
+                    <p className="text-xs font-semibold text-muted-foreground">{t('forms.apply.decided.message')}</p>
+                    <p className={`mt-0.5 whitespace-pre-line break-words ${message ? 'text-foreground' : 'text-muted-foreground'}`}>{message ?? t('forms.apply.decided.noMessage')}</p>
+                </div>
+            )}
+            {accepted && (
+                <div className="mt-2 text-sm text-foreground">
+                    <p>{t('forms.apply.decided.acceptedHint')}</p>
+                    <button type="button" onClick={onRefresh} className={`mt-2 ${secondaryButtonClass}`}>
+                        {t('verein.join.pending.refresh')}
+                    </button>
+                </div>
+            )}
+        </li>
     );
 }

@@ -6,6 +6,7 @@ import { RefreshCw } from 'lucide-react';
 import FormRenderer, { fieldDomId, focusField } from '@/components/forms/FormRenderer';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ApiError, apiFetch } from '@/lib/api-client';
+import { findOpenDraft } from '@/lib/applicantStatus';
 import { type ApplyConflict, applyConflictKind, primaryButtonClass, secondaryButtonClass } from '@/lib/clubMembers';
 import {
     type Answers,
@@ -19,6 +20,7 @@ import {
     fieldErrorsFromError,
     type FormDefinition,
     type FormFile,
+    type MySubmission,
     formErrorKey,
     type OnBehalfOf,
     outdatedFrom,
@@ -111,8 +113,32 @@ export default function ApplicationForm({ slug, mode, current, resume, registerF
     }
 
 
+    /**
+     * Creates the draft -- unless an open draft of the same club and mode already exists (second tab, lost state after a
+     * reload): that one is resumed, so the person never ends up with two drafts. The lookup is best effort; if it fails the
+     * draft is created as usual.
+     */
     async function createDraft(initial: Answers): Promise<void> {
         const { slug: s, mode: m } = propsRef.current;
+        let existing: MySubmission | undefined;
+        try {
+            const mine = await apiFetch<{ data: MySubmission[] }>('/form-submissions/mine');
+            existing = findOpenDraft(mine.data, s, m);
+        } catch {
+            existing = undefined;
+        }
+        if (existing) {
+            idRef.current = existing.id;
+            savedRef.current = existing.answers ?? {};
+            if (alive.current) setHasDraft(true);
+            // What the person typed so far goes into the resumed draft; what the draft already holds shows up in the form.
+            if (Object.keys(initial).length > 0) {
+                const res = await apiFetch<{ data: { submission: Submission } }>(`/form-submissions/${existing.id}`, { method: 'PATCH', body: { answers: initial } });
+                savedRef.current = res.data.submission.answers ?? {};
+            }
+            if (alive.current) setAnswersBoth({ ...savedRef.current, ...answersRef.current });
+            return;
+        }
         const res = await apiFetch<{ data: { submission: Submission } }>('/form-submissions', {
             method: 'POST',
             body: { clubSlug: s, formVersionId: defRef.current.formVersionId, onBehalfOf: m, ...(Object.keys(initial).length > 0 ? { answers: initial } : {}) },

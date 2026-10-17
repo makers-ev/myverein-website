@@ -1,6 +1,6 @@
 import { ApiError } from './api-client';
 import { formErrorKey } from './formSchema';
-import { memberErrorKey } from './clubMembers';
+import { formatDate, memberErrorKey } from './clubMembers';
 
 /**
  * Types and pure helpers of the board's review of applications (Wave 8 W4): `GET /club-applications` (page of list rows
@@ -149,11 +149,20 @@ export function rejectBody(note: string, applicantMessage: string): { note?: str
 }
 
 /** Text of an answer for the review list: option labels already resolved by the server; booleans as yes/no. */
-export function answerText(answer: Pick<RenderedAnswer, 'answered' | 'display'>, t: (key: string) => string): string {
+export function answerText(answer: Pick<RenderedAnswer, 'answered' | 'display'> & { type?: string }, t: (key: string) => string, language?: string): string {
     if (!answer.answered || answer.display === null || answer.display === undefined) return '—';
     if (typeof answer.display === 'boolean') return t(answer.display ? 'forms.review.yes' : 'forms.review.no');
     if (Array.isArray(answer.display)) return answer.display.join(', ');
+    // Date fields arrive as `YYYY-MM-DD`: shown like every other date of the app (calendar day, no time-zone shift).
+    if (language && answer.type === 'date') return displayDate(String(answer.display), language);
     return String(answer.display);
+}
+
+const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+/** A `YYYY-MM-DD` value in the language's date format via the central helper; anything else stays as it is. */
+export function displayDate(value: string, language: string): string {
+    return ISO_DAY.test(value) ? formatDate(value, language) : value;
 }
 
 const MAPPING_REASONS = new Set([

@@ -421,7 +421,7 @@ export default function MemberList({
                 </div>
             ) : (
                 <>
-                    <div className={`overflow-x-auto rounded-xl border border-border transition-opacity ${loading ? 'opacity-60' : ''}`} aria-busy={loading}>
+                    <div className={`relative overflow-x-auto rounded-xl border border-border transition-opacity ${loading ? 'opacity-60' : ''}`} aria-busy={loading}>
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="border-b border-border bg-muted/50 text-left text-xs text-muted-foreground">

@@ -4,6 +4,8 @@ import { useEffect, useId, useRef } from 'react';
 import { X } from 'lucide-react';
 import type { ReactNode } from 'react';
 
+import { useLanguage } from '@/contexts/LanguageContext';
+
 /** Open modals, topmost last: only the topmost reacts to Escape and keeps Tab focus inside itself. */
 const modalStack: string[] = [];
 
@@ -21,6 +23,7 @@ interface ModalProps {
 
 /** Centered dialog -- the first generic modal/dialog primitive in this template, used by IntroModal.tsx. */
 export function Modal({ open, onClose, title, children, footer, size = 'md' }: ModalProps) {
+  const { t } = useLanguage();
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
@@ -94,7 +97,7 @@ export function Modal({ open, onClose, title, children, footer, size = 'md' }: M
       >
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
           <h2 id={titleId} className="truncate pr-3 text-lg font-bold text-foreground">{title}</h2>
-          <button type="button" onClick={onClose} className="rounded p-1 hover:bg-muted" aria-label="Close">
+          <button type="button" onClick={onClose} className="rounded p-1 hover:bg-muted" aria-label={t('common.close')}>
             <X className="h-5 w-5 text-muted-foreground" />
           </button>
         </div>

@@ -17,6 +17,7 @@ vi.mock('./api-client', () => {
 import { ApiError } from './api-client';
 import {
     answerText,
+    displayDate,
     approveBody,
     clampPage,
     duplicateKindKey,
@@ -65,6 +66,16 @@ describe('display helpers', () => {
         expect(answerText({ answered: true, display: 42 }, t)).toBe('42');
         // a redacted answer has no display
         expect(answerText({ answered: true, display: null }, t)).toBe('—');
+    });
+
+    it('formats date answers with the central date helper, without a time-zone shift', () => {
+        expect(answerText({ answered: true, display: '1990-05-17', type: 'date' }, t, 'de')).toBe('17.5.1990');
+        expect(answerText({ answered: true, display: '1990-05-17', type: 'date' }, t, 'en')).toBe('17/05/1990');
+        // other types and unknown languages keep the server text
+        expect(answerText({ answered: true, display: '1990-05-17', type: 'text' }, t, 'de')).toBe('1990-05-17');
+        expect(answerText({ answered: true, display: '1990-05-17', type: 'date' }, t)).toBe('1990-05-17');
+        expect(displayDate('1990-05-17', 'de')).toBe('17.5.1990');
+        expect(displayDate('Dienstag', 'de')).toBe('Dienstag');
     });
 
     it('translates mapping targets and frames custom fields', () => {

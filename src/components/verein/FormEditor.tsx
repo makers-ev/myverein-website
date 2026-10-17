@@ -69,6 +69,8 @@ export default function FormEditor({
     customFields,
     customFieldsFailed,
     categories,
+    selectableCategories = null,
+    onOpenCategorySettings,
     onBack,
     onDirtyChange,
 }: {
@@ -77,6 +79,10 @@ export default function FormEditor({
     customFields: CustomFieldRef[];
     customFieldsFailed: boolean;
     categories: ReadonlyArray<{ key: string; name: string }>;
+    /** Number of categories applicants may choose; `null` = unknown (not loaded), then there is no pre-warning. */
+    selectableCategories?: number | null;
+    /** Link target of the "no selectable category" check (category settings). */
+    onOpenCategorySettings?: () => void;
     /** `changed`: the list should reload (published, archived, discarded). */
     onBack: (changed: boolean) => void;
     onDirtyChange: (dirty: boolean) => void;
@@ -158,7 +164,7 @@ export default function FormEditor({
     const hasDraft = detail.draft !== null;
     const locked = lockedKeysOf(published);
     const shape = shapeProblems(state.fields);
-    const checks = publishChecks(state.fields, state.privacyNotice, purpose, customFieldsFailed ? undefined : customFields);
+    const checks = publishChecks(state.fields, state.privacyNotice, purpose, customFieldsFailed ? undefined : customFields, selectableCategories);
     const textIssues = textProblems(state.name, state.privacyNotice);
     const nameIssue = textIssues.find((p) => p.code === 'name_missing' || p.code === 'name_invalid');
     const privacyIssue = textIssues.find((p) => p.code === 'privacy_invalid');
@@ -622,6 +628,11 @@ export default function FormEditor({
                             <div className="mt-2 space-y-2">
                                 
                                 <ProblemList problems={[...describedShape, ...describedChecks]} onGoToField={goToField} goLabel={t('forms.editor.problem.goto')} />
+                                {checks.some((p) => p.code === 'no_selectable_category') && onOpenCategorySettings && (
+                                    <button type="button" onClick={onOpenCategorySettings} className={secondaryButtonClass}>
+                                        {t('forms.editor.checks.openCategories')}
+                                    </button>
+                                )}{' '}
                                 {checks.some((p) => p.code === 'privacy_notice_missing') && (
                                     <button type="button" onClick={addPrivacyBlock} className={secondaryButtonClass}>
                                         {t('forms.editor.preset.addPrivacy')}

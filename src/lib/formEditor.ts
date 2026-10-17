@@ -565,13 +565,25 @@ export function textProblems(name: string, privacyNotice: string): EditorProblem
 /** Whether the draft can be saved: no shape problem. */
 export const canSaveDraft = (fields: readonly FormField[]): boolean => shapeProblems(fields).length === 0;
 
+/** A field whose options are the club's member categories (a category field of the application form). */
+export const usesMemberCategories = (f: Pick<FormField, 'mapsTo' | 'optionsSource'>): boolean => f.mapsTo === 'category' || f.optionsSource === 'member_categories';
+
 /**
  * Publish checks that need no server data (what the server checks too): the standard rules of the purpose. Shown as a
  * live checklist; they do not block saving a draft.
  */
-export function publishChecks(fields: readonly FormField[], privacyNotice: string, purpose: string, customFields?: readonly CustomFieldRef[]): EditorProblem[] {
+export function publishChecks(
+    fields: readonly FormField[],
+    privacyNotice: string,
+    purpose: string,
+    customFields?: readonly CustomFieldRef[],
+    /** Number of categories applicants may choose; `null`/`undefined` = not loaded (no pre-warning, the server still checks). */
+    selectableCategories?: number | null,
+): EditorProblem[] {
     const problems: EditorProblem[] = [];
     if (purpose === 'aufnahme') {
+        const categoryField = fields.find(usesMemberCategories);
+        if (categoryField && selectableCategories === 0) problems.push({ code: 'no_selectable_category', fieldKey: categoryField.key });
         const notice = fields.find((f) => f.type === 'info' && f.infoKind === 'privacy_notice');
         if (!notice) problems.push({ code: 'privacy_notice_missing' });
         else if (!(privacyNotice.trim() || (notice.text ?? '').trim())) problems.push({ code: 'privacy_notice_text_missing', fieldKey: notice.key });
