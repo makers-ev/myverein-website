@@ -27,6 +27,10 @@ interface Props {
     showSensitiveNote?: boolean;
     /** Reports unsaved edits to the surrounding dialog. */
     onDirtyChange?: (dirty: boolean) => void;
+    /** The surrounding page owns one combined unsaved-changes guard (reload/Back); this instance then installs none. */
+    disableGuard?: boolean;
+    /** The caller is a guardian looking at a child's fields: read-only notes then say who may change them. */
+    guardianView?: boolean;
     /** Show everything as plain values (details for people without `members:write`); nothing can be changed here. */
     readOnlyView?: boolean;
     /** Shown in place of the section when there are no fields at all (otherwise nothing renders), e.g. to point the board to the module catalog. */
@@ -38,7 +42,7 @@ interface Props {
  * edit. Editable fields are rendered with the shared FormRenderer, the rest read-only with option labels; protected fields carry a
  * lock marker. Only changed editable values are sent. External guests (403) and clubs without visible fields render nothing.
  */
-export default function MemberCustomFields({ clubId, target, title, showSensitiveNote, onDirtyChange, readOnlyView = false, emptyHint }: Props) {
+export default function MemberCustomFields({ clubId, target, title, showSensitiveNote, onDirtyChange, readOnlyView = false, emptyHint, disableGuard = false, guardianView = false }: Props) {
     const { t, language } = useLanguage();
     const lang = textLang(language);
     const own = target === 'me';
@@ -53,6 +57,11 @@ export default function MemberCustomFields({ clubId, target, title, showSensitiv
     const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
     const alive = useRef(true);
     const { confirm, dialog } = useConfirm();
+    // Kept in a ref: callers often pass an inline callback, and its identity must never retrigger the effects below.
+    const onDirtyChangeRef = useRef(onDirtyChange);
+    useEffect(() => {
+        onDirtyChangeRef.current = onDirtyChange;
+    });
 
     useEffect(() => {
         alive.current = true;
@@ -102,11 +111,12 @@ export default function MemberCustomFields({ clubId, target, title, showSensitiv
     const patch = readOnlyView ? null : valuesPatch(fields ?? [], saved, answers, own);
     const dirty = patch !== null;
     useEffect(() => {
-        onDirtyChange?.(dirty);
-    }, [dirty, onDirtyChange]);
-    useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
-    // Reload / close / Back with unsaved custom field edits asks first (tab switches are guarded by the page via onDirtyChange).
-    useUnsavedGuard(dirty, () => confirm({ title: t('forms.editor.leave.title'), body: t('forms.cf.values.leaveConfirm'), confirmLabel: t('forms.editor.leave.confirm'), danger: true }));
+        onDirtyChangeRef.current?.(dirty);
+    }, [dirty]);
+    useEffect(() => () => onDirtyChangeRef.current?.(false), []);
+    // Reload / close / Back with unsaved custom field edits asks first (tab switches are guarded by the page via onDirtyChange); a page that
+    // hosts several sections passes `disableGuard` and guards the combined state itself.
+    useUnsavedGuard(dirty && !disableGuard, () => confirm({ title: t('forms.editor.leave.title'), body: t('forms.cf.values.leaveConfirm'), confirmLabel: t('forms.editor.leave.confirm'), danger: true }));
 
     if (state === 'loading') return <LoadingText />;
     if (state === 'hidden') return null;
@@ -186,10 +196,10 @@ export default function MemberCustomFields({ clubId, target, title, showSensitiv
                                 {f.type === 'credential' && text !== null && (
                                     <dd className="mt-1 flex flex-wrap items-center gap-2">
                                         <ExpiryBadge expiry={asExpiry(f.expiry)} />
-                                        <EnteredByNote enteredBy={f.enteredBy} />
+                                        <EnteredByNote enteredBy={f.enteredBy} hasValue />
                                     </dd>
                                 )}
-                                {!readOnlyView && !own && !f.editable && <dd className="mt-0.5 text-xs text-muted-foreground">{f.sensitive ? t('forms.cf.values.readonlySensitive') : f.editableBy === 'vorstand' ? t('forms.cf.values.readonlyBoard') : t('forms.cf.values.readonlySelf')}</dd>}
+                                {!readOnlyView && !own && !f.editable && <dd className="mt-0.5 text-xs text-muted-foreground">{guardianView ? (f.editableBy === 'vorstand' ? t('forms.cf.values.readonlyBoard') : t('forms.cf.values.readonlyGuardian')) : f.sensitive ? t('forms.cf.values.readonlySensitive') : f.editableBy === 'vorstand' ? t('forms.cf.values.readonlyBoard') : t('forms.cf.values.readonlySelf')}</dd>}
                                 {!readOnlyView && own && f.editableBy === 'vorstand' && <dd className="mt-0.5 text-xs text-muted-foreground">{t('forms.cf.values.readonlyBoard')}</dd>}
                             </div>
                         );

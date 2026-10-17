@@ -39,10 +39,10 @@ export default function CustomFieldsPanel({ clubId, permissions }: { clubId: str
 
     const load = useCallback(() => {
         setFailed(false);
-        apiFetch<{ data: CustomFieldDefinition[] }>(withLang(`/member-fields?clubId=${clubId}&includeArchived=true`, lang))
+        apiFetch<{ data: CustomFieldDefinition[] }>(withLang(`/member-fields?clubId=${clubId}&includeArchived=true`, textLang(language)))
             .then((res) => setDefs(res.data))
             .catch(() => setFailed(true));
-    }, [clubId, lang]);
+    }, [clubId, language]);
 
     useEffect(() => {
         if (!canWrite) return;

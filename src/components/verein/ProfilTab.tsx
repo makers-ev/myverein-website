@@ -182,8 +182,9 @@ export default function ProfilTab({ me, clubId, onSaved, onPhotoExpired, onDirty
 
     const leaveBody = t('verein.profil.leaveConfirm');
     const askLeave = () => confirm({ title: t('forms.editor.leave.title'), body: leaveBody, confirmLabel: t('forms.editor.leave.confirm'), danger: true });
-    // Reload / close / Back; the custom fields below bring their own guard, only one may be active at a time.
-    useUnsavedGuard(dirty && !customDirty, askLeave);
+    // Reload / close / Back: ONE guard for the combined state (profile form, own custom fields, all children); the custom field sections
+    // inside this tab are rendered with `disableGuard` so no second guard stacks up.
+    useUnsavedGuard(dirty || customDirty, askLeave);
 
     function update(key: ProfileKey, value: string) {
         setDraft((prev) => ({ ...prev, [key]: value }));
@@ -411,7 +412,7 @@ export default function ProfilTab({ me, clubId, onSaved, onPhotoExpired, onDirty
                     {dirty && !status ? <p className="mt-2 text-xs text-muted-foreground">{t('verein.profil.unsaved')}</p> : null}
                 </form>
             </div>
-            <MemberCustomFields clubId={clubId} target="me" title={t('forms.cf.values.titleOwn')} onDirtyChange={setCustomDirty} emptyHint={onOpenCustomFields && me.permissions.includes('forms:write') ? <NoModulesHint onOpen={onOpenCustomFields} /> : undefined} />
+            <MemberCustomFields clubId={clubId} target="me" title={t('forms.cf.values.titleOwn')} onDirtyChange={setCustomDirty} disableGuard emptyHint={onOpenCustomFields && me.permissions.includes('forms:write') ? <NoModulesHint onOpen={onOpenCustomFields} /> : undefined} />
             <ChildrenFields clubId={clubId} onDirtyChange={setChildrenDirty} />
             <ExitSection clubId={clubId} orgRole={me.orgRole} effectiveStatus={me.effectiveStatus} onChanged={onSaved} />
             {dialog}

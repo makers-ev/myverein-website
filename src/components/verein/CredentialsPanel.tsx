@@ -280,7 +280,7 @@ export function CredentialsTable({ rows, fields, labels = {}, loading, onOpen }:
                                             </span>
                                         )}
                                         <div className="mt-0.5">
-                                            <EnteredByNote enteredBy={row.enteredBy} />
+                                            <EnteredByNote enteredBy={row.enteredBy} hasValue={row.value !== null} />
                                         </div>
                                     </td>
                                     <td className="px-3 py-2 text-foreground">{levelLabel(row.fieldKey, row.value?.level)}</td>

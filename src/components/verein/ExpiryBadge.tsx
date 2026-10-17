@@ -37,14 +37,24 @@ export default function ExpiryBadge({ expiry }: { expiry: CredentialExpiry | nul
  * Who recorded a value: the person itself or a guardian (declarations the club has not checked), or the board (the club's own record).
  * Text plus icon; renders nothing without a value.
  */
-export function EnteredByNote({ enteredBy }: { enteredBy: EnteredBy | null | undefined }) {
+export function EnteredByNote({ enteredBy, hasValue = false }: { enteredBy: EnteredBy | null | undefined; hasValue?: boolean }) {
     const { t } = useLanguage();
-    if (enteredBy !== 'self' && enteredBy !== 'guardian' && enteredBy !== 'board') return null;
-    const Icon = enteredBy === 'self' ? UserRound : enteredBy === 'guardian' ? Users : UserCheck;
+    const kind = enteredByKind(enteredBy, hasValue);
+    if (kind === null) return null;
+    const Icon = kind === 'self' ? UserRound : kind === 'guardian' ? Users : UserCheck;
     return (
         <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
             <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            {t(`forms.cred.enteredBy.${enteredBy}`)}
+            {t(`forms.cred.enteredBy.${kind}`)}
         </span>
     );
+}
+
+/**
+ * Which note to show: only `board` is the club's own record. `guardian` is named as such, every other value -- and a missing one while
+ * a value is stored (`hasValue`) -- is treated as the unchecked default (`self`). No note for a field without a value.
+ */
+export function enteredByKind(enteredBy: unknown, hasValue: boolean): EnteredBy | null {
+    if (enteredBy === 'board' || enteredBy === 'guardian' || enteredBy === 'self') return enteredBy;
+    return enteredBy !== null && enteredBy !== undefined ? 'self' : hasValue ? 'self' : null;
 }

@@ -6,6 +6,7 @@ import { AlertTriangle, CheckCircle2, Download, Loader2, Lock } from 'lucide-rea
 import { Modal } from '@/components/Modal';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api-client';
+import { localizedTexts, textLang, withLang } from '@/lib/profileTexts';
 import type { CustomFieldDefinition } from '@/lib/customFields';
 import { inputClass, MEMBER_STATUSES, memberErrorKey, primaryButtonClass, secondaryButtonClass, todayIso, type MemberCategory } from '@/lib/clubMembers';
 import { buildExportQuery, exportableCustomFields, defaultExportColumns, EXPORT_COLUMNS, fetchCsvBlob, isRateLimited, saveBlob, selectableColumns, toggleExportColumn } from '@/lib/memberCsv';
@@ -28,7 +29,7 @@ export default function MemberExportDialog({
     departments: { id: string; name: string }[];
     onClose: () => void;
 }) {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const canSensitive = permissions.includes('members:read_sensitive');
 
     const [columns, setColumns] = useState<string[]>(() => defaultExportColumns(canSensitive));
@@ -50,9 +51,10 @@ export default function MemberExportDialog({
 
     useEffect(() => {
         let cancelled = false;
-        apiFetch<{ data: CustomFieldDefinition[] }>(`/member-fields?clubId=${clubId}`)
+        apiFetch<{ data: CustomFieldDefinition[] }>(withLang(`/member-fields?clubId=${clubId}`, textLang(language)))
             .then((res) => {
-                if (!cancelled) setCustomDefs(exportableCustomFields(res.data, canSensitive));
+                if (!cancelled) // Labels are shown in the UI language; the export columns stay the technical `cf:<key>`.
+                    setCustomDefs(exportableCustomFields(res.data, canSensitive).map((d) => ({ ...d, label: localizedTexts(d, textLang(language)).label })));
             })
             .catch(() => {
                 if (!cancelled) setCustomDefs([]);
@@ -60,7 +62,7 @@ export default function MemberExportDialog({
         return () => {
             cancelled = true;
         };
-    }, [clubId, canSensitive]);
+    }, [clubId, canSensitive, language]);
 
     const allowed = selectableColumns(canSensitive);
     const allSelected = columns.length === allowed.length;

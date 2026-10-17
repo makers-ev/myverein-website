@@ -7,10 +7,10 @@ import { LanguageProvider } from '@/contexts/LanguageContext';
 
 import { EnteredByNote } from './ExpiryBadge';
 
-const render = (enteredBy: 'self' | 'guardian' | 'board' | null | undefined) =>
+const render = (enteredBy: unknown, hasValue = false) =>
     renderToStaticMarkup(
         <LanguageProvider initialLanguage="de">
-            <EnteredByNote enteredBy={enteredBy} />
+            <EnteredByNote enteredBy={enteredBy as never} hasValue={hasValue} />
         </LanguageProvider>,
     );
 
@@ -23,9 +23,14 @@ describe('EnteredByNote', () => {
         expect(render('board')).not.toContain('nicht geprüft');
         expect(render('guardian')).toContain('aria-hidden="true"');
     });
-    it('renders nothing without a known value', () => {
+    it('renders nothing without any value', () => {
         expect(render(null)).toBe('');
         expect(render(undefined)).toBe('');
-        expect(render('x' as never)).toBe('');
+    });
+    it('treats everything but board as unchecked: unknown values and a missing one for a stored value show the self text', () => {
+        expect(render('x')).toContain('nicht geprüft');
+        expect(render(null, true)).toContain('nicht geprüft');
+        expect(render(undefined, true)).toContain('nicht geprüft');
+        expect(render('board', true)).not.toContain('nicht geprüft');
     });
 });

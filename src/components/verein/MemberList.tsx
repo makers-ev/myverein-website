@@ -13,6 +13,7 @@ import TransitionSuggestions from '@/components/verein/TransitionSuggestions';
 import { useThrottledCallback } from '@/lib/useThrottledCallback';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ApiError, apiFetch } from '@/lib/api-client';
+import { textLang, withLang } from '@/lib/profileTexts';
 import { type CustomFieldDefinition, hasVisibleFields } from '@/lib/customFields';
 import {
     categoryLabel,
@@ -105,7 +106,7 @@ export default function MemberList({
     useEffect(() => {
         if (canWrite) return;
         let cancelled = false;
-        apiFetch<{ data: CustomFieldDefinition[] }>(`/member-fields?clubId=${clubId}`)
+        apiFetch<{ data: CustomFieldDefinition[] }>(withLang(`/member-fields?clubId=${clubId}`, textLang(language)))
             .then((res) => {
                 if (!cancelled) setHasCustomFields(hasVisibleFields(res.data));
             })
@@ -115,7 +116,7 @@ export default function MemberList({
         return () => {
             cancelled = true;
         };
-    }, [canWrite, clubId]);
+    }, [canWrite, clubId, language]);
 
     // Signed photo URLs expire: a failed image load refetches the list once (all avatars fail together, so debounce).
     const onPhotoExpired = useThrottledCallback(() => setLocalReload((n) => n + 1));
