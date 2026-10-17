@@ -7,7 +7,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: () => {} }) }));
 
 import { LanguageProvider, translations } from '@/contexts/LanguageContext';
 
-import ProfilTab, { type OwnMembership } from './ProfilTab';
+import ProfilTab, { NoModulesHint, type OwnMembership } from './ProfilTab';
 
 const base: OwnMembership = {
     id: 'm1',
@@ -64,5 +64,30 @@ describe('profile translations', () => {
             expect(placeholders(translations.en[k]!), k).toEqual(placeholders(translations.de[k]!));
             expect(/(?<!\{)\{\w+\}(?!\})/.test(translations.de[k]! + translations.en[k]!), k).toBe(false);
         }
+    });
+});
+
+describe('NoModulesHint', () => {
+    it('points to the custom fields tab with a plain button, in both languages', () => {
+        const render = (lang: 'de' | 'en') =>
+            renderToStaticMarkup(
+                <LanguageProvider initialLanguage={lang}>
+                    <NoModulesHint onOpen={() => {}} />
+                </LanguageProvider>,
+            );
+        const de = render('de');
+        expect(de).toContain('Noch keine Bausteine aktiviert');
+        expect(de).toContain('Bausteine aktivieren');
+        expect(de).toMatch(/<button type="button"[^>]*>Zu den Zusatzfeldern<\/button>/);
+        expect(render('en')).toContain('No modules activated yet');
+    });
+
+    it('is not part of the profile for people without forms:write (nothing renders while or if there are no fields)', () => {
+        const html = renderToStaticMarkup(
+            <LanguageProvider initialLanguage="de">
+                <ProfilTab me={{ ...base, permissions: [] }} clubId="c1" onSaved={() => {}} onOpenCustomFields={() => {}} />
+            </LanguageProvider>,
+        );
+        expect(html).not.toContain('Noch keine Bausteine aktiviert');
     });
 });

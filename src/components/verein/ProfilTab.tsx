@@ -4,7 +4,7 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import { formatDate, inputClass, memberErrorKey, todayIso } from '@/lib/clubMembers';
+import { formatDate, inputClass, memberErrorKey, secondaryButtonClass, todayIso } from '@/lib/clubMembers';
 import { apiFetch } from '@/lib/api-client';
 import { isMinorBirthDate } from '@/lib/memberPhoto';
 import {
@@ -130,7 +130,23 @@ function SectionTitle({ id, children }: { id: string; children: React.ReactNode 
  * backend delivered them, `422 details.fields` are shown per field and unsaved edits are guarded (reload/back via
  * `useUnsavedGuard`, tab switch and the link to the settings here, tab switch confirmation in the page).
  */
-export default function ProfilTab({ me, clubId, onSaved, onPhotoExpired, onDirtyChange }: { me: OwnMembership; clubId: string; onSaved: () => void; onPhotoExpired?: () => void; onDirtyChange?: (dirty: boolean) => void }) {
+/**
+ * "Meine Zusatzangaben" without any field: only people with `forms:write` get a pointer to the module catalog (everybody else sees
+ * nothing, so members are not confused by something they cannot change).
+ */
+export function NoModulesHint({ onOpen }: { onOpen: () => void }) {
+    const { t } = useLanguage();
+    return (
+        <div className="mt-2">
+            <p className="text-sm text-muted-foreground">{t('forms.cf.values.noModules')}</p>
+            <button type="button" onClick={onOpen} className={`${secondaryButtonClass} mt-2`}>
+                {t('forms.cf.values.noModules.open')}
+            </button>
+        </div>
+    );
+}
+
+export default function ProfilTab({ me, clubId, onSaved, onPhotoExpired, onDirtyChange, onOpenCustomFields }: { me: OwnMembership; clubId: string; onSaved: () => void; onPhotoExpired?: () => void; onDirtyChange?: (dirty: boolean) => void; onOpenCustomFields?: () => void }) {
     const { t, language } = useLanguage();
     const router = useRouter();
     const { confirm, dialog } = useConfirm();
@@ -392,7 +408,7 @@ export default function ProfilTab({ me, clubId, onSaved, onPhotoExpired, onDirty
                     {dirty && !status ? <p className="mt-2 text-xs text-muted-foreground">{t('verein.profil.unsaved')}</p> : null}
                 </form>
             </div>
-            <MemberCustomFields clubId={clubId} target="me" title={t('forms.cf.values.titleOwn')} onDirtyChange={setCustomDirty} />
+            <MemberCustomFields clubId={clubId} target="me" title={t('forms.cf.values.titleOwn')} onDirtyChange={setCustomDirty} emptyHint={onOpenCustomFields && me.permissions.includes('forms:write') ? <NoModulesHint onOpen={onOpenCustomFields} /> : undefined} />
             <ExitSection clubId={clubId} orgRole={me.orgRole} effectiveStatus={me.effectiveStatus} onChanged={onSaved} />
             {dialog}
         </div>

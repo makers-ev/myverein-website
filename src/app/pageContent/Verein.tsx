@@ -330,7 +330,7 @@ export default function VereinPageContent() {
                         {currentTab === 'info' && (info ? <VereinsinfoTab info={info} t={t} onPhotoExpired={refetchBoardPhotos} /> : <LoadingText />)}
                         {currentTab === 'profil' &&
                             (me ? (
-                                <ProfilTab me={me} clubId={activeClub.clubId} onDirtyChange={onProfilDirty} onSaved={() => void refreshClubData(activeClub.clubId)} onPhotoExpired={refetchOwnPhoto} />
+                                <ProfilTab me={me} clubId={activeClub.clubId} onDirtyChange={onProfilDirty} onSaved={() => void refreshClubData(activeClub.clubId)} onPhotoExpired={refetchOwnPhoto} onOpenCustomFields={() => void selectTab('zusatzfelder')} />
                             ) : (
                                 <LoadingText />
                             ))}

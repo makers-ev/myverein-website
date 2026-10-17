@@ -28,6 +28,8 @@ interface Props {
     onDirtyChange?: (dirty: boolean) => void;
     /** Show everything as plain values (details for people without `members:write`); nothing can be changed here. */
     readOnlyView?: boolean;
+    /** Shown in place of the section when there are no fields at all (otherwise nothing renders), e.g. to point the board to the module catalog. */
+    emptyHint?: React.ReactNode;
 }
 
 /**
@@ -35,7 +37,7 @@ interface Props {
  * edit. Editable fields are rendered with the shared FormRenderer, the rest read-only with option labels; protected fields carry a
  * lock marker. Only changed editable values are sent. External guests (403) and clubs without visible fields render nothing.
  */
-export default function MemberCustomFields({ clubId, target, title, showSensitiveNote, onDirtyChange, readOnlyView = false }: Props) {
+export default function MemberCustomFields({ clubId, target, title, showSensitiveNote, onDirtyChange, readOnlyView = false, emptyHint }: Props) {
     const { t, language } = useLanguage();
     const own = target === 'me';
     const path = `/club-members/${encodeURIComponent(target)}/custom-fields?clubId=${clubId}`;
@@ -98,6 +100,14 @@ export default function MemberCustomFields({ clubId, target, title, showSensitiv
     if (state === 'loading') return <LoadingText />;
     if (state === 'hidden') return null;
     if (state === 'failed') return <LoadError onRetry={() => { setState('loading'); setAttempt((n) => n + 1); }} />;
+    if (fields && fields.length === 0 && !showSensitiveNote && emptyHint) {
+        return (
+            <section className="rounded-lg border border-border p-3" aria-label={title ?? t('forms.cf.values.title')}>
+                <h3 className="text-sm font-bold text-foreground">{title ?? t('forms.cf.values.title')}</h3>
+                {emptyHint}
+            </section>
+        );
+    }
     if (!fields || (fields.length === 0 && !showSensitiveNote)) return null;
 
     async function save() {
