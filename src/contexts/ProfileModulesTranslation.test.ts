@@ -70,7 +70,7 @@ describe('ProfileModulesTranslation', () => {
         }
         for (const st of ['expired', 'expiring', 'valid', 'missing']) need(`forms.cred.overview.status.${st}`);
         for (const v of ['list', 'credentials']) need(`verein.members.view.${v}`);
-        for (const e of ['self', 'board']) need(`forms.cred.enteredBy.${e}`);
+        for (const e of ['self', 'guardian', 'board']) need(`forms.cred.enteredBy.${e}`);
         for (const type of CUSTOM_FIELD_TYPES) need(`forms.editor.type.${type}`);
     });
 });

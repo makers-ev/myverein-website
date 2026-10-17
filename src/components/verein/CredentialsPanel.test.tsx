@@ -76,6 +76,8 @@ describe('CredentialsTable', () => {
         expect(html).toContain('Nicht eingetragen');
         expect(html).toContain('Abgelaufen seit 12 Tagen');
         expect(html).toContain('Details von — anzeigen');
+        expect(render([row({ enteredBy: 'guardian' })])).toContain('Von Erziehungsberechtigten eingetragen');
+        expect(render([row({ enteredBy: 'guardian' })], false, 'en')).toContain('Entered by a guardian');
     });
 
     it('renders text as plain text and dims while loading', () => {

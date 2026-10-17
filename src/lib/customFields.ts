@@ -19,7 +19,8 @@ export const EDITABLE_BY = ['vorstand', 'self'] as const;
 export type EditableBy = (typeof EDITABLE_BY)[number];
 
 export const MAX_CUSTOM_FIELDS = 100;
-export type EnteredBy = 'self' | 'board';
+/** `self` and `guardian` are declarations the club has not checked; `board` is the club's own record. */
+export type EnteredBy = 'self' | 'guardian' | 'board';
 /** Longest free-text level a board can set on a credential (server: 1 to 80). */
 export const MAX_LEVEL_LIMIT = 80;
 
