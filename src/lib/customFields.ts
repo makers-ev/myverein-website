@@ -19,6 +19,9 @@ export const EDITABLE_BY = ['vorstand', 'self'] as const;
 export type EditableBy = (typeof EDITABLE_BY)[number];
 
 export const MAX_CUSTOM_FIELDS = 100;
+export type EnteredBy = 'self' | 'board';
+/** Longest free-text level a board can set on a credential (server: 1 to 80). */
+export const MAX_LEVEL_LIMIT = 80;
 
 export const isCustomFieldType = (v: unknown): v is CustomFieldType => typeof v === 'string' && (CUSTOM_FIELD_TYPES as readonly string[]).includes(v);
 export const isChoice = (type: string): boolean => type === 'select' || type === 'multiselect';
@@ -44,7 +47,8 @@ export interface CustomFieldDefinition {
     sortOrder: number;
     archived: boolean;
     archivedAt: string | null;
-    valueCount?: number;
+    /** Stored values; `null` = the number is not disclosed (sensitive field, caller without `members:read_sensitive`). */
+    valueCount?: number | null;
 }
 
 /** One field of a member as `GET /club-members/:id/custom-fields` returns it: definition + value + what the caller may do. */
@@ -53,6 +57,8 @@ export interface MemberCustomField extends Omit<CustomFieldDefinition, 'valueCou
     editable: boolean;
     value: unknown;
     updatedAt: string | null;
+    /** Who recorded the value: the person itself (`self`, a declaration the club has not checked), somebody else (`board`), `null` without a value / older backend. */
+    enteredBy?: EnteredBy | null;
     /** Expiry status of a credential field (90-day window, Berlin day); `null` for every other type, absent on older backends. */
     expiry?: CredentialExpiry | null;
 }
@@ -64,19 +70,24 @@ export interface DefinitionForm {
     label: string;
     type: CustomFieldType;
     options: FieldOption[];
+    /** Credential only: how the level is entered -- not at all, a choice (`options`) or free text (`levelMax` characters). */
+    levelKind: 'none' | 'choice' | 'text';
+    levelMax: string;
     helpText: string;
     visibleTo: VisibleTo;
     editableBy: EditableBy;
     sensitive: boolean;
 }
 
-export const emptyDefinitionForm = (): DefinitionForm => ({ key: '', label: '', type: 'text', options: [], helpText: '', visibleTo: 'vorstand', editableBy: 'vorstand', sensitive: false });
+export const emptyDefinitionForm = (): DefinitionForm => ({ key: '', label: '', type: 'text', options: [], levelKind: 'none', levelMax: '', helpText: '', visibleTo: 'vorstand', editableBy: 'vorstand', sensitive: false });
 
 export function formFromDefinition(def: CustomFieldDefinition): DefinitionForm {
-    return { key: def.key, label: def.label, type: def.type, options: withOptionUids((def.options ?? []).map((o) => ({ ...o }))), helpText: def.helpText ?? '', visibleTo: def.visibleTo, editableBy: def.editableBy, sensitive: def.sensitive };
+    const maxLength = def.validation?.maxLength;
+    const levelKind = def.type !== 'credential' ? 'none' : (def.options ?? []).length > 0 ? 'choice' : typeof maxLength === 'number' ? 'text' : 'none';
+    return { key: def.key, label: def.label, type: def.type, options: withOptionUids((def.options ?? []).map((o) => ({ ...o }))), levelKind, levelMax: typeof maxLength === 'number' ? String(maxLength) : '', helpText: def.helpText ?? '', visibleTo: def.visibleTo, editableBy: def.editableBy, sensitive: def.sensitive };
 }
 
-export type DefinitionProblem = 'label' | 'label_text' | 'key_format' | 'key_reserved' | 'key_duplicate' | 'options_missing' | 'option_label' | 'option_duplicate' | 'too_many_options' | 'help_text';
+export type DefinitionProblem = 'label' | 'label_text' | 'key_format' | 'key_reserved' | 'key_duplicate' | 'options_missing' | 'option_label' | 'option_duplicate' | 'too_many_options' | 'help_text' | 'level_limit';
 
 /** Local checks of a definition form (the server repeats them); `existingKeys` are the keys of all other definitions of the club (incl. archived). */
 export function definitionProblems(form: DefinitionForm, existingKeys: readonly string[], isNew: boolean): DefinitionProblem[] {
@@ -92,9 +103,13 @@ export function definitionProblems(form: DefinitionForm, existingKeys: readonly 
     }
     const help = form.helpText.trim();
     if (help.length > MAX_HELP_TEXT || !isCleanText(help, true)) problems.push('help_text');
-    if (hasOptions(form.type)) {
-        // The levels of a credential are optional; a choice needs at least one option.
-        if (isChoice(form.type) && form.options.length === 0) problems.push('options_missing');
+    if (form.type === 'credential' && form.levelKind === 'text') {
+        const max = Number(form.levelMax);
+        if (!/^\d+$/.test(form.levelMax.trim()) || max < 1 || max > MAX_LEVEL_LIMIT) problems.push('level_limit');
+    }
+    if (isChoice(form.type) || (form.type === 'credential' && form.levelKind === 'choice')) {
+        // The levels of a credential are optional as a whole, but a chosen "Auswahl" needs at least one.
+        if (form.options.length === 0) problems.push('options_missing');
         if (form.options.length > MAX_OPTIONS) problems.push('too_many_options');
         if (form.options.some((o) => o.label.trim() === '' || o.value.trim() === '' || !isCleanText(o.label))) problems.push('option_label');
         if (new Set(form.options.map((o) => o.value)).size !== form.options.length) problems.push('option_duplicate');
@@ -129,10 +144,12 @@ export interface ChangeLocks {
 /** The locks that apply to editing an existing definition (mirrors the server's PATCH rules so they can be explained up front). */
 export function changeLocks(def: Pick<CustomFieldDefinition, 'sensitive' | 'valueCount'>, canReadSensitive: boolean): ChangeLocks {
     const values = def.valueCount ?? 0;
+    // `null` = not disclosed: assume values exist (the server decides).
+    const unknown = def.valueCount === null;
     return {
-        typeLocked: values > 0,
-        sensitiveLocked: def.sensitive && values > 0,
-        sensitiveNeedsPermission: def.sensitive && values === 0 && !canReadSensitive,
+        typeLocked: unknown || values > 0,
+        sensitiveLocked: def.sensitive && (unknown || values > 0),
+        sensitiveNeedsPermission: def.sensitive && !unknown && values === 0 && !canReadSensitive,
         wideningNeedsPermission: (def.sensitive || values > 0) && !canReadSensitive,
     };
 }
@@ -152,7 +169,7 @@ export function lockViolations(def: CustomFieldDefinition, form: DefinitionForm,
 
 /** Options to send: the choice options, the levels of a credential (none = `null`), nothing for other types. */
 function optionsBody(form: DefinitionForm): Array<{ value: string; label: string }> | null {
-    if (!hasOptions(form.type) || (form.type === 'credential' && form.options.length === 0)) return null;
+    if (!hasOptions(form.type) || (form.type === 'credential' && form.levelKind !== 'choice')) return null;
     return form.options.map((o) => ({ value: o.value.trim(), label: o.label.trim() }));
 }
 
@@ -164,6 +181,12 @@ export function definitionPatch(def: CustomFieldDefinition, form: DefinitionForm
     const options = optionsBody(form);
     const stored = def.options === null ? null : def.options.map((o) => ({ value: o.value, label: o.label }));
     if (JSON.stringify(options) !== JSON.stringify(stored) && (options !== null || stored !== null)) patch.options = options;
+    if (form.type === 'credential') {
+        // The free-text limit and the levels exclude each other (the server refuses both).
+        const wanted = form.levelKind === 'text' ? Number(form.levelMax.trim()) : null;
+        const stored = def.type === 'credential' ? (def.validation?.maxLength ?? null) : null;
+        if (wanted !== stored) patch.validation = wanted === null ? null : { maxLength: wanted };
+    }
     const help = form.helpText.trim() === '' ? null : form.helpText.trim();
     if (help !== (def.helpText ?? null)) patch.helpText = help;
     if (form.visibleTo !== def.visibleTo) patch.visibleTo = form.visibleTo;
@@ -179,6 +202,7 @@ export function definitionCreateBody(form: DefinitionForm, sortOrder: number): R
         label: form.label.trim(),
         type: form.type,
         ...(optionsBody(form) ? { options: optionsBody(form) } : {}),
+        ...(form.type === 'credential' && form.levelKind === 'text' ? { validation: { maxLength: Number(form.levelMax.trim()) } } : {}),
         ...(form.helpText.trim() !== '' ? { helpText: form.helpText.trim() } : {}),
         visibleTo: form.visibleTo,
         editableBy: form.editableBy,

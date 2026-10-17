@@ -246,14 +246,31 @@ describe('values of a member', () => {
     });
 });
 
+describe('undisclosed value count (sensitive field without members:read_sensitive)', () => {
+    it('assumes values exist: the type and protection stay locked', () => {
+        const locks = changeLocks({ sensitive: true, valueCount: null }, false);
+        expect(locks).toMatchObject({ typeLocked: true, sensitiveLocked: true, sensitiveNeedsPermission: false, wideningNeedsPermission: true });
+        expect(changeLocks({ sensitive: false, valueCount: null }, false).typeLocked).toBe(true);
+        expect(changeLocks({ sensitive: false }, false).typeLocked).toBe(false);
+    });
+});
+
 describe('credential fields and help texts', () => {
     const base = { ...emptyDefinitionForm(), key: 'juleica', label: 'JuLeiCa', type: 'credential' as const };
 
     it('offers the credential type and needs no levels', () => {
         expect(CUSTOM_FIELD_TYPES).toContain('credential');
         expect(definitionProblems(base, [], true)).toEqual([]);
-        expect(definitionProblems({ ...base, options: [{ value: 'a', label: 'A' }] }, [], true)).toEqual([]);
-        expect(definitionProblems({ ...base, options: [{ value: 'a', label: '' }] }, [], true)).toEqual(['option_label']);
+        const choice = { ...base, levelKind: 'choice' as const };
+        expect(definitionProblems({ ...choice, options: [{ value: 'a', label: 'A' }] }, [], true)).toEqual([]);
+        expect(definitionProblems({ ...choice, options: [{ value: 'a', label: '' }] }, [], true)).toEqual(['option_label']);
+        expect(definitionProblems(choice, [], true)).toEqual(['options_missing']);
+    });
+
+    it('checks the free-text level limit (1 to 80)', () => {
+        const text = { ...base, levelKind: 'text' as const };
+        for (const ok of ['1', '60', '80']) expect(definitionProblems({ ...text, levelMax: ok }, [], true), ok).toEqual([]);
+        for (const bad of ['', '0', '81', 'x', '1.5']) expect(definitionProblems({ ...text, levelMax: bad }, [], true), bad).toEqual(['level_limit']);
     });
 
     it('limits the help text', () => {
@@ -263,10 +280,14 @@ describe('credential fields and help texts', () => {
     });
 
     it('creates with levels as options and the trimmed help text only when given', () => {
-        expect(definitionCreateBody({ ...base, options: [{ value: 'c', label: 'C ' }], helpText: ' Nur wenn vorhanden ' }, 10)).toMatchObject({ type: 'credential', options: [{ value: 'c', label: 'C' }], helpText: 'Nur wenn vorhanden' });
+        expect(definitionCreateBody({ ...base, levelKind: 'choice', options: [{ value: 'c', label: 'C ' }], helpText: ' Nur wenn vorhanden ' }, 10)).toMatchObject({ type: 'credential', options: [{ value: 'c', label: 'C' }], helpText: 'Nur wenn vorhanden' });
         const plain = definitionCreateBody(base, 10);
         expect(plain).not.toHaveProperty('options');
         expect(plain).not.toHaveProperty('helpText');
+        expect(plain).not.toHaveProperty('validation');
+        const free = definitionCreateBody({ ...base, levelKind: 'text', levelMax: ' 60 ' }, 10);
+        expect(free).toMatchObject({ validation: { maxLength: 60 } });
+        expect(free).not.toHaveProperty('options');
     });
 
     it('patches the help text (null clears it) and the levels', () => {
@@ -274,10 +295,17 @@ describe('credential fields and help texts', () => {
         expect(definitionPatch(stored, formFromDefinition(stored))).toEqual({});
         expect(definitionPatch(stored, { ...formFromDefinition(stored), helpText: '' })).toEqual({ helpText: null });
         expect(definitionPatch(stored, { ...formFromDefinition(stored), helpText: 'Neu' })).toEqual({ helpText: 'Neu' });
-        expect(definitionPatch(stored, { ...formFromDefinition(stored), options: [{ value: 'a', label: 'A' }] })).toMatchObject({ options: [{ value: 'a', label: 'A' }] });
+        expect(definitionPatch(stored, { ...formFromDefinition(stored), levelKind: 'choice', options: [{ value: 'a', label: 'A' }] })).toMatchObject({ options: [{ value: 'a', label: 'A' }] });
         // a free-text level (limit instead of options) is not touched
         const freeText = def({ type: 'credential', options: null, validation: { maxLength: 60 } });
+        expect(formFromDefinition(freeText)).toMatchObject({ levelKind: 'text', levelMax: '60' });
         expect(definitionPatch(freeText, formFromDefinition(freeText))).toEqual({});
+        expect(definitionPatch(freeText, { ...formFromDefinition(freeText), levelMax: '40' })).toEqual({ validation: { maxLength: 40 } });
+        // switching to levels clears the limit, switching to none clears the levels
+        expect(definitionPatch(freeText, { ...formFromDefinition(freeText), levelKind: 'choice', options: [{ value: 'a', label: 'A' }] })).toEqual({ validation: null, options: [{ value: 'a', label: 'A' }] });
+        const levels = def({ type: 'credential', options: [{ value: 'a', label: 'A' }] });
+        expect(formFromDefinition(levels).levelKind).toBe('choice');
+        expect(definitionPatch(levels, { ...formFromDefinition(levels), levelKind: 'none' })).toEqual({ options: null });
     });
 
     it('gives the renderer help text, limits and levels', () => {

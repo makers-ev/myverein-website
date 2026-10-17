@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Lock } from 'lucide-react';
 
 import FormRenderer, { focusField } from '@/components/forms/FormRenderer';
-import ExpiryBadge from '@/components/verein/ExpiryBadge';
+import ExpiryBadge, { EnteredByNote } from '@/components/verein/ExpiryBadge';
 import LoadError from '@/components/LoadError';
 import LoadingText from '@/components/LoadingText';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -163,8 +163,9 @@ export default function MemberCustomFields({ clubId, target, title, showSensitiv
                                 {f.helpText && <dd className="mt-0.5 whitespace-pre-line break-words text-xs text-muted-foreground">{f.helpText}</dd>}
                                 <dd className={`mt-0.5 whitespace-pre-line break-words text-sm ${text === null ? 'text-muted-foreground' : 'text-foreground'}`}>{text ?? '—'}</dd>
                                 {f.type === 'credential' && text !== null && (
-                                    <dd className="mt-1">
+                                    <dd className="mt-1 flex flex-wrap items-center gap-2">
                                         <ExpiryBadge expiry={asExpiry(f.expiry)} />
+                                        <EnteredByNote enteredBy={f.enteredBy} />
                                     </dd>
                                 )}
                                 {!readOnlyView && !own && !f.editable && <dd className="mt-0.5 text-xs text-muted-foreground">{f.sensitive ? t('forms.cf.values.readonlySensitive') : f.editableBy === 'vorstand' ? t('forms.cf.values.readonlyBoard') : t('forms.cf.values.readonlySelf')}</dd>}

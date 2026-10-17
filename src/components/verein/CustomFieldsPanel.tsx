@@ -126,7 +126,7 @@ export default function CustomFieldsPanel({ clubId, permissions }: { clubId: str
                                                 {d.archived && <Chip tone="muted">{t('forms.cf.list.archived')}</Chip>}
                                             </div>
                                             <p className="mt-1 text-xs text-muted-foreground">
-                                                <code>{d.key}</code> · {t('forms.cf.list.values', { count: d.valueCount ?? 0 })} · {t('forms.cf.list.export')} <code>cf:{d.key}</code>
+                                                <code>{d.key}</code> · {d.valueCount === null ? t('forms.cf.list.valuesHidden') : t('forms.cf.list.values', { count: d.valueCount ?? 0 })} · {t('forms.cf.list.export')} <code>cf:{d.key}</code>
                                             </p>
                                         </div>
                                         <div className="flex items-center gap-1">
@@ -140,7 +140,14 @@ export default function CustomFieldsPanel({ clubId, permissions }: { clubId: str
                                                     <button type="button" onClick={() => setEditing(d)} aria-label={t('forms.cf.editNamed', { label: d.label })} className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
                                                         <Pencil className="h-4 w-4" aria-hidden="true" />
                                                     </button>
-                                                    <button type="button" onClick={() => setRemoving(d)} aria-label={t('forms.cf.removeNamed', { label: d.label })} className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setRemoving(d)}
+                                                        disabled={d.valueCount === null}
+                                                        title={d.valueCount === null ? t('forms.cf.remove.needsSensitive') : undefined}
+                                                        aria-label={t('forms.cf.removeNamed', { label: d.label })}
+                                                        className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive disabled:opacity-40"
+                                                    >
                                                         {(d.valueCount ?? 0) > 0 ? <Archive className="h-4 w-4" aria-hidden="true" /> : <Trash2 className="h-4 w-4" aria-hidden="true" />}
                                                     </button>
                                                 </>
