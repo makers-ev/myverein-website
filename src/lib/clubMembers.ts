@@ -76,6 +76,9 @@ export interface ClubMember {
     roles: MemberRole[];
     departments: MemberDepartment[];
     email?: string | null;
+    /** Separate name parts; absent on older backends (read as empty). */
+    firstName?: string | null;
+    lastName?: string | null;
     contactEmail?: string | null;
     memberNumber?: string | null;
     birthDate?: string | null;

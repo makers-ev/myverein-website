@@ -273,7 +273,7 @@ export default function VereinPageContent() {
     async function selectTab(next: Tab) {
         // Unsaved edits (form editor, own custom fields) survive only inside their tab: leaving it needs a confirmation.
         const unsaved = next !== currentTab && ((currentTab === 'formulare' && formsDirty) || (currentTab === 'profil' && profilDirty));
-        if (unsaved && !(await confirm({ title: t('forms.editor.leave.title'), body: t(currentTab === 'formulare' ? 'forms.editor.leaveConfirm' : 'forms.cf.values.leaveConfirm'), confirmLabel: t('forms.editor.leave.confirm'), danger: true }))) return;
+        if (unsaved && !(await confirm({ title: t('forms.editor.leave.title'), body: t(currentTab === 'formulare' ? 'forms.editor.leaveConfirm' : 'verein.profil.leaveConfirm'), confirmLabel: t('forms.editor.leave.confirm'), danger: true }))) return;
         setTab(next);
     }
 
