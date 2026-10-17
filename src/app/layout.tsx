@@ -58,7 +58,7 @@ export default async function RootLayout({
     { name: "nav.features", href: "/features" },
     { name: "nav.roadmap", href: "/roadmap" },
     { name: "nav.changelog", href: "/changelog" },
-    { name: "nav.contact", href: "/contact" },
+    // { name: "nav.contact", href: "/contact" },
   ];
 
   // Member-only function links, shown inside AuthNav's account dropdown
