@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { expiryView } from '@/lib/credentials';
+import { CUSTOM_FIELD_TYPES } from '@/lib/customFields';
 
 import ProfileModulesTranslation from './ProfileModulesTranslation';
 import { translations } from './LanguageContext';
@@ -35,7 +36,7 @@ describe('ProfileModulesTranslation', () => {
 
     it('has every static key used by the profile module components', () => {
         const root = join(__dirname, '..');
-        const files = ['components/verein/ExpiryBadge.tsx', 'components/forms/FormRenderer.tsx', 'components/verein/MemberCustomFields.tsx', 'components/verein/CustomFieldFormModal.tsx', 'lib/credentials.ts'];
+        const files = ['components/verein/ExpiryBadge.tsx', 'components/forms/FormRenderer.tsx', 'components/verein/MemberCustomFields.tsx', 'components/verein/CustomFieldFormModal.tsx', 'components/verein/ProfileModulesDialog.tsx', 'components/verein/CustomFieldsPanel.tsx', 'lib/credentials.ts', 'lib/profileModules.ts'];
         const used = files.flatMap((f) => [...readFileSync(join(root, f), 'utf8').matchAll(/['"]((?:forms|verein)\.[\w.]+)['"]/g)].map((m) => m[1]!));
         expect(used.length).toBeGreaterThan(15);
         for (const key of used) expect(de[key], key).toBeTruthy();
@@ -57,5 +58,17 @@ describe('ProfileModulesTranslation', () => {
             expect(de[view!.key], view!.key).toBeTruthy();
             expect(placeholders(de[view!.key]!), view!.key).toEqual(Object.keys(view!.params).sort());
         }
+    });
+
+    it('has the dynamically built keys of the module catalog', () => {
+        const need = (key: string) => expect(de[key], key).toBeTruthy();
+        for (const g of ['fuehrerschein', 'qualifikationen', 'kinderschutz', 'mitarbeit', 'sport', 'persoenlich']) need(`forms.mod.group.${g}`);
+        for (const st of ['active', 'archived', 'inactive']) need(`forms.mod.state.${st}`);
+        for (const k of ['none', 'choice', 'text']) {
+            need(`forms.cf.levels.kind.${k}`);
+            need(`forms.cf.levels.kind.${k}.hint`);
+        }
+        for (const e of ['self', 'board']) need(`forms.cred.enteredBy.${e}`);
+        for (const type of CUSTOM_FIELD_TYPES) need(`forms.editor.type.${type}`);
     });
 });

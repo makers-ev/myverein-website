@@ -45,8 +45,8 @@ export function parseJsonPlain(text: string): unknown {
  * must never answer them from its HTTP cache (the backend's `Cache-Control` is set separately and is not relied upon here).
  */
 export function cachePolicyFor(path: string): RequestCache | undefined {
-    // Form definitions (drafts hold unpublished wording), custom field definitions/values (may be sensitive) and exit requests with answers.
-    return /^\/(form-submissions|club-forms|club-applications|forms|member-fields|club-exit-requests)(\/|\?|$)/.test(path) || /^\/club-members\/[^/?]+\/custom-fields(\/|\?|$)/.test(path)
+    // Form definitions (drafts hold unpublished wording), custom field definitions/values, the module catalog (`/member-fields/catalog`) and the credential overview (`/club-members/credentials`) (may be sensitive) and exit requests with answers.
+    return /^\/(form-submissions|club-forms|club-applications|forms|member-fields|club-exit-requests)(\/|\?|$)/.test(path) || /^\/club-members\/[^/?]+\/custom-fields(\/|\?|$)/.test(path) || /^\/club-members\/credentials(\/|\?|$)/.test(path)
         ? 'no-store'
         : undefined;
 }

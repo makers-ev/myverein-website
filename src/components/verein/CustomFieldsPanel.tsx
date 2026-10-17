@@ -1,11 +1,12 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Archive, ArchiveRestore, ListPlus, Lock, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Archive, ArchiveRestore, LayoutGrid, ListPlus, Lock, Pencil, Plus, Trash2 } from 'lucide-react';
 
 import LoadError from '@/components/LoadError';
 import LoadingText from '@/components/LoadingText';
 import CustomFieldFormModal from '@/components/verein/CustomFieldFormModal';
+import ProfileModulesDialog from '@/components/verein/ProfileModulesDialog';
 import { Modal } from '@/components/Modal';
 import { Chip, EmptyState, SectionCard } from '@/components/standorte/ui';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -28,6 +29,7 @@ export default function CustomFieldsPanel({ clubId, permissions }: { clubId: str
     const [showArchived, setShowArchived] = useState(false);
     const [editing, setEditing] = useState<CustomFieldDefinition | null>(null);
     const [creating, setCreating] = useState(false);
+    const [modules, setModules] = useState(false);
     const [removing, setRemoving] = useState<CustomFieldDefinition | null>(null);
     const [busyId, setBusyId] = useState<string | null>(null);
     const [flash, setFlash] = useState<{ ok: boolean; text: string } | null>(null);
@@ -80,10 +82,16 @@ export default function CustomFieldsPanel({ clubId, permissions }: { clubId: str
                     <h2 className="text-sm font-bold text-foreground">{t('forms.cf.title')}</h2>
                     <p className="mt-1 max-w-2xl text-xs text-muted-foreground">{t('forms.cf.hint')}</p>
                 </div>
-                <button type="button" disabled={(defs?.length ?? 0) >= MAX_CUSTOM_FIELDS} onClick={() => setCreating(true)} className={`${primaryButtonClass} inline-flex items-center gap-1.5`}>
-                    <Plus className="h-4 w-4" aria-hidden="true" />
-                    {t('forms.cf.create')}
-                </button>
+                <div className="flex flex-wrap gap-2">
+                    <button type="button" onClick={() => setModules(true)} className={`${secondaryButtonClass} inline-flex items-center gap-1.5`}>
+                        <LayoutGrid className="h-4 w-4" aria-hidden="true" />
+                        {t('forms.mod.open')}
+                    </button>
+                    <button type="button" disabled={(defs?.length ?? 0) >= MAX_CUSTOM_FIELDS} onClick={() => setCreating(true)} className={`${primaryButtonClass} inline-flex items-center gap-1.5`}>
+                        <Plus className="h-4 w-4" aria-hidden="true" />
+                        {t('forms.cf.create')}
+                    </button>
+                </div>
             </div>
 
             {flash && (
@@ -178,6 +186,7 @@ export default function CustomFieldsPanel({ clubId, permissions }: { clubId: str
                     }}
                 />
             )}
+            {modules && <ProfileModulesDialog clubId={clubId} canReadSensitive={canReadSensitive} onClose={() => setModules(false)} onChanged={load} />}
             {removing && (
                 <RemoveDialog
                     clubId={clubId}
