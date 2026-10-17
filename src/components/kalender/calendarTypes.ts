@@ -70,3 +70,13 @@ export function formatTimeRange(ev: CalendarEvent, language: string): string {
 export function errorMessage(err: unknown, t: (key: string) => string): string {
     return t(memberErrorKey(err));
 }
+
+/** The default calendar is the only one: backend forbids deleting it or un-defaulting/department-scoping it. */
+export function isLockedDefaultCalendar(calendar: Calendar, calendars: Calendar[]): boolean {
+    return calendar.isDefault && calendars.length <= 1;
+}
+
+/** Calendar preselected for new events: the club default, else the first one, else none. */
+export function defaultCalendarId(calendars: Calendar[]): string {
+    return (calendars.find((c) => c.isDefault) ?? calendars[0])?.id ?? '';
+}

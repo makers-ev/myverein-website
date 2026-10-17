@@ -9,6 +9,7 @@ import { apiFetch } from '@/lib/api-client';
 import {
     type Calendar,
     type CalendarEvent,
+    defaultCalendarId,
     type RsvpStatus,
     type TFn,
     dangerBtn,
@@ -167,7 +168,7 @@ interface FormProps {
 
 export function EventFormModal({ clubId, calendars, colorFor, event, initialStart, t, onClose, onSaved }: FormProps) {
     const defaultStart = initialStart ?? new Date();
-    const [calendarId, setCalendarId] = useState(event?.calendarId ?? (calendars.find((c) => c.isDefault) ?? calendars[0])?.id ?? '');
+    const [calendarId, setCalendarId] = useState(event?.calendarId ?? defaultCalendarId(calendars));
     const [title, setTitle] = useState(event?.title ?? '');
     const [description, setDescription] = useState(event?.description ?? '');
     const [category, setCategory] = useState(event?.category ?? '');

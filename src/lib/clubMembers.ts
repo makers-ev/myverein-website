@@ -259,6 +259,8 @@ export function memberErrorKey(err: unknown): string {
             return 'verein.err.alreadyMember';
         case 'account_has_open_items':
             return 'verein.err.accountOpenItems';
+        case 'default_calendar_required':
+            return 'kalender.err.defaultCalendarRequired';
         case 'export_too_large':
             return 'verein.err.exportTooLarge';
         case 'unknown_column':
