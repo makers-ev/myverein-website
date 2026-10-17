@@ -12,6 +12,7 @@ import { useConfirm } from '@/components/useConfirm';
 import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
 import { ApiError, apiFetch } from '@/lib/api-client';
 import { formatDate, primaryButtonClass } from '@/lib/clubMembers';
+import { localizedTexts, textLang } from '@/lib/profileTexts';
 import { asExpiry } from '@/lib/credentials';
 import { customFieldErrorKey, displayValue, type MemberCustomField, partitionFields, toFormField, valuesPatch, valuesToAnswers } from '@/lib/customFields';
 import { type Answers, type FieldErrorCode, fieldErrorsFromError, validateAnswers } from '@/lib/formSchema';
@@ -39,9 +40,10 @@ interface Props {
  */
 export default function MemberCustomFields({ clubId, target, title, showSensitiveNote, onDirtyChange, readOnlyView = false, emptyHint }: Props) {
     const { t, language } = useLanguage();
+    const lang = textLang(language);
     const own = target === 'me';
     const path = `/club-members/${encodeURIComponent(target)}/custom-fields?clubId=${clubId}`;
-    const [fields, setFields] = useState<MemberCustomField[] | null>(null);
+    const [loaded, setLoaded] = useState<MemberCustomField[] | null>(null);
     const [state, setState] = useState<'loading' | 'ready' | 'failed' | 'hidden'>('loading');
     const [attempt, setAttempt] = useState(0);
     const [saved, setSaved] = useState<Answers>({});
@@ -61,7 +63,7 @@ export default function MemberCustomFields({ clubId, target, title, showSensitiv
 
     const apply = useCallback((list: MemberCustomField[]) => {
         const next = valuesToAnswers(list);
-        setFields(list);
+        setLoaded(list);
         setSaved(next);
         setAnswers(next);
         setErrors({});
@@ -85,6 +87,15 @@ export default function MemberCustomFields({ clubId, target, title, showSensitiv
         };
     }, [path, attempt, apply]);
 
+    // Texts of module-derived fields in the UI language (`translations[lang]?.label ?? label`); the stored text stays untouched in `loaded`.
+    const fields = useMemo(
+        () =>
+            loaded?.map((f) => {
+                const tx = localizedTexts(f, lang);
+                return { ...f, label: tx.label, helpText: tx.helpText };
+            }) ?? null,
+        [loaded, lang],
+    );
     const parts = useMemo(() => partitionFields(fields ?? [], readOnlyView, own), [fields, readOnlyView, own]);
     const { editable, readOnly } = parts;
     const renderFields = useMemo(() => editable.map(toFormField), [editable]);

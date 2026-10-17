@@ -26,6 +26,7 @@ import {
     pageCount,
     rowName,
 } from '@/lib/credentialOverview';
+import { localizedTexts, textLang, withLang, type TextTranslations } from '@/lib/profileTexts';
 import { CREDENTIAL_STATUSES, type CredentialStatus, EXPIRING_WINDOWS } from '@/lib/credentials';
 
 type Outcome = { key: string; overview: Overview; error?: undefined } | { key: string; error: unknown; overview?: undefined };
@@ -42,6 +43,23 @@ export default function CredentialsPanel({ clubId, canIncludeFormer, onUnavailab
     const [filters, setFilters] = useState<OverviewFilters>(emptyOverviewFilters());
     const [page, setPage] = useState(1);
     const [fields, setFields] = useState<OverviewField[]>([]);
+    // The overview delivers German labels only; the definitions (same rights: only fields the caller may read) carry the English ones.
+    const lang = textLang(language);
+    const [labels, setLabels] = useState<Record<string, string>>({});
+    useEffect(() => {
+        let cancelled = false;
+        apiFetch<{ data: Array<{ key: string; label: string; helpText?: string | null; translations?: TextTranslations | null }> }>(withLang(`/member-fields?clubId=${clubId}`, lang))
+            .then((res) => {
+                if (!cancelled) setLabels(Object.fromEntries(res.data.map((d) => [d.key, localizedTexts(d, lang).label])));
+            })
+            .catch(() => {
+                if (!cancelled) setLabels({});
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [clubId, lang]);
+    const labelOfKey = (key: string, fallback: string) => labels[key] ?? fallback;
     const [outcome, setOutcome] = useState<Outcome | null>(null);
     const [attempt, setAttempt] = useState(0);
     const [detail, setDetail] = useState<{ id: string; name: string | null } | null>(null);
@@ -113,7 +131,7 @@ export default function CredentialsPanel({ clubId, canIncludeFormer, onUnavailab
                         <option value="">{t('forms.cred.overview.field.all')}</option>
                         {fields.map((f) => (
                             <option key={f.id} value={f.key}>
-                                {f.label}
+                                {labelOfKey(f.key, f.label)}
                                 {f.sensitive ? ` (${t('forms.cred.overview.confidential')})` : ''}
                             </option>
                         ))}
@@ -204,7 +222,7 @@ export default function CredentialsPanel({ clubId, canIncludeFormer, onUnavailab
                         {shown.today ? ` · ${t('forms.cred.overview.asOf', { date: formatDate(shown.today, language) })}` : ''}
                         {loading ? ` · ${t('common.loading')}` : ''}
                     </p>
-                    <CredentialsTable rows={shown.data} fields={fields} loading={loading} onOpen={(id, name) => setDetail({ id, name })} />
+                    <CredentialsTable rows={shown.data} fields={fields} labels={labels} loading={loading} onOpen={(id, name) => setDetail({ id, name })} />
                     {pages > 1 && (
                         <nav aria-label={t('forms.cred.overview.pages')} className="flex flex-wrap items-center justify-between gap-2">
                             <button type="button" disabled={page <= 1 || loading} onClick={() => setPage((p) => Math.max(1, p - 1))} className={secondaryButtonClass}>
@@ -226,7 +244,7 @@ export default function CredentialsPanel({ clubId, canIncludeFormer, onUnavailab
 }
 
 /** The result table: horizontally scrollable on a phone, row headers, expiry in words, details button per row. */
-export function CredentialsTable({ rows, fields, loading, onOpen }: { rows: OverviewRow[]; fields: readonly OverviewField[]; loading: boolean; onOpen: (clubMemberId: string, name: string | null) => void }) {
+export function CredentialsTable({ rows, fields, labels = {}, loading, onOpen }: { rows: OverviewRow[]; fields: readonly OverviewField[]; labels?: Record<string, string>; loading: boolean; onOpen: (clubMemberId: string, name: string | null) => void }) {
     const { t, language } = useLanguage();
     const levelLabel = (fieldKey: string, level: string | undefined) => (level ? (fields.find((f) => f.key === fieldKey)?.options?.find((o) => o.value === level)?.label ?? level) : '—');
     return (
@@ -254,7 +272,7 @@ export function CredentialsTable({ rows, fields, loading, onOpen }: { rows: Over
                                         <span className="break-words">{name ?? '—'}</span>
                                     </th>
                                     <td className="px-3 py-2 text-foreground">
-                                        <span className="break-words">{row.fieldLabel}</span>
+                                        <span className="break-words">{labels[row.fieldKey] ?? row.fieldLabel}</span>
                                         {row.sensitive && (
                                             <span className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-warning/15 px-1.5 py-0.5 text-[11px] font-medium text-warning">
                                                 <Lock className="h-3 w-3" aria-hidden="true" />

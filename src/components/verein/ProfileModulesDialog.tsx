@@ -12,7 +12,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api-client';
 import { primaryButtonClass, secondaryButtonClass } from '@/lib/clubMembers';
 import { customFieldErrorKey } from '@/lib/customFields';
-import { asCatalog, type Catalog, type CatalogModule, groupLabelKey, groupModules, limitView, moduleAudience, PRIVACY_NOTE_MODULES, toggleBlock } from '@/lib/profileModules';
+import { localizedTexts, textLang, withLang } from '@/lib/profileTexts';
+import { asCatalog, type Catalog, type CatalogModule, groupModules, limitView, moduleAudience, PRIVACY_NOTE_MODULES, toggleBlock } from '@/lib/profileModules';
 
 /**
  * "Bausteine aktivieren" (`forms:write`): the catalog of optional profile modules, grouped, each with one click on/off. Nothing is
@@ -21,7 +22,8 @@ import { asCatalog, type Catalog, type CatalogModule, groupLabelKey, groupModule
  * server and is rendered as plain text.
  */
 export default function ProfileModulesDialog({ clubId, canReadSensitive, onClose, onChanged }: { clubId: string; canReadSensitive: boolean; onClose: () => void; onChanged: () => void }) {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
+    const lang = textLang(language);
     const { confirm, dialog } = useConfirm();
     const [catalog, setCatalog] = useState<Catalog | null>(null);
     const [failed, setFailed] = useState(false);
@@ -38,7 +40,7 @@ export default function ProfileModulesDialog({ clubId, canReadSensitive, onClose
 
     const load = useCallback(() => {
         setFailed(false);
-        apiFetch<unknown>(`/member-fields/catalog?clubId=${clubId}`)
+        apiFetch<unknown>(withLang(`/member-fields/catalog?clubId=${clubId}`, lang))
             .then((res) => {
                 if (!alive.current) return;
                 const parsed = asCatalog(res);
@@ -48,7 +50,7 @@ export default function ProfileModulesDialog({ clubId, canReadSensitive, onClose
             .catch(() => {
                 if (alive.current) setFailed(true);
             });
-    }, [clubId]);
+    }, [clubId, lang]);
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -60,7 +62,7 @@ export default function ProfileModulesDialog({ clubId, canReadSensitive, onClose
         const activating = m.state !== 'active';
         if (!activating) {
             const ok = await confirm({
-                title: t('forms.mod.deactivate.title', { label: m.label }),
+                title: t('forms.mod.deactivate.title', { label: localizedTexts(m, lang).label }),
                 body: t('forms.mod.deactivate.body'),
                 confirmLabel: t('forms.mod.deactivate'),
                 danger: true,
@@ -70,9 +72,9 @@ export default function ProfileModulesDialog({ clubId, canReadSensitive, onClose
         setBusyId(m.id);
         setFlash(null);
         try {
-            await apiFetch(`/member-fields/catalog/${encodeURIComponent(m.id)}/${activating ? 'activate' : 'deactivate'}?clubId=${clubId}`, { method: 'POST', body: {} });
+            await apiFetch(withLang(`/member-fields/catalog/${encodeURIComponent(m.id)}/${activating ? 'activate' : 'deactivate'}?clubId=${clubId}`, lang), { method: 'POST', body: {} });
             if (!alive.current) return;
-            setFlash({ ok: true, text: t(activating ? 'forms.mod.activated' : 'forms.mod.deactivated', { label: m.label }) });
+            setFlash({ ok: true, text: t(activating ? 'forms.mod.activated' : 'forms.mod.deactivated', { label: localizedTexts(m, lang).label }) });
             load();
             onChanged();
         } catch (err) {
@@ -137,17 +139,17 @@ export default function ProfileModulesDialog({ clubId, canReadSensitive, onClose
                         </div>
 
                         {groupModules(catalog).map(({ group, modules }) => {
-                            const key = groupLabelKey(group.id);
                             const headingId = `mod-group-${group.id}`;
                             return (
                                 <section key={group.id} aria-labelledby={headingId}>
                                     <h3 id={headingId} className="text-sm font-bold text-foreground">
-                                        {key ? t(key) : group.label}
+                                        {localizedTexts(group, lang).label}
                                     </h3>
                                     {modules.some((m) => m.neverMandatoryGroup) && <p className="mt-0.5 text-xs text-muted-foreground">{t('forms.mod.neverMandatory')}</p>}
                                     <ul className="mt-2 space-y-2">
                                         {modules.map((m) => {
                                             const aud = moduleAudience(m);
+                                            const tx = localizedTexts(m, lang);
                                             const block = toggleBlock(m, catalog.limit, canReadSensitive);
                                             const privacy = PRIVACY_NOTE_MODULES[m.id];
                                             const descId = `mod-${m.id}-desc`;
@@ -156,10 +158,10 @@ export default function ProfileModulesDialog({ clubId, canReadSensitive, onClose
                                                 <li key={m.id} className="rounded-xl border border-border bg-card p-3">
                                                     <div className="flex flex-wrap items-start justify-between gap-3">
                                                         <div className="min-w-0 flex-1">
-                                                            <p className="break-words text-sm font-semibold text-foreground">{m.label}</p>
-                                                            {m.description && (
+                                                            <p className="break-words text-sm font-semibold text-foreground">{tx.label}</p>
+                                                            {tx.description && (
                                                                 <p id={descId} className="mt-0.5 break-words text-xs text-muted-foreground">
-                                                                    {m.description}
+                                                                    {tx.description}
                                                                 </p>
                                                             )}
                                                             <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
@@ -189,8 +191,8 @@ export default function ProfileModulesDialog({ clubId, canReadSensitive, onClose
                                                             type="button"
                                                             onClick={() => void toggle(m)}
                                                             disabled={busyId !== null || block !== null}
-                                                            aria-describedby={[m.description ? descId : null, block ? blockId : null].filter(Boolean).join(' ') || undefined}
-                                                            aria-label={t(m.state === 'active' ? 'forms.mod.deactivateNamed' : m.state === 'archived' ? 'forms.mod.reactivateNamed' : 'forms.mod.activateNamed', { label: m.label })}
+                                                            aria-describedby={[tx.description ? descId : null, block ? blockId : null].filter(Boolean).join(' ') || undefined}
+                                                            aria-label={t(m.state === 'active' ? 'forms.mod.deactivateNamed' : m.state === 'archived' ? 'forms.mod.reactivateNamed' : 'forms.mod.activateNamed', { label: tx.label })}
                                                             className={m.state === 'active' ? secondaryButtonClass : primaryButtonClass}
                                                         >
                                                             {t(m.state === 'active' ? 'forms.mod.deactivate' : m.state === 'archived' ? 'forms.mod.reactivate' : 'forms.mod.activate')}

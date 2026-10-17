@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/lib/auth-client', () => ({ backendUrl: 'http://backend.test', authClient: {} }));
 
-import { asCatalog, type CatalogModule, groupLabelKey, groupModules, limitView, moduleAudience, toggleBlock } from './profileModules';
+import { asCatalog, type CatalogModule, groupModules, limitView, moduleAudience, toggleBlock } from './profileModules';
 
 const mod = (id: string, group: string, extra: Partial<CatalogModule> = {}): CatalogModule => ({
     id,
@@ -40,9 +40,6 @@ describe('groupModules', () => {
         const views = groupModules({ groups, modules: [mod('a', 'fuehrerschein'), mod('x', 'neu'), mod('y', 'neu')] });
         expect(views.map((v) => v.group.id)).toEqual(['fuehrerschein', 'neu']);
         expect(views[1]!.modules).toHaveLength(2);
-        expect(groupLabelKey('neu')).toBeNull();
-        expect(groupLabelKey('sport')).toBe('forms.mod.group.sport');
-        expect(groupLabelKey('__proto__')).toBeNull();
     });
 });
 

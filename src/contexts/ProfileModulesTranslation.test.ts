@@ -62,7 +62,6 @@ describe('ProfileModulesTranslation', () => {
 
     it('has the dynamically built keys of the module catalog', () => {
         const need = (key: string) => expect(de[key], key).toBeTruthy();
-        for (const g of ['fuehrerschein', 'qualifikationen', 'kinderschutz', 'mitarbeit', 'sport', 'persoenlich']) need(`forms.mod.group.${g}`);
         for (const st of ['active', 'archived', 'inactive']) need(`forms.mod.state.${st}`);
         for (const k of ['none', 'choice', 'text']) {
             need(`forms.cf.levels.kind.${k}`);

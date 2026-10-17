@@ -2,6 +2,8 @@ import { ApiError } from './api-client';
 import { memberErrorKey } from './clubMembers';
 import { type FieldOption, isValidFieldKey, keyProblem, MAX_LABEL, MAX_OPTIONS, withOptionUids } from './formEditor';
 import { type CredentialExpiry, type CredentialTexts, credentialSummary } from './credentials';
+import type { TextTranslations } from './profileTexts';
+import { storedTexts } from './profileTexts';
 import { type Answers, diffAnswers, type FormField, isCleanText, isEmptyAnswer } from './formSchema';
 
 /**
@@ -42,6 +44,8 @@ export interface CustomFieldDefinition {
     validation?: NonNullable<FormField['validation']> | null;
     /** Explanation shown with the input (plain text). Absent on older backends. */
     helpText?: string | null;
+    /** German and English text of a definition derived from a profile module (`null`: board-edited or manual, never translated). */
+    translations?: TextTranslations | null;
     visibleTo: VisibleTo;
     editableBy: EditableBy;
     sensitive: boolean;
@@ -85,7 +89,9 @@ export const emptyDefinitionForm = (): DefinitionForm => ({ key: '', label: '', 
 export function formFromDefinition(def: CustomFieldDefinition): DefinitionForm {
     const maxLength = def.validation?.maxLength;
     const levelKind = def.type !== 'credential' ? 'none' : (def.options ?? []).length > 0 ? 'choice' : typeof maxLength === 'number' ? 'text' : 'none';
-    return { key: def.key, label: def.label, type: def.type, options: withOptionUids((def.options ?? []).map((o) => ({ ...o }))), levelKind, levelMax: typeof maxLength === 'number' ? String(maxLength) : '', helpText: def.helpText ?? '', visibleTo: def.visibleTo, editableBy: def.editableBy, sensitive: def.sensitive };
+    // The editor works on the STORED text, not on the English one a `?lang=en` request put at the top level.
+    const stored = storedTexts(def);
+    return { key: def.key, label: stored.label, type: def.type, options: withOptionUids((def.options ?? []).map((o) => ({ ...o }))), levelKind, levelMax: typeof maxLength === 'number' ? String(maxLength) : '', helpText: stored.helpText ?? '', visibleTo: def.visibleTo, editableBy: def.editableBy, sensitive: def.sensitive };
 }
 
 export type DefinitionProblem = 'label' | 'label_text' | 'key_format' | 'key_reserved' | 'key_duplicate' | 'options_missing' | 'option_label' | 'option_duplicate' | 'too_many_options' | 'help_text' | 'level_limit';
@@ -177,7 +183,8 @@ function optionsBody(form: DefinitionForm): Array<{ value: string; label: string
 /** The PATCH body: only what differs from the stored definition. Empty = nothing to save. */
 export function definitionPatch(def: CustomFieldDefinition, form: DefinitionForm): Record<string, unknown> {
     const patch: Record<string, unknown> = {};
-    if (form.label.trim() !== def.label) patch.label = form.label.trim();
+    const storedText = storedTexts(def);
+    if (form.label.trim() !== storedText.label) patch.label = form.label.trim();
     if (form.type !== def.type) patch.type = form.type;
     const options = optionsBody(form);
     const stored = def.options === null ? null : def.options.map((o) => ({ value: o.value, label: o.label }));
@@ -189,7 +196,7 @@ export function definitionPatch(def: CustomFieldDefinition, form: DefinitionForm
         if (wanted !== stored) patch.validation = wanted === null ? null : { maxLength: wanted };
     }
     const help = form.helpText.trim() === '' ? null : form.helpText.trim();
-    if (help !== (def.helpText ?? null)) patch.helpText = help;
+    if (help !== storedText.helpText) patch.helpText = help;
     if (form.visibleTo !== def.visibleTo) patch.visibleTo = form.visibleTo;
     if (form.editableBy !== def.editableBy) patch.editableBy = form.editableBy;
     if (form.sensitive !== def.sensitive) patch.sensitive = form.sensitive;

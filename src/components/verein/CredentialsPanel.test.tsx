@@ -88,6 +88,12 @@ describe('CredentialsTable', () => {
         expect(html).toContain('aria-busy="true"');
     });
 
+    it('shows the localized label of a field when the definitions delivered one', () => {
+        const html = wrap(<CredentialsTable rows={[row()]} fields={fields} labels={{ mod_q_uebungsleiter: 'Instructor licence' }} loading={false} onOpen={() => {}} />, 'en');
+        expect(html).toContain('Instructor licence');
+        expect(html).not.toContain('Übungsleiter-Lizenz');
+    });
+
     it('renders in English', () => {
         const html = render([row()], false, 'en');
         expect(html).toContain('Expires in 3 days');

@@ -1,5 +1,6 @@
 import type { CustomFieldType, EditableBy, VisibleTo } from './customFields';
 import type { FieldOption } from './formEditor';
+import type { TextTranslations } from './profileTexts';
 
 /**
  * Pure helpers of the profile module catalog ("Profil-Bausteine", `GET /member-fields/catalog`, `forms:write`): optional,
@@ -13,6 +14,7 @@ export type ModuleState = 'active' | 'archived' | 'inactive';
 export interface CatalogGroup {
     id: string;
     label: string;
+    translations?: TextTranslations | null;
 }
 
 export interface CatalogModule {
@@ -21,6 +23,8 @@ export interface CatalogModule {
     label: string;
     description: string;
     helpText: string | null;
+    /** German and English text of the module (the top-level text is already in the requested `lang`). */
+    translations?: TextTranslations | null;
     type: CustomFieldType;
     options: FieldOption[] | null;
     validation: { maxLength?: number; min?: number; max?: number } | null;
@@ -40,11 +44,6 @@ export interface Catalog {
     modules: CatalogModule[];
     limit: { used: number; max: number };
 }
-
-const KNOWN_GROUPS = new Set(['fuehrerschein', 'qualifikationen', 'kinderschutz', 'mitarbeit', 'sport', 'persoenlich']);
-
-/** Translation key of a known group, `null` for a group this client does not know (the server's label is shown then). */
-export const groupLabelKey = (id: string): string | null => (KNOWN_GROUPS.has(id) ? `forms.mod.group.${id}` : null);
 
 export interface ModuleGroupView {
     group: CatalogGroup;

@@ -11,6 +11,7 @@ import { Modal } from '@/components/Modal';
 import { Chip, EmptyState, SectionCard } from '@/components/standorte/ui';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api-client';
+import { localizedTexts, textLang, withLang } from '@/lib/profileTexts';
 import { primaryButtonClass, secondaryButtonClass } from '@/lib/clubMembers';
 import { type CustomFieldDefinition, customFieldErrorKey, deleteOutcomeOf, MAX_CUSTOM_FIELDS } from '@/lib/customFields';
 
@@ -21,7 +22,9 @@ import { type CustomFieldDefinition, customFieldErrorKey, deleteOutcomeOf, MAX_C
  * is shown per field (`cf:<key>`).
  */
 export default function CustomFieldsPanel({ clubId, permissions }: { clubId: string; permissions: string[] }) {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
+    const lang = textLang(language);
+    const labelOf = (d: CustomFieldDefinition) => localizedTexts(d, lang).label;
     const canWrite = permissions.includes('forms:write');
     const canReadSensitive = permissions.includes('members:read_sensitive');
     const [defs, setDefs] = useState<CustomFieldDefinition[] | null>(null);
@@ -36,10 +39,10 @@ export default function CustomFieldsPanel({ clubId, permissions }: { clubId: str
 
     const load = useCallback(() => {
         setFailed(false);
-        apiFetch<{ data: CustomFieldDefinition[] }>(`/member-fields?clubId=${clubId}&includeArchived=true`)
+        apiFetch<{ data: CustomFieldDefinition[] }>(withLang(`/member-fields?clubId=${clubId}&includeArchived=true`, lang))
             .then((res) => setDefs(res.data))
             .catch(() => setFailed(true));
-    }, [clubId]);
+    }, [clubId, lang]);
 
     useEffect(() => {
         if (!canWrite) return;
@@ -63,7 +66,7 @@ export default function CustomFieldsPanel({ clubId, permissions }: { clubId: str
         setFlash(null);
         try {
             await apiFetch(`/member-fields/${def.id}/unarchive?clubId=${clubId}`, { method: 'POST', body: {} });
-            setFlash({ ok: true, text: t('forms.cf.unarchived', { label: def.label }) });
+            setFlash({ ok: true, text: t('forms.cf.unarchived', { label: labelOf(def) }) });
             load();
         } catch (err) {
             setFlash({ ok: false, text: t(customFieldErrorKey(err)) });
@@ -120,7 +123,7 @@ export default function CustomFieldsPanel({ clubId, permissions }: { clubId: str
                                 <li key={d.id} className={`rounded-xl border border-border bg-card p-3 ${d.archived ? 'opacity-70' : ''}`}>
                                     <div className="flex flex-wrap items-start justify-between gap-2">
                                         <div className="min-w-0">
-                                            <p className="break-words text-sm font-semibold text-foreground">{d.label}</p>
+                                            <p className="break-words text-sm font-semibold text-foreground">{labelOf(d)}</p>
                                             <div className="mt-1 flex flex-wrap items-center gap-1.5">
                                                 <Chip tone="muted">{t(`forms.editor.type.${d.type}`)}</Chip>
                                                 <Chip tone="muted">{t('forms.cf.list.visibleTo', { who: t(`forms.cf.visibleTo.${d.visibleTo}`) })}</Chip>
@@ -145,7 +148,7 @@ export default function CustomFieldsPanel({ clubId, permissions }: { clubId: str
                                                 </button>
                                             ) : (
                                                 <>
-                                                    <button type="button" onClick={() => setEditing(d)} aria-label={t('forms.cf.editNamed', { label: d.label })} className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
+                                                    <button type="button" onClick={() => setEditing(d)} aria-label={t('forms.cf.editNamed', { label: labelOf(d) })} className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
                                                         <Pencil className="h-4 w-4" aria-hidden="true" />
                                                     </button>
                                                     <button
@@ -153,7 +156,7 @@ export default function CustomFieldsPanel({ clubId, permissions }: { clubId: str
                                                         onClick={() => setRemoving(d)}
                                                         disabled={d.valueCount === null}
                                                         title={d.valueCount === null ? t('forms.cf.remove.needsSensitive') : undefined}
-                                                        aria-label={t('forms.cf.removeNamed', { label: d.label })}
+                                                        aria-label={t('forms.cf.removeNamed', { label: labelOf(d) })}
                                                         className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive disabled:opacity-40"
                                                     >
                                                         {(d.valueCount ?? 0) > 0 ? <Archive className="h-4 w-4" aria-hidden="true" /> : <Trash2 className="h-4 w-4" aria-hidden="true" />}
@@ -193,7 +196,7 @@ export default function CustomFieldsPanel({ clubId, permissions }: { clubId: str
                     definition={removing}
                     onClose={() => setRemoving(null)}
                     onDone={(outcome) => {
-                        setFlash({ ok: true, text: t(outcome === 'archived' ? 'forms.cf.outcome.archived' : 'forms.cf.outcome.deleted', { label: removing.label }) });
+                        setFlash({ ok: true, text: t(outcome === 'archived' ? 'forms.cf.outcome.archived' : 'forms.cf.outcome.deleted', { label: labelOf(removing) }) });
                         setRemoving(null);
                         load();
                     }}
@@ -204,7 +207,7 @@ export default function CustomFieldsPanel({ clubId, permissions }: { clubId: str
 }
 
 function RemoveDialog({ clubId, definition, onClose, onDone }: { clubId: string; definition: CustomFieldDefinition; onClose: () => void; onDone: (outcome: 'archived' | 'deleted') => void }) {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const hasValues = (definition.valueCount ?? 0) > 0;
@@ -225,7 +228,7 @@ function RemoveDialog({ clubId, definition, onClose, onDone }: { clubId: string;
         <Modal
             open
             onClose={busy ? () => {} : onClose}
-            title={t('forms.cf.remove.title', { label: definition.label })}
+            title={t('forms.cf.remove.title', { label: localizedTexts(definition, textLang(language)).label })}
             footer={
                 <div className="flex justify-end gap-2">
                     <button type="button" onClick={onClose} disabled={busy} className={secondaryButtonClass}>

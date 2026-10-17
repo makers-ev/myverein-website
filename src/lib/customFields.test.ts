@@ -333,3 +333,28 @@ describe('credential fields and help texts', () => {
         expect(customFieldErrorKey(new ApiError(409, 'CONFLICT', 'x', { code: 'custom_field_limit' }))).toBe('forms.cf.err.limit');
     });
 });
+
+describe('translated module definitions in the editor', () => {
+    // Fetched with ?lang=en: the top level is English, the stored (German) text is translations.de.
+    const translated = def({
+        type: 'credential',
+        options: null,
+        key: 'mod_q_juleica',
+        label: 'Youth leader card',
+        helpText: 'Tick only if you have it.',
+        translations: { de: { label: 'JuLeiCa', helpText: 'Nur ankreuzen, wenn vorhanden.' }, en: { label: 'Youth leader card', helpText: 'Tick only if you have it.' } },
+    });
+
+    it('shows and compares the stored text, never the English one', () => {
+        const form = formFromDefinition(translated);
+        expect(form).toMatchObject({ label: 'JuLeiCa', helpText: 'Nur ankreuzen, wenn vorhanden.' });
+        expect(definitionPatch(translated, form)).toEqual({});
+        expect(definitionPatch(translated, { ...form, label: 'Jugendleiter-Card' })).toEqual({ label: 'Jugendleiter-Card' });
+    });
+
+    it('takes the top-level text of a board-edited or manual definition (translations null)', () => {
+        const own = def({ label: 'Eigenes Feld', helpText: 'Hilfe', translations: null });
+        expect(formFromDefinition(own)).toMatchObject({ label: 'Eigenes Feld', helpText: 'Hilfe' });
+        expect(definitionPatch(own, formFromDefinition(own))).toEqual({});
+    });
+});
