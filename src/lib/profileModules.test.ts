@@ -76,11 +76,13 @@ describe('toggleBlock', () => {
         expect(toggleBlock({ state: 'active', sensitive: false }, full, true)).toBeNull();
         expect(toggleBlock({ state: 'inactive', sensitive: false }, free, false)).toBeNull();
     });
-    it('keeps sensitive modules for members:read_sensitive', () => {
-        for (const state of ['inactive', 'archived', 'active'] as const) {
+    it('needs members:read_sensitive to activate (or restore) a sensitive module, but not to deactivate it', () => {
+        for (const state of ['inactive', 'archived'] as const) {
             expect(toggleBlock({ state, sensitive: true }, free, false)).toBe('sensitive');
             expect(toggleBlock({ state, sensitive: true }, free, true)).toBeNull();
         }
+        expect(toggleBlock({ state: 'active', sensitive: true }, free, false)).toBeNull();
+        expect(toggleBlock({ state: 'active', sensitive: true }, free, true)).toBeNull();
     });
 });
 

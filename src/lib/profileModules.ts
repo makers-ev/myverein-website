@@ -92,10 +92,11 @@ export type ToggleBlock = 'limit' | 'sensitive';
 
 /**
  * Why a module cannot be switched on/off right now (`null` = it can). A new module needs a free slot (re-activating an archived
- * one does not); Kinderschutz modules (sensitive) are switched only by people with `members:read_sensitive`.
+ * one does not). Activating a Kinderschutz module (sensitive, including restoring it) needs `members:read_sensitive`;
+ * deactivating one needs only `forms:write` (backend rule: switching off protects data, it does not expose any).
  */
 export function toggleBlock(m: Pick<CatalogModule, 'state' | 'sensitive'>, limit: { used: number; max: number }, canReadSensitive: boolean): ToggleBlock | null {
-    if (m.sensitive && !canReadSensitive) return 'sensitive';
+    if (m.sensitive && m.state !== 'active' && !canReadSensitive) return 'sensitive';
     if (m.state === 'inactive' && limitView(limit).full) return 'limit';
     return null;
 }

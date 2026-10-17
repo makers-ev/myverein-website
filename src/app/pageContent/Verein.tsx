@@ -5,8 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { useThrottledCallback } from '@/lib/useThrottledCallback';
 import { memberErrorKey } from '@/lib/clubMembers';
-import { type ClubTab, formsGate, visibleTabs } from '@/lib/clubPermissions';
-import { asOverview, hasCredentialFields } from '@/lib/credentialOverview';
+import { type ClubTab, canSeeCredentialOverview, formsGate, visibleTabs } from '@/lib/clubPermissions';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ApplicationsPanel from '@/components/verein/ApplicationsPanel';
 import NoClubSection from '@/components/verein/NoClubSection';
@@ -202,8 +201,8 @@ export default function VereinPageContent() {
     // Own custom field edits in "Mein Profil" (separate save button).
     const [profilDirty, setProfilDirty] = useState(false);
     const onProfilDirty = useCallback((dirty: boolean) => setProfilDirty(dirty), []);
-    // "Qualifikationen" next to the member list: offered only if the endpoint answers with credential fields (403/404/none = hidden).
-    const [credentialsAvailable, setCredentialsAvailable] = useState(false);
+    // "Qualifikationen" next to the member list: offered by role, hidden once the endpoint says 403/404.
+    const [credentialsDenied, setCredentialsDenied] = useState(false);
     const [memberView, setMemberView] = useState<'list' | 'credentials'>('list');
     const { confirm, dialog: confirmDialog } = useConfirm();
 
@@ -275,22 +274,9 @@ export default function VereinPageContent() {
     const tabs: Tab[] = visibleTabs(permissions, me?.roles ?? []);
     const currentTab: Tab = tabs.includes(tab) ? tab : 'info';
 
-    const probeClubId = activeClub?.clubId ?? null;
-    const probeCredentials = currentTab === 'mitglieder' && probeClubId !== null;
-    useEffect(() => {
-        if (!probeCredentials || !probeClubId) return;
-        let cancelled = false;
-        apiFetch<unknown>(`/club-members/credentials?clubId=${probeClubId}&pageSize=1`)
-            .then((res) => {
-                if (!cancelled) setCredentialsAvailable(hasCredentialFields(asOverview(res)));
-            })
-            .catch(() => {
-                if (!cancelled) setCredentialsAvailable(false);
-            });
-        return () => {
-            cancelled = true;
-        };
-    }, [probeCredentials, probeClubId]);
+    // The switch comes from permissions/roles alone (no request on opening the tab); the view itself asks the endpoint and reports
+    // 403/404 as "not for you", which hides the switch again.
+    const credentialsAvailable = !credentialsDenied && canSeeCredentialOverview(permissions, me?.roles ?? []);
     const view: 'list' | 'credentials' = credentialsAvailable ? memberView : 'list';
 
     async function selectTab(next: Tab) {
@@ -364,7 +350,7 @@ export default function VereinPageContent() {
                             </div>
                         )}
                         {currentTab === 'mitglieder' && view === 'credentials' && (
-                            <CredentialsPanel clubId={activeClub.clubId} canIncludeFormer={permissions.includes('members:write') || permissions.includes('members:read_sensitive')} />
+                            <CredentialsPanel clubId={activeClub.clubId} onUnavailable={() => setCredentialsDenied(true)} canIncludeFormer={permissions.includes('members:write') || permissions.includes('members:read_sensitive')} />
                         )}
                         {currentTab === 'mitglieder' && view === 'list' && permissions.includes('members:write') && (
                             <ApplicationsPanel

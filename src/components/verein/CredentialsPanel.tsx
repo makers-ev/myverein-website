@@ -37,7 +37,7 @@ type Outcome = { key: string; overview: Overview; error?: undefined } | { key: s
  * handled by the caller / here); sensitive qualifications (Kinderschutz) are marked and their reads are audited by the server.
  * Nothing about it is stored in the browser and values are never logged. No reminders: the status is only shown.
  */
-export default function CredentialsPanel({ clubId, canIncludeFormer }: { clubId: string; canIncludeFormer: boolean }) {
+export default function CredentialsPanel({ clubId, canIncludeFormer, onUnavailable }: { clubId: string; canIncludeFormer: boolean; onUnavailable?: () => void }) {
     const { t, language } = useLanguage();
     const [filters, setFilters] = useState<OverviewFilters>(emptyOverviewFilters());
     const [page, setPage] = useState(1);
@@ -73,6 +73,12 @@ export default function CredentialsPanel({ clubId, canIncludeFormer }: { clubId:
     }, [query, attempt]);
 
     const current = outcome && outcome.key === key ? outcome : null;
+    // 403 (not for this person) or 404 without a field filter (nothing to show at all) = the view is not for the caller: report it so the
+    // switch disappears and the list comes back. Other failures (429, 5xx, offline) stay visible here with a retry.
+    const unavailable = current?.error instanceof ApiError && (current.error.status === 403 || (current.error.status === 404 && filters.fieldKey === ''));
+    useEffect(() => {
+        if (unavailable) onUnavailable?.();
+    }, [unavailable, onUnavailable]);
     const loading = current === null;
     const overview = current?.overview ?? null;
     // While a new query is on its way the previous rows stay visible (dimmed) instead of flashing.
@@ -187,6 +193,8 @@ export default function CredentialsPanel({ clubId, canIncludeFormer }: { clubId:
                 </div>
             ) : !shown ? (
                 loading ? <LoadingText /> : <LoadError onRetry={() => setAttempt((n) => n + 1)} />
+            ) : shown.fields.length === 0 ? (
+                <EmptyState icon={<ShieldCheck className="h-6 w-6" aria-hidden="true" />} text={t('forms.cred.overview.noFields')} />
             ) : shown.data.length === 0 ? (
                 <EmptyState icon={<ShieldCheck className="h-6 w-6" aria-hidden="true" />} text={filtered ? t('forms.cred.overview.empty.filtered') : t('forms.cred.overview.empty')} />
             ) : (

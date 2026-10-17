@@ -23,6 +23,17 @@ export function visibleTabs(permissions: readonly string[], roles: ReadonlyArray
     return tabs;
 }
 
+/** Roles that see the credential overview besides the board (backend `FUNKTIONSTRAEGER_ROLES`). */
+const FUNKTIONSTRAEGER = ['trainer', 'abteilungsleitung'] as const;
+
+/**
+ * Whether to offer the "Qualifikationen" view: board-level (`members:write` / `members:read_sensitive`) or a Funktionsträger role.
+ * Only a signal to show the switch -- the endpoint answers 403 for everybody else and that is handled in the view.
+ */
+export function canSeeCredentialOverview(permissions: readonly string[] | null | undefined, roles: ReadonlyArray<{ roleType: string }> | null | undefined): boolean {
+    return can(permissions, 'members:write') || can(permissions, 'members:read_sensitive') || !!roles?.some((r) => (FUNKTIONSTRAEGER as readonly string[]).includes(r.roleType));
+}
+
 /** What the caller may do with forms and custom fields (Wave 8). */
 export interface FormsGate {
     /** Form editor, custom field definitions (`forms:write`). */

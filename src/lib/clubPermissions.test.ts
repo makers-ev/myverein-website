@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { can, formsGate, isGuardianOnly, visibleTabs } from './clubPermissions';
+import { can, canSeeCredentialOverview, formsGate, isGuardianOnly, visibleTabs } from './clubPermissions';
 
 const mitglied = { permissions: [] as string[], roles: [{ roleType: 'mitglied' }] };
 const guardian = { permissions: [] as string[], roles: [{ roleType: 'erziehungsberechtigt' }] };
@@ -51,5 +51,17 @@ describe('forms gate', () => {
         expect(formsGate(['members:read_sensitive'])).toEqual({ manage: false, editMemberValues: false, readSensitive: true, review: false });
         expect(formsGate(schriftfuehrer)).toEqual({ manage: true, editMemberValues: true, readSensitive: true, review: true });
         expect(formsGate(undefined).manage).toBe(false);
+    });
+});
+
+describe('canSeeCredentialOverview', () => {
+    it('is offered to board-level permissions and to trainers and department heads, deny-by-default otherwise', () => {
+        expect(canSeeCredentialOverview(['members:write'], [])).toBe(true);
+        expect(canSeeCredentialOverview(['members:read_sensitive'], [])).toBe(true);
+        expect(canSeeCredentialOverview([], [{ roleType: 'trainer' }])).toBe(true);
+        expect(canSeeCredentialOverview([], [{ roleType: 'abteilungsleitung' }])).toBe(true);
+        expect(canSeeCredentialOverview([], [{ roleType: 'mitglied' }])).toBe(false);
+        expect(canSeeCredentialOverview(['forms:write', 'club_stats:read'], [{ roleType: 'erziehungsberechtigt' }])).toBe(false);
+        expect(canSeeCredentialOverview(null, undefined)).toBe(false);
     });
 });

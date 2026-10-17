@@ -147,6 +147,12 @@ describe('FormRenderer', () => {
             expect(html).toContain('value="2099-01-31"');
         });
 
+        it('keeps a stored level that is not among the options visible as an extra option', () => {
+            const html = render({ fields: [levels], answers: { lizenz: { valid: true, level: 'alt' } } });
+            expect(html).toContain('<option value="alt" selected="">alt</option>');
+            expect(render({ fields: [levels], answers: { lizenz: { valid: true, level: 'b' } } }).match(/<option value="b"/g)).toHaveLength(1);
+        });
+
         it('offers a limited text input for a free-text level and no level input without either', () => {
             const text = render({ fields: [free], answers: { lizenz: { valid: true } } });
             expect(text).toContain('maxLength="60"');

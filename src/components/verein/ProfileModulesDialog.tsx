@@ -151,6 +151,7 @@ export default function ProfileModulesDialog({ clubId, canReadSensitive, onClose
                                             const block = toggleBlock(m, catalog.limit, canReadSensitive);
                                             const privacy = PRIVACY_NOTE_MODULES[m.id];
                                             const descId = `mod-${m.id}-desc`;
+                                            const blockId = `mod-${m.id}-block`;
                                             return (
                                                 <li key={m.id} className="rounded-xl border border-border bg-card p-3">
                                                     <div className="flex flex-wrap items-start justify-between gap-3">
@@ -179,13 +180,16 @@ export default function ProfileModulesDialog({ clubId, canReadSensitive, onClose
                                                                     {t(privacy)}
                                                                 </p>
                                                             )}
-                                                            {block && <p className="mt-1 text-xs text-muted-foreground">{t(block === 'limit' ? 'forms.mod.block.limit' : 'forms.mod.block.sensitive')}</p>}
+                                                            {block && (
+                                                                <p id={blockId} className="mt-1 text-xs text-muted-foreground">{t(block === 'limit' ? 'forms.mod.block.limit' : 'forms.mod.block.sensitive')}
+                                                                </p>
+                                                            )}
                                                         </div>
                                                         <button
                                                             type="button"
                                                             onClick={() => void toggle(m)}
                                                             disabled={busyId !== null || block !== null}
-                                                            aria-describedby={m.description ? descId : undefined}
+                                                            aria-describedby={[m.description ? descId : null, block ? blockId : null].filter(Boolean).join(' ') || undefined}
                                                             aria-label={t(m.state === 'active' ? 'forms.mod.deactivateNamed' : m.state === 'archived' ? 'forms.mod.reactivateNamed' : 'forms.mod.activateNamed', { label: m.label })}
                                                             className={m.state === 'active' ? secondaryButtonClass : primaryButtonClass}
                                                         >

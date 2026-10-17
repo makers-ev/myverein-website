@@ -200,6 +200,126 @@ function PrivacyBlock({ text, title }: { text: string; title?: string }) {
 }
 
 /**
+ * The credential custom field (qualification with validity). Draft level and dates survive unticking "Habe ich" until the
+ * form is saved or left (local state), so a mis-click does not lose them; ticking again restores them.
+ */
+function CredentialInput({ field, id, error, value, disabled, onChange }: { field: FormField; id: string; error?: FieldErrorCode; value: unknown; disabled: boolean; onChange: (v: unknown) => void }) {
+    const { t } = useLanguage();
+    const [stash, setStash] = useState<ReturnType<typeof credentialDraft> | null>(null);
+    const held = asCredential(value);
+    // A value that arrives from outside (reload after save, re-pin) replaces the stash.
+    if (held && stash) setStash(null);
+    const draft = credentialDraft(value);
+    const mode = levelMode(field);
+    const orderWrong = datesOutOfOrder(value);
+    const orderId = `${id}-order`;
+    const set = (patch: Partial<typeof draft>) => onChange(buildCredential({ ...draft, ...patch }));
+    const dateField = (min: string): FormField => ({ ...field, validation: { minDate: min, maxDate: MAX_CREDENTIAL_DATE } });
+    // Live status of what is typed right now (the server computes the status of the saved value with the same rules).
+    const preview = held ? credentialExpiry(held, todayIso()) : null;
+    return (
+        <FieldShell field={field} id={id} error={orderWrong && error === 'invalid_value' ? undefined : error} group extra={{ id: orderId, shown: orderWrong }}>
+            {() => (
+                <div className="space-y-3">
+                    <label className="flex items-start gap-2.5 text-sm text-foreground">
+                        <input
+                            id={`${id}-have`}
+                            type="checkbox"
+                            checked={held !== null}
+                            disabled={disabled}
+                            onChange={(e) => {
+                        if (e.target.checked) {
+                            onChange(buildCredential(stash ?? {}));
+                            setStash(null);
+                        } else {
+                            // Keep what was typed until the form is saved or left, so ticking again brings it back.
+                            setStash(draft);
+                            onChange(undefined);
+                        }
+                    }}
+                            className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--color-primary,currentColor)]"
+                        />
+                        <span className="min-w-0 break-words">{t('forms.cred.have')}</span>
+                    </label>
+                    {held && (
+                        <div className="space-y-3 border-l-2 border-border pl-3 sm:pl-4">
+                            {mode === 'select' && (
+                                <div>
+                                    <label htmlFor={`${id}-level`} className="block text-xs font-semibold text-muted-foreground">
+                                        {t('forms.cred.level')}
+                                    </label>
+                                    <select id={`${id}-level`} value={draft.level} disabled={disabled} onChange={(e) => set({ level: e.target.value })} className={`mt-1 ${inputClass} sm:max-w-xs`}>
+                                        <option value="">{t('forms.select.placeholder')}</option>
+                                        {(field.options ?? []).map((o) => (
+                                            <option key={o.value} value={o.value}>
+                                                {o.label}
+                                            </option>
+                                        ))}
+                                        {/* A stored level the options no longer contain (renamed/removed) stays visible instead of looking empty. */}
+                                        {draft.level !== '' && !(field.options ?? []).some((o) => o.value === draft.level) && <option value={draft.level}>{draft.level}</option>}
+                                    </select>
+                                </div>
+                            )}
+                            {mode === 'text' && (
+                                <div>
+                                    <label htmlFor={`${id}-level`} className="block text-xs font-semibold text-muted-foreground">
+                                        {t('forms.cred.level')}
+                                    </label>
+                                    <input id={`${id}-level`} type="text" maxLength={levelMaxLength(field)} value={draft.level} disabled={disabled} onChange={(e) => set({ level: e.target.value })} className={`mt-1 ${inputClass} sm:max-w-xs`} />
+                                </div>
+                            )}
+                            <div className="grid gap-3 sm:grid-cols-2">
+                                <div>
+                                    <label htmlFor={`${id}-obtained`} className="block text-xs font-semibold text-muted-foreground">
+                                        {t('forms.cred.obtainedOn')}
+                                    </label>
+                                    <div className="mt-1">
+                                        <BufferedInput
+                                            aria={{ id: `${id}-obtained`, 'aria-describedby': orderWrong ? orderId : undefined }}
+                                            kind="date"
+                                            field={dateField(MIN_CREDENTIAL_DATE)}
+                                            value={draft.obtainedOn || undefined}
+                                            disabled={disabled}
+                                            onChange={(d) => set({ obtainedOn: typeof d === 'string' ? d : '' })}
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label htmlFor={`${id}-until`} className="block text-xs font-semibold text-muted-foreground">
+                                        {t('forms.cred.validUntil')}
+                                    </label>
+                                    <div className="mt-1">
+                                        <BufferedInput
+                                            aria={{ id: `${id}-until`, 'aria-describedby': orderWrong ? orderId : undefined, 'aria-invalid': orderWrong ? true : undefined }}
+                                            kind="date"
+                                            field={dateField(MIN_CREDENTIAL_DATE)}
+                                            value={draft.validUntil || undefined}
+                                            disabled={disabled}
+                                            onChange={(d) => set({ validUntil: typeof d === 'string' ? d : '' })}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            {orderWrong && (
+                                <p id={orderId} role="alert" className="text-xs text-destructive">
+                                    {t('forms.cred.err.order')}
+                                </p>
+                            )}
+                            {preview && !orderWrong && (
+                                <p className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                                    <span>{t('forms.cred.status')}</span>
+                                    <ExpiryBadge expiry={preview} />
+                                </p>
+                            )}
+                        </div>
+                    )}
+                </div>
+            )}
+        </FieldShell>
+    );
+}
+
+/**
  * Renders a form definition (Wave 8 W1): every field type, `visibleIf`, per-field errors, file and photo upload with
  * progress. A controlled component: the caller owns `answers`/`files`, validates and talks to the backend; used by the
  * application flow and meant for the exit form and the custom fields later. All text of the definition (labels, help, options,
@@ -457,106 +577,8 @@ export default function FormRenderer({
                 );
             }
 
-            case 'credential': {
-                const held = asCredential(value);
-                const draft = credentialDraft(value);
-                const mode = levelMode(field);
-                const orderWrong = datesOutOfOrder(value);
-                const orderId = `${id}-order`;
-                const set = (patch: Partial<typeof draft>) => onChange(field.key, buildCredential({ ...draft, ...patch }));
-                const dateField = (min: string): FormField => ({ ...field, validation: { minDate: min, maxDate: MAX_CREDENTIAL_DATE } });
-                // Live status of what is typed right now (the server computes the status of the saved value with the same rules).
-                const preview = held ? credentialExpiry(held, todayIso()) : null;
-                return (
-                    <FieldShell field={field} id={id} error={orderWrong && error === 'invalid_value' ? undefined : error} group extra={{ id: orderId, shown: orderWrong }}>
-                        {() => (
-                            <div className="space-y-3">
-                                <label className="flex items-start gap-2.5 text-sm text-foreground">
-                                    <input
-                                        id={`${id}-have`}
-                                        type="checkbox"
-                                        checked={held !== null}
-                                        disabled={disabled}
-                                        onChange={(e) => onChange(field.key, e.target.checked ? buildCredential({}) : undefined)}
-                                        className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--color-primary,currentColor)]"
-                                    />
-                                    <span className="min-w-0 break-words">{t('forms.cred.have')}</span>
-                                </label>
-                                {held && (
-                                    <div className="space-y-3 border-l-2 border-border pl-3 sm:pl-4">
-                                        {mode === 'select' && (
-                                            <div>
-                                                <label htmlFor={`${id}-level`} className="block text-xs font-semibold text-muted-foreground">
-                                                    {t('forms.cred.level')}
-                                                </label>
-                                                <select id={`${id}-level`} value={draft.level} disabled={disabled} onChange={(e) => set({ level: e.target.value })} className={`mt-1 ${inputClass} sm:max-w-xs`}>
-                                                    <option value="">{t('forms.select.placeholder')}</option>
-                                                    {(field.options ?? []).map((o) => (
-                                                        <option key={o.value} value={o.value}>
-                                                            {o.label}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        )}
-                                        {mode === 'text' && (
-                                            <div>
-                                                <label htmlFor={`${id}-level`} className="block text-xs font-semibold text-muted-foreground">
-                                                    {t('forms.cred.level')}
-                                                </label>
-                                                <input id={`${id}-level`} type="text" maxLength={levelMaxLength(field)} value={draft.level} disabled={disabled} onChange={(e) => set({ level: e.target.value })} className={`mt-1 ${inputClass} sm:max-w-xs`} />
-                                            </div>
-                                        )}
-                                        <div className="grid gap-3 sm:grid-cols-2">
-                                            <div>
-                                                <label htmlFor={`${id}-obtained`} className="block text-xs font-semibold text-muted-foreground">
-                                                    {t('forms.cred.obtainedOn')}
-                                                </label>
-                                                <div className="mt-1">
-                                                    <BufferedInput
-                                                        aria={{ id: `${id}-obtained`, 'aria-describedby': orderWrong ? orderId : undefined }}
-                                                        kind="date"
-                                                        field={dateField(MIN_CREDENTIAL_DATE)}
-                                                        value={draft.obtainedOn || undefined}
-                                                        disabled={disabled}
-                                                        onChange={(d) => set({ obtainedOn: typeof d === 'string' ? d : '' })}
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <label htmlFor={`${id}-until`} className="block text-xs font-semibold text-muted-foreground">
-                                                    {t('forms.cred.validUntil')}
-                                                </label>
-                                                <div className="mt-1">
-                                                    <BufferedInput
-                                                        aria={{ id: `${id}-until`, 'aria-describedby': orderWrong ? orderId : undefined, 'aria-invalid': orderWrong ? true : undefined }}
-                                                        kind="date"
-                                                        field={dateField(MIN_CREDENTIAL_DATE)}
-                                                        value={draft.validUntil || undefined}
-                                                        disabled={disabled}
-                                                        onChange={(d) => set({ validUntil: typeof d === 'string' ? d : '' })}
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {orderWrong && (
-                                            <p id={orderId} role="alert" className="text-xs text-destructive">
-                                                {t('forms.cred.err.order')}
-                                            </p>
-                                        )}
-                                        {preview && !orderWrong && (
-                                            <p className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-                                                <span>{t('forms.cred.status')}</span>
-                                                <ExpiryBadge expiry={preview} />
-                                            </p>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </FieldShell>
-                );
-            }
+            case 'credential':
+                return <CredentialInput field={field} id={id} error={error} value={value} disabled={disabled} onChange={(v) => onChange(field.key, v)} />;
 
             case 'image':
             case 'file': {
