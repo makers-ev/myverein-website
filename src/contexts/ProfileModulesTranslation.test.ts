@@ -36,7 +36,7 @@ describe('ProfileModulesTranslation', () => {
 
     it('has every static key used by the profile module components', () => {
         const root = join(__dirname, '..');
-        const files = ['components/verein/ExpiryBadge.tsx', 'components/forms/FormRenderer.tsx', 'components/verein/MemberCustomFields.tsx', 'components/verein/CustomFieldFormModal.tsx', 'components/verein/ProfileModulesDialog.tsx', 'components/verein/CustomFieldsPanel.tsx', 'components/verein/CredentialsPanel.tsx', 'app/pageContent/Verein.tsx', 'lib/credentials.ts', 'lib/profileModules.ts', 'lib/credentialOverview.ts'];
+        const files = ['components/verein/ExpiryBadge.tsx', 'components/forms/FormRenderer.tsx', 'components/verein/MemberCustomFields.tsx', 'components/verein/CustomFieldFormModal.tsx', 'components/verein/ProfileModulesDialog.tsx', 'components/verein/CustomFieldsPanel.tsx', 'components/verein/CredentialsPanel.tsx', 'components/verein/ChildrenFields.tsx', 'components/verein/ProfilTab.tsx', 'app/pageContent/Verein.tsx', 'lib/credentials.ts', 'lib/profileModules.ts', 'lib/credentialOverview.ts'];
         const used = files.flatMap((f) => [...readFileSync(join(root, f), 'utf8').matchAll(/['"]((?:forms|verein)\.[\w.]+)['"]/g)].map((m) => m[1]!));
         expect(used.length).toBeGreaterThan(15);
         for (const key of used) expect(de[key], key).toBeTruthy();

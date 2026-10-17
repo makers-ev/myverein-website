@@ -26,6 +26,7 @@ import { useConfirm } from '@/components/useConfirm';
 import { useLanguage } from '@/contexts/LanguageContext';
 import MemberPhotoSection from '@/components/verein/MemberPhotoSection';
 import ExitSection from '@/components/verein/ExitSection';
+import ChildrenFields from '@/components/verein/ChildrenFields';
 import MemberCustomFields from '@/components/verein/MemberCustomFields';
 
 export interface OwnMembership {
@@ -161,7 +162,9 @@ export default function ProfilTab({ me, clubId, onSaved, onPhotoExpired, onDirty
     const [errors, setErrors] = useState<ProfileErrors>({});
     const [saving, setSaving] = useState(false);
     const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
-    const [customDirty, setCustomDirty] = useState(false);
+    const [ownCustomDirty, setCustomDirty] = useState(false);
+    const [childrenDirty, setChildrenDirty] = useState(false);
+    const customDirty = ownCustomDirty || childrenDirty;
 
     // Fresh server values (after the page re-fetched) flow into untouched fields; anything typed meanwhile is kept.
     if (me !== syncedMe) {
@@ -409,6 +412,7 @@ export default function ProfilTab({ me, clubId, onSaved, onPhotoExpired, onDirty
                 </form>
             </div>
             <MemberCustomFields clubId={clubId} target="me" title={t('forms.cf.values.titleOwn')} onDirtyChange={setCustomDirty} emptyHint={onOpenCustomFields && me.permissions.includes('forms:write') ? <NoModulesHint onOpen={onOpenCustomFields} /> : undefined} />
+            <ChildrenFields clubId={clubId} onDirtyChange={setChildrenDirty} />
             <ExitSection clubId={clubId} orgRole={me.orgRole} effectiveStatus={me.effectiveStatus} onChanged={onSaved} />
             {dialog}
         </div>
