@@ -257,6 +257,8 @@ const CommunicationTranslation: Translation = {
         'verein.mail.preview.subject': 'Betreff',
         'verein.mail.preview.frame': 'Vorschau der E-Mail',
         'verein.mail.preview.sample': 'Beispieldaten: Name und Text sind erfunden.',
+        'notifications.page.scope': 'Hier stehen Hinweise der Plattform, zum Beispiel zu deinem Konto. Nachrichten deines Vereins findest du im Schwarzen Brett.',
+        'notifications.page.toClub': 'Zu den Mitteilungen deines Vereins',
         // -- next:de
     },
     en: {
@@ -509,6 +511,8 @@ const CommunicationTranslation: Translation = {
         'verein.mail.preview.subject': 'Subject',
         'verein.mail.preview.frame': 'E-mail preview',
         'verein.mail.preview.sample': 'Sample data: name and text are made up.',
+        'notifications.page.scope': 'This page shows notices from the platform, for example about your account. Messages from your club are on the notice board.',
+        'notifications.page.toClub': 'Go to your club\'s announcements',
         // -- next:en
     },
 };

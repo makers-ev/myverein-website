@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Mail, MailOpen, Trash2 } from 'lucide-react';
 
 import { authClient, backendUrl } from '@/lib/auth-client';
@@ -112,6 +113,12 @@ export default function NotificationsPageContent() {
     return (
         <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6 lg:px-8">
             <h1 className="text-2xl font-bold text-foreground">{t('notifications.page.title')}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+                {t('notifications.page.scope')}{' '}
+                <Link href="/mitteilungen" className="font-medium text-primary hover:underline">
+                    {t('notifications.page.toClub')}
+                </Link>
+            </p>
 
             <div className="mt-6 flex gap-2 border-b border-border">
                 {(['unread', 'read'] as const).map((value) => (

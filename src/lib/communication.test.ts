@@ -188,3 +188,26 @@ describe('inbox helpers', () => {
         expect(badgeText(10)).toBe('9+');
     });
 });
+
+describe('gating matrix (Vorstand, Trainer with department scope, plain member)', () => {
+    const vorstand = communicationGate(['announcements:write', 'members:write']);
+    const trainer = communicationGate(['announcements:write_department']);
+    const mitglied = communicationGate([]);
+    const roles = [{ roleType: 'trainer', departmentId: 'd2' }];
+
+    it('shows the compose area and history only to authors', () => {
+        expect([vorstand.canAuthor, trainer.canAuthor, mitglied.canAuthor]).toEqual([true, true, false]);
+    });
+
+    it('limits the trainer to the own department and hides urgent and recipient lists', () => {
+        expect(selectableDepartments(trainer, departments, ownDepartmentIds(roles))).toEqual([departments[1]]);
+        expect(trainer.canUrgent).toBe(false);
+        expect(trainer.canSeeRecipients).toBe(false);
+        expect(selectableDepartments(vorstand, departments, [])).toHaveLength(2);
+    });
+
+    it('gives a plain member nothing to author', () => {
+        expect(selectableDepartments(mitglied, departments, ownDepartmentIds(roles))).toEqual([]);
+        expect(mitglied.canUrgent).toBe(false);
+    });
+});
