@@ -7,6 +7,7 @@ import { HelpCircle } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
 import { useLanguage } from "@/contexts/LanguageContext"
 import { PaletteSettings } from "@/components/PaletteSettings"
+import NotificationPreferences from "@/components/NotificationPreferences"
 
 function Avatar({ name }: { name: string }) {
 	const initials = name
@@ -226,6 +227,8 @@ export default function SettingsPageContent() {
 
 			<div className="space-y-6">
 				<PaletteSettings />
+
+				<NotificationPreferences />
 
 				<form onSubmit={handleSaveProfile} className="bg-card border border-border rounded-lg p-6 shadow-sm">
 					<h2 className="text-lg font-semibold">Profile</h2>
