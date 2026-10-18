@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Clock, Tag, Users } from 'lucide-react';
+import { Ban, Clock, Tag, Users } from 'lucide-react';
 
 import { Modal } from '@/components/Modal';
+import { Toggle } from '@/components/standorte/ui';
 import { apiFetch } from '@/lib/api-client';
 
 import {
@@ -19,8 +20,84 @@ import {
     labelClass,
     primaryBtn,
     secondaryBtn,
+    timeChanged,
     toLocalInput,
 } from './calendarTypes';
+
+const REASON_MAX = 500;
+
+interface CancelProps {
+    event: CalendarEvent;
+    clubId: string;
+    calendar: Calendar | undefined;
+    t: TFn;
+    onClose: () => void;
+    onCancelled: () => void;
+}
+
+/**
+ * "Termin absagen" (Wave 9 W5): cancels instead of deleting, with an optional reason and the switch "Mitglieder benachrichtigen"
+ * (on by default). Who is told is described in words: attendees and waitlist, the members of the calendar's department and
+ * their guardians. Turning the switch off sends nothing (the backend records that in the audit log).
+ */
+export function CancelEventModal({ event, clubId, calendar, t, onClose, onCancelled }: CancelProps) {
+    const [reason, setReason] = useState('');
+    const [notify, setNotify] = useState(true);
+    const [busy, setBusy] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    async function submit(e: React.FormEvent) {
+        e.preventDefault();
+        setBusy(true);
+        setError(null);
+        try {
+            await apiFetch(`/events/${event.id}/cancel?clubId=${clubId}`, { method: 'POST', body: { reason: reason.trim() || undefined, notify } });
+            onCancelled();
+        } catch (err) {
+            setError(errorMessage(err, t));
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    return (
+        <Modal
+            open
+            onClose={onClose}
+            title={t('kalender.cancelEvent.title')}
+            footer={
+                <div className="flex justify-end gap-2">
+                    <button type="button" onClick={onClose} className={secondaryBtn}>
+                        {t('kalender.cancelEvent.back')}
+                    </button>
+                    <button type="submit" form="cancel-event-form" disabled={busy} className={dangerBtn}>
+                        {t('kalender.cancelEvent.confirm')}
+                    </button>
+                </div>
+            }
+        >
+            <form id="cancel-event-form" onSubmit={(e) => void submit(e)} className="space-y-4">
+                <p className="text-sm text-foreground">{t('kalender.cancelEvent.body', { title: event.title })}</p>
+                <div>
+                    <label htmlFor="cancel-reason" className={labelClass}>
+                        {t('kalender.cancelEvent.reason')}
+                    </label>
+                    <textarea id="cancel-reason" rows={3} maxLength={REASON_MAX} autoFocus value={reason} onChange={(e) => setReason(e.target.value)} className={inputClass} placeholder={t('kalender.cancelEvent.reason.placeholder')} />
+                    <p className="mt-1 text-xs text-muted-foreground">{t('kalender.cancelEvent.reason.hint', { count: reason.length, max: REASON_MAX })}</p>
+                </div>
+                <div className="space-y-1">
+                    <Toggle checked={notify} onChange={setNotify} label={t('kalender.notify.label')} />
+                    <p className="text-xs text-muted-foreground">{t(notify ? (calendar?.departmentId ? 'kalender.cancelEvent.audience.department' : 'kalender.cancelEvent.audience') : 'kalender.notify.off')}</p>
+                </div>
+                {error && (
+                    <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                        {error}
+                    </p>
+                )}
+            </form>
+        </Modal>
+    );
+}
 
 interface DetailProps {
     event: CalendarEvent;
@@ -40,6 +117,8 @@ interface DetailProps {
 export function EventDetailModal({ event, clubId, calendar, color, canWrite, rsvp, language, t, onClose, onRsvpChange, onEdit, onDeleted }: DetailProps) {
     const [error, setError] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
+    const [cancelling, setCancelling] = useState(false);
+    const cancelled = Boolean(event.cancelled);
 
     async function run(action: () => Promise<void>) {
         setBusy(true);
@@ -75,6 +154,7 @@ export function EventDetailModal({ event, clubId, calendar, color, canWrite, rsv
     const start = new Date(event.startsAt);
 
     return (
+        <>
         <Modal
             open
             onClose={onClose}
@@ -82,7 +162,9 @@ export function EventDetailModal({ event, clubId, calendar, color, canWrite, rsv
             footer={
                 <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                        {rsvp ? (
+                        {cancelled ? (
+                            <span className="rounded-full bg-destructive/10 px-2.5 py-1 text-xs font-semibold text-destructive">{t('kalender.events.cancelled')}</span>
+                        ) : rsvp ? (
                             <>
                                 <span
                                     className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
@@ -103,9 +185,16 @@ export function EventDetailModal({ event, clubId, calendar, color, canWrite, rsv
                     </div>
                     {canWrite && (
                         <div className="flex items-center gap-2">
-                            <button type="button" onClick={onEdit} disabled={busy} className={secondaryBtn}>
-                                {t('kalender.events.edit')}
-                            </button>
+                            {!cancelled && (
+                                <>
+                                    <button type="button" onClick={onEdit} disabled={busy} className={secondaryBtn}>
+                                        {t('kalender.events.edit')}
+                                    </button>
+                                    <button type="button" onClick={() => setCancelling(true)} disabled={busy} className={dangerBtn}>
+                                        {t('kalender.cancelEvent.action')}
+                                    </button>
+                                </>
+                            )}
                             <button type="button" onClick={handleDelete} disabled={busy} className={dangerBtn}>
                                 {t('kalender.events.delete')}
                             </button>
@@ -115,6 +204,15 @@ export function EventDetailModal({ event, clubId, calendar, color, canWrite, rsv
             }
         >
             <div className="space-y-3 text-sm">
+                {cancelled && (
+                    <div role="status" className="flex items-start gap-2 rounded-lg bg-destructive/10 p-3 text-destructive">
+                        <Ban className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                        <p>
+                            <span className="font-semibold">{t('kalender.events.cancelled')}</span>
+                            {event.cancelReason ? <span className="block whitespace-pre-line text-foreground">{event.cancelReason}</span> : null}
+                        </p>
+                    </div>
+                )}
                 <p className="flex items-start gap-2 text-foreground">
                     <Clock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
                     <span>
@@ -150,6 +248,8 @@ export function EventDetailModal({ event, clubId, calendar, color, canWrite, rsv
                 )}
             </div>
         </Modal>
+        {cancelling && <CancelEventModal event={event} clubId={clubId} calendar={calendar} t={t} onClose={() => setCancelling(false)} onCancelled={onDeleted} />}
+        </>
     );
 }
 
@@ -177,11 +277,14 @@ export function EventFormModal({ clubId, calendars, colorFor, event, initialStar
         event ? (event.endsAt ? toLocalInput(new Date(event.endsAt)) : '') : toLocalInput(new Date(defaultStart.getTime() + 2 * 3600_000)),
     );
     const [capacity, setCapacity] = useState(event?.capacity != null ? String(event.capacity) : '');
+    // Wave 9 W5: members affected by a change are told by default; the switch only exists when editing.
+    const [notify, setNotify] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
 
     const endBeforeStart = Boolean(startsAt && endsAt && new Date(endsAt) <= new Date(startsAt));
     const capacityInvalid = capacity !== '' && !(Number.isInteger(Number(capacity)) && Number(capacity) > 0);
+    const timeWillChange = Boolean(event && startsAt && timeChanged(event, new Date(startsAt).toISOString(), endsAt ? new Date(endsAt).toISOString() : null));
     const invalid = !calendarId || !title.trim() || !startsAt || endBeforeStart || capacityInvalid;
 
     async function handleSubmit(e: React.FormEvent) {
@@ -199,6 +302,7 @@ export function EventFormModal({ clubId, calendars, colorFor, event, initialStar
             startsAt: new Date(startsAt).toISOString(),
             endsAt: endsAt ? new Date(endsAt).toISOString() : empty,
             capacity: capacity ? Number(capacity) : empty,
+            ...(event ? { notify } : {}),
         };
         try {
             await apiFetch(event ? `/events/${event.id}?clubId=${clubId}` : `/events?clubId=${clubId}`, {
@@ -308,6 +412,12 @@ export function EventFormModal({ clubId, calendars, colorFor, event, initialStar
                     </label>
                     <textarea id="ev-description" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} className={inputClass} />
                 </div>
+                {event && (
+                    <div className="space-y-1 rounded-lg border border-border p-3">
+                        <Toggle checked={notify} onChange={setNotify} label={t('kalender.notify.label')} />
+                        <p className="text-xs text-muted-foreground">{t(!notify ? 'kalender.notify.off' : timeWillChange ? 'kalender.notify.timeChanged' : 'kalender.notify.hint')}</p>
+                    </div>
+                )}
                 {error && (
                     <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
                         {error}
