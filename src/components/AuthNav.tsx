@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { CalendarDays, ChevronDown, Clock, LogOut, MapPin, Settings as SettingsIcon, Users } from 'lucide-react';
+import { CalendarDays, ChevronDown, Clock, LogOut, MapPin, Megaphone, Settings as SettingsIcon, Users } from 'lucide-react';
 
 import { authClient } from '@/lib/auth-client';
 import { clearAllStoredInviteTokens } from '@/lib/memberLifecycle';
@@ -20,6 +20,7 @@ export interface AuthNavAppLink {
 // slug/name -> icon map rather than guessing an icon from the href.
 const APP_LINK_ICONS: Record<string, typeof Users> = {
     'nav.verein': Users,
+    'nav.mitteilungen': Megaphone,
     'nav.kalender': CalendarDays,
     'nav.standorte': MapPin,
     'nav.verfuegbarkeit': Clock,

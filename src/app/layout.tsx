@@ -65,6 +65,7 @@ export default async function RootLayout({
   // (only rendered once a session exists) rather than in the public navbar.
   const appLinks = [
     { name: "nav.verein", href: "/verein" },
+    { name: "nav.mitteilungen", href: "/mitteilungen" },
     { name: "nav.kalender", href: "/kalender" },
     { name: "nav.standorte", href: "/standorte" },
     { name: "nav.verfuegbarkeit", href: "/verfuegbarkeit" },
