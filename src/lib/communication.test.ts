@@ -4,6 +4,8 @@ import { ApiError } from './api-client';
 import {
     aggregateDeliveries,
     announcementActions,
+    badgeText,
+    safeCtaHref,
     statusLabelKey,
     audienceIsEmpty,
     buildChannels,
@@ -166,5 +168,23 @@ describe('announcement actions', () => {
     it('labels a withdrawn announcement as withdrawn', () => {
         expect(statusLabelKey({ status: 'sent', withdrawn: true })).toBe('mitteilungen.status.withdrawn');
         expect(statusLabelKey({ status: 'draft', withdrawn: false })).toBe('mitteilungen.status.draft');
+    });
+});
+
+describe('inbox helpers', () => {
+    it('follows only same-site paths and http(s) links', () => {
+        expect(safeCtaHref('/kalender')).toBe('/kalender');
+        expect(safeCtaHref('https://example.org/x')).toBe('https://example.org/x');
+        expect(safeCtaHref('javascript:alert(1)')).toBeNull();
+        expect(safeCtaHref('data:text/html,x')).toBeNull();
+        expect(safeCtaHref('//evil.example')).toBeNull();
+        expect(safeCtaHref('/\\evil.example')).toBeNull();
+        expect(safeCtaHref(null)).toBeNull();
+        expect(safeCtaHref('')).toBeNull();
+    });
+
+    it('caps the badge', () => {
+        expect(badgeText(3)).toBe('3');
+        expect(badgeText(10)).toBe('9+');
     });
 });

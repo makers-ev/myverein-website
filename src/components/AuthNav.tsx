@@ -9,6 +9,7 @@ import { authClient } from '@/lib/auth-client';
 import { clearAllStoredInviteTokens } from '@/lib/memberLifecycle';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { NotificationBell } from '@/components/NotificationBell';
+import { InboxLink } from '@/components/InboxLink';
 
 export interface AuthNavAppLink {
     name: string;
@@ -71,6 +72,7 @@ export function AuthNav({ appLinks = [] }: { appLinks?: AuthNavAppLink[] }) {
 
     return (
         <div className="flex items-center gap-1">
+            <InboxLink />
             <NotificationBell />
             <div className="relative" ref={ref}>
                 <button

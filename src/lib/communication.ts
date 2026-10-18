@@ -363,3 +363,50 @@ export function announcementActions(a: Pick<Announcement, 'status' | 'withdrawn'
 export function statusLabelKey(a: Pick<Announcement, 'status' | 'withdrawn'>): string {
     return a.status === 'sent' && a.withdrawn ? 'mitteilungen.status.withdrawn' : `mitteilungen.status.${a.status}`;
 }
+
+/* ------------------------------ member inbox (W3) ------------------------------ */
+
+export const INBOX_CHANGED_EVENT = 'myverein:inbox-changed';
+
+export const inboxPath = (clubId: string, suffix = '') => `/club-inbox${suffix}${suffix.includes('?') ? '&' : '?'}clubId=${encodeURIComponent(clubId)}`;
+
+export async function loadInbox(clubId: string, opts: { page: number; pageSize: number; unreadOnly: boolean }): Promise<{ items: InboxItem[]; pagination: Pagination }> {
+    const qs = `&page=${opts.page}&pageSize=${opts.pageSize}${opts.unreadOnly ? '&unread=true' : ''}`;
+    const res = await apiFetch<{ data: InboxItem[]; pagination: Pagination }>(inboxPath(clubId) + qs);
+    return { items: res.data, pagination: res.pagination };
+}
+
+export async function loadUnreadCount(clubId: string): Promise<number> {
+    const res = await apiFetch<{ data: { count: number } }>(inboxPath(clubId, '/unread-count'));
+    return res.data.count;
+}
+
+export async function markInboxRead(clubId: string, id: string): Promise<string> {
+    const res = await apiFetch<{ data: { id: string; readAt: string } }>(inboxPath(clubId, `/${id}/read`), { method: 'POST' });
+    return res.data.readAt;
+}
+
+/** Tells the navbar counter to refresh (the inbox page and the navbar do not share state). */
+export function notifyInboxChanged(): void {
+    if (typeof window !== 'undefined') window.dispatchEvent(new Event(INBOX_CHANGED_EVENT));
+}
+
+/**
+ * Link target of a system message's call to action. Only same-site paths and http(s) URLs are followed; anything else
+ * (`javascript:`, `data:`, protocol-relative `//host`) is dropped so a message can never smuggle a script into the page.
+ */
+export function safeCtaHref(url: string | null | undefined): string | null {
+    if (!url) return null;
+    if (url.startsWith('/') && !url.startsWith('//') && !url.startsWith('/\\')) return url;
+    try {
+        const u = new URL(url);
+        return u.protocol === 'https:' || u.protocol === 'http:' ? u.toString() : null;
+    } catch {
+        return null;
+    }
+}
+
+/** Badge text of an unread counter: capped so it fits the navbar. */
+export function badgeText(count: number): string {
+    return count > 9 ? '9+' : String(count);
+}
