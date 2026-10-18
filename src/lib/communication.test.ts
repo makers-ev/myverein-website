@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { ApiError } from './api-client';
 import {
     aggregateDeliveries,
+    announcementActions,
+    statusLabelKey,
     audienceIsEmpty,
     buildChannels,
     cleanAudience,
@@ -149,5 +151,20 @@ describe('error keys', () => {
         expect(communicationErrorKey(new ApiError(429, 'TOO_MANY_REQUESTS', 'x', { rule: 'announcement.urgent_day' }))).toBe('mitteilungen.err.rule.announcement.urgent_day');
         expect(communicationErrorKey(new ApiError(429, 'TOO_MANY_REQUESTS', 'x', { rule: 'something.else' }))).toBe('mitteilungen.err.tooMany');
         expect(communicationErrorKey(new ApiError(403, 'FORBIDDEN', 'x'))).toBe('verein.err.forbidden');
+    });
+});
+
+describe('announcement actions', () => {
+    it('offers edit/cancel/delete by state', () => {
+        expect(announcementActions({ status: 'draft', withdrawn: false })).toMatchObject({ edit: true, delete: true, cancel: false, withdraw: false, showDeliveries: false });
+        expect(announcementActions({ status: 'scheduled', withdrawn: false })).toMatchObject({ edit: true, delete: true, cancel: true, withdraw: false });
+        expect(announcementActions({ status: 'sent', withdrawn: false })).toMatchObject({ edit: false, delete: false, withdraw: true, resend: true, showDeliveries: true });
+        expect(announcementActions({ status: 'sent', withdrawn: true })).toMatchObject({ withdraw: false, resend: false, showDeliveries: true });
+        expect(announcementActions({ status: 'cancelled', withdrawn: false })).toMatchObject({ delete: true, edit: false });
+    });
+
+    it('labels a withdrawn announcement as withdrawn', () => {
+        expect(statusLabelKey({ status: 'sent', withdrawn: true })).toBe('mitteilungen.status.withdrawn');
+        expect(statusLabelKey({ status: 'draft', withdrawn: false })).toBe('mitteilungen.status.draft');
     });
 });

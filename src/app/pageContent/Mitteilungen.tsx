@@ -6,6 +6,7 @@ import { apiFetch } from '@/lib/api-client';
 import { communicationGate, ownDepartmentIds, selectableDepartments, type Announcement } from '@/lib/communication';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ComposePanel from '@/components/mitteilungen/ComposePanel';
+import HistoryPanel from '@/components/mitteilungen/HistoryPanel';
 import NoClubSection from '@/components/verein/NoClubSection';
 import LoadingText from '@/components/LoadingText';
 import LoadError from '@/components/LoadError';
@@ -25,14 +26,18 @@ interface Department {
     name: string;
 }
 
-type Tab = 'verfassen';
+type Tab = 'verfassen' | 'verlauf';
+const AUTHOR_TABS: Tab[] = ['verfassen', 'verlauf'];
 
 export default function MitteilungenPageContent() {
     const { t } = useLanguage();
     const [clubs, setClubs] = useState<MyClub[] | null>(null);
     const [clubsError, setClubsError] = useState(false);
     const [ctx, setCtx] = useState<{ clubId: string; me: MeLite; departments: Department[] } | { clubId: string; error: true } | null>(null);
-    const [tab] = useState<Tab>('verfassen');
+    const [tab, setTab] = useState<Tab>('verfassen');
+    // Draft/scheduled announcement being edited from the history (null = new one).
+    const [editing, setEditing] = useState<Announcement | null>(null);
+    const [historyReload, setHistoryReload] = useState(0);
     const [notice, setNotice] = useState<string | null>(null);
     // Bumping the key gives a fresh compose form after a send/draft.
     const [composeKey, setComposeKey] = useState(0);
@@ -66,7 +71,10 @@ export default function MitteilungenPageContent() {
 
     function handleDone(result: { kind: 'draft' | 'sent' | 'scheduled'; announcement: Announcement | null }) {
         setNotice(t(`mitteilungen.done.${result.kind}`));
+        setEditing(null);
         setComposeKey((n) => n + 1);
+        setHistoryReload((n) => n + 1);
+        setTab('verlauf');
     }
 
     return (
@@ -89,9 +97,24 @@ export default function MitteilungenPageContent() {
             ) : (
                 <>
                     <div role="tablist" className="mt-6 flex gap-2 overflow-x-auto border-b border-border">
-                        <button role="tab" aria-selected={tab === 'verfassen'} className="whitespace-nowrap border-b-2 border-primary px-3 py-2 text-sm font-medium text-primary">
-                            {t('mitteilungen.tab.verfassen')}
-                        </button>
+                        {AUTHOR_TABS.map((value) => (
+                            <button
+                                key={value}
+                                type="button"
+                                role="tab"
+                                aria-selected={tab === value}
+                                onClick={() => {
+                                    setNotice(null);
+                                    if (value === 'verfassen' && tab !== 'verfassen') setEditing(null);
+                                    setTab(value);
+                                }}
+                                className={`whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
+                                    tab === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
+                                }`}
+                            >
+                                {t(`mitteilungen.tab.${value}`)}
+                            </button>
+                        ))}
                     </div>
                     {notice && (
                         <p role="status" className="mt-4 rounded-lg bg-success/10 px-3 py-2 text-sm text-success">
@@ -99,13 +122,29 @@ export default function MitteilungenPageContent() {
                         </p>
                     )}
                     <div className="mt-4">
-                        <ComposePanel
-                            key={composeKey}
-                            clubId={activeClub.clubId}
-                            gate={gate}
-                            departments={selectableDepartments(gate, ready.departments, ownDepartmentIds(ready.me.roles))}
-                            onDone={handleDone}
-                        />
+                        {tab === 'verfassen' && editing && <p className="mb-4 rounded-lg bg-muted px-3 py-2 text-sm text-foreground">{t('mitteilungen.editing', { title: editing.title })}</p>}
+                        {tab === 'verfassen' && (
+                            <ComposePanel
+                                key={`${composeKey}-${editing?.id ?? 'new'}`}
+                                clubId={activeClub.clubId}
+                                gate={gate}
+                                departments={selectableDepartments(gate, ready.departments, ownDepartmentIds(ready.me.roles))}
+                                initial={editing}
+                                onDone={handleDone}
+                            />
+                        )}
+                        {tab === 'verlauf' && (
+                            <HistoryPanel
+                                clubId={activeClub.clubId}
+                                gate={gate}
+                                reloadToken={historyReload}
+                                onEdit={(a) => {
+                                    setNotice(null);
+                                    setEditing(a);
+                                    setTab('verfassen');
+                                }}
+                            />
+                        )}
                     </div>
                 </>
             )}

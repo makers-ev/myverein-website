@@ -327,3 +327,39 @@ export async function previewAudience(clubId: string, audience: Audience, channe
 export async function sendAnnouncement(clubId: string, id: string, body: { publishAt?: string | null; confirmRecipients?: number }): Promise<void> {
     await apiFetch(announcementsPath(clubId, `/${id}/send`), { method: 'POST', body });
 }
+
+export interface HistoryPage {
+    items: Announcement[];
+    pagination: Pagination;
+}
+
+export async function loadHistory(clubId: string, opts: { status?: string; page: number; pageSize: number }): Promise<HistoryPage> {
+    const qs = `&page=${opts.page}&pageSize=${opts.pageSize}${opts.status ? `&status=${encodeURIComponent(opts.status)}` : ''}`;
+    const res = await apiFetch<{ data: Announcement[]; pagination: Pagination }>(announcementsPath(clubId, '') + qs);
+    return { items: res.data, pagination: res.pagination };
+}
+
+export async function loadDeliveries(clubId: string, id: string, opts: { page: number; pageSize: number; status?: string; withList: boolean }): Promise<DeliveriesResponse> {
+    const qs = opts.withList ? `&page=${opts.page}&pageSize=${opts.pageSize}${opts.status ? `&status=${encodeURIComponent(opts.status)}` : ''}` : '';
+    const res = await apiFetch<{ data: DeliveriesResponse; pagination?: Pagination }>(announcementsPath(clubId, `/${id}/deliveries`) + qs);
+    // The pagination of the recipient list sits next to `data` in some answers and inside it in others: accept both.
+    return { ...res.data, pagination: res.data.pagination ?? res.pagination };
+}
+
+/** What the author can still do with an announcement in a given state (the backend enforces the same rules). */
+export function announcementActions(a: Pick<Announcement, 'status' | 'withdrawn'>): { edit: boolean; delete: boolean; cancel: boolean; withdraw: boolean; showDeliveries: boolean; resend: boolean } {
+    const sentLive = a.status === 'sent' && !a.withdrawn;
+    return {
+        edit: a.status === 'draft' || a.status === 'scheduled',
+        delete: a.status === 'draft' || a.status === 'scheduled' || a.status === 'cancelled',
+        cancel: a.status === 'scheduled',
+        withdraw: sentLive,
+        showDeliveries: a.status === 'sent' || a.status === 'sending',
+        resend: sentLive,
+    };
+}
+
+/** Translation key of the state label; a withdrawn announcement is `sent` on the backend but shown as withdrawn. */
+export function statusLabelKey(a: Pick<Announcement, 'status' | 'withdrawn'>): string {
+    return a.status === 'sent' && a.withdrawn ? 'mitteilungen.status.withdrawn' : `mitteilungen.status.${a.status}`;
+}
