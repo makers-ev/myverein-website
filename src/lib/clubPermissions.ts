@@ -19,7 +19,8 @@ export function visibleTabs(permissions: readonly string[], roles: ReadonlyArray
     if (can(permissions, 'members:write')) tabs.push('austritte');
     if (can(permissions, 'club_stats:read')) tabs.push('kennzahlen');
     if (can(permissions, 'forms:write')) tabs.push('formulare', 'zusatzfelder');
-    if (can(permissions, 'members:write')) tabs.push('einstellungen');
+    // Club rules and reminders hang on members:write, the club's mail template on announcements:write (Wave 9 W6).
+    if (can(permissions, 'members:write') || can(permissions, 'announcements:write')) tabs.push('einstellungen');
     return tabs;
 }
 
