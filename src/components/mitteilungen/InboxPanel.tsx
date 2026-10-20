@@ -65,12 +65,17 @@ export default function InboxPanel({ clubId }: { clubId: string }) {
     const [page, setPage] = useState(1);
     const [state, setState] = useState<'loading' | 'error' | 'ready'>('loading');
     const [loadingMore, setLoadingMore] = useState(false);
+    const [moreError, setMoreError] = useState(false);
     const [reload, setReload] = useState(0);
     const [expandedId, setExpandedId] = useState<string | null>(null);
 
     // First page for a filter/club/reload; later pages are appended by "load more".
     useEffect(() => {
         let cancelled = false;
+        // Restart the load state when filter/club/reload changes (also when the active filter is clicked again: no change, no hang).
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setState('loading');
+        setMoreError(false);
         loadInbox(clubId, { page: 1, pageSize: PAGE_SIZE, unreadOnly })
             .then((res) => {
                 if (cancelled) return;
@@ -88,19 +93,19 @@ export default function InboxPanel({ clubId }: { clubId: string }) {
     }, [clubId, unreadOnly, reload]);
 
     const retry = useCallback(() => {
-        setState('loading');
         setReload((n) => n + 1);
     }, []);
 
     async function loadMore() {
         setLoadingMore(true);
+        setMoreError(false);
         try {
             const res = await loadInbox(clubId, { page: page + 1, pageSize: PAGE_SIZE, unreadOnly });
             setItems((prev) => [...prev, ...res.items.filter((n) => !prev.some((p) => p.id === n.id))]);
             setPagination(res.pagination);
             setPage((p) => p + 1);
         } catch {
-            setState('error');
+            setMoreError(true);
         } finally {
             setLoadingMore(false);
         }
@@ -128,10 +133,7 @@ export default function InboxPanel({ clubId }: { clubId: string }) {
                         key={String(only)}
                         type="button"
                         aria-pressed={unreadOnly === only}
-                        onClick={() => {
-                            setState('loading');
-                            setUnreadOnly(only);
-                        }}
+                        onClick={() => setUnreadOnly(only)}
                         className={`rounded-md px-3 py-1.5 text-sm font-medium ${unreadOnly === only ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
                     >
                         {t(only ? 'mitteilungen.inbox.filter.unread' : 'mitteilungen.inbox.filter.all')}
@@ -152,9 +154,14 @@ export default function InboxPanel({ clubId }: { clubId: string }) {
                             <InboxCard key={item.id} item={item} expanded={expandedId === item.id} onToggle={() => toggle(item)} />
                         ))}
                     </ul>
+                    {moreError && (
+                        <p role="alert" className="text-sm text-destructive">
+                            {t('common.error')}
+                        </p>
+                    )}
                     {hasMore && (
                         <button type="button" disabled={loadingMore} onClick={() => void loadMore()} className={secondaryButtonClass}>
-                            {t('mitteilungen.inbox.more')}
+                            {moreError ? t('common.retry') : t('mitteilungen.inbox.more')}
                         </button>
                     )}
                 </>

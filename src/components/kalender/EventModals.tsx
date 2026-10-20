@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Ban, Clock, Tag, Users } from 'lucide-react';
 
 import { Modal } from '@/components/Modal';
@@ -26,6 +26,15 @@ import {
 
 const REASON_MAX = 500;
 
+/** `GET /events/:id/cancel-preview`: numbers only, no names or addresses. */
+interface CancelPreview {
+    alreadyCancelled: boolean;
+    confirmed: number;
+    waitlisted: number;
+    departmentCalendar: boolean;
+    audience: { total: number; reachable: number; inApp: number; email: number; emailOnly: number; unreachable: number; sharedAddress: number; tooLarge: boolean };
+}
+
 interface CancelProps {
     event: CalendarEvent;
     clubId: string;
@@ -45,6 +54,27 @@ export function CancelEventModal({ event, clubId, calendar, t, onClose, onCancel
     const [notify, setNotify] = useState(true);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [preview, setPreview] = useState<CancelPreview | null>(null);
+    const [previewError, setPreviewError] = useState<string | null>(null);
+
+    const loadPreview = useCallback(async () => {
+        setPreviewError(null);
+        setPreview(null);
+        try {
+            const res = await apiFetch<{ data: CancelPreview }>(`/events/${event.id}/cancel-preview?clubId=${clubId}`);
+            setPreview(res.data);
+        } catch (err) {
+            setPreviewError(errorMessage(err, t));
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [event.id, clubId]);
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        void loadPreview();
+    }, [loadPreview]);
+
+    const tooLarge = preview?.audience.tooLarge === true;
 
     async function submit(e: React.FormEvent) {
         e.preventDefault();
@@ -88,6 +118,43 @@ export function CancelEventModal({ event, clubId, calendar, t, onClose, onCancel
                 <div className="space-y-1">
                     <Toggle checked={notify} onChange={setNotify} label={t('kalender.notify.label')} />
                     <p className="text-xs text-muted-foreground">{t(notify ? (calendar?.departmentId ? 'kalender.cancelEvent.audience.department' : 'kalender.cancelEvent.audience') : 'kalender.notify.off')}</p>
+                </div>
+                <div className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm text-foreground" aria-live="polite">
+                    <p className="font-semibold">{t('kalender.cancelEvent.preview.title')}</p>
+                    {previewError ? (
+                        <p role="alert" className="mt-1 text-destructive">
+                            {previewError}{' '}
+                            <button type="button" onClick={() => void loadPreview()} className="font-semibold underline">
+                                {t('kalender.cancelEvent.preview.retry')}
+                            </button>
+                        </p>
+                    ) : !preview ? (
+                        <p role="status" className="mt-1 text-muted-foreground">
+                            {t('kalender.cancelEvent.preview.loading')}
+                        </p>
+                    ) : (
+                        <div className="mt-1 space-y-1">
+                            <p>{t('kalender.cancelEvent.preview.counts', { confirmed: preview.confirmed, waitlisted: preview.waitlisted })}</p>
+                            {notify ? (
+                                <>
+                                    {preview.audience.total === 0 ? (
+                                        <p className="text-muted-foreground">{t('kalender.cancelEvent.preview.none')}</p>
+                                    ) : (
+                                        <p>{t('kalender.cancelEvent.preview.audience', { total: preview.audience.total, reachable: preview.audience.reachable, inApp: preview.audience.inApp, email: preview.audience.email })}</p>
+                                    )}
+                                    {preview.audience.unreachable > 0 && <p className="text-xs text-muted-foreground">{t('kalender.cancelEvent.preview.unreachable', { count: preview.audience.unreachable })}</p>}
+                                    {preview.audience.sharedAddress > 0 && <p className="text-xs text-muted-foreground">{t('kalender.cancelEvent.preview.shared', { count: preview.audience.sharedAddress })}</p>}
+                                    {tooLarge && (
+                                        <p role="alert" className="rounded-md bg-warning/10 px-2 py-1 text-foreground">
+                                            {t('kalender.cancelEvent.preview.tooLarge', { total: preview.audience.total })}
+                                        </p>
+                                    )}
+                                </>
+                            ) : (
+                                <p className="text-muted-foreground">{t('kalender.notify.off')}</p>
+                            )}
+                        </div>
+                    )}
                 </div>
                 {error && (
                     <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">

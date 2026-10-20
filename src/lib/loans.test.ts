@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { canBorrow, canReturn, isGuestRole } from './loans';
+import { buildExtension, canBorrow, canExtend, canReturn, isGuestRole } from './loans';
 
 describe('canBorrow', () => {
     it('follows the club switch for plain members', () => {
@@ -41,5 +41,22 @@ describe('canBorrow guards', () => {
         expect(isGuestRole('member, guest')).toBe(true);
         expect(isGuestRole('member')).toBe(false);
         expect(isGuestRole(null)).toBe(false);
+    });
+});
+
+describe('extension', () => {
+    const now = new Date('2030-06-01T10:00:00');
+    it('is offered to managers for open loans with a due date only', () => {
+        expect(canExtend({ dueAt: '2030-06-10T00:00:00Z', returnedAt: null }, true)).toBe(true);
+        expect(canExtend({ dueAt: '2030-06-10T00:00:00Z', returnedAt: null }, false)).toBe(false);
+        expect(canExtend({ dueAt: null, returnedAt: null }, true)).toBe(false);
+        expect(canExtend({ dueAt: '2030-06-10T00:00:00Z', returnedAt: '2030-06-02T00:00:00Z' }, true)).toBe(false);
+    });
+    it('validates the new date', () => {
+        expect(buildExtension('', '2030-06-10T00:00:00Z', now)).toEqual({ problem: 'required' });
+        expect(buildExtension('2030-05-30', null, now)).toEqual({ problem: 'past' });
+        expect(buildExtension('2030-06-05', '2030-06-10T12:00:00Z', now)).toEqual({ problem: 'notLater' });
+        const ok = buildExtension('2030-06-20', '2030-06-10T12:00:00Z', now);
+        expect('dueAt' in ok && ok.dueAt.endsWith('Z')).toBe(true);
     });
 });

@@ -13,8 +13,19 @@ export interface ReminderSettings {
     reminderMaintenanceLeadDays: number;
     reminderRsvpEnabled: boolean;
     reminderRsvpLeadDays: number;
+    reminderInvitationEnabled: boolean;
+    reminderInvitationLeadDays: number;
+    reminderCredentialEnabled: boolean;
+    reminderCredentialLeadDays: number;
     ageTransitionAuto: boolean;
+    notifyBoardRequests: boolean;
+    notifyMeetingInvites: boolean;
+    notifyHandover: boolean;
 }
+
+/** Switches for messages that people trigger by an action (`PATCH /club-settings`, `members:write`). */
+export const NOTIFY_SWITCHES = ['notifyBoardRequests', 'notifyMeetingInvites', 'notifyHandover'] as const;
+export type NotifySwitch = (typeof NOTIFY_SWITCHES)[number];
 
 export interface MailTemplateSettings {
     senderName: string | null;
@@ -22,14 +33,16 @@ export interface MailTemplateSettings {
     replyTo: string | null;
 }
 
-export type ReminderKey = 'event' | 'loan' | 'maintenance' | 'rsvp';
+export type ReminderKey = 'event' | 'loan' | 'maintenance' | 'rsvp' | 'invitation' | 'credential';
 
-/** Range and unit of each lead time (backend limits: event 1-168 h, loan 0-30 d, maintenance 0-90 d, RSVP 1-30 d). */
+/** Range and unit of each lead time (backend limits: event 1-168 h, loan 0-30 d, maintenance 0-90 d, RSVP 1-30 d, invitation 1-30 d, credential 1-365 d). */
 export const REMINDER_RULES: Record<ReminderKey, { enabled: keyof ReminderSettings; lead: keyof ReminderSettings; min: number; max: number; unit: 'hours' | 'days' }> = {
     event: { enabled: 'reminderEventEnabled', lead: 'reminderEventLeadHours', min: 1, max: 168, unit: 'hours' },
     loan: { enabled: 'reminderLoanEnabled', lead: 'reminderLoanLeadDays', min: 0, max: 30, unit: 'days' },
     maintenance: { enabled: 'reminderMaintenanceEnabled', lead: 'reminderMaintenanceLeadDays', min: 0, max: 90, unit: 'days' },
     rsvp: { enabled: 'reminderRsvpEnabled', lead: 'reminderRsvpLeadDays', min: 1, max: 30, unit: 'days' },
+    invitation: { enabled: 'reminderInvitationEnabled', lead: 'reminderInvitationLeadDays', min: 1, max: 30, unit: 'days' },
+    credential: { enabled: 'reminderCredentialEnabled', lead: 'reminderCredentialLeadDays', min: 1, max: 365, unit: 'days' },
 };
 export const REMINDER_KEYS = Object.keys(REMINDER_RULES) as ReminderKey[];
 

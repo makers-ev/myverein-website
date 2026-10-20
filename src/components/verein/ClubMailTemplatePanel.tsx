@@ -42,7 +42,7 @@ export default function ClubMailTemplatePanel({ clubId }: { clubId: string }) {
     const load = useCallback(async () => {
         setLoadError(null);
         try {
-            const res = await apiFetch<{ data: MailTemplateSettings }>(`/club-settings?clubId=${clubId}`);
+            const res = await apiFetch<{ data: MailTemplateSettings }>(`/club-settings?clubId=${encodeURIComponent(clubId)}`);
             apply(res.data);
         } catch (err) {
             setLoadError(errorMessage(err, t));
@@ -87,7 +87,7 @@ export default function ClubMailTemplatePanel({ clubId }: { clubId: string }) {
         setBusy(true);
         setStatus(null);
         try {
-            const res = await apiFetch<{ data: MailTemplateSettings }>(`/club-settings?clubId=${clubId}`, { method: 'PATCH', body: patch });
+            const res = await apiFetch<{ data: MailTemplateSettings }>(`/club-settings?clubId=${encodeURIComponent(clubId)}`, { method: 'PATCH', body: patch });
             apply(res.data);
             setStatus({ ok: true, text: t('verein.settings.saved') });
         } catch (err) {
@@ -100,7 +100,7 @@ export default function ClubMailTemplatePanel({ clubId }: { clubId: string }) {
     async function showPreview() {
         setPreview({ state: 'loading' });
         try {
-            const res = await apiFetch<{ data: MailPreview }>(`/club-settings/mail-preview?clubId=${clubId}`, {
+            const res = await apiFetch<{ data: MailPreview }>(`/club-settings/mail-preview?clubId=${encodeURIComponent(clubId)}`, {
                 method: 'POST',
                 body: {
                     template,
@@ -202,7 +202,7 @@ export default function ClubMailTemplatePanel({ clubId }: { clubId: string }) {
                             <dt className="font-semibold text-muted-foreground">{t('verein.mail.preview.subject')}</dt>
                             <dd className="text-foreground">{preview.data.subject}</dd>
                         </dl>
-                        {/* Sample data only; `sandbox=""` = no scripts, no forms, no same-origin access. */}
+                        {/* Sample data only; `sandbox=""` = no scripts, no forms, no same-origin access. The srcdoc inherits the page CSP; src/proxy.ts allows inline style attributes on /verein so the mail renders styled. */}
                         <iframe title={t('verein.mail.preview.frame')} sandbox="" srcDoc={preview.data.html} referrerPolicy="no-referrer" className="h-[28rem] w-full rounded-lg border border-border bg-white" />
                         <p className="text-xs text-muted-foreground">{t('verein.mail.preview.sample')}</p>
                     </div>

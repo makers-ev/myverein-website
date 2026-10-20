@@ -100,26 +100,28 @@ export default function MitteilungenPageContent() {
                 <LoadingText className="mt-6" />
             ) : (
                 <>
-                    <div role="tablist" className="mt-6 flex gap-2 overflow-x-auto border-b border-border">
-                        {tabs.map((value) => (
-                            <button
-                                key={value}
-                                type="button"
-                                role="tab"
-                                aria-selected={currentTab === value}
-                                onClick={() => {
-                                    setNotice(null);
-                                    if (value === 'verfassen' && currentTab !== 'verfassen') setEditing(null);
-                                    setTab(value);
-                                }}
-                                className={`whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
-                                    currentTab === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
-                                }`}
-                            >
-                                {t(`mitteilungen.tab.${value}`)}
-                            </button>
-                        ))}
-                    </div>
+                    {tabs.length > 1 && (
+                        <div role="tablist" className="mt-6 flex gap-2 overflow-x-auto border-b border-border">
+                            {tabs.map((value) => (
+                                <button
+                                    key={value}
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={currentTab === value}
+                                    onClick={() => {
+                                        setNotice(null);
+                                        if (value === 'verfassen' && currentTab !== 'verfassen') setEditing(null);
+                                        setTab(value);
+                                    }}
+                                    className={`whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
+                                        currentTab === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
+                                    }`}
+                                >
+                                    {t(`mitteilungen.tab.${value}`)}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                     {notice && (
                         <p role="status" className="mt-4 rounded-lg bg-success/10 px-3 py-2 text-sm text-success">
                             {notice}

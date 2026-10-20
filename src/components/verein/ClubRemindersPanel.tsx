@@ -4,9 +4,10 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { errorMessage, SectionCard, Toggle } from '@/components/standorte/ui';
 import { useLanguage } from '@/contexts/LanguageContext';
+import NotificationCatalogInfo from '@/components/verein/NotificationCatalogInfo';
 import { apiFetch } from '@/lib/api-client';
 import { inputClass, primaryButtonClass } from '@/lib/clubMembers';
-import { REMINDER_KEYS, REMINDER_RULES, type ReminderSettings, parseLead } from '@/lib/clubCommSettings';
+import { NOTIFY_SWITCHES, REMINDER_KEYS, REMINDER_RULES, type ReminderSettings, parseLead } from '@/lib/clubCommSettings';
 
 /**
  * "Erinnerungen und Automatik" in the Einstellungen tab (Wave 9 W6, `members:write`): which automatic reminders the club
@@ -20,6 +21,8 @@ export default function ClubRemindersPanel({ clubId }: { clubId: string }) {
     const [enabled, setEnabled] = useState<Record<string, boolean>>({});
     const [lead, setLead] = useState<Record<string, string>>({});
     const [ageAuto, setAgeAuto] = useState(false);
+    const [catalogOpen, setCatalogOpen] = useState(false);
+    const [notify, setNotify] = useState<Record<string, boolean>>({});
     const [busy, setBusy] = useState(false);
     const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
 
@@ -28,12 +31,13 @@ export default function ClubRemindersPanel({ clubId }: { clubId: string }) {
         setEnabled(Object.fromEntries(REMINDER_KEYS.map((k) => [k, s[REMINDER_RULES[k].enabled] as boolean])));
         setLead(Object.fromEntries(REMINDER_KEYS.map((k) => [k, String(s[REMINDER_RULES[k].lead])])));
         setAgeAuto(s.ageTransitionAuto);
+        setNotify(Object.fromEntries(NOTIFY_SWITCHES.map((k) => [k, s[k]])));
     }, []);
 
     const load = useCallback(async () => {
         setLoadError(null);
         try {
-            const res = await apiFetch<{ data: ReminderSettings }>(`/club-settings?clubId=${clubId}`);
+            const res = await apiFetch<{ data: ReminderSettings }>(`/club-settings?clubId=${encodeURIComponent(clubId)}`);
             apply(res.data);
         } catch (err) {
             setLoadError(errorMessage(err, t));
@@ -78,6 +82,7 @@ export default function ClubRemindersPanel({ clubId }: { clubId: string }) {
         else if (parsed !== saved[rule.lead]) changes[rule.lead] = parsed;
     }
     if (ageAuto !== saved.ageTransitionAuto) changes.ageTransitionAuto = ageAuto;
+    for (const k of NOTIFY_SWITCHES) if (notify[k] !== saved[k]) changes[k] = notify[k];
     const dirty = Object.keys(changes).length > 0;
     const hasInvalid = Object.values(invalid).some(Boolean);
 
@@ -87,7 +92,7 @@ export default function ClubRemindersPanel({ clubId }: { clubId: string }) {
         setBusy(true);
         setStatus(null);
         try {
-            const res = await apiFetch<{ data: ReminderSettings }>(`/club-settings?clubId=${clubId}`, { method: 'PATCH', body: changes });
+            const res = await apiFetch<{ data: ReminderSettings }>(`/club-settings?clubId=${encodeURIComponent(clubId)}`, { method: 'PATCH', body: changes });
             apply(res.data);
             setStatus({ ok: true, text: t('verein.settings.saved') });
         } catch (err) {
@@ -143,6 +148,26 @@ export default function ClubRemindersPanel({ clubId }: { clubId: string }) {
                     <p className="text-xs text-muted-foreground">{t('verein.reminders.age.hint')}</p>
                     {ageAuto && <p className="rounded-lg bg-warning/10 px-3 py-2 text-xs text-foreground">{t('verein.reminders.age.warning')}</p>}
                 </fieldset>
+
+                <fieldset className="space-y-3">
+                    <legend className="text-sm font-semibold text-foreground">{t('verein.notify.title')}</legend>
+                    <p className="text-xs text-muted-foreground">{t('verein.notify.hint')}</p>
+                    <ul className="space-y-3">
+                        {NOTIFY_SWITCHES.map((k) => (
+                            <li key={k} className="space-y-1">
+                                <Toggle checked={!!notify[k]} onChange={(v) => setNotify((prev) => ({ ...prev, [k]: v }))} label={t(`verein.notify.${k}`)} />
+                                <p className="text-xs text-muted-foreground">{t(`verein.notify.${k}.hint`)}</p>
+                            </li>
+                        ))}
+                    </ul>
+                </fieldset>
+
+                <div className="rounded-lg border border-border bg-muted/30 p-3">
+                    <button type="button" onClick={() => setCatalogOpen((o) => !o)} aria-expanded={catalogOpen} className="text-sm font-semibold text-primary underline">
+                        {t('verein.catalog.link')}
+                    </button>
+                    {catalogOpen && <NotificationCatalogInfo />}
+                </div>
 
                 <div className="flex items-center gap-3">
                     <button type="submit" disabled={busy || !dirty || hasInvalid} className={primaryButtonClass}>
