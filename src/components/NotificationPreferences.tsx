@@ -38,7 +38,7 @@ export default function NotificationPreferences() {
     }, [load]);
 
     async function toggle(category: PrefCategory, channel: PrefChannel, enabled: boolean) {
-        if (!prefs || channel === 'in_app') return;
+        if (!prefs || pending !== null || channel === 'in_app') return;
         const before = prefs;
         setPrefs(withToggle(prefs, category, channel, enabled));
         setPending(`${category}:${channel}`);
@@ -102,7 +102,7 @@ export default function NotificationPreferences() {
                                                             <input
                                                                 type="checkbox"
                                                                 checked={ch.enabled}
-                                                                disabled={pending === `${cat.category}:${channel}`}
+                                                                disabled={pending !== null}
                                                                 onChange={(e) => void toggle(cat.category, channel, e.target.checked)}
                                                                 aria-label={t('prefs.toggle', { category: t(`prefs.category.${cat.category}`), channel: t(`prefs.channel.${channel}`) })}
                                                                 className="h-4 w-4 accent-primary"
