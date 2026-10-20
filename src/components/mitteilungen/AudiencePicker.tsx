@@ -26,7 +26,7 @@ function toggle(list: readonly string[] | undefined, value: string): string[] {
 function CheckChip({ checked, onChange, children, disabled }: { checked: boolean; onChange: () => void; children: React.ReactNode; disabled?: boolean }) {
     return (
         <label
-            className={`inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1 text-sm transition-colors ${
+            className={`inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1 text-sm transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-primary ${
                 checked ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-background text-foreground hover:bg-muted'
             } ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}
         >
@@ -46,7 +46,20 @@ function Group({ legend, children }: { legend: string; children: React.ReactNode
 }
 
 /** Search and pick individual members (club-member ids). Only offered with club-wide authoring. */
-function MemberSearch({ clubId, picked, onChange }: { clubId: string; picked: PickedMember[]; onChange: (next: PickedMember[]) => void }) {
+function MemberSearch({
+    clubId,
+    picked,
+    unnamedCount,
+    onClearUnnamed,
+    onChange,
+}: {
+    clubId: string;
+    picked: PickedMember[];
+    /** Ids from a loaded draft whose names are not known (cannot be listed, only counted or cleared). */
+    unnamedCount: number;
+    onClearUnnamed: () => void;
+    onChange: (next: PickedMember[]) => void;
+}) {
     const { t } = useLanguage();
     const [input, setInput] = useState('');
     const [q, setQ] = useState('');
@@ -77,8 +90,16 @@ function MemberSearch({ clubId, picked, onChange }: { clubId: string; picked: Pi
 
     return (
         <div className="space-y-2">
-            {picked.length > 0 && (
+            {(picked.length > 0 || unnamedCount > 0) && (
                 <ul className="flex flex-wrap gap-2" aria-label={t('mitteilungen.audience.members.picked')}>
+                    {unnamedCount > 0 && (
+                        <li className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-sm text-primary">
+                            {t('mitteilungen.audience.members.saved', { count: unnamedCount })}
+                            <button type="button" onClick={onClearUnnamed} className="rounded-full px-1 hover:text-destructive" aria-label={t('mitteilungen.audience.members.saved.clear')}>
+                                ×
+                            </button>
+                        </li>
+                    )}
                     {picked.map((m) => (
                         <li key={m.id} className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-sm text-primary">
                             {m.name}
@@ -168,6 +189,7 @@ export default function AudiencePicker({
     }, [clubId, gate.writeAll]);
 
     const all = !!value.all;
+    const unnamedIds = (value.memberIds ?? []).filter((id) => !pickedMembers.some((p) => p.id === id));
     const set = (patch: Partial<Audience>) => onChange({ ...value, ...patch });
 
     return (
@@ -229,9 +251,11 @@ export default function AudiencePicker({
                                 <MemberSearch
                                     clubId={clubId}
                                     picked={pickedMembers}
+                                    unnamedCount={unnamedIds.length}
+                                    onClearUnnamed={() => set({ memberIds: value.memberIds?.filter((id) => pickedMembers.some((p) => p.id === id)) ?? [] })}
                                     onChange={(next) => {
                                         onPickedMembersChange(next);
-                                        set({ memberIds: next.map((m) => m.id) });
+                                        set({ memberIds: [...unnamedIds, ...next.map((m) => m.id)] });
                                     }}
                                 />
                             </div>

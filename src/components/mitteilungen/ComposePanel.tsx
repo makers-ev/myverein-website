@@ -178,19 +178,23 @@ export default function ComposePanel({
         setBusy('send');
         setError(null);
         try {
-            const saved = await persist();
+            // Ask before anything is persisted when the preview already tells us the send is large.
             let confirmRecipients: number | undefined;
             if (counts && needsConfirmation(counts.total)) {
                 if (!(await ask(counts.total))) return;
                 confirmRecipients = counts.total;
             }
+            const saved = await persist();
             try {
                 await sendAnnouncement(clubId, saved.id, { publishAt: when, ...(confirmRecipients !== undefined ? { confirmRecipients } : {}) });
             } catch (err) {
                 // The club's threshold differs from the default: ask once with the count the backend names.
                 const needed = confirmationFromError(err);
                 if (!needed || !(await ask(needed.recipients))) {
-                    if (needed) return;
+                    if (needed) {
+                        setError(t('mitteilungen.confirm.savedAsDraft'));
+                        return;
+                    }
                     throw err;
                 }
                 await sendAnnouncement(clubId, saved.id, { publishAt: when, confirmRecipients: needed.recipients });
