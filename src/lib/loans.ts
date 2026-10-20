@@ -19,3 +19,26 @@ export function canReturn(loan: { memberId: string; returnedAt: string | null },
     if (loan.returnedAt) return false;
     return canManage || (ownMemberId !== null && loan.memberId === ownMemberId);
 }
+
+/** Extending the return date needs `inventory:write` (the borrower gets `403`), an open loan and an existing return date. */
+export function canExtend(loan: { dueAt: string | null; returnedAt: string | null }, canManage: boolean): boolean {
+    return canManage && !loan.returnedAt && !!loan.dueAt;
+}
+
+export type ExtensionProblem = 'required' | 'notLater' | 'past';
+
+/**
+ * Validates the new return date (`YYYY-MM-DD` from a date input) like the backend: strictly later than the current return
+ * date and in the future. Returns the ISO instant with offset to send (end of that day, local time) or the problem.
+ */
+export function buildExtension(newDate: string, currentDueAt: string | null, now: Date = new Date()): { dueAt: string } | { problem: ExtensionProblem } {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(newDate)) return { problem: 'required' };
+    const next = new Date(`${newDate}T23:59:00`);
+    if (Number.isNaN(next.getTime())) return { problem: 'required' };
+    if (next.getTime() <= now.getTime()) return { problem: 'past' };
+    if (currentDueAt) {
+        const current = new Date(currentDueAt);
+        if (!Number.isNaN(current.getTime()) && next.getTime() <= current.getTime()) return { problem: 'notLater' };
+    }
+    return { dueAt: next.toISOString() };
+}
