@@ -93,7 +93,7 @@ export default function MonthCalendar({ month, events, selectedDay, language, t,
                             {dayEvents.length > 0 && (
                                 <div className="mt-1 flex flex-wrap justify-center gap-0.5 sm:hidden">
                                     {dayEvents.slice(0, 4).map((ev) => (
-                                        <span key={ev.id} className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: colorFor(ev.calendarId) }} />
+                                        <span key={ev.id} className={`h-1.5 w-1.5 rounded-full ${ev.cancelled ? 'opacity-30' : ''}`} style={{ backgroundColor: colorFor(ev.calendarId) }} />
                                     ))}
                                 </div>
                             )}
@@ -107,8 +107,8 @@ export default function MonthCalendar({ month, events, selectedDay, language, t,
                                             e.stopPropagation();
                                             onSelectEvent(ev);
                                         }}
-                                        title={ev.title}
-                                        className="block w-full truncate rounded px-1.5 py-0.5 text-left text-[11px] font-medium text-white hover:opacity-90"
+                                        title={ev.cancelled ? `${ev.title} (${t('kalender.events.cancelled')})` : ev.title}
+                                        className={`block w-full truncate rounded px-1.5 py-0.5 text-left text-[11px] font-medium text-white hover:opacity-90 ${ev.cancelled ? 'line-through opacity-50' : ''}`}
                                         style={{ backgroundColor: colorFor(ev.calendarId) }}
                                     >
                                         <span className="opacity-80">{formatTime(ev.startsAt, language)}</span> {ev.title}

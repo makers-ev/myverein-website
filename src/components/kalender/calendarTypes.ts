@@ -33,6 +33,10 @@ export interface CalendarEvent {
     endsAt: string | null;
     category: string | null;
     capacity: number | null;
+    /** Wave 9: an event is cancelled instead of deleted (`POST /events/:id/cancel`); older backends omit these. */
+    cancelled?: boolean;
+    cancelledAt?: string | null;
+    cancelReason?: string | null;
 }
 
 export type RsvpStatus = 'angemeldet' | 'warteliste';
@@ -79,4 +83,10 @@ export function isLockedDefaultCalendar(calendar: Calendar, calendars: Calendar[
 /** Calendar preselected for new events: the club default, else the first one, else none. */
 export function defaultCalendarId(calendars: Calendar[]): string {
     return (calendars.find((c) => c.isDefault) ?? calendars[0])?.id ?? '';
+}
+
+/** Whether the edit changed when the event takes place (drives the "members will be notified" hint). */
+export function timeChanged(event: Pick<CalendarEvent, 'startsAt' | 'endsAt'>, startsAtIso: string, endsAtIso: string | null): boolean {
+    const same = (a: string | null, b: string | null) => (a === null || b === null ? a === b : new Date(a).getTime() === new Date(b).getTime());
+    return !same(event.startsAt, startsAtIso) || !same(event.endsAt, endsAtIso);
 }

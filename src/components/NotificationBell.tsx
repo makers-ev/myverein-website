@@ -5,11 +5,13 @@ import Link from 'next/link';
 import { Bell } from 'lucide-react';
 
 import { authClient, backendUrl } from '@/lib/auth-client';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const POLL_INTERVAL_MS = 30_000;
 
 /** Bell + unread badge for the signed-in nav slot (`AuthNav.tsx`) -- polls on an interval and on window focus rather than a websocket/SSE connection (ADR-006: polling, no realtime in v1). */
 export function NotificationBell() {
+    const { t } = useLanguage();
     const [unreadCount, setUnreadCount] = useState(0);
 
     useEffect(() => {
@@ -34,7 +36,8 @@ export function NotificationBell() {
         <Link
             href="/notifications"
             className="relative flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-            aria-label="Notifications"
+            aria-label={t('nav.notifications.platform')}
+            title={t('nav.notifications.platform')}
         >
             <Bell size={18} />
             {unreadCount > 0 && (

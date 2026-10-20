@@ -99,8 +99,9 @@ export function proxy(request: NextRequest) {
     response.headers.set('Content-Security-Policy', contentSecurityPolicyHeaderValue);
     response.headers.set('X-Frame-Options', 'DENY');
     response.headers.set('X-Content-Type-Options', 'nosniff');
-    // The invitation landing page carries a secret token in its URL: never send that URL on as Referer.
-    const invitationPage = request.nextUrl.pathname === '/einladung' || request.nextUrl.pathname.startsWith('/einladung/');
+    // The invitation and unsubscribe landing pages carry a secret token in their URL: never send that URL on as Referer.
+    const tokenPaths = ['/einladung', '/abmelden'];
+    const invitationPage = tokenPaths.some((p) => request.nextUrl.pathname === p || request.nextUrl.pathname.startsWith(`${p}/`));
     response.headers.set('Referrer-Policy', invitationPage ? 'no-referrer' : 'strict-origin-when-cross-origin');
 
     return response;

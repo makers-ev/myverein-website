@@ -37,6 +37,11 @@ describe('visible tabs', () => {
         expect(visibleTabs(schriftfuehrer, mitglied.roles)).toEqual(['info', 'profil', 'mitglieder', 'abteilungen', 'austritte', 'kennzahlen', 'formulare', 'zusatzfelder', 'einstellungen']);
     });
 
+    it('offers the settings tab to the mail template editors (announcements:write) as well', () => {
+        expect(visibleTabs(['announcements:write'], mitglied.roles)).toContain('einstellungen');
+        expect(visibleTabs(['announcements:write_department'], mitglied.roles)).not.toContain('einstellungen');
+    });
+
     it('never offers a tab twice', () => {
         const tabs = visibleTabs(schriftfuehrer, mitglied.roles);
         expect(new Set(tabs).size).toBe(tabs.length);

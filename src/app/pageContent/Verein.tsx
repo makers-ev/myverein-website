@@ -11,6 +11,8 @@ import ApplicationsPanel from '@/components/verein/ApplicationsPanel';
 import NoClubSection from '@/components/verein/NoClubSection';
 import CategoriesPanel from '@/components/verein/CategoriesPanel';
 import ClubSettingsPanel from '@/components/verein/ClubSettingsPanel';
+import ClubRemindersPanel from '@/components/verein/ClubRemindersPanel';
+import ClubMailTemplatePanel from '@/components/verein/ClubMailTemplatePanel';
 import CredentialsPanel from '@/components/verein/CredentialsPanel';
 import ClubStatsPanel from '@/components/verein/ClubStatsPanel';
 import CustomFieldsPanel from '@/components/verein/CustomFieldsPanel';
@@ -395,8 +397,10 @@ export default function VereinPageContent() {
                         {currentTab === 'zusatzfelder' && gate.manage && <CustomFieldsPanel clubId={activeClub.clubId} permissions={permissions} />}
                         {currentTab === 'einstellungen' && (
                             <div className="space-y-6">
-                                <ClubSettingsPanel clubId={activeClub.clubId} />
-                                <CategoriesPanel clubId={activeClub.clubId} onChanged={() => setMembersReload((n) => n + 1)} />
+                                {permissions.includes('members:write') && <ClubSettingsPanel clubId={activeClub.clubId} />}
+                                {permissions.includes('members:write') && <ClubRemindersPanel clubId={activeClub.clubId} />}
+                                {permissions.includes('announcements:write') && <ClubMailTemplatePanel clubId={activeClub.clubId} />}
+                                {permissions.includes('members:write') && <CategoriesPanel clubId={activeClub.clubId} onChanged={() => setMembersReload((n) => n + 1)} />}
                             </div>
                         )}
                     </div>

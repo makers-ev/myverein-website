@@ -54,10 +54,11 @@ export default function EventAgenda({ events, language, t, colorFor, calendarNam
                                     className="flex w-full items-stretch gap-3 rounded-lg border border-border bg-background p-3 text-left transition-colors hover:bg-muted/50"
                                 >
                                     <span className="w-1 shrink-0 rounded-full" style={{ backgroundColor: colorFor(ev.calendarId) }} />
-                                    <span className="w-24 shrink-0 text-xs font-semibold tabular-nums text-muted-foreground">{formatTimeRange(ev, language)}</span>
-                                    <span className="min-w-0 flex-1">
-                                        <span className="block truncate text-sm font-semibold text-foreground">{ev.title}</span>
+                                    <span className={`w-24 shrink-0 text-xs font-semibold tabular-nums text-muted-foreground ${ev.cancelled ? 'line-through' : ''}`}>{formatTimeRange(ev, language)}</span>
+                                    <span className={`min-w-0 flex-1 ${ev.cancelled ? 'opacity-70' : ''}`}>
+                                        <span className={`block truncate text-sm font-semibold text-foreground ${ev.cancelled ? 'line-through' : ''}`}>{ev.title}</span>
                                         <span className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                                            {ev.cancelled && <span className="rounded-full bg-destructive/10 px-2 py-0.5 font-semibold text-destructive">{t('kalender.events.cancelled')}</span>}
                                             <span>{calendarName(ev.calendarId)}</span>
                                             {ev.category && (
                                                 <span className="rounded-full bg-muted px-2 py-0.5 font-medium text-foreground">{ev.category}</span>
