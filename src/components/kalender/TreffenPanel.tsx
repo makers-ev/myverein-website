@@ -27,6 +27,7 @@ import { Modal } from '@/components/Modal';
 import { inputClass, labelClass, primaryBtn, secondaryBtn } from '@/components/kalender/calendarTypes';
 import LoadingText from '@/components/LoadingText';
 import LoadError from '@/components/LoadError';
+import { Toggle } from '@/components/standorte/ui';
 
 interface Meeting {
     id: string;
@@ -36,7 +37,7 @@ interface Meeting {
     scheduledAt: string | null;
     agenda: string | null;
     minutes: string | null;
-    status: 'terminfindung' | 'geplant' | 'abgehalten' | 'protokolliert';
+    status: 'terminfindung' | 'geplant' | 'abgehalten' | 'protokolliert' | 'abgesagt';
 }
 
 interface MeetingInvitee {
@@ -66,13 +67,14 @@ interface OverlapCandidate {
 
 type TFn = (key: string, p?: Record<string, string | number>) => string;
 
-const MEETING_STATUSES = ['terminfindung', 'geplant', 'abgehalten', 'protokolliert'] as const;
+const MEETING_STATUSES = ['terminfindung', 'geplant', 'abgehalten', 'protokolliert', 'abgesagt'] as const;
 
 const STATUS_STYLES: Record<Meeting['status'], string> = {
     terminfindung: 'bg-warning/15 text-warning',
     geplant: 'bg-primary/10 text-primary',
     abgehalten: 'bg-success/15 text-success',
     protokolliert: 'bg-muted text-muted-foreground',
+    abgesagt: 'bg-destructive/15 text-destructive',
 };
 
 const RESPONSE_STYLES: Record<string, string> = {
@@ -106,6 +108,16 @@ function ErrorText({ children }: { children: React.ReactNode }) {
         <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {children}
         </p>
+    );
+}
+
+/** "Eingeladene benachrichtigen" (on by default); the off state is described so nobody switches it off by accident. */
+function NotifySwitch({ checked, onChange, hintKey, t }: { checked: boolean; onChange: (v: boolean) => void; hintKey: string; t: TFn }) {
+    return (
+        <div className="space-y-1">
+            <Toggle checked={checked} onChange={onChange} label={t('treffen.notify.label')} />
+            <p className="text-xs text-muted-foreground">{checked ? t(hintKey) : t('treffen.notify.off')}</p>
+        </div>
     );
 }
 
@@ -347,6 +359,11 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
     const [metaSaving, setMetaSaving] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState<string | null>(null);
+    const [deleteOpen, setDeleteOpen] = useState(false);
+    const [notifyDelete, setNotifyDelete] = useState(true);
+    const [notifyMeta, setNotifyMeta] = useState(true);
+    const [notifyStatus, setNotifyStatus] = useState(true);
+    const [notifyInvite, setNotifyInvite] = useState(true);
 
     function openEditMeeting() {
         if (!meeting) return;
@@ -354,6 +371,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
         setMetaType(meeting.type);
         setMetaScheduled(toDatetimeLocal(meeting.scheduledAt));
         setMetaError(null);
+        setNotifyMeta(true);
         setMetaOpen(true);
     }
 
@@ -367,6 +385,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
         if (metaScheduled !== toDatetimeLocal(meeting.scheduledAt)) {
             const scheduled = fromDatetimeLocal(metaScheduled);
             body.scheduledAt = scheduled;
+            if (!notifyMeta) body.notify = false;
             // A meeting that gets a date is no longer in Terminfindung (and vice versa when the date is removed).
             const nextStatus = statusForSchedule(meeting.status, scheduled);
             if (nextStatus) body.status = nextStatus;
@@ -389,13 +408,14 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
     }
 
     async function handleDeleteMeeting() {
-        if (!meeting || !window.confirm(t('treffen.delete.confirm', { title: meeting.title }))) return;
+        if (!meeting) return;
         setDeleting(true);
         setDeleteError(null);
         try {
-            await apiFetch(`/meetings/${meetingId}?clubId=${clubId}`, { method: 'DELETE' });
+            await apiFetch(`/meetings/${meetingId}?clubId=${clubId}${notifyDelete ? '' : '&notify=false'}`, { method: 'DELETE' });
             onBack();
         } catch (err) {
+            setDeleteOpen(false);
             setDeleteError(t(memberErrorKey(err)));
             setDeleting(false);
         }
@@ -441,7 +461,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
         try {
             await apiFetch(`/meetings/${meetingId}?clubId=${clubId}`, {
                 method: 'PATCH',
-                body: { agenda, minutes, status },
+                body: { agenda, minutes, status, ...(status === 'abgesagt' && meeting?.status !== 'abgesagt' && !notifyStatus ? { notify: false } : {}) },
             });
             setSaved(true);
             setEditing(false);
@@ -461,7 +481,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
         try {
             await apiFetch(`/meetings/${meetingId}/invitees?clubId=${clubId}`, {
                 method: 'POST',
-                body: { memberId: newInviteeId.trim() },
+                body: { memberId: newInviteeId.trim(), ...(notifyInvite ? {} : { notify: false }) },
             });
             setNewInviteeId('');
             await load();
@@ -664,7 +684,10 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                             </button>
                             <button
                                 type="button"
-                                onClick={() => void handleDeleteMeeting()}
+                                onClick={() => {
+                                    setNotifyDelete(true);
+                                    setDeleteOpen(true);
+                                }}
                                 disabled={deleting}
                                 className={`${secondaryBtn} inline-flex items-center gap-1.5 !px-3 !py-1.5 !text-destructive`}
                             >
@@ -714,6 +737,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                                 ))}
                             </select>
                         </div>
+                        {status === 'abgesagt' && meeting.status !== 'abgesagt' && <NotifySwitch checked={notifyStatus} onChange={setNotifyStatus} hintKey="treffen.notify.hint.cancel" t={t} />}
                         <div className="flex flex-wrap gap-2">
                             <button type="button" onClick={() => void handleSaveAgenda()} className={primaryBtn}>
                                 {t('treffen.agenda-minutes.save')}
@@ -840,6 +864,11 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                             </select>
                         </div>
                         {directoryError && <p className="w-full text-xs text-destructive">{t('verein.directory.error')}</p>}
+                        {newInviteeId && (
+                            <div className="w-full">
+                                <NotifySwitch checked={notifyInvite} onChange={setNotifyInvite} hintKey="treffen.notify.hint.invite" t={t} />
+                            </div>
+                        )}
                         <button type="button" onClick={() => void handleAddInvitee()} disabled={!newInviteeId} className={primaryBtn}>
                             {t('treffen.invitees.invite')}
                         </button>
@@ -1230,8 +1259,32 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                             <input id="me-scheduled" type="datetime-local" value={metaScheduled} onChange={(e) => setMetaScheduled(e.target.value)} className={inputClass} />
                             <p className="mt-1 text-xs text-muted-foreground">{t('treffen.scheduled-at.hint')}</p>
                         </div>
+                        {metaScheduled !== toDatetimeLocal(meeting.scheduledAt) && <NotifySwitch checked={notifyMeta} onChange={setNotifyMeta} hintKey="treffen.notify.hint.reschedule" t={t} />}
                         {metaError && <ErrorText>{metaError}</ErrorText>}
                     </form>
+                </Modal>
+            )}
+
+            {canWrite && (
+                <Modal
+                    open={deleteOpen}
+                    onClose={deleting ? () => {} : () => setDeleteOpen(false)}
+                    title={t('treffen.delete')}
+                    footer={
+                        <div className="flex justify-end gap-2">
+                            <button type="button" onClick={() => setDeleteOpen(false)} disabled={deleting} className={secondaryBtn}>
+                                {t('treffen.cancel')}
+                            </button>
+                            <button type="button" onClick={() => void handleDeleteMeeting()} disabled={deleting} className="rounded-lg bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground disabled:opacity-60">
+                                {t('treffen.delete')}
+                            </button>
+                        </div>
+                    }
+                >
+                    <div className="space-y-4">
+                        <p className="text-sm text-foreground">{t('treffen.delete.confirm', { title: meeting.title })}</p>
+                        <NotifySwitch checked={notifyDelete} onChange={setNotifyDelete} hintKey="treffen.notify.hint.delete" t={t} />
+                    </div>
                 </Modal>
             )}
         </div>
