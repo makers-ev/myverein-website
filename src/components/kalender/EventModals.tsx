@@ -135,17 +135,23 @@ export function CancelEventModal({ event, clubId, calendar, t, onClose, onCancel
                     ) : (
                         <div className="mt-1 space-y-1">
                             <p>{t('kalender.cancelEvent.preview.counts', { confirmed: preview.confirmed, waitlisted: preview.waitlisted })}</p>
-                            {preview.audience.total === 0 ? (
-                                <p className="text-muted-foreground">{t('kalender.cancelEvent.preview.none')}</p>
+                            {notify ? (
+                                <>
+                                    {preview.audience.total === 0 ? (
+                                        <p className="text-muted-foreground">{t('kalender.cancelEvent.preview.none')}</p>
+                                    ) : (
+                                        <p>{t('kalender.cancelEvent.preview.audience', { total: preview.audience.total, reachable: preview.audience.reachable, inApp: preview.audience.inApp, email: preview.audience.email })}</p>
+                                    )}
+                                    {preview.audience.unreachable > 0 && <p className="text-xs text-muted-foreground">{t('kalender.cancelEvent.preview.unreachable', { count: preview.audience.unreachable })}</p>}
+                                    {preview.audience.sharedAddress > 0 && <p className="text-xs text-muted-foreground">{t('kalender.cancelEvent.preview.shared', { count: preview.audience.sharedAddress })}</p>}
+                                    {tooLarge && (
+                                        <p role="alert" className="rounded-md bg-warning/10 px-2 py-1 text-foreground">
+                                            {t('kalender.cancelEvent.preview.tooLarge', { total: preview.audience.total })}
+                                        </p>
+                                    )}
+                                </>
                             ) : (
-                                <p>{t('kalender.cancelEvent.preview.audience', { total: preview.audience.total, reachable: preview.audience.reachable, inApp: preview.audience.inApp, email: preview.audience.email })}</p>
-                            )}
-                            {preview.audience.unreachable > 0 && <p className="text-xs text-muted-foreground">{t('kalender.cancelEvent.preview.unreachable', { count: preview.audience.unreachable })}</p>}
-                            {preview.audience.sharedAddress > 0 && <p className="text-xs text-muted-foreground">{t('kalender.cancelEvent.preview.shared', { count: preview.audience.sharedAddress })}</p>}
-                            {tooLarge && (
-                                <p role="alert" className="rounded-md bg-warning/10 px-2 py-1 text-foreground">
-                                    {t('kalender.cancelEvent.preview.tooLarge', { total: preview.audience.total })}
-                                </p>
+                                <p className="text-muted-foreground">{t('kalender.notify.off')}</p>
                             )}
                         </div>
                     )}

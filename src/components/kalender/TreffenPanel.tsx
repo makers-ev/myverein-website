@@ -727,7 +727,10 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                             <select
                                 id="mt-status"
                                 value={status}
-                                onChange={(e) => setStatus(e.target.value as Meeting['status'])}
+                                onChange={(e) => {
+                                    setStatus(e.target.value as Meeting['status']);
+                                    setNotifyStatus(true);
+                                }}
                                 className={`${inputClass} sm:w-auto`}
                             >
                                 {MEETING_STATUSES.map((s) => (
@@ -852,7 +855,12 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                             <label htmlFor="mt-invitee" className={labelClass}>
                                 {t('treffen.invitees.add')}
                             </label>
-                            <select id="mt-invitee" value={newInviteeId} onChange={(e) => setNewInviteeId(e.target.value)} className={inputClass}>
+                            <select id="mt-invitee" value={newInviteeId} onChange={(e) => {
+                                    setNewInviteeId(e.target.value);
+                                    setNotifyInvite(true);
+                                }}
+                                className={inputClass}
+                            >
                                 <option value="">—</option>
                                 {members
                                     .filter((m) => !m.left && !invitees.some((inv) => inv.memberId === m.id))
