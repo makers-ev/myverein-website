@@ -22,7 +22,7 @@ const buttonClass =
 
 function Shell({ children, status }: { children: React.ReactNode; status?: 'ok' | 'warn' }) {
     return (
-        <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+        <div className="flex flex-col items-center justify-center bg-background p-4 py-16">
             <div className="w-full max-w-md overflow-hidden rounded-2xl bg-card p-8 shadow-xl">
                 <div className="flex flex-col items-center text-center">
                     {status === 'ok' && (
@@ -42,6 +42,9 @@ function Shell({ children, status }: { children: React.ReactNode; status?: 'ok' 
     );
 }
 
+// StrictMode runs the mount effect twice in dev; the first run strips the token from the URL, so it is kept here.
+let capturedToken: string | null = null;
+
 export default function UnsubscribeContent() {
     const { t } = useLanguage();
     const [view, setView] = useState<View>({ kind: 'init' });
@@ -50,7 +53,8 @@ export default function UnsubscribeContent() {
     // The token is read once from the URL and removed from the address bar right away (history, screenshots).
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
-        const found = params.get('token');
+        const found = params.get('token') ?? capturedToken;
+        capturedToken = found;
         window.history.replaceState(null, '', window.location.pathname);
         if (!isPlausibleToken(found)) {
             // Reading browser state after mount, not derivable during render.
