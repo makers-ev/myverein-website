@@ -37,7 +37,7 @@ export default function ClubRemindersPanel({ clubId }: { clubId: string }) {
     const load = useCallback(async () => {
         setLoadError(null);
         try {
-            const res = await apiFetch<{ data: ReminderSettings }>(`/club-settings?clubId=${clubId}`);
+            const res = await apiFetch<{ data: ReminderSettings }>(`/club-settings?clubId=${encodeURIComponent(clubId)}`);
             apply(res.data);
         } catch (err) {
             setLoadError(errorMessage(err, t));
@@ -92,7 +92,7 @@ export default function ClubRemindersPanel({ clubId }: { clubId: string }) {
         setBusy(true);
         setStatus(null);
         try {
-            const res = await apiFetch<{ data: ReminderSettings }>(`/club-settings?clubId=${clubId}`, { method: 'PATCH', body: changes });
+            const res = await apiFetch<{ data: ReminderSettings }>(`/club-settings?clubId=${encodeURIComponent(clubId)}`, { method: 'PATCH', body: changes });
             apply(res.data);
             setStatus({ ok: true, text: t('verein.settings.saved') });
         } catch (err) {

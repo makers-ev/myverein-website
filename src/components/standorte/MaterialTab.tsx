@@ -394,7 +394,7 @@ function LoansSection({
         const built = buildExtension(extendDate, extending.dueAt);
         if ('problem' in built) return t(`standorte.loans.extend.err.${built.problem}`);
         try {
-            await apiFetch(`/inventory-items/${itemId}/loans/${extending.id}?clubId=${clubId}`, { method: 'PATCH', body: { dueAt: built.dueAt } });
+            await apiFetch(`/inventory-items/${itemId}/loans/${extending.id}?clubId=${encodeURIComponent(clubId)}`, { method: 'PATCH', body: { dueAt: built.dueAt } });
             await loadLoans();
             return null;
         } catch (err) {
@@ -491,7 +491,7 @@ function LoansSection({
                                                 onClick={() => {
                                                     setExtending(loan);
                                                     setExtendDate('');
-                                                                                }}
+                                                }}
                                                 className={`${secondaryButtonClass} mr-2`}
                                             >
                                                 {t('standorte.loans.extend')}
@@ -755,7 +755,7 @@ export default function MaterialTab({ clubId, locations, canWrite, ownMemberId, 
 
     useEffect(() => {
         let cancelled = false;
-        apiFetch<{ data: ClubSettings }>(`/club-settings?clubId=${clubId}`)
+        apiFetch<{ data: ClubSettings }>(`/club-settings?clubId=${encodeURIComponent(clubId)}`)
             .then((res) => {
                 if (!cancelled) setAllowSelfLoans(res.data.allowSelfLoans);
             })
