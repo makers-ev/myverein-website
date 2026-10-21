@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { RefreshCw } from 'lucide-react';
 
 import FormRenderer, { fieldDomId, focusField } from '@/components/forms/FormRenderer';
+import JoinPrivacyNotice from '@/components/verein/JoinPrivacyNotice';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ApiError, apiFetch } from '@/lib/api-client';
 import { findOpenDraft } from '@/lib/applicantStatus';
@@ -82,6 +83,8 @@ export default function ApplicationForm({ slug, mode, current, resume, registerF
     const [confirmDiscard, setConfirmDiscard] = useState(false);
     const [discarding, setDiscarding] = useState(false);
     const noticeRef = useRef<HTMLDivElement>(null);
+    // Wave 10: "Datenschutzhinweis zur Kenntnis genommen" -- information sent along with the submit, never a requirement.
+    const acknowledgedRef = useRef(false);
 
     // Mutable truth of the autosave machinery (state is only the display of it).
     const defRef = useRef(definition);
@@ -406,7 +409,7 @@ export default function ApplicationForm({ slug, mode, current, resume, registerF
                 const outcome = await savePending();
                 if (outcome !== 'ok') return { kind: outcome } as const;
                 if (!idRef.current) await createDraft({});
-                const res = await apiFetch<{ data: { submission: Submission; warnings?: unknown[] } }>(`/form-submissions/${idRef.current}/submit`, { method: 'POST', body: {} });
+                const res = await apiFetch<{ data: { submission: Submission; warnings?: unknown[] } }>(`/form-submissions/${idRef.current}/submit`, { method: 'POST', body: acknowledgedRef.current ? { privacyNoticeAcknowledged: true } : {} });
                 return { kind: 'done', data: res.data } as const;
             });
             if (!alive.current) return;
@@ -536,6 +539,13 @@ export default function ApplicationForm({ slug, mode, current, resume, registerF
                     onRemoveFile={removeFile}
                 />
             </div>
+
+            <JoinPrivacyNotice
+                slug={slug}
+                onAcknowledgedChange={(value) => {
+                    acknowledgedRef.current = value;
+                }}
+            />
 
             <p aria-live="polite" className="mt-4 min-h-4 text-xs text-muted-foreground">
                 {saveText}

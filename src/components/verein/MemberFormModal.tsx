@@ -387,6 +387,7 @@ export default function MemberFormModal({
                         <div className="space-y-1">
                             <p>{t('verein.form.create.noAccountHint')}</p>
                             <p>{t('verein.form.create.minorsHint')}</p>
+                            <p>{t('privacy.create.art14')}</p>
                         </div>
                     </div>
                 )}
