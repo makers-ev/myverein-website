@@ -1,6 +1,7 @@
 'use client';
 
 import { useId, useState } from 'react';
+import { TriangleAlert } from 'lucide-react';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ABSENCE_KINDS, type AbsenceInput, type AbsenceKind, NOTE_MAX, absenceBody, absenceErrorKey, absenceProblem } from '@/lib/absences';
@@ -81,7 +82,8 @@ export default function AbsenceForm({
             <label className="block">
                 <span className="mb-1 block text-xs font-medium text-muted-foreground">{t('absence.form.note')}</span>
                 <textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={NOTE_MAX} rows={2} aria-describedby={`${id}-hint`} className={inputClass} />
-                <span id={`${id}-hint`} className="mt-1 block text-xs text-warning">
+                <span id={`${id}-hint`} className="mt-1 flex items-start gap-1.5 text-xs text-foreground">
+                    <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning" aria-hidden="true" />
                     {t('absence.form.noDiagnosis')}
                 </span>
             </label>
