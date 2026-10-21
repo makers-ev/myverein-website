@@ -140,9 +140,13 @@ export async function loadAccountScope(): Promise<AccountScope> {
     return { hasClub: clubs, hasWards: wards };
 }
 
-/** Links of the account menu: `null` scope (unknown yet / failed) keeps the full menu, a guardian-only account sees `Familie` only. */
-export function visibleAppLinks<L extends { href: string }>(links: readonly L[], scope: AccountScope | null, familyLink: L): L[] {
-    if (!scope) return [...links];
+/**
+ * Links of the account menu: while the scope is unknown (`null`) nothing is shown so a guardian never sees club links flash by;
+ * only a failed lookup (`failed`) falls back to the full menu (the pages enforce access anyway). A guardian-only account sees
+ * `Familie` only.
+ */
+export function visibleAppLinks<L extends { href: string }>(links: readonly L[], scope: AccountScope | null, familyLink: L, failed = false): L[] {
+    if (!scope) return failed ? [...links] : [];
     if (!scope.hasClub && scope.hasWards) return [familyLink];
     return scope.hasWards ? [...links, familyLink] : [...links];
 }

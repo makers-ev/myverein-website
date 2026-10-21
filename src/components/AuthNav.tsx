@@ -45,8 +45,9 @@ export function AuthNav({ appLinks = [] }: { appLinks?: AuthNavAppLink[] }) {
     const router = useRouter();
     const { t } = useLanguage();
     const [isOpen, setIsOpen] = useState(false);
-    // Club / wards of the signed-in account (null = unknown yet or failed: keep the full menu, the pages enforce access anyway).
+    // Club / wards of the signed-in account (null = unknown yet: no app links; `scopeFailed` falls back to the full menu, the pages enforce access anyway).
     const [scope, setScope] = useState<AccountScope | null>(null);
+    const [scopeFailed, setScopeFailed] = useState(false);
     const signedIn = !!session;
     const ref = useRef<HTMLDivElement>(null);
 
@@ -65,7 +66,7 @@ export function AuthNav({ appLinks = [] }: { appLinks?: AuthNavAppLink[] }) {
         let cancelled = false;
         loadAccountScope()
             .then((s) => !cancelled && setScope(s))
-            .catch(() => undefined);
+            .catch(() => !cancelled && setScopeFailed(true));
         return () => {
             cancelled = true;
         };
@@ -89,7 +90,7 @@ export function AuthNav({ appLinks = [] }: { appLinks?: AuthNavAppLink[] }) {
     }
 
     const displayName = session.user.name ?? session.user.email;
-    const links = visibleAppLinks(appLinks, scope, FAMILY_LINK);
+    const links = visibleAppLinks(appLinks, scope, FAMILY_LINK, scopeFailed);
 
     return (
         <div className="flex items-center gap-1">
