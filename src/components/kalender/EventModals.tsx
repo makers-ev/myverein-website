@@ -7,6 +7,8 @@ import { Modal } from '@/components/Modal';
 import { Toggle } from '@/components/standorte/ui';
 import { apiFetch } from '@/lib/api-client';
 
+import EventAbsenceOverlay from './EventAbsenceOverlay';
+
 import {
     type Calendar,
     type CalendarEvent,
@@ -172,6 +174,8 @@ interface DetailProps {
     calendar: Calendar | undefined;
     color: string;
     canWrite: boolean;
+    /** `absences:read`: shows who is absent on the day of the event (names and period only). */
+    canSeeAbsences?: boolean;
     rsvp: RsvpStatus | undefined;
     language: string;
     t: TFn;
@@ -181,7 +185,7 @@ interface DetailProps {
     onDeleted: () => void;
 }
 
-export function EventDetailModal({ event, clubId, calendar, color, canWrite, rsvp, language, t, onClose, onRsvpChange, onEdit, onDeleted }: DetailProps) {
+export function EventDetailModal({ event, clubId, calendar, color, canWrite, canSeeAbsences = false, rsvp, language, t, onClose, onRsvpChange, onEdit, onDeleted }: DetailProps) {
     const [error, setError] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
     const [cancelling, setCancelling] = useState(false);
@@ -308,6 +312,7 @@ export function EventDetailModal({ event, clubId, calendar, color, canWrite, rsv
                     </p>
                 )}
                 {event.description && <p className="whitespace-pre-line rounded-lg bg-muted/50 p-3 text-foreground">{event.description}</p>}
+                {canSeeAbsences && !cancelled && <EventAbsenceOverlay clubId={clubId} eventId={event.id} />}
                 {error && (
                     <p role="alert" className="text-sm text-destructive">
                         {error}

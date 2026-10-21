@@ -58,6 +58,12 @@ describe('apiFetch date handling', () => {
 });
 
 describe('cache policy of personal-data routes', () => {
+    it('never uses the HTTP cache for absences, guardian routes, consents and the access log', () => {
+        for (const path of ['/absences?clubId=c', '/absences/club?clubId=c', '/my-wards', '/guardian/wards/w/events?clubId=c', '/consent-purposes?clubId=c', '/consents/overview?clubId=c', '/club-members/abc/consents?clubId=c', '/audit-log?clubId=c']) {
+            expect(cachePolicyFor(path)).toBe('no-store');
+        }
+    });
+
     it('never uses the HTTP cache for form submissions, applicant forms and the application review', () => {
         for (const path of ['/form-submissions/mine', '/form-submissions/abc?x=1', '/club-forms/demo/aufnahme', '/club-applications?clubId=c', '/club-applications/1']) {
             expect(cachePolicyFor(path)).toBe('no-store');

@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { useThrottledCallback } from '@/lib/useThrottledCallback';
 import { memberErrorKey } from '@/lib/clubMembers';
-import { type ClubTab, canSeeCredentialOverview, formsGate, visibleTabs } from '@/lib/clubPermissions';
+import { type ClubTab, canSeeCredentialOverview, formsGate, isGuardianOnly, visibleTabs } from '@/lib/clubPermissions';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ApplicationsPanel from '@/components/verein/ApplicationsPanel';
 import NoClubSection from '@/components/verein/NoClubSection';
@@ -18,6 +18,8 @@ import ClubStatsPanel from '@/components/verein/ClubStatsPanel';
 import CustomFieldsPanel from '@/components/verein/CustomFieldsPanel';
 import FormsPanel from '@/components/verein/FormsPanel';
 import ExitQueuePanel from '@/components/verein/ExitQueuePanel';
+import AbsencesBoardPanel from '@/components/verein/AbsencesBoardPanel';
+import OwnAbsencesPanel from '@/components/absences/OwnAbsencesPanel';
 import MemberList from '@/components/verein/MemberList';
 import MemberAvatar from '@/components/verein/MemberAvatar';
 import RoleBadge from '@/components/verein/RoleBadge';
@@ -332,7 +334,10 @@ export default function VereinPageContent() {
                         {currentTab === 'info' && (info ? <VereinsinfoTab info={info} t={t} onPhotoExpired={refetchBoardPhotos} /> : <LoadingText />)}
                         {currentTab === 'profil' &&
                             (me ? (
-                                <ProfilTab me={me} clubId={activeClub.clubId} onDirtyChange={onProfilDirty} onSaved={() => void refreshClubData(activeClub.clubId)} onPhotoExpired={refetchOwnPhoto} onOpenCustomFields={() => void selectTab('zusatzfelder')} />
+                                <div className="space-y-6">
+                                    <ProfilTab me={me} clubId={activeClub.clubId} onDirtyChange={onProfilDirty} onSaved={() => void refreshClubData(activeClub.clubId)} onPhotoExpired={refetchOwnPhoto} onOpenCustomFields={() => void selectTab('zusatzfelder')} />
+                                    {!isGuardianOnly(permissions, me.roles) && <OwnAbsencesPanel clubId={activeClub.clubId} />}
+                                </div>
                             ) : (
                                 <LoadingText />
                             ))}
@@ -395,6 +400,9 @@ export default function VereinPageContent() {
                         {currentTab === 'kennzahlen' && <ClubStatsPanel clubId={activeClub.clubId} />}
                         {currentTab === 'formulare' && gate.manage && <FormsPanel clubId={activeClub.clubId} permissions={permissions} onDirtyChange={onFormsDirty} onOpenCategorySettings={tabs.includes('einstellungen') ? () => void selectTab('einstellungen') : undefined} />}
                         {currentTab === 'zusatzfelder' && gate.manage && <CustomFieldsPanel clubId={activeClub.clubId} permissions={permissions} />}
+                        {currentTab === 'fehlt' && permissions.includes('absences:read') && (
+                            <AbsencesBoardPanel clubId={activeClub.clubId} departments={(info?.departments ?? []).map((d) => ({ id: d.id, name: d.name }))} />
+                        )}
                         {currentTab === 'einstellungen' && (
                             <div className="space-y-6">
                                 {permissions.includes('members:write') && <ClubSettingsPanel clubId={activeClub.clubId} />}

@@ -164,6 +164,13 @@ export function todayIso(): string {
     return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 }
 
+/** `YYYY-MM-DD` plus whole days (calendar arithmetic in UTC, so no DST surprises). */
+export function addDaysIso(iso: string, days: number): string {
+    const d = new Date(`${iso}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + days);
+    return d.toISOString().slice(0, 10);
+}
+
 /** True when an exit is booked for a future key date (stored status still live, `leftAt` in the future). */
 export function hasPendingExit(member: Pick<ClubMember, 'status' | 'effectiveStatus' | 'leftAt'>): boolean {
     return !isLeftStatus(member.effectiveStatus) && !!member.leftAt && member.leftAt > todayIso();
