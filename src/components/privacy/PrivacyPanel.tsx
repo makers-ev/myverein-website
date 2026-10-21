@@ -4,21 +4,24 @@ import { useState } from 'react';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 import { can } from '@/lib/clubPermissions';
+import AuditLogPanel, { type AuditMemberFocus } from './AuditLogPanel';
 import ConsentOverviewPanel from './ConsentOverviewPanel';
 import ConsentPurposesPanel from './ConsentPurposesPanel';
 
-type View = 'consents';
+type View = 'consents' | 'audit';
 
 /**
  * Tab "Datenschutz" of the club area (Wave 10): Einwilligungen (purposes, text versions, overview) for `privacy:read` or
- * `privacy:manage`. Every control is gated by `permissions`; the backend checks again.
+ * `privacy:manage`, Zugriffsprotokoll for `privacy:read`. Every control is gated by `permissions`; the backend checks again.
  */
 export default function PrivacyPanel({ clubId, permissions }: { clubId: string; permissions: readonly string[] }) {
     const { t } = useLanguage();
     const canManage = can(permissions, 'privacy:manage');
     const canRead = can(permissions, 'privacy:read') || canManage;
-    const views: View[] = canRead ? ['consents'] : [];
+    const canAudit = can(permissions, 'privacy:read');
+    const views: View[] = [...(canRead ? (['consents'] as const) : []), ...(canAudit ? (['audit'] as const) : [])];
     const [view, setView] = useState<View>('consents');
+    const [focus, setFocus] = useState<AuditMemberFocus | null>(null);
     // Bumped when purposes change so the overview columns follow.
     const [purposesVersion, setPurposesVersion] = useState(0);
     const current: View = views.includes(view) ? view : (views[0] ?? 'consents');
@@ -49,9 +52,18 @@ export default function PrivacyPanel({ clubId, permissions }: { clubId: string; 
                         key={purposesVersion}
                         clubId={clubId}
                         permissions={permissions}
+                        onOpenAudit={
+                            canAudit
+                                ? (id, name) => {
+                                      setFocus({ id, name });
+                                      setView('audit');
+                                  }
+                                : undefined
+                        }
                     />
                 </div>
             )}
+            {current === 'audit' && <AuditLogPanel clubId={clubId} focus={focus} onFocusChange={setFocus} />}
         </div>
     );
 }
