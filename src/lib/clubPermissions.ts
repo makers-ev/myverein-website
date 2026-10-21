@@ -4,7 +4,7 @@
  * a missing or unknown permission grants nothing. Pure, so the gating rules are unit-tested.
  */
 
-export type ClubTab = 'info' | 'profil' | 'mitglieder' | 'abteilungen' | 'austritte' | 'kennzahlen' | 'formulare' | 'zusatzfelder' | 'einstellungen' | 'fehlt';
+export type ClubTab = 'info' | 'profil' | 'mitglieder' | 'abteilungen' | 'austritte' | 'kennzahlen' | 'formulare' | 'zusatzfelder' | 'einstellungen' | 'fehlt' | 'datenschutz';
 
 export const can = (permissions: readonly string[] | null | undefined, permission: string): boolean => !!permissions && permissions.includes(permission);
 
@@ -21,8 +21,9 @@ export function visibleTabs(permissions: readonly string[], roles: ReadonlyArray
     if (can(permissions, 'forms:write')) tabs.push('formulare', 'zusatzfelder');
     // Club rules and reminders hang on members:write, the club's mail template on announcements:write (Wave 9 W6).
     if (can(permissions, 'members:write') || can(permissions, 'announcements:write')) tabs.push('einstellungen');
-    // Wave 10: "Wer fehlt" for trainers and the board (`absences:read`).
+    // Wave 10: "Wer fehlt" for trainers and the board (`absences:read`), "Datenschutz" (consents, access log) for `privacy:read` / `privacy:manage`.
     if (can(permissions, 'absences:read')) tabs.push('fehlt');
+    if (can(permissions, 'privacy:read') || can(permissions, 'privacy:manage')) tabs.push('datenschutz');
     return tabs;
 }
 

@@ -19,6 +19,7 @@ import CustomFieldsPanel from '@/components/verein/CustomFieldsPanel';
 import FormsPanel from '@/components/verein/FormsPanel';
 import ExitQueuePanel from '@/components/verein/ExitQueuePanel';
 import AbsencesBoardPanel from '@/components/verein/AbsencesBoardPanel';
+import PrivacyPanel from '@/components/privacy/PrivacyPanel';
 import OwnAbsencesPanel from '@/components/absences/OwnAbsencesPanel';
 import MemberList from '@/components/verein/MemberList';
 import MemberAvatar from '@/components/verein/MemberAvatar';
@@ -403,6 +404,7 @@ export default function VereinPageContent() {
                         {currentTab === 'fehlt' && permissions.includes('absences:read') && (
                             <AbsencesBoardPanel clubId={activeClub.clubId} departments={(info?.departments ?? []).map((d) => ({ id: d.id, name: d.name }))} />
                         )}
+                        {currentTab === 'datenschutz' && <PrivacyPanel clubId={activeClub.clubId} permissions={permissions} />}
                         {currentTab === 'einstellungen' && (
                             <div className="space-y-6">
                                 {permissions.includes('members:write') && <ClubSettingsPanel clubId={activeClub.clubId} />}

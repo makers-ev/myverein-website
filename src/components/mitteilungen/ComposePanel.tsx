@@ -25,6 +25,7 @@ import {
     sendAnnouncement,
 } from '@/lib/communication';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { type ReminderPrefill } from '@/lib/consents';
 import { useConfirm } from '@/components/useConfirm';
 import { Toggle } from '@/components/standorte/ui';
 import AudiencePicker, { type PickedMember, type PickerDepartment } from './AudiencePicker';
@@ -71,6 +72,7 @@ export default function ComposePanel({
     gate,
     departments,
     initial,
+    prefill,
     onDone,
 }: {
     clubId: string;
@@ -78,15 +80,18 @@ export default function ComposePanel({
     /** Departments the author may address (already restricted to the own ones for the department scope). */
     departments: PickerDepartment[];
     initial?: Announcement | null;
+    /** Pre-filled new announcement (e.g. the consent reminder of the privacy overview); ignored when editing `initial`. */
+    prefill?: ReminderPrefill | null;
     onDone: (result: { kind: 'draft' | 'sent' | 'scheduled'; announcement: Announcement | null }) => void;
 }) {
     const { t } = useLanguage();
     const { confirm, dialog } = useConfirm();
     const [id, setId] = useState<string | null>(initial?.id ?? null);
-    const [title, setTitle] = useState(initial?.title ?? '');
-    const [body, setBody] = useState(initial?.body ?? '');
-    const [audience, setAudience] = useState<Audience>({ ...emptyAudience(), ...(initial?.audience ?? {}) });
-    const [picked, setPicked] = useState<PickedMember[]>([]);
+    const fill = initial ? null : (prefill ?? null);
+    const [title, setTitle] = useState(initial?.title ?? fill?.title ?? '');
+    const [body, setBody] = useState(initial?.body ?? fill?.body ?? '');
+    const [audience, setAudience] = useState<Audience>({ ...emptyAudience(), ...(initial?.audience ?? {}), ...(fill ? { memberIds: fill.members.map((m) => m.id) } : {}) });
+    const [picked, setPicked] = useState<PickedMember[]>(fill ? fill.members.map((m) => ({ id: m.id, name: m.name })) : []);
     const [optional, setOptional] = useState<Channel[]>((initial?.channels ?? ['in_app', 'email']).filter((c) => c !== 'in_app'));
     const [urgent, setUrgent] = useState(gate.canUrgent && !!initial?.urgent);
     const [pinned, setPinned] = useState(!!initial?.pinned);

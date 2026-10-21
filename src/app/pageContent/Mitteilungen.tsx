@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { apiFetch } from '@/lib/api-client';
+import { takeReminder, type ReminderPrefill } from '@/lib/consents';
 import { communicationGate, ownDepartmentIds, selectableDepartments, type Announcement } from '@/lib/communication';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ComposePanel from '@/components/mitteilungen/ComposePanel';
@@ -43,6 +44,8 @@ export default function MitteilungenPageContent() {
     const [notice, setNotice] = useState<string | null>(null);
     // Bumping the key gives a fresh compose form after a send/draft.
     const [composeKey, setComposeKey] = useState(0);
+    // Consent reminder handed over from Datenschutz > Einwilligungen (Wave 10 W1): opens the composer pre-filled.
+    const [prefill, setPrefill] = useState<ReminderPrefill | null>(null);
 
     const activeClub = clubs?.[0] ?? null;
 
@@ -70,6 +73,17 @@ export default function MitteilungenPageContent() {
     const context = activeClub && ctx && ctx.clubId === activeClub.clubId ? ctx : null;
     const ready = context && !('error' in context) ? context : null;
     const gate = communicationGate(ready?.me.permissions);
+    const canAuthor = gate.canAuthor;
+
+    useEffect(() => {
+        if (!ready || !canAuthor) return;
+        const reminder = takeReminder();
+        if (!reminder) return;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setPrefill(reminder);
+        setTab('verfassen');
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [ready === null, canAuthor]);
 
     // Reading is for every member; composing and the history hang on the announcement permissions (backend enforces them too).
     const tabs = gate.canAuthor ? AUTHOR_TABS : MEMBER_TABS;
@@ -78,6 +92,7 @@ export default function MitteilungenPageContent() {
     function handleDone(result: { kind: 'draft' | 'sent' | 'scheduled'; announcement: Announcement | null }) {
         setNotice(t(`mitteilungen.done.${result.kind}`));
         setEditing(null);
+        setPrefill(null);
         setComposeKey((n) => n + 1);
         setHistoryReload((n) => n + 1);
         setTab('verlauf');
@@ -111,6 +126,7 @@ export default function MitteilungenPageContent() {
                                     onClick={() => {
                                         setNotice(null);
                                         if (value === 'verfassen' && currentTab !== 'verfassen') setEditing(null);
+                                        if (value !== 'verfassen') setPrefill(null);
                                         setTab(value);
                                     }}
                                     className={`whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
@@ -129,6 +145,7 @@ export default function MitteilungenPageContent() {
                     )}
                     <div className="mt-4">
                         {currentTab === 'brett' && <InboxPanel clubId={activeClub.clubId} />}
+                        {currentTab === 'verfassen' && !editing && prefill && <p className="mb-4 rounded-lg bg-muted px-3 py-2 text-sm text-foreground">{t('privacy.reminder.prefilled')}</p>}
                         {currentTab === 'verfassen' && editing && <p className="mb-4 rounded-lg bg-muted px-3 py-2 text-sm text-foreground">{t('mitteilungen.editing', { title: editing.title })}</p>}
                         {currentTab === 'verfassen' && (
                             <ComposePanel
@@ -137,6 +154,7 @@ export default function MitteilungenPageContent() {
                                 gate={gate}
                                 departments={selectableDepartments(gate, ready.departments, ownDepartmentIds(ready.me.roles))}
                                 initial={editing}
+                                prefill={prefill}
                                 onDone={handleDone}
                             />
                         )}
