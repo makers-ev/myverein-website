@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 
 import { authClient } from '@/lib/auth-client';
 import IntroModal from '@/components/IntroModal';
+import DpaRequiredNotice from '@/components/privacy/DpaRequiredNotice';
 
 /**
  * Fail-safe server-side re-check for everything under the (protected) route
@@ -41,6 +42,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
         <div className="min-h-[calc(100vh-4rem)] bg-background">
             {children}
             <IntroModal />
+            <DpaRequiredNotice />
         </div>
     );
 }
