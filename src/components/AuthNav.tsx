@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { CalendarDays, ChevronDown, Clock, LogOut, MapPin, Megaphone, Settings as SettingsIcon, Users } from 'lucide-react';
+import { CalendarDays, ChevronDown, Clock, HeartHandshake, LogOut, MapPin, Megaphone, Settings as SettingsIcon, Users } from 'lucide-react';
 
 import { authClient } from '@/lib/auth-client';
 import { clearAllStoredInviteTokens } from '@/lib/memberLifecycle';
+import { type AccountScope, loadAccountScope, visibleAppLinks } from '@/lib/familie';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { NotificationBell } from '@/components/NotificationBell';
 import { InboxLink } from '@/components/InboxLink';
@@ -25,7 +26,11 @@ const APP_LINK_ICONS: Record<string, typeof Users> = {
     'nav.kalender': CalendarDays,
     'nav.standorte': MapPin,
     'nav.verfuegbarkeit': Clock,
+    'nav.familie': HeartHandshake,
 };
+
+// Guardian area (Wave 10 W3): offered to accounts with wards; a guardian-only account sees nothing else of the club.
+const FAMILY_LINK: AuthNavAppLink = { name: 'nav.familie', href: '/familie' };
 
 /**
  * Client-side, optimistic auth slot for the Navbar's `guestNav`/`mobileGuestNav`
@@ -39,6 +44,9 @@ export function AuthNav({ appLinks = [] }: { appLinks?: AuthNavAppLink[] }) {
     const router = useRouter();
     const { t } = useLanguage();
     const [isOpen, setIsOpen] = useState(false);
+    // Club / wards of the signed-in account (null = unknown yet or failed: keep the full menu, the pages enforce access anyway).
+    const [scope, setScope] = useState<AccountScope | null>(null);
+    const signedIn = !!session;
     const ref = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -50,6 +58,17 @@ export function AuthNav({ appLinks = [] }: { appLinks?: AuthNavAppLink[] }) {
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    useEffect(() => {
+        if (!signedIn) return;
+        let cancelled = false;
+        loadAccountScope()
+            .then((s) => !cancelled && setScope(s))
+            .catch(() => undefined);
+        return () => {
+            cancelled = true;
+        };
+    }, [signedIn]);
 
     if (isPending) {
         return <div className="h-9 w-20" />;
@@ -69,6 +88,7 @@ export function AuthNav({ appLinks = [] }: { appLinks?: AuthNavAppLink[] }) {
     }
 
     const displayName = session.user.name ?? session.user.email;
+    const links = visibleAppLinks(appLinks, scope, FAMILY_LINK);
 
     return (
         <div className="flex items-center gap-1">
@@ -88,9 +108,9 @@ export function AuthNav({ appLinks = [] }: { appLinks?: AuthNavAppLink[] }) {
 
                 {isOpen && (
                     <div className="absolute right-0 mt-2 w-48 origin-top-right rounded-xl border border-border bg-card p-2 shadow-lg ring-1 ring-black/5">
-                        {appLinks.length > 0 && (
+                        {links.length > 0 && (
                             <>
-                                {appLinks.map((link) => {
+                                {links.map((link) => {
                                     const Icon = APP_LINK_ICONS[link.name];
                                     return (
                                         <Link

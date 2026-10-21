@@ -9,6 +9,7 @@ import { TwoFactorPrompt } from '@/features/auth/components/TwoFactorPrompt';
 import { EmailVerificationPrompt } from '@/features/auth/components/EmailVerificationPrompt';
 import { ForgotPasswordPrompt } from '@/features/auth/components/ForgotPasswordPrompt';
 import { resolveCallbackUrl, verifyEmailCallback } from '@/lib/resolveCallbackUrl';
+import { postLoginTarget } from '@/lib/familie';
 
 type Mode = 'sign-in' | 'sign-up';
 
@@ -18,6 +19,12 @@ function LoginSignupFormInner() {
     const { t } = useLanguage();
 
     const callbackUrl = resolveCallbackUrl(searchParams.get('callbackUrl'));
+    const hasExplicitTarget = searchParams.get('callbackUrl') !== null;
+
+    // Without an explicit target a guardian-only account (no club, at least one ward) lands in /familie (Wave 10 W3).
+    async function goAfterLogin() {
+        router.push(hasExplicitTarget ? callbackUrl : await postLoginTarget(callbackUrl));
+    }
 
     const [mode, setMode] = useState<Mode>('sign-in');
     const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -55,7 +62,7 @@ function LoginSignupFormInner() {
                 return;
             }
 
-            router.push(callbackUrl);
+            await goAfterLogin();
             return;
         }
 
@@ -79,7 +86,7 @@ function LoginSignupFormInner() {
     if (needsTwoFactor) {
         return (
             <TwoFactorPrompt
-                onVerified={() => router.push(callbackUrl)}
+                onVerified={() => void goAfterLogin()}
                 onCancel={() => setNeedsTwoFactor(false)}
             />
         );
