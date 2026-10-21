@@ -18,6 +18,12 @@ export default function JoinPrivacyNotice({ slug, onAcknowledgedChange }: { slug
     const [notice, setNotice] = useState<(PrivacyNotice & { clubName?: string }) | null>(null);
     const [acknowledged, setAcknowledged] = useState(false);
 
+    // The tick starts unchecked on every mount, so tell the parent (its ref may still hold a value from a previous mount).
+    useEffect(() => {
+        onAcknowledgedChange(false);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [slug]);
+
     useEffect(() => {
         let cancelled = false;
         apiFetch<{ data: (PrivacyNotice & { clubName?: string }) | null }>(`/clubs/${encodeURIComponent(slug)}/privacy-notice`)
