@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ShieldAlert } from 'lucide-react';
 
 import { useLanguage } from '@/contexts/LanguageContext';
-import { apiFetch } from '@/lib/api-client';
+import { ApiError, apiFetch } from '@/lib/api-client';
 import { inputClass, secondaryButtonClass } from '@/lib/clubMembers';
 import { type ErasurePlan, erasureBlockerKey, privacyErrorKey } from '@/lib/privacyAdmin';
 import { useConfirm } from '@/components/useConfirm';
@@ -13,6 +13,12 @@ import { useConfirm } from '@/components/useConfirm';
 function stepLabel(t: (key: string) => string, key: string): string {
     const label = t(`privacy.erasure.step.${key}`);
     return label.startsWith('privacy.erasure.step.') ? key : label;
+}
+
+/** Plain-language reason why data of a step is kept; the backend's English text is never shown, unknown steps show none. */
+function keptReasonLabel(t: (key: string) => string, key: string): string | null {
+    const label = t(`privacy.erasure.kept.${key}`);
+    return label.startsWith('privacy.erasure.kept.') ? null : label;
 }
 
 /**
@@ -66,7 +72,8 @@ export default function MemberErasureSection({ clubId, clubMemberId, displayName
             onErased();
         } catch (err) {
             // The data changed since the plan: show the new plan instead of the stale one, next to the reason.
-            await calculate().catch(() => undefined);
+            const outdated = err instanceof ApiError && ((err.details as { code?: unknown } | undefined)?.code ?? err.code) === 'plan_outdated';
+            if (outdated) await calculate().catch(() => undefined);
             setError(t(privacyErrorKey(err)));
         } finally {
             setBusy(false);
@@ -140,7 +147,7 @@ export default function MemberErasureSection({ clubId, clubMemberId, displayName
                                         <td className="px-3 py-2">{s.anonymized}</td>
                                         <td className="px-3 py-2">
                                             {s.kept}
-                                            {s.keptReason && <span className="block text-xs text-muted-foreground">{s.keptReason}</span>}
+                                            {s.kept > 0 && keptReasonLabel(t, s.key) && <span className="block text-xs text-muted-foreground">{keptReasonLabel(t, s.key)}</span>}
                                         </td>
                                     </tr>
                                 ))}
