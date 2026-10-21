@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const fetchMock = vi.fn();
 vi.mock('@/lib/auth-client', () => ({ authClient: { $fetch: (...args: unknown[]) => fetchMock(...args) }, backendUrl: 'http://backend.test' }));
 
-import { ApiError, apiFetch, cachePolicyFor, parseJsonPlain } from './api-client';
+import { ApiError, apiFetch, cachePolicyFor, DPA_REQUIRED_EVENT, parseJsonPlain } from './api-client';
 
 beforeEach(() => fetchMock.mockReset());
 
@@ -62,6 +62,24 @@ describe('cache policy of personal-data routes', () => {
         for (const path of ['/absences?clubId=c', '/absences/club?clubId=c', '/my-wards', '/guardian/wards/w/events?clubId=c', '/consent-purposes?clubId=c', '/consents/overview?clubId=c', '/club-members/abc/consents?clubId=c', '/audit-log?clubId=c']) {
             expect(cachePolicyFor(path)).toBe('no-store');
         }
+    });
+
+    it('never uses the HTTP cache for exports, erasure, requests, retention, privacy notices and the DPA', () => {
+        for (const path of ['/club-members/me/data-export?clubId=c', '/club-members/me/data-requests', '/club-members/abc/data-export', '/club-members/abc/erasure/plan', '/club-members/abc/legal-hold', '/club-members/abc/privacy-notice', '/data-subject-requests?clubId=c', '/retention-policies?clubId=c', '/retention-policies/preview', '/club-privacy-notices/current', '/clubs/demo/privacy-notice', '/dpa/current?clubId=c', '/admin/dpa-versions', '/admin/retention-runs?scope=all']) {
+            expect(cachePolicyFor(path), path).toBe('no-store');
+        }
+        expect(cachePolicyFor('/dpaX')).toBeUndefined();
+    });
+
+    it('announces a refused write of a club without processor agreement', async () => {
+        const seen = vi.fn();
+        const target = new EventTarget();
+        vi.stubGlobal('window', target);
+        target.addEventListener(DPA_REQUIRED_EVENT, seen);
+        fetchMock.mockResolvedValue({ data: null, error: { status: 403, statusText: 'Forbidden', error: { code: 'DPA_REQUIRED', message: 'x', details: { code: 'dpa_required' } } } });
+        await apiFetch('/x', { method: 'POST' }).catch(() => undefined);
+        vi.unstubAllGlobals();
+        expect(seen).toHaveBeenCalledTimes(1);
     });
 
     it('never uses the HTTP cache for form submissions, applicant forms and the application review', () => {

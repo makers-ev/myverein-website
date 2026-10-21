@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Download, Eye, Pencil, Search, Upload, UserPlus, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Download, Eye, Pencil, Search, ShieldCheck, Upload, UserPlus, X } from 'lucide-react';
 
 import MemberAvatar from '@/components/verein/MemberAvatar';
 import MemberExportDialog from '@/components/verein/MemberExportDialog';
@@ -9,6 +9,7 @@ import MemberDetailDialog from '@/components/verein/MemberDetailDialog';
 import MemberFormModal from '@/components/verein/MemberFormModal';
 import MemberImportDialog from '@/components/verein/MemberImportDialog';
 import MemberRoleCell from '@/components/verein/MemberRoleCell';
+import MemberPrivacyDialog from '@/components/privacy/MemberPrivacyDialog';
 import TransitionSuggestions from '@/components/verein/TransitionSuggestions';
 import { useThrottledCallback } from '@/lib/useThrottledCallback';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -78,6 +79,8 @@ export default function MemberList({
     const canWrite = permissions.includes('members:write');
     const canRoles = permissions.includes('roles:write');
     const canSensitive = permissions.includes('members:read_sensitive');
+    // Wave 10: the "Datenschutz" of a member (consents, notice stamp, export, erasure) for the people who work on privacy.
+    const canPrivacy = permissions.includes('privacy:read') || permissions.includes('privacy:manage');
     // Plain members only get live members (probe/aktiv/ruhend) from the backend, so other statuses are not offered.
     const statusOptions = canWrite || canSensitive ? MEMBER_STATUSES : MEMBER_STATUSES.filter((s) => s === 'probe' || s === 'aktiv' || s === 'ruhend');
 
@@ -99,6 +102,7 @@ export default function MemberList({
     const [exporting, setExporting] = useState(false);
     // Read-only details (custom fields) for people without members:write; offered only if the club has fields they may see.
     const [detail, setDetail] = useState<ClubMember | null>(null);
+    const [privacyFor, setPrivacyFor] = useState<ClubMember | null>(null);
     const [hasCustomFields, setHasCustomFields] = useState(false);
 
     const reload = () => setLocalReload((n) => n + 1);
@@ -434,6 +438,11 @@ export default function MemberList({
                                     <th className="px-3 py-2 uppercase tracking-wide">{t('verein.members.table.roles')}</th>
                                     {sortHeader(t('verein.members.table.joined'), 'joinedAt')}
                                     {canSensitive && sortHeader(t('verein.members.table.number'), 'memberNumber')}
+                                    {canPrivacy && (
+                                        <th className="px-3 py-2">
+                                            <span className="sr-only">{t('privacy.file.column')}</span>
+                                        </th>
+                                    )}
                                     {(canWrite || hasCustomFields) && <th className="px-3 py-2"><span className="sr-only">{t('forms.cf.detail.column')}</span></th>}
                                 </tr>
                             </thead>
@@ -471,6 +480,18 @@ export default function MemberList({
                                             </td>
                                             <td className="px-3 py-2 text-muted-foreground">{formatDate(m.joinedAt, language)}</td>
                                             {canSensitive && <td className="px-3 py-2 text-muted-foreground">{m.memberNumber ?? '—'}</td>}
+                                            {canPrivacy && (
+                                                <td className="px-3 py-2 text-right">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setPrivacyFor(m)}
+                                                        className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                                                        aria-label={t('privacy.file.open', { name: m.name ?? '—' })}
+                                                    >
+                                                        <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                                                    </button>
+                                                </td>
+                                            )}
                                             {!canWrite && hasCustomFields && (
                                                 <td className="px-3 py-2 text-right">
                                                     <button
@@ -573,6 +594,16 @@ export default function MemberList({
                         setCreating(false);
                     }}
                     onChanged={reload}
+                />
+            )}
+            {privacyFor && (
+                <MemberPrivacyDialog
+                    clubId={clubId}
+                    clubMemberId={privacyFor.id}
+                    name={privacyFor.name ?? '—'}
+                    permissions={permissions}
+                    onClose={() => setPrivacyFor(null)}
+                    onErased={reload}
                 />
             )}
             {detail && !canWrite && <MemberDetailDialog clubId={clubId} memberId={detail.id} name={detail.name} onClose={() => setDetail(null)} />}

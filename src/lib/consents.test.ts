@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { ApiError } from './api-client';
-import { consentErrorKey, diffWords, overviewQuery, stashReminder, takeReminder } from './consents';
+import { consentErrorKey, diffWords, overviewQuery, proofProblem, stashReminder, takeReminder } from './consents';
 
 describe('overviewQuery', () => {
     it('sends state only together with a purpose', () => {
@@ -54,4 +54,13 @@ describe('reminder stash', () => {
         sessionStorage.setItem('myverein.consentReminder', '{"title":1}');
         expect(takeReminder()).toBeNull();
     });
+});
+
+describe('proofProblem', () => {
+    it('needs a date and a source', () => {
+        expect(proofProblem('', 'Papierformular', '2026-10-21')).toBe('privacy.err.proofRequired');
+        expect(proofProblem('2026-10-01', '   ', '2026-10-21')).toBe('privacy.err.proofRequired');
+        expect(proofProblem('2026-10-01', 'Papierformular, Ablage 3', '2026-10-21')).toBeNull();
+    });
+    it('refuses a date in the future', () => expect(proofProblem('2026-11-01', 'Brief', '2026-10-21')).toBe('privacy.proof.err.future'));
 });

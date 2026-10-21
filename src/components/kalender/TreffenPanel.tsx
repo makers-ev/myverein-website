@@ -540,6 +540,8 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
     }
 
     const attendancePatch = buildAttendancePatch(storedAttendance, attendanceEdits);
+    // Rows of erased members (`memberId: null`) stay for quorum and votes; they are shown read-only as "Gelöschtes Mitglied".
+    const erasedAttendance = storedAttendance.filter((r) => r.memberId === null);
 
     async function handleSaveAttendance() {
         setAttendanceError(null);
@@ -965,7 +967,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
             <SectionCard title={t('treffen.attendance.title')}>
                 {attendanceLoadFailed ? (
                     <ErrorText>{t('treffen.attendance.loadError')}</ErrorText>
-                ) : invitees.length === 0 ? (
+                ) : invitees.length === 0 && erasedAttendance.length === 0 ? (
                     <p className="text-sm text-muted-foreground">{t('treffen.attendance.empty')}</p>
                 ) : (
                     <div className="overflow-x-auto rounded-lg border border-border">
@@ -1028,6 +1030,14 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                                         </tr>
                                     );
                                 })}
+                                {erasedAttendance.map((row, index) => (
+                                    <tr key={`erased-${index}`} className="border-b border-border text-muted-foreground last:border-b-0">
+                                        <td className="px-3 py-2 italic">{t('privacy.erased.member')}</td>
+                                        <td className="px-3 py-2 text-center">{row.present ? '✓' : '✕'}</td>
+                                        <td className="px-3 py-2 text-center">{row.hasVotingRight ? '✓' : '✕'}</td>
+                                        <td className="px-3 py-2">—</td>
+                                    </tr>
+                                ))}
                             </tbody>
                         </table>
                     </div>

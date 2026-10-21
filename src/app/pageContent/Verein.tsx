@@ -21,6 +21,7 @@ import ExitQueuePanel from '@/components/verein/ExitQueuePanel';
 import AbsencesBoardPanel from '@/components/verein/AbsencesBoardPanel';
 import PrivacyPanel from '@/components/privacy/PrivacyPanel';
 import OwnAbsencesPanel from '@/components/absences/OwnAbsencesPanel';
+import MyPrivacyPanel from '@/components/privacy/MyPrivacyPanel';
 import MemberList from '@/components/verein/MemberList';
 import MemberAvatar from '@/components/verein/MemberAvatar';
 import RoleBadge from '@/components/verein/RoleBadge';
@@ -338,6 +339,7 @@ export default function VereinPageContent() {
                                 <div className="space-y-6">
                                     <ProfilTab me={me} clubId={activeClub.clubId} onDirtyChange={onProfilDirty} onSaved={() => void refreshClubData(activeClub.clubId)} onPhotoExpired={refetchOwnPhoto} onOpenCustomFields={() => void selectTab('zusatzfelder')} />
                                     {!isGuardianOnly(permissions, me.roles) && <OwnAbsencesPanel clubId={activeClub.clubId} />}
+                                    {!isGuardianOnly(permissions, me.roles) && me.clubMemberId && <MyPrivacyPanel clubId={activeClub.clubId} clubMemberId={me.clubMemberId} />}
                                 </div>
                             ) : (
                                 <LoadingText />

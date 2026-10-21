@@ -324,9 +324,24 @@ export function filenameFromDisposition(header: string | null, fallback: string)
  * as JSON). A failed request is turned into the same `ApiError` as `apiFetch` so `errorMessage` works unchanged.
  */
 export async function fetchCsvBlob(path: string, fallbackName: string, signal?: AbortSignal): Promise<{ blob: Blob; filename: string }> {
+    return fetchFileBlob(path, fallbackName, { accept: 'text/csv', signal });
+}
+
+/** Same for any file download (CSV, the personal data export as JSON/HTML); `body` makes it a JSON `POST`. */
+export async function fetchFileBlob(
+    path: string,
+    fallbackName: string,
+    options: { accept: string; method?: 'GET' | 'POST'; body?: unknown; signal?: AbortSignal },
+): Promise<{ blob: Blob; filename: string }> {
     let res: Response;
     try {
-        res = await fetch(`${backendUrl}${path}`, { credentials: 'include', headers: { Accept: 'text/csv' }, signal });
+        res = await fetch(`${backendUrl}${path}`, {
+            method: options.method ?? 'GET',
+            credentials: 'include',
+            headers: { Accept: options.accept, ...(options.body !== undefined ? { 'Content-Type': 'application/json' } : {}) },
+            ...(options.body !== undefined ? { body: JSON.stringify(options.body) } : {}),
+            signal: options.signal,
+        });
     } catch {
         // Network failure: not an ApiError, memberErrorKey maps it to the "no connection" text.
         throw new TypeError('network');

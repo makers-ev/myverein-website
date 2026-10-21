@@ -51,12 +51,43 @@ export interface MemberConsent {
     outdated: boolean;
     givenBy: string | null;
     decidedAt: string | null;
+    /** A grant made for a minor who has come of age meanwhile: informational "please confirm" only, never a restriction. */
+    confirmation?: { pending: boolean; due: string | null; overdue: boolean } | null;
+}
+
+/** One append-only event (`history` of the member consents); the paper proof fields are only delivered to the board. */
+export interface ConsentEvent {
+    id: string;
+    purposeId: string;
+    purposeKey: string;
+    action: 'granted' | 'revoked';
+    givenBy: string | null;
+    version: number;
+    createdAt: string;
+    proofDate: string | null;
+    proofSource: string | null;
 }
 
 export interface MemberConsentsResponse {
     clubMemberId: string;
     consents: MemberConsent[];
     open: number;
+    history?: ConsentEvent[];
+}
+
+/** Paper proof of the board (Art. 7 evidence): both fields are mandatory, the source is at most 200 characters. */
+export const PROOF_SOURCE_MAX = 200;
+
+export interface PaperProof {
+    proofDate: string;
+    proofSource: string;
+}
+
+/** Validates the paper proof inputs; returns the translation key of the problem or null. `today` is `YYYY-MM-DD`. */
+export function proofProblem(proofDate: string, proofSource: string, today: string): string | null {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(proofDate) || !proofSource.trim()) return 'privacy.err.proofRequired';
+    if (proofDate > today) return 'privacy.proof.err.future';
+    return null;
 }
 
 export interface OverviewPurpose {

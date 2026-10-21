@@ -11,6 +11,7 @@ import { communicationGate } from '@/lib/communication';
 import { inputClass, secondaryButtonClass } from '@/lib/clubMembers';
 import { Chip, EmptyState, SectionCard, errorMessage, type Tone } from '@/components/standorte/ui';
 import LoadingText from '@/components/LoadingText';
+import MemberPrivacyDialog from './MemberPrivacyDialog';
 
 const STATES: ConsentState[] = ['granted', 'revoked', 'none'];
 
@@ -34,6 +35,8 @@ export default function ConsentOverviewPanel({ clubId, permissions, onOpenAudit 
     const [result, setResult] = useState<ConsentOverview | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [notice, setNotice] = useState<string | null>(null);
+    // The member file ("Datenschutz" of one person) opened from a row.
+    const [file, setFile] = useState<{ id: string; name: string } | null>(null);
     const canRemind = communicationGate(permissions).canAuthor;
 
     const load = useCallback(async () => {
@@ -168,7 +171,7 @@ export default function ConsentOverviewPanel({ clubId, permissions, onOpenAudit 
                                                 {p.name}
                                             </th>
                                         ))}
-                                        {onOpenAudit && <th className="px-3 py-2" />}
+                                        <th className="px-3 py-2" />
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -184,13 +187,16 @@ export default function ConsentOverviewPanel({ clubId, permissions, onOpenAudit 
                                                     </td>
                                                 );
                                             })}
-                                            {onOpenAudit && (
-                                                <td className="px-3 py-2 text-right">
+                                            <td className="space-x-3 whitespace-nowrap px-3 py-2 text-right">
+                                                <button type="button" onClick={() => setFile({ id: m.clubMemberId, name: m.displayName })} className="text-xs font-medium text-primary underline">
+                                                    {t('privacy.overview.openFile')}
+                                                </button>
+                                                {onOpenAudit && (
                                                     <button type="button" onClick={() => onOpenAudit(m.clubMemberId, m.displayName)} className="text-xs font-medium text-primary underline">
                                                         {t('privacy.overview.openAudit')}
                                                     </button>
-                                                </td>
-                                            )}
+                                                )}
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -210,6 +216,19 @@ export default function ConsentOverviewPanel({ clubId, permissions, onOpenAudit 
                         </div>
                     )}
                 </>
+            )}
+            {file && (
+                <MemberPrivacyDialog
+                    clubId={clubId}
+                    clubMemberId={file.id}
+                    name={file.name}
+                    permissions={permissions}
+                    onClose={() => {
+                        setFile(null);
+                        void load();
+                    }}
+                    onErased={() => void load()}
+                />
             )}
         </SectionCard>
     );

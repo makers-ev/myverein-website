@@ -244,6 +244,8 @@ export function currentDepartments(m: Pick<ClubMember, 'departments'>): MemberDe
  */
 export function memberErrorKey(err: unknown): string {
     if (!(err instanceof ApiError)) return 'verein.err.network';
+    // Wave 10: the processor agreement is not accepted yet and the grace period is over -- every write says so in plain words.
+    if (err.status === 403 && (err.code === 'DPA_REQUIRED' || (err.details as { code?: unknown } | undefined)?.code === 'dpa_required')) return 'privacy.err.dpaRequired';
     const m = err.message;
     // Wave 7 B4/B6 conflicts carry a machine-readable `details.code`; it wins over the message text.
     const detailsCode = (err.details as { code?: unknown } | undefined)?.code;
