@@ -197,36 +197,61 @@ export function diffWords(before: string, after: string): DiffPart[] {
 export const TEXT_MIN = 10;
 export const TEXT_MAX = 5000;
 
-/** Pre-filled reminder for the open consents of a purpose, handed to the announcement composer (Wave 9 mechanism). */
+/**
+ * Pre-filled reminder for the open consents of a purpose, handed to the announcement composer (Wave 10 W1 / Wave 9 mechanism).
+ * Only ids travel through the storage (no names, no health or consent data of persons); the picker shows them as "saved".
+ */
 export interface ReminderPrefill {
     title: string;
     body: string;
-    members: { id: string; name: string }[];
+    memberIds: string[];
 }
 
 export const REMINDER_STORAGE_KEY = 'myverein.consentReminder';
+/** The stash is only meant for the immediate hop to the composer. */
+export const REMINDER_TTL_MS = 5 * 60 * 1000;
 
 /** Stores the prefill for `/mitteilungen`; storage errors are tolerated (the reminder is then just not pre-filled). */
-export function stashReminder(prefill: ReminderPrefill): boolean {
+export function stashReminder(prefill: ReminderPrefill, now: number = Date.now()): boolean {
     try {
-        sessionStorage.setItem(REMINDER_STORAGE_KEY, JSON.stringify(prefill));
+        sessionStorage.setItem(REMINDER_STORAGE_KEY, JSON.stringify({ ...prefill, expiresAt: now + REMINDER_TTL_MS }));
         return true;
     } catch {
         return false;
     }
 }
 
-/** Reads and clears the stashed prefill; anything malformed is ignored. */
-export function takeReminder(): ReminderPrefill | null {
+/** Removes a stashed reminder (sign-out, or the user cannot author announcements). */
+export function clearReminder(): void {
+    try {
+        sessionStorage.removeItem(REMINDER_STORAGE_KEY);
+    } catch {
+        /* storage unavailable: nothing to clear */
+    }
+}
+
+/** Reads and clears the stashed prefill; anything malformed or expired is ignored. */
+export function takeReminder(now: number = Date.now()): ReminderPrefill | null {
     try {
         const raw = sessionStorage.getItem(REMINDER_STORAGE_KEY);
         if (!raw) return null;
         sessionStorage.removeItem(REMINDER_STORAGE_KEY);
-        const v = JSON.parse(raw) as Partial<ReminderPrefill>;
-        if (typeof v.title !== 'string' || typeof v.body !== 'string' || !Array.isArray(v.members)) return null;
-        const members = v.members.filter((m): m is { id: string; name: string } => !!m && typeof m.id === 'string' && typeof m.name === 'string');
-        return members.length > 0 ? { title: v.title, body: v.body, members } : null;
+        const v = JSON.parse(raw) as Partial<ReminderPrefill> & { expiresAt?: unknown };
+        if (typeof v.title !== 'string' || typeof v.body !== 'string' || !Array.isArray(v.memberIds)) return null;
+        if (typeof v.expiresAt !== 'number' || v.expiresAt < now) return null;
+        const memberIds = v.memberIds.filter((id): id is string => typeof id === 'string');
+        return memberIds.length > 0 ? { title: v.title, body: v.body, memberIds } : null;
     } catch {
         return null;
+    }
+}
+
+/** Collects the member ids of all pages of one purpose with the state "noch nicht entschieden" (the reminder audience). */
+export async function fetchOpenMemberIds(clubId: string, purposeId: string, fetchPage: (query: string) => Promise<ConsentOverview>): Promise<string[]> {
+    const ids: string[] = [];
+    for (let page = 1; ; page++) {
+        const res = await fetchPage(overviewQuery(clubId, { q: '', purposeId, state: 'none', page }));
+        ids.push(...res.data.members.map((m) => m.clubMemberId));
+        if (res.data.members.length === 0 || page * res.meta.pageSize >= res.meta.total) return ids;
     }
 }

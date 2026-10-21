@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { ApiError } from './api-client';
-import { consentErrorKey, diffWords, overviewQuery, proofProblem, stashReminder, takeReminder } from './consents';
+import { clearReminder, consentErrorKey, diffWords, fetchOpenMemberIds, overviewQuery, proofProblem, stashReminder, takeReminder, REMINDER_TTL_MS, type ConsentOverview } from './consents';
 
 describe('overviewQuery', () => {
     it('sends state only together with a purpose', () => {
@@ -46,8 +46,18 @@ describe('reminder stash', () => {
         } as unknown as Storage;
     });
     it('round-trips once and clears', () => {
-        expect(stashReminder({ title: 't', body: 'b', members: [{ id: '1', name: 'A' }] })).toBe(true);
-        expect(takeReminder()?.members).toEqual([{ id: '1', name: 'A' }]);
+        expect(stashReminder({ title: 't', body: 'b', memberIds: ['1'] })).toBe(true);
+        expect(sessionStorage.getItem('myverein.consentReminder')).not.toContain('"name"');
+        expect(takeReminder()?.memberIds).toEqual(['1']);
+        expect(takeReminder()).toBeNull();
+    });
+    it('drops an expired stash', () => {
+        stashReminder({ title: 't', body: 'b', memberIds: ['1'] }, 1000);
+        expect(takeReminder(1000 + REMINDER_TTL_MS + 1)).toBeNull();
+    });
+    it('clears on demand', () => {
+        stashReminder({ title: 't', body: 'b', memberIds: ['1'] });
+        clearReminder();
         expect(takeReminder()).toBeNull();
     });
     it('ignores malformed data', () => {
@@ -63,4 +73,18 @@ describe('proofProblem', () => {
         expect(proofProblem('2026-10-01', 'Papierformular, Ablage 3', '2026-10-21')).toBeNull();
     });
     it('refuses a date in the future', () => expect(proofProblem('2026-11-01', 'Brief', '2026-10-21')).toBe('privacy.proof.err.future'));
+});
+
+describe('fetchOpenMemberIds', () => {
+    it('walks all pages', async () => {
+        const page = (ids: string[]): ConsentOverview => ({ data: { purposes: [], members: ids.map((id) => ({ clubMemberId: id, displayName: id, accountLinked: false, states: {} })) }, meta: { total: 3, page: 1, pageSize: 2 } });
+        const queries: string[] = [];
+        const ids = await fetchOpenMemberIds('c', 'p', async (q) => {
+            queries.push(q);
+            return q.includes('page=1') ? page(['a', 'b']) : page(['c']);
+        });
+        expect(ids).toEqual(['a', 'b', 'c']);
+        expect(queries).toHaveLength(2);
+        expect(queries[0]).toContain('state=none');
+    });
 });

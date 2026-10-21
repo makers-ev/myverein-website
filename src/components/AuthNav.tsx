@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { CalendarDays, ChevronDown, Clock, HeartHandshake, LogOut, MapPin, Megaphone, Settings as SettingsIcon, Users } from 'lucide-react';
 
 import { authClient } from '@/lib/auth-client';
+import { clearReminder } from '@/lib/consents';
 import { clearAllStoredInviteTokens } from '@/lib/memberLifecycle';
 import { type AccountScope, loadAccountScope, visibleAppLinks } from '@/lib/familie';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -139,6 +140,7 @@ export function AuthNav({ appLinks = [] }: { appLinks?: AuthNavAppLink[] }) {
                             onClick={async () => {
                                 setIsOpen(false);
                                 clearAllStoredInviteTokens();
+                                clearReminder();
                                 await authClient.signOut();
                                 router.push('/');
                                 router.refresh();

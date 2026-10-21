@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { apiFetch } from '@/lib/api-client';
-import { takeReminder, type ReminderPrefill } from '@/lib/consents';
+import { clearReminder, takeReminder, type ReminderPrefill } from '@/lib/consents';
 import { communicationGate, ownDepartmentIds, selectableDepartments, type Announcement } from '@/lib/communication';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ComposePanel from '@/components/mitteilungen/ComposePanel';
@@ -76,8 +76,13 @@ export default function MitteilungenPageContent() {
     const canAuthor = gate.canAuthor;
 
     useEffect(() => {
-        if (!ready || !canAuthor) return;
+        if (!ready) return;
+        // Always consumed on arrival, also when this account may not author (the stash must not linger).
         const reminder = takeReminder();
+        if (!canAuthor) {
+            clearReminder();
+            return;
+        }
         if (!reminder) return;
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setPrefill(reminder);

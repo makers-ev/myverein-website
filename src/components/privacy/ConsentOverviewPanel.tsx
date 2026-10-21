@@ -6,7 +6,7 @@ import { Search } from 'lucide-react';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api-client';
-import { type ConsentOverview, type ConsentState, type OverviewFilter, OVERVIEW_PAGE_SIZE, overviewQuery, stashReminder } from '@/lib/consents';
+import { type ConsentOverview, type ConsentState, type OverviewFilter, OVERVIEW_PAGE_SIZE, overviewQuery, fetchOpenMemberIds, stashReminder } from '@/lib/consents';
 import { communicationGate } from '@/lib/communication';
 import { inputClass, secondaryButtonClass } from '@/lib/clubMembers';
 import { Chip, EmptyState, SectionCard, errorMessage, type Tone } from '@/components/standorte/ui';
@@ -60,20 +60,27 @@ export default function ConsentOverviewPanel({ clubId, permissions, onOpenAudit 
     const total = result?.meta.total ?? 0;
     const pages = Math.max(1, Math.ceil(total / OVERVIEW_PAGE_SIZE));
     const chosen = purposes.find((p) => p.id === filter.purposeId);
-    const reminderTargets = chosen && filter.state === 'none' ? members : [];
+    // The reminder covers every member with the state "noch nicht entschieden" (all pages), so the count is the purpose total (ignores the name search).
+    const reminderCount = chosen && filter.state === 'none' ? chosen.counts.none : 0;
+    const [reminding, setReminding] = useState(false);
 
-    function remind() {
+    async function remind() {
         if (!chosen) return;
-        const ok = stashReminder({
-            title: t('privacy.reminder.title', { name: chosen.name }),
-            body: t('privacy.reminder.body', { name: chosen.name }),
-            members: reminderTargets.map((m) => ({ id: m.clubMemberId, name: m.displayName })),
-        });
-        if (!ok) {
-            setNotice(t('privacy.reminder.storageFailed'));
-            return;
+        setNotice(null);
+        setReminding(true);
+        try {
+            const memberIds = await fetchOpenMemberIds(clubId, chosen.id, (query) => apiFetch<ConsentOverview>(`/consents/overview?${query}`));
+            const ok = memberIds.length > 0 && stashReminder({ title: t('privacy.reminder.title', { name: chosen.name }), body: t('privacy.reminder.body', { name: chosen.name }), memberIds });
+            if (!ok) {
+                setNotice(t('privacy.reminder.storageFailed'));
+                return;
+            }
+            router.push('/mitteilungen');
+        } catch (err) {
+            setNotice(errorMessage(err, t));
+        } finally {
+            setReminding(false);
         }
-        router.push('/mitteilungen');
     }
 
     return (
@@ -146,8 +153,8 @@ export default function ConsentOverviewPanel({ clubId, permissions, onOpenAudit 
 
                     {chosen && filter.state === 'none' && canRemind && (
                         <div className="mb-4 rounded-lg bg-muted/50 p-3 text-sm">
-                            <p className="text-foreground">{t('privacy.reminder.hint', { count: reminderTargets.length })}</p>
-                            <button type="button" disabled={reminderTargets.length === 0} onClick={remind} className={`mt-2 ${secondaryButtonClass}`}>
+                            <p className="text-foreground">{t('privacy.reminder.hint', { count: reminderCount })}</p>
+                            <button type="button" disabled={reminderCount === 0 || reminding} onClick={() => void remind()} className={`mt-2 ${secondaryButtonClass}`}>
                                 {t('privacy.reminder.action')}
                             </button>
                             {notice && (

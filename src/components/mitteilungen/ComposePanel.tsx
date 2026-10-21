@@ -90,8 +90,8 @@ export default function ComposePanel({
     const fill = initial ? null : (prefill ?? null);
     const [title, setTitle] = useState(initial?.title ?? fill?.title ?? '');
     const [body, setBody] = useState(initial?.body ?? fill?.body ?? '');
-    const [audience, setAudience] = useState<Audience>({ ...emptyAudience(), ...(initial?.audience ?? {}), ...(fill ? { memberIds: fill.members.map((m) => m.id) } : {}) });
-    const [picked, setPicked] = useState<PickedMember[]>(fill ? fill.members.map((m) => ({ id: m.id, name: m.name })) : []);
+    const [audience, setAudience] = useState<Audience>({ ...emptyAudience(), ...(initial?.audience ?? {}), ...(fill ? { memberIds: fill.memberIds } : {}) });
+    const [picked, setPicked] = useState<PickedMember[]>([]);
     const [optional, setOptional] = useState<Channel[]>((initial?.channels ?? ['in_app', 'email']).filter((c) => c !== 'in_app'));
     const [urgent, setUrgent] = useState(gate.canUrgent && !!initial?.urgent);
     const [pinned, setPinned] = useState(!!initial?.pinned);
