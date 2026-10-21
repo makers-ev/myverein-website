@@ -338,6 +338,8 @@ export async function fetchFileBlob(
         res = await fetch(`${backendUrl}${path}`, {
             method: options.method ?? 'GET',
             credentials: 'include',
+            // Personal data and exports must never come out of the HTTP cache.
+            cache: 'no-store',
             headers: { Accept: options.accept, ...(options.body !== undefined ? { 'Content-Type': 'application/json' } : {}) },
             ...(options.body !== undefined ? { body: JSON.stringify(options.body) } : {}),
             signal: options.signal,
