@@ -312,6 +312,7 @@ export default function KalenderPageContent() {
                             calendar={calendars?.find((c) => c.id === detailEvent.calendarId)}
                             color={colorFor(detailEvent.calendarId)}
                             canWrite={canWrite}
+                            canSeeAbsences={permissions.includes('absences:read')}
                             rsvp={rsvpState[detailEvent.id]}
                             language={language}
                             t={t}

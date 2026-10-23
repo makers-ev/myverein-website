@@ -42,6 +42,18 @@ describe('visible tabs', () => {
         expect(visibleTabs(['announcements:write_department'], mitglied.roles)).not.toContain('einstellungen');
     });
 
+    it('offers "Wer fehlt" only with absences:read', () => {
+        expect(visibleTabs([], mitglied.roles)).not.toContain('fehlt');
+        expect(visibleTabs(['absences:read'], mitglied.roles)).toContain('fehlt');
+    });
+
+    it('offers "Datenschutz" with privacy:read or privacy:manage only', () => {
+        expect(visibleTabs([], mitglied.roles)).not.toContain('datenschutz');
+        expect(visibleTabs(['members:write'], mitglied.roles)).not.toContain('datenschutz');
+        expect(visibleTabs(['privacy:read'], mitglied.roles)).toContain('datenschutz');
+        expect(visibleTabs(['privacy:manage'], mitglied.roles)).toContain('datenschutz');
+    });
+
     it('never offers a tab twice', () => {
         const tabs = visibleTabs(schriftfuehrer, mitglied.roles);
         expect(new Set(tabs).size).toBe(tabs.length);

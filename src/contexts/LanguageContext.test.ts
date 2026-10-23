@@ -8,6 +8,7 @@ import CustomFieldsTranslation from './CustomFieldsTranslation';
 import FormBuilderTranslation from './FormBuilderTranslation';
 import FormsTranslation from './FormsTranslation';
 import KalenderTranslation from './KalenderTranslation';
+import PrivacyTranslation from './PrivacyTranslation';
 import ProfileModulesTranslation from './ProfileModulesTranslation';
 import { translations } from './LanguageContext';
 import MarketingHeroTranslation from './MarketingHeroTranslation';
@@ -23,7 +24,7 @@ import VerfuegbarkeitTranslation from './VerfuegbarkeitTranslation';
 // Modules that are DE/EN-only by design (documented in each file's header; other languages fall back to English
 // per key via t()). Their keys are exempt from the "every language has every key" check.
 const DE_EN_ONLY_KEYS = new Set(
-  [AboutTranslation, ChangelogTranslation, CommunicationTranslation, CustomFieldsTranslation, FeaturesTranslation, FormBuilderTranslation, FormsTranslation, KalenderTranslation, MarketingHeroTranslation, MarketingStoryTranslation, MarketingTranslation, MarketingTrustTranslation, ProfileModulesTranslation, RoadmapTranslation, StandorteTranslation, TreffenTranslation, VereinTranslation, VerfuegbarkeitTranslation].flatMap(
+  [AboutTranslation, ChangelogTranslation, CommunicationTranslation, CustomFieldsTranslation, FeaturesTranslation, FormBuilderTranslation, FormsTranslation, KalenderTranslation, MarketingHeroTranslation, MarketingStoryTranslation, MarketingTranslation, MarketingTrustTranslation, PrivacyTranslation, ProfileModulesTranslation, RoadmapTranslation, StandorteTranslation, TreffenTranslation, VereinTranslation, VerfuegbarkeitTranslation].flatMap(
     (m) => Object.keys(m.en ?? {}),
   ),
 );

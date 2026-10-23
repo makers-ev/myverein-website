@@ -18,6 +18,7 @@ import FormBuilderTranslation from './FormBuilderTranslation';
 import CustomFieldsTranslation from './CustomFieldsTranslation';
 import ProfileModulesTranslation from './ProfileModulesTranslation';
 import CommunicationTranslation from './CommunicationTranslation';
+import PrivacyTranslation from './PrivacyTranslation';
 import KalenderTranslation from './KalenderTranslation';
 import TreffenTranslation from './TreffenTranslation';
 import VerfuegbarkeitTranslation from './VerfuegbarkeitTranslation';
@@ -58,6 +59,7 @@ export const translations: Record<Language, Record<string, string>> = supportedL
             ...(id === 'de' || id === 'en' ? CustomFieldsTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? ProfileModulesTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? CommunicationTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? PrivacyTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? KalenderTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? TreffenTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? VerfuegbarkeitTranslation[id] : {}),

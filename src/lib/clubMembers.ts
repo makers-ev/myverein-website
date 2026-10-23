@@ -164,6 +164,13 @@ export function todayIso(): string {
     return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 }
 
+/** `YYYY-MM-DD` plus whole days (calendar arithmetic in UTC, so no DST surprises). */
+export function addDaysIso(iso: string, days: number): string {
+    const d = new Date(`${iso}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + days);
+    return d.toISOString().slice(0, 10);
+}
+
 /** True when an exit is booked for a future key date (stored status still live, `leftAt` in the future). */
 export function hasPendingExit(member: Pick<ClubMember, 'status' | 'effectiveStatus' | 'leftAt'>): boolean {
     return !isLeftStatus(member.effectiveStatus) && !!member.leftAt && member.leftAt > todayIso();
@@ -237,6 +244,8 @@ export function currentDepartments(m: Pick<ClubMember, 'departments'>): MemberDe
  */
 export function memberErrorKey(err: unknown): string {
     if (!(err instanceof ApiError)) return 'verein.err.network';
+    // Wave 10: the processor agreement is not accepted yet and the grace period is over -- every write says so in plain words.
+    if (err.status === 403 && (err.code === 'DPA_REQUIRED' || (err.details as { code?: unknown } | undefined)?.code === 'dpa_required')) return 'privacy.err.dpaRequired';
     const m = err.message;
     // Wave 7 B4/B6 conflicts carry a machine-readable `details.code`; it wins over the message text.
     const detailsCode = (err.details as { code?: unknown } | undefined)?.code;

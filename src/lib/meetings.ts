@@ -13,7 +13,8 @@ export function meetingTypeKey(type: string): string | null {
 
 /** Row of `GET /meetings/:id/attendance`. */
 export interface AttendanceRow {
-    memberId: string;
+    /** `null` = the person was erased (Wave 10): the row stays pseudonymised so quorum and votes remain verifiable. */
+    memberId: string | null;
     present: boolean;
     hasVotingRight: boolean;
     proxyForMemberId: string | null;

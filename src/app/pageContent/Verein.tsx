@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { useThrottledCallback } from '@/lib/useThrottledCallback';
 import { memberErrorKey } from '@/lib/clubMembers';
-import { type ClubTab, canSeeCredentialOverview, formsGate, visibleTabs } from '@/lib/clubPermissions';
+import { type ClubTab, canSeeCredentialOverview, formsGate, isGuardianOnly, visibleTabs } from '@/lib/clubPermissions';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ApplicationsPanel from '@/components/verein/ApplicationsPanel';
 import NoClubSection from '@/components/verein/NoClubSection';
@@ -18,6 +18,12 @@ import ClubStatsPanel from '@/components/verein/ClubStatsPanel';
 import CustomFieldsPanel from '@/components/verein/CustomFieldsPanel';
 import FormsPanel from '@/components/verein/FormsPanel';
 import ExitQueuePanel from '@/components/verein/ExitQueuePanel';
+import AbsencesBoardPanel from '@/components/verein/AbsencesBoardPanel';
+import PrivacyPanel, { type PrivacyView } from '@/components/privacy/PrivacyPanel';
+import DpaBanner from '@/components/privacy/DpaBanner';
+import { useDpaCurrent } from '@/components/privacy/useDpaCurrent';
+import OwnAbsencesPanel from '@/components/absences/OwnAbsencesPanel';
+import MyPrivacyPanel from '@/components/privacy/MyPrivacyPanel';
 import MemberList from '@/components/verein/MemberList';
 import MemberAvatar from '@/components/verein/MemberAvatar';
 import RoleBadge from '@/components/verein/RoleBadge';
@@ -207,6 +213,9 @@ export default function VereinPageContent() {
     const [credentialsDenied, setCredentialsDenied] = useState(false);
     const [memberView, setMemberView] = useState<'list' | 'credentials'>('list');
     const { confirm, dialog: confirmDialog } = useConfirm();
+    // Processor agreement (AV-Vertrag): banner for the people who work on privacy, and a way to open the signing page from it.
+    const [dpaReload, setDpaReload] = useState(0);
+    const [privacyStart, setPrivacyStart] = useState<{ view: PrivacyView; n: number }>({ view: 'consents', n: 0 });
 
     const activeClub = clubs?.[0] ?? null;
 
@@ -270,6 +279,7 @@ export default function VereinPageContent() {
     }, [activeClub?.clubId]);
 
     const permissions = me?.permissions ?? [];
+    const dpa = useDpaCurrent(activeClub?.clubId ?? null, permissions.includes('privacy:read') || permissions.includes('privacy:manage'), dpaReload);
     const gate = formsGate(permissions);
     // Every tab beyond the basics hangs on a permission from GET /club-members/me (the backend enforces them too).
     // Guardians (external role) have no right to the member list; hide the tab instead of showing a 403.
@@ -328,11 +338,23 @@ export default function VereinPageContent() {
                         ))}
                     </div>
 
+                    <DpaBanner
+                        current={dpa}
+                        onOpen={() => {
+                            setPrivacyStart((s) => ({ view: 'dpa', n: s.n + 1 }));
+                            void selectTab('datenschutz');
+                        }}
+                    />
+
                     <div className="mt-4">
                         {currentTab === 'info' && (info ? <VereinsinfoTab info={info} t={t} onPhotoExpired={refetchBoardPhotos} /> : <LoadingText />)}
                         {currentTab === 'profil' &&
                             (me ? (
-                                <ProfilTab me={me} clubId={activeClub.clubId} onDirtyChange={onProfilDirty} onSaved={() => void refreshClubData(activeClub.clubId)} onPhotoExpired={refetchOwnPhoto} onOpenCustomFields={() => void selectTab('zusatzfelder')} />
+                                <div className="space-y-6">
+                                    <ProfilTab me={me} clubId={activeClub.clubId} onDirtyChange={onProfilDirty} onSaved={() => void refreshClubData(activeClub.clubId)} onPhotoExpired={refetchOwnPhoto} onOpenCustomFields={() => void selectTab('zusatzfelder')} />
+                                    {!isGuardianOnly(permissions, me.roles) && <OwnAbsencesPanel clubId={activeClub.clubId} />}
+                                    {!isGuardianOnly(permissions, me.roles) && me.clubMemberId && <MyPrivacyPanel clubId={activeClub.clubId} clubMemberId={me.clubMemberId} />}
+                                </div>
                             ) : (
                                 <LoadingText />
                             ))}
@@ -395,6 +417,10 @@ export default function VereinPageContent() {
                         {currentTab === 'kennzahlen' && <ClubStatsPanel clubId={activeClub.clubId} />}
                         {currentTab === 'formulare' && gate.manage && <FormsPanel clubId={activeClub.clubId} permissions={permissions} onDirtyChange={onFormsDirty} onOpenCategorySettings={tabs.includes('einstellungen') ? () => void selectTab('einstellungen') : undefined} />}
                         {currentTab === 'zusatzfelder' && gate.manage && <CustomFieldsPanel clubId={activeClub.clubId} permissions={permissions} />}
+                        {currentTab === 'fehlt' && permissions.includes('absences:read') && (
+                            <AbsencesBoardPanel clubId={activeClub.clubId} departments={(info?.departments ?? []).map((d) => ({ id: d.id, name: d.name }))} />
+                        )}
+                        {currentTab === 'datenschutz' && <PrivacyPanel key={privacyStart.n} clubId={activeClub.clubId} permissions={permissions} startView={privacyStart.view} onDpaAccepted={() => setDpaReload((n) => n + 1)} />}
                         {currentTab === 'einstellungen' && (
                             <div className="space-y-6">
                                 {permissions.includes('members:write') && <ClubSettingsPanel clubId={activeClub.clubId} />}
