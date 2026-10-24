@@ -331,7 +331,7 @@ function InvitationProof({ clubId, meetingId, invitation, canSensitive, onChange
                     ) : rows.length === 0 ? (
                         <p className="text-sm text-muted-foreground">{t('assembly.invite.proof.empty')}</p>
                     ) : (
-                        <div className="overflow-x-auto">
+                        <div className="relative overflow-x-auto">
                             <table className="w-full text-left text-sm">
                                 <caption className="sr-only">{t('assembly.invite.proof.title')}</caption>
                                 <thead>
