@@ -121,6 +121,7 @@ Statute-driven Mitgliederversammlung, votes and elections. Permission `assembly:
 - `src/contexts/AssemblyTranslation.ts` (DE/EN only) — all `assembly.*` texts; `AssemblyTranslation.test.ts` fails when a component uses a key that is not defined or an error code has no message.
 - `src/lib/api-client.ts` — `cachePolicyFor` sends `no-store` for `/ballots`, `/elections`, `/club-roles`, `/club-settings/assembly` and `/meetings/:id/(minutes|invitations|voting-roll|proxies|quorum|agenda-items|attendance|online)`.
 - `src/components/assembly/AssemblyRulesPanel.tsx` (W1) and `TermsOfOffice.tsx` (W8) — see the `/verein` row.
+- `src/components/assembly/AssemblyPlanning.tsx` (W2) — inside a Mitgliederversammlung (tab Planen & Einladen, `assembly:manage`): structured agenda (`/meetings/:id/agenda-items`, announced items locked), live invitation period check, recipient overview (e-mail / account message / post), send with confirmation, documented exception when the period is violated (422 `invitation_period_violated` shows the earliest valid day), Nachtrag, proof of delivery per invitation (status tiles, filterable table, post list CSV for `members:read_sensitive`, mark letters as posted).
 - `src/components/assembly/shared.tsx` — `MemberPicker` (search in `GET /club-members?q=`, yields the club member id, members without account included), `Notice`, `ErrorText`.
 
 ### Marketing homepage
