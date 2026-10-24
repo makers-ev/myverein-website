@@ -446,8 +446,12 @@ export default function BallotsManager({ clubId, mode, meetingId, agendaItems = 
                             </div>
                         )}
                         <div className="space-y-1">
-                            <Toggle checked={secret} onChange={(v) => rules.secretBallotDigitalAllowed && setSecret(v)} label={t('assembly.ballots.secret')} />
-                            {!rules.secretBallotDigitalAllowed && <p className="text-xs text-muted-foreground">{t('assembly.ballots.secret.notAllowed')}</p>}
+                            <Toggle checked={secret} onChange={setSecret} disabled={!rules.secretBallotDigitalAllowed} describedBy="bl-secret-hint" label={t('assembly.ballots.secret')} />
+                            {!rules.secretBallotDigitalAllowed && (
+                                <p id="bl-secret-hint" className="text-xs text-muted-foreground">
+                                    {t('assembly.ballots.secret.disabled')} {t('assembly.ballots.secret.notAllowed')}
+                                </p>
+                            )}
                             {secret && <Notice>{t('assembly.ballots.secret.explain')}</Notice>}
                         </div>
                         {error && <ErrorText>{error}</ErrorText>}

@@ -205,8 +205,12 @@ function ElectionDetail({ clubId, id, canManage, onBack }: { clubId: string; id:
                                     ))}
                                 </div>
                             )}
-                            <Toggle checked={secret} onChange={(v) => secretAllowed && setSecret(v)} label={t('assembly.ballots.secret')} />
-                            {!secretAllowed && <p className="text-xs text-muted-foreground">{t('assembly.ballots.secret.notAllowed')}</p>}
+                            <Toggle checked={secret} onChange={setSecret} disabled={!secretAllowed} describedBy="el-secret-hint" label={t('assembly.ballots.secret')} />
+                            {!secretAllowed && (
+                                <p id="el-secret-hint" className="text-xs text-muted-foreground">
+                                    {t('assembly.ballots.secret.disabled')} {t('assembly.ballots.secret.notAllowed')}
+                                </p>
+                            )}
                             <button
                                 type="button"
                                 disabled={busy || !election.meetingId || selected.length === 0}
@@ -242,7 +246,8 @@ function ElectionDetail({ clubId, id, canManage, onBack }: { clubId: string; id:
                                 type="button"
                                 disabled={busy || (lotIds !== null && (lotIds.length === 0 || lotNote.trim().length < 5))}
                                 onClick={async () => {
-                                    if (!(await confirm({ title: t('assembly.elections.decide'), body: t('assembly.elections.decide.confirm'), confirmLabel: t('assembly.elections.decide') }))) return;
+                                    // The lot form is an explicit step of its own: no second confirmation behind it.
+                                    if (lotIds === null && !(await confirm({ title: t('assembly.elections.decide'), body: t('assembly.elections.decide.confirm'), confirmLabel: t('assembly.elections.decide') }))) return;
                                     await run(() => apiFetch(`/elections/${election.id}/decide?clubId=${clubId}`, { method: 'POST', body: lotIds !== null && lotIds.length > 0 ? { lot: { candidateIds: lotIds, note: lotNote.trim() } } : {} }));
                                 }}
                                 className={primaryBtn}
