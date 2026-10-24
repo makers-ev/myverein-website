@@ -113,6 +113,15 @@ not a silent no-op).
 - `src/lib/memberPhoto.ts`, `src/lib/meetings.ts`, `src/lib/loans.ts`, `src/lib/locationVisibility.ts` — pure helpers behind the photo upload, the Treffen attendance patch/type/date handling, the self-loan rules and the Orte visibility levels (each with a `*.test.ts`).
 - `vitest.config.ts` — resolves the `@/*` alias for tests. `LanguageContext.test.ts` exempts the keys of the documented DE/EN-only translation modules.
 
+### General assembly (Wave 11)
+
+Statute-driven Mitgliederversammlung, votes and elections. Permission `assembly:manage` (from `permissions` of `GET /club-members/me`) gates every management view; members only vote, answer, give a proxy and read. No legal defaults: parameters the club has not stated are `null` and the dependent features stay off; every rule text says "Annahme, keine Rechtsberatung".
+
+- `src/lib/assembly.ts` — contract types (rules, ballots, elections, minutes, quorum, invitations) and pure helpers (rules patch, invitation blockers, vote selection, minutes actions, term status, `assemblyErrorKey` mapping `details.code` to `assembly.err.*`); tested in `assembly.test.ts`.
+- `src/contexts/AssemblyTranslation.ts` (DE/EN only) — all `assembly.*` texts; `AssemblyTranslation.test.ts` fails when a component uses a key that is not defined or an error code has no message.
+- `src/lib/api-client.ts` — `cachePolicyFor` sends `no-store` for `/ballots`, `/elections`, `/club-roles`, `/club-settings/assembly` and `/meetings/:id/(minutes|invitations|voting-roll|proxies|quorum|agenda-items|attendance|online)`.
+- `src/components/assembly/shared.tsx` — `MemberPicker` (search in `GET /club-members?q=`, yields the club member id, members without account included), `Notice`, `ErrorText`.
+
 ### Marketing homepage
 
 The homepage (`pageContent/Homepage.tsx`) only composes chapters from `src/components/marketing/`. Visual language: paper-collage people, a growing club network and a few stick-figure moments; **solid frame = available today, dashed frame = "we are sketching this" (never presented as available)**.

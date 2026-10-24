@@ -44,12 +44,13 @@ export function parseJsonPlain(text: string): unknown {
 }
 
 /**
- * Applicant drafts, uploads, the board's application review, the form editor, custom fields and exit requests carry personal data and change between requests: the browser
+ * General assembly data (ballots, elections, minutes, invitations with delivery proof, voting roll, proxies, quorum, attendance), term lists, the statute parameters,
+ * applicant drafts, uploads, the board's application review, the form editor, custom fields and exit requests carry personal data and change between requests: the browser
  * must never answer them from its HTTP cache (the backend's `Cache-Control` is set separately and is not relied upon here).
  */
 export function cachePolicyFor(path: string): RequestCache | undefined {
     // Form definitions (drafts hold unpublished wording), custom field definitions/values, the module catalog (`/member-fields/catalog`) and the credential overview (`/club-members/credentials`) (may be sensitive) and exit requests with answers.
-    return /^\/(form-submissions|club-forms|club-applications|forms|member-fields|club-exit-requests|absences|my-wards|guardian|consent-purposes|consents|audit-log|data-subject-requests|retention-policies|club-privacy-notices|clubs\/[^/?]+\/privacy-notice|dpa|admin\/(dpa-versions|dpa-acceptances|retention-runs))(\/|\?|$)/.test(path) || /^\/club-members\/[^/?]+\/(consents|guardians|visibility|data-export|data-requests|erasure|erasure-request|legal-hold|privacy-notice|privacy-notice-sent)(\/|\?|$)/.test(path) || /^\/club-members\/[^/?]+\/custom-fields(\/|\?|$)/.test(path) || /^\/club-members\/credentials(\/|\?|$)/.test(path) || /^\/club-members\/me\/children(\/|\?|$)/.test(path)
+    return /^\/(form-submissions|club-forms|club-applications|forms|member-fields|club-exit-requests|absences|my-wards|guardian|consent-purposes|consents|audit-log|data-subject-requests|retention-policies|club-privacy-notices|clubs\/[^/?]+\/privacy-notice|dpa|ballots|elections|club-roles|club-settings\/assembly|admin\/(dpa-versions|dpa-acceptances|retention-runs))(\/|\?|$)/.test(path) || /^\/meetings\/[^/?]+\/(minutes|invitations|voting-roll|proxies|quorum|agenda-items|attendance|online)(\/|\?|$)/.test(path) || /^\/club-members\/[^/?]+\/(consents|guardians|visibility|data-export|data-requests|erasure|erasure-request|legal-hold|privacy-notice|privacy-notice-sent)(\/|\?|$)/.test(path) || /^\/club-members\/[^/?]+\/custom-fields(\/|\?|$)/.test(path) || /^\/club-members\/credentials(\/|\?|$)/.test(path) || /^\/club-members\/me\/children(\/|\?|$)/.test(path)
         ? 'no-store'
         : undefined;
 }

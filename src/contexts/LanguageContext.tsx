@@ -21,6 +21,7 @@ import CommunicationTranslation from './CommunicationTranslation';
 import PrivacyTranslation from './PrivacyTranslation';
 import KalenderTranslation from './KalenderTranslation';
 import TreffenTranslation from './TreffenTranslation';
+import AssemblyTranslation from './AssemblyTranslation';
 import VerfuegbarkeitTranslation from './VerfuegbarkeitTranslation';
 import StandorteTranslation from './StandorteTranslation';
 import RoadmapTranslation from './RoadmapTranslation';
@@ -62,6 +63,7 @@ export const translations: Record<Language, Record<string, string>> = supportedL
             ...(id === 'de' || id === 'en' ? PrivacyTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? KalenderTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? TreffenTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? AssemblyTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? VerfuegbarkeitTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? StandorteTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? RoadmapTranslation[id] : {}),

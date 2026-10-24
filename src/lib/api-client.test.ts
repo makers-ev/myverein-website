@@ -71,6 +71,14 @@ describe('cache policy of personal-data routes', () => {
         expect(cachePolicyFor('/dpaX')).toBeUndefined();
     });
 
+    it('never uses the HTTP cache for the general assembly (ballots, elections, minutes, invitations, voting roll, rules)', () => {
+        for (const path of ['/ballots?clubId=c', '/ballots/abc', '/elections/abc', '/club-roles/expiring?clubId=c', '/club-settings/assembly?clubId=c', '/meetings/abc/minutes?clubId=c', '/meetings/abc/invitations/latest', '/meetings/abc/voting-roll/me', '/meetings/abc/proxies', '/meetings/abc/quorum', '/meetings/abc/attendance']) {
+            expect(cachePolicyFor(path), path).toBe('no-store');
+        }
+        expect(cachePolicyFor('/meetings?clubId=c')).toBeUndefined();
+        expect(cachePolicyFor('/ballotsX')).toBeUndefined();
+    });
+
     it('announces a refused write of a club without processor agreement', async () => {
         const seen = vi.fn();
         const target = new EventTarget();
