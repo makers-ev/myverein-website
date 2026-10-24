@@ -302,7 +302,7 @@ export default function KalenderPageContent() {
                             ) : (
                                 <LoadingText />
                             ))}
-                        {tab === 'treffen' && <TreffenPanel clubId={activeClub.clubId} canWrite={permissions.includes('meetings:write')} />}
+                        {tab === 'treffen' && <TreffenPanel clubId={activeClub.clubId} canWrite={permissions.includes('meetings:write')} canManageAssembly={permissions.includes('assembly:manage')} canReadSensitive={permissions.includes('members:read_sensitive')} />}
                     </div>
 
                     {detailEvent && (
