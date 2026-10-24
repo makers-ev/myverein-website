@@ -24,8 +24,9 @@ export default function AbstimmungenPageContent() {
     const { t } = useLanguage();
     const [clubs, setClubs] = useState<MyClub[] | null>(null);
     const [clubsError, setClubsError] = useState(false);
-    const [permissions, setPermissions] = useState<string[]>([]);
-    const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
+    const [clubId, setClubId] = useState<string | null>(null);
+    // Rights and departments are loaded per club; `loaded` names the club they belong to so a switch never shows the old club's rights.
+    const [access, setAccess] = useState<{ clubId: string; permissions: string[]; departments: { id: string; name: string }[]; failed: boolean } | null>(null);
     // "Neuwahl planen" in the club info links here with ?tab=wahlen&role=...&department=...
     const params = useSearchParams();
     const [tab, setTab] = useState<Tab>(params.get('tab') === 'wahlen' ? 'wahlen' : 'abstimmungen');
@@ -38,26 +39,39 @@ export default function AbstimmungenPageContent() {
             .then(({ data }) => {
                 setClubs(data);
                 setClubsError(false);
+                setClubId((current) => (current && data.some((c) => c.clubId === current) ? current : (data[0]?.clubId ?? null)));
             })
             .catch(() => setClubsError(true));
     }, [retry]);
 
-    const activeClub = clubs?.[0] ?? null;
+    const activeClub = clubs?.find((c) => c.clubId === clubId) ?? null;
 
     useEffect(() => {
         if (!activeClub) return;
-        // Missing permissions only hide the management tabs; the backend enforces them anyway.
-        apiFetch<{ data: { permissions?: string[] } }>(`/club-members/me?clubId=${activeClub.clubId}`)
-            .then(({ data }) => setPermissions(data.permissions ?? []))
-            .catch(() => setPermissions([]));
-        apiFetch<{ data: { departments: { id: string; name: string }[] } }>(`/club-info?clubId=${activeClub.clubId}`)
-            .then(({ data }) => setDepartments(data.departments))
-            .catch(() => setDepartments([]));
-    }, [activeClub]);
+        let cancelled = false;
+        const id = activeClub.clubId;
+        // The management tabs depend on the rights: nothing is rendered before they are known (no flash of the member view).
+        Promise.all([
+            apiFetch<{ data: { permissions?: string[] } }>(`/club-members/me?clubId=${id}`),
+            apiFetch<{ data: { departments: { id: string; name: string }[] } }>(`/club-info?clubId=${id}`).catch(() => ({ data: { departments: [] } })),
+        ])
+            .then(([me, info]) => {
+                if (!cancelled) setAccess({ clubId: id, permissions: me.data.permissions ?? [], departments: info.data.departments, failed: false });
+            })
+            .catch(() => {
+                if (!cancelled) setAccess({ clubId: id, permissions: [], departments: [], failed: true });
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [activeClub, retry]);
 
+    const current = access && activeClub && access.clubId === activeClub.clubId ? access : null;
+    const permissions = current?.permissions ?? [];
+    const departments = current?.departments ?? [];
     const canManage = can(permissions, ASSEMBLY_MANAGE);
     const tabs: Tab[] = canManage ? ['abstimmungen', 'umlauf', 'wahlen'] : ['abstimmungen', 'wahlen'];
-    const current: Tab = tabs.includes(tab) ? tab : 'abstimmungen';
+    const currentTab: Tab = tabs.includes(tab) ? tab : 'abstimmungen';
 
     return (
         <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
@@ -72,27 +86,49 @@ export default function AbstimmungenPageContent() {
                 <p className="mt-6 text-sm text-muted-foreground">{t('assembly.page.noClub')}</p>
             ) : (
                 <>
-                    <div role="tablist" aria-label={t('assembly.page.title')} className="mt-6 flex gap-2 overflow-x-auto border-b border-border">
-                        {tabs.map((value) => (
-                            <button
-                                key={value}
-                                id={`ab-tab-${value}`}
-                                type="button"
-                                role="tab"
-                                aria-selected={current === value}
-                                aria-controls="ab-panel"
-                                onClick={() => setTab(value)}
-                                className={`whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium transition-colors ${current === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
-                            >
-                                {t(`assembly.page.tab.${value}`)}
-                            </button>
-                        ))}
-                    </div>
-                    <div id="ab-panel" role="tabpanel" aria-labelledby={`ab-tab-${current}`} className="mt-4">
-                        {current === 'abstimmungen' && <VotingPanel clubId={activeClub.clubId} />}
-                        {current === 'umlauf' && canManage && <BallotsManager clubId={activeClub.clubId} mode="circular" />}
-                        {current === 'wahlen' && <ElectionsPanel clubId={activeClub.clubId} canManage={canManage} departments={departments} prefill={prefill} />}
-                    </div>
+                    {clubs.length > 1 && (
+                        <div className="mt-4">
+                            <label htmlFor="ab-club" className="mb-1 block text-xs font-semibold text-muted-foreground">
+                                {t('assembly.page.club')}
+                            </label>
+                            <select id="ab-club" value={activeClub.clubId} onChange={(e) => setClubId(e.target.value)} className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground">
+                                {clubs.map((c) => (
+                                    <option key={c.clubId} value={c.clubId}>
+                                        {c.clubName ?? c.clubId}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+                    {!current ? (
+                        <LoadingText className="mt-6" />
+                    ) : current.failed ? (
+                        <LoadError className="mt-6" onRetry={() => { setAccess(null); setRetry((n) => n + 1); }} />
+                    ) : (
+                        <>
+                            <div role="tablist" aria-label={t('assembly.page.title')} className="mt-6 flex gap-2 overflow-x-auto border-b border-border">
+                                {tabs.map((value) => (
+                                    <button
+                                        key={value}
+                                        id={`ab-tab-${value}`}
+                                        type="button"
+                                        role="tab"
+                                        aria-selected={currentTab === value}
+                                        aria-controls="ab-panel"
+                                        onClick={() => setTab(value)}
+                                        className={`whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium transition-colors ${currentTab === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                                    >
+                                        {t(`assembly.page.tab.${value}`)}
+                                    </button>
+                                ))}
+                            </div>
+                            <div id="ab-panel" role="tabpanel" aria-labelledby={`ab-tab-${currentTab}`} className="mt-4">
+                                {currentTab === 'abstimmungen' && <VotingPanel key={activeClub.clubId} clubId={activeClub.clubId} />}
+                                {currentTab === 'umlauf' && canManage && <BallotsManager key={activeClub.clubId} clubId={activeClub.clubId} mode="circular" />}
+                                {currentTab === 'wahlen' && <ElectionsPanel key={activeClub.clubId} clubId={activeClub.clubId} canManage={canManage} departments={departments} prefill={prefill} />}
+                            </div>
+                        </>
+                    )}
                 </>
             )}
         </div>
