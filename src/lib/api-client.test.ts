@@ -72,10 +72,10 @@ describe('cache policy of personal-data routes', () => {
     });
 
     it('never uses the HTTP cache for the general assembly (ballots, elections, minutes, invitations, voting roll, rules)', () => {
-        for (const path of ['/ballots?clubId=c', '/ballots/abc', '/elections/abc', '/club-roles/expiring?clubId=c', '/club-settings/assembly?clubId=c', '/meetings/abc/minutes?clubId=c', '/meetings/abc/invitations/latest', '/meetings/abc/voting-roll/me', '/meetings/abc/proxies', '/meetings/abc/quorum', '/meetings/abc/attendance']) {
+        for (const path of ['/ballots?clubId=c', '/ballots/abc', '/elections/abc', '/club-roles/expiring?clubId=c', '/club-settings/assembly?clubId=c', '/meetings/abc/minutes?clubId=c', '/meetings/abc/invitations/latest', '/meetings/abc/voting-roll/me', '/meetings/abc/proxies', '/meetings/abc/quorum', '/meetings/abc/attendance', '/meetings/abc/resolutions?clubId=c', '/meetings/abc?clubId=c', '/meetings?clubId=c']) {
             expect(cachePolicyFor(path), path).toBe('no-store');
         }
-        expect(cachePolicyFor('/meetings?clubId=c')).toBeUndefined();
+        expect(cachePolicyFor('/meetingsX')).toBeUndefined();
         expect(cachePolicyFor('/ballotsX')).toBeUndefined();
     });
 

@@ -117,7 +117,7 @@ const ASSEMBLY_ERROR_CODES = new Set([
     'round_pending', 'round_running', 'round_not_final', 'round_decided', 'tie_needs_lot', 'no_tie', 'election_filled', 'election_closed', 'not_elected', 'role_not_electable',
     'department_required', 'department_not_allowed', 'lead_is_candidate', 'seats_below_elected', 'minutes_locked', 'minutes_approved', 'minutes_empty', 'minutes_not_draft',
     'minutes_not_submitted', 'minutes_not_confirmed', 'minutes_not_approved', 'minutes_two_persons', 'approval_meeting_not_later', 'approval_meeting_type_mismatch',
-    'resolution_not_accepted', 'online_not_allowed', 'online_url_requires_mode', 'not_online', 'not_self_online', 'outside_check_in_window', 'reason_required',
+    'resolution_not_accepted', 'no_proxy', 'topic_mismatch', 'topic_needs_agenda_item', 'invalid_candidate_transition', 'invalid_lot', 'ballot_not_cancellable', 'round_not_decided', 'online_not_allowed', 'online_url_requires_mode', 'not_online', 'not_self_online', 'outside_check_in_window', 'reason_required',
 ]);
 
 /** Missing statute parameters of a 422 `assembly_rules_incomplete` / `invitation_period_violated` answer. */
@@ -326,6 +326,11 @@ export function toggleSelection(ballot: Pick<Ballot, 'maxChoices' | 'options'>, 
     if (option.kind === 'abstain') return [optionId];
     const withoutAbstain = selected.filter((id) => ballot.options.find((o) => o.id === id)?.kind !== 'abstain');
     return withoutAbstain.length >= ballot.maxChoices ? [...withoutAbstain] : [...withoutAbstain, optionId];
+}
+
+/** `true` when a failed vote means the vote is in fact recorded (409 `already_voted`), e.g. after a double submit. */
+export function isAlreadyVoted(err: unknown): boolean {
+    return err instanceof ApiError && err.status === 409 && (err.details as { code?: unknown } | undefined)?.code === 'already_voted';
 }
 
 export function selectionValid(ballot: Pick<Ballot, 'maxChoices'>, selected: readonly string[]): boolean {
