@@ -20,7 +20,8 @@ export function visibleTabs(permissions: readonly string[], roles: ReadonlyArray
     if (can(permissions, 'club_stats:read')) tabs.push('kennzahlen');
     if (can(permissions, 'forms:write')) tabs.push('formulare', 'zusatzfelder');
     // Club rules and reminders hang on members:write, the club's mail template on announcements:write (Wave 9 W6).
-    if (can(permissions, 'members:write') || can(permissions, 'announcements:write')) tabs.push('einstellungen');
+    // Wave 11: the statute parameters of the general assembly (`assembly:manage`) live there as well.
+    if (can(permissions, 'members:write') || can(permissions, 'announcements:write') || can(permissions, 'assembly:manage')) tabs.push('einstellungen');
     // Wave 10: "Wer fehlt" for trainers and the board (`absences:read`), "Datenschutz" (consents, access log) for `privacy:read` / `privacy:manage`.
     if (can(permissions, 'absences:read')) tabs.push('fehlt');
     if (can(permissions, 'privacy:read') || can(permissions, 'privacy:manage')) tabs.push('datenschutz');
