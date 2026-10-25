@@ -91,7 +91,7 @@ export default function StandortePageContent() {
             ) : (
                 <>
                     <div className="mt-6 flex gap-2 border-b border-border">
-                        {(['standorte', 'material', 'belegung'] as const).filter((v) => v !== 'belegung' || !isGuest).map((value) => (
+                        {(['standorte', 'material', 'belegung'] as const).map((value) => (
                             <button
                                 key={value}
                                 type="button"
@@ -119,6 +119,7 @@ export default function StandortePageContent() {
                                         onLocationsChanged={() => void refreshLocations(activeClub.clubId)}
                                     />
                                 )}
+                                {tab === 'belegung' && isGuest && <p className="rounded-lg bg-muted px-3 py-3 text-sm text-muted-foreground">{t('occupancy.guest')}</p>}
                                 {tab === 'belegung' && !isGuest && <OccupancyTab clubId={activeClub.clubId} locations={locations} canWrite={permissions.includes('locations:write')} />}
                                 {tab === 'material' && (
                                     <MaterialTab clubId={activeClub.clubId} locations={locations} canWrite={permissions.includes('inventory:write')} ownMemberId={ownMemberId} isGuest={isGuest} />

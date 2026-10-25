@@ -5,6 +5,7 @@ import { Download, Play, Square } from 'lucide-react';
 
 import LoadError from '@/components/LoadError';
 import LoadingText from '@/components/LoadingText';
+import { useConfirm } from '@/components/useConfirm';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api-client';
 import { eventErrorKey } from '@/lib/eventErrors';
@@ -39,6 +40,7 @@ const STATUS_TONE = { offen: 'bg-warning/15 text-warning', bestaetigt: 'bg-succe
 /** Trainer time tracking (W10): clock in/out, suggestions from attendance, manual entries, confirmation, hours report. Report only, no payout. */
 export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, ownClubMemberId, events }: Props) {
     const { t, language } = useLanguage();
+    const { confirm, dialog } = useConfirm();
     const q = `clubId=${clubId}`;
     const [range, setRange] = useState(defaultRange);
     const [scope, setScope] = useState<'mine' | 'team'>('mine');
@@ -283,13 +285,13 @@ export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, o
                                                         <button type="button" disabled={busy} onClick={() => void act(() => apiFetch(`/time-entries/${e.id}/confirm?${q}`, { method: 'POST' }))} className={`${primaryBtn} !px-2.5 !py-1 text-xs`}>
                                                             {t('time.confirm')}
                                                         </button>
-                                                        <button type="button" disabled={busy} onClick={() => void act(() => apiFetch(`/time-entries/${e.id}/reject?${q}`, { method: 'POST' }))} className={`${secondaryBtn} !px-2.5 !py-1 text-xs`}>
+                                                        <button type="button" disabled={busy} onClick={() => void (async () => { if (await confirm({ title: t('time.reject'), body: t('time.reject.body', { name: e.displayName }), confirmLabel: t('time.reject'), danger: true })) await act(() => apiFetch(`/time-entries/${e.id}/reject?${q}`, { method: 'POST' })); })()} className={`${secondaryBtn} !px-2.5 !py-1 text-xs`}>
                                                             {t('time.reject')}
                                                         </button>
                                                     </>
                                                 )}
                                                 {e.clubMemberId === ownClubMemberId && e.status === 'offen' && !e.running && (
-                                                    <button type="button" disabled={busy} onClick={() => void act(() => apiFetch(`/time-entries/${e.id}?${q}`, { method: 'DELETE' }))} className={`${secondaryBtn} !px-2.5 !py-1 text-xs`}>
+                                                    <button type="button" disabled={busy} onClick={() => void (async () => { if (await confirm({ title: t('time.delete'), body: t('time.delete.body'), confirmLabel: t('time.delete'), danger: true })) await act(() => apiFetch(`/time-entries/${e.id}?${q}`, { method: 'DELETE' })); })()} className={`${secondaryBtn} !px-2.5 !py-1 text-xs`}>
                                                         {t('time.delete')}
                                                     </button>
                                                 )}
@@ -306,6 +308,7 @@ export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, o
                 </>
             )}
             {(canConfirm || canRates) && <HoursReport clubId={clubId} range={range} />}
+            {dialog}
             {canRates && <RateCards clubId={clubId} />}
         </div>
     );
