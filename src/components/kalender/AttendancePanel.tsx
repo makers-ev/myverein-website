@@ -31,9 +31,9 @@ interface Props {
 }
 
 const STATUS_STYLE: Record<AttendanceStatus, string> = {
-    anwesend: 'bg-success text-white',
-    entschuldigt: 'bg-warning text-white',
-    unentschuldigt: 'bg-destructive text-white',
+    anwesend: 'bg-success text-success-foreground',
+    entschuldigt: 'bg-warning text-warning-foreground',
+    unentschuldigt: 'bg-destructive text-destructive-foreground',
 };
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
@@ -119,6 +119,22 @@ export default function AttendancePanel({ clubId, event }: Props) {
         setSaveState('saved');
         inFlight.current = false;
     }, [send, publish]);
+
+    // Taps that are still buffered when the panel closes (tab change, dialog close) are sent right away; a page unload warns.
+    useEffect(() => {
+        const flushNow = () => {
+            if (timer.current) clearTimeout(timer.current);
+            void flush();
+        };
+        const warn = (e: BeforeUnloadEvent) => {
+            if (pending.current.size > 0) e.preventDefault();
+        };
+        window.addEventListener('beforeunload', warn);
+        return () => {
+            window.removeEventListener('beforeunload', warn);
+            flushNow();
+        };
+    }, [flush]);
 
     function schedule() {
         if (timer.current) clearTimeout(timer.current);
