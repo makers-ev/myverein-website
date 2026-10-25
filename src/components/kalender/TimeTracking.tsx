@@ -17,6 +17,8 @@ import MemberPicker from './MemberPicker';
 
 interface Props {
     clubId: string;
+    /** Trainers, leads and confirmers record hours; rate readers alone only see the report and rates. */
+    canTrack: boolean;
     /** `time:write`: team view, confirm and reject. */
     canConfirm: boolean;
     /** `time:read_rates`: hourly rates and the amounts of the report. */
@@ -35,7 +37,7 @@ function Duration({ minutes }: { minutes: number | null }) {
 const STATUS_TONE = { offen: 'bg-warning/15 text-warning', bestaetigt: 'bg-success/15 text-success', abgelehnt: 'bg-destructive/10 text-destructive' } as const;
 
 /** Trainer time tracking (W10): clock in/out, suggestions from attendance, manual entries, confirmation, hours report. Report only, no payout. */
-export default function TimeTracking({ clubId, canConfirm, canRates, ownClubMemberId, events }: Props) {
+export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, ownClubMemberId, events }: Props) {
     const { t, language } = useLanguage();
     const q = `clubId=${clubId}`;
     const [range, setRange] = useState(defaultRange);
@@ -54,6 +56,10 @@ export default function TimeTracking({ clubId, canConfirm, canRates, ownClubMemb
     const [loadedAt] = useState(() => Date.now());
 
     const load = useCallback(() => {
+        if (!canTrack) {
+            setEntries([]);
+            return;
+        }
         setFailed(false);
         const qs = new URLSearchParams({ clubId, from: range.from, to: range.to, scope });
         if (status) qs.set('status', status);
@@ -68,7 +74,7 @@ export default function TimeTracking({ clubId, canConfirm, canRates, ownClubMemb
                 setSuggestions(sug.data);
             })
             .catch(() => setFailed(true));
-    }, [clubId, q, range.from, range.to, scope, status]);
+    }, [clubId, q, range.from, range.to, scope, status, canTrack]);
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -103,6 +109,8 @@ export default function TimeTracking({ clubId, canConfirm, canRates, ownClubMemb
                 </p>
             )}
 
+            {canTrack && (
+                <>
             <section className="space-y-3 rounded-xl border border-border bg-card p-4">
                 <h3 className="font-semibold text-foreground">{t('time.clock.title')}</h3>
                 {current ? (
@@ -295,7 +303,9 @@ export default function TimeTracking({ clubId, canConfirm, canRates, ownClubMemb
                 )}
             </section>
 
-            {canConfirm && <HoursReport clubId={clubId} range={range} />}
+                </>
+            )}
+            {(canConfirm || canRates) && <HoursReport clubId={clubId} range={range} />}
             {canRates && <RateCards clubId={clubId} />}
         </div>
     );

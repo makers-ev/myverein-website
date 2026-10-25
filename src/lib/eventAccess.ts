@@ -10,7 +10,6 @@ export interface EventMe {
     clubMemberId: string | null;
     permissions: string[];
     roles: Array<{ roleType: string; departmentId?: string | null }>;
-    departments?: Array<{ id: string }>;
 }
 
 export type EventPermission = 'attendance:write' | 'attendance:read' | 'registrations:read' | 'helpers:write' | 'time:write' | 'time:read_rates' | 'calendars:write';
@@ -23,11 +22,13 @@ const CLUB_WIDE: Record<string, readonly string[]> = {
     kassenwart: ['time:read_rates'],
 };
 
-/** Ids of the departments the caller belongs to (department-bound roles and current memberships). */
-export function ownDepartmentIds(me: Pick<EventMe, 'roles' | 'departments'>): Set<string> {
+/**
+ * Ids of the departments the caller holds department-scoped rights in: only the `department_id` of trainer and
+ * abteilungsleitung roles counts (the server scopes by those `club_roles` rows, not by plain department membership).
+ */
+export function ownDepartmentIds(me: Pick<EventMe, 'roles'>): Set<string> {
     const ids = new Set<string>();
-    for (const r of me.roles) if (r.departmentId) ids.add(r.departmentId);
-    for (const d of me.departments ?? []) ids.add(d.id);
+    for (const r of me.roles) if (r.departmentId && (r.roleType === 'trainer' || r.roleType === 'abteilungsleitung')) ids.add(r.departmentId);
     return ids;
 }
 
@@ -44,8 +45,14 @@ export function canForCalendar(me: EventMe | null | undefined, permission: Event
     return ownDepartmentIds(me).has(calendar.departmentId);
 }
 
-/** Time tracking area: trainers, department leads and everybody who confirms (`time:write`). */
+/** Time tracking area: trainers, department leads, everybody who confirms (`time:write`) and rate readers (`time:read_rates`: report and rates only). */
 export function canUseTimeTracking(me: EventMe | null | undefined): boolean {
+    if (!me) return false;
+    return can(me.permissions, 'time:write') || can(me.permissions, 'time:read_rates') || me.roles.some((r) => r.roleType === 'trainer' || r.roleType === 'abteilungsleitung');
+}
+
+/** May record own hours (clock, entries): trainers, department leads and confirmers; rate readers alone only get the report. */
+export function canTrackTime(me: EventMe | null | undefined): boolean {
     if (!me) return false;
     return can(me.permissions, 'time:write') || me.roles.some((r) => r.roleType === 'trainer' || r.roleType === 'abteilungsleitung');
 }

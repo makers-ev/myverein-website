@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { type EventMe, canForCalendar, canSeeAttendanceGroup, canUseTimeTracking, holdsClubWide, ownDepartmentIds, visibleEventTabs } from './eventAccess';
+import { type EventMe, canForCalendar, canSeeAttendanceGroup, canTrackTime, canUseTimeTracking, holdsClubWide, ownDepartmentIds, visibleEventTabs } from './eventAccess';
 
 const me = (over: Partial<EventMe>): EventMe => ({ clubMemberId: 'c1', permissions: [], roles: [], ...over });
 const board = me({ permissions: ['attendance:read', 'attendance:write', 'registrations:read', 'helpers:write'], roles: [{ roleType: 'vorsitz' }] });
@@ -35,15 +35,22 @@ describe('event access gating', () => {
         expect(holdsClubWide(me({ roles: [{ roleType: 'kassenwart' }] }), 'time:read_rates')).toBe(true);
     });
 
-    it('collects departments from roles and memberships', () => {
-        expect([...ownDepartmentIds(me({ roles: [{ roleType: 'trainer', departmentId: 'A' }], departments: [{ id: 'C' }] }))].sort()).toEqual(['A', 'C']);
+    it('scopes by department-bound trainer and lead roles only', () => {
+        expect([...ownDepartmentIds(me({ roles: [{ roleType: 'trainer', departmentId: 'A' }, { roleType: 'abteilungsleitung', departmentId: 'C' }, { roleType: 'mitglied', departmentId: 'D' }] }))].sort()).toEqual(['A', 'C']);
     });
 
     it('shows time tracking only to trainers, department leads and confirmers', () => {
         expect(canUseTimeTracking(plain)).toBe(false);
         expect(canUseTimeTracking(trainerA)).toBe(true);
         expect(canUseTimeTracking(me({ permissions: ['time:write'] }))).toBe(true);
+        expect(canUseTimeTracking(me({ permissions: ['time:read_rates'], roles: [{ roleType: 'kassenwart' }] }))).toBe(true);
         expect(canUseTimeTracking(null)).toBe(false);
+    });
+
+    it('lets rate readers alone see the report but not track hours', () => {
+        const kassenwart = me({ permissions: ['time:read_rates'], roles: [{ roleType: 'kassenwart' }] });
+        expect(canTrackTime(kassenwart)).toBe(false);
+        expect(canTrackTime(trainerA)).toBe(true);
     });
 
     it('shows group attendance views only with attendance:read', () => {
