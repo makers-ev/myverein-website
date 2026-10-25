@@ -48,6 +48,15 @@ export const EVENT_ERROR_CODES = [
     'entry_overlap',
     'entry_decided',
     'no_self_decision',
+    'too_many_shifts',
+    'too_many_stations',
+    'invalid_min_staff',
+    'entry_exists',
+    'running',
+    'member_left',
+    'unknown_entry',
+    'answers_too_large',
+    'unknown_column',
 ] as const;
 
 export type EventErrorCode = (typeof EVENT_ERROR_CODES)[number];
