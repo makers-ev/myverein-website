@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { CalendarDays, ChevronLeft, ChevronRight, List, Plus } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, Download, List, Plus, Rss } from 'lucide-react';
 
 import { apiFetch } from '@/lib/api-client';
+import { fetchFileBlob, saveBlob } from '@/lib/memberCsv';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getDepartmentColor } from '@/theme/departmentColors';
 import TreffenPanel from '@/components/kalender/TreffenPanel';
@@ -11,16 +12,24 @@ import MonthCalendar from '@/components/kalender/MonthCalendar';
 import EventAgenda from '@/components/kalender/EventAgenda';
 import CalendarManager from '@/components/kalender/CalendarManager';
 import { EventDetailModal, EventFormModal } from '@/components/kalender/EventModals';
+import CalendarSubscribeModal from '@/components/kalender/CalendarSubscribeModal';
+import SeriesScopeModal from '@/components/kalender/SeriesScopeModal';
+import type { SeriesScope } from '@/components/kalender/eventSeries';
 import {
     type Calendar,
     type CalendarEvent,
     type Department,
-    type RsvpStatus,
     dayKey,
+    errorMessage,
+    eventDayKeys,
     primaryBtn,
     secondaryBtn,
 } from '@/components/kalender/calendarTypes';
 import LoadingText from '@/components/LoadingText';
+import { type EventMe, canSeeAttendanceGroup, canTrackTime, canUseTimeTracking } from '@/lib/eventAccess';
+import TimeTracking from '@/components/kalender/TimeTracking';
+import { GroupAttendance, MemberAttendance } from '@/components/kalender/AttendanceReport';
+import { SectionCard } from '@/components/standorte/ui';
 import LoadError from '@/components/LoadError';
 
 interface MyClub {
@@ -30,9 +39,13 @@ interface MyClub {
     orgRole: string;
 }
 
-type Tab = 'termine' | 'treffen';
+type Tab = 'termine' | 'treffen' | 'anwesenheit' | 'zeiterfassung';
 type View = 'month' | 'list';
-type EventModal = { kind: 'detail'; event: CalendarEvent } | { kind: 'form'; event?: CalendarEvent; start?: Date } | null;
+type EventModal =
+    | { kind: 'detail'; event: CalendarEvent }
+    | { kind: 'scope'; event: CalendarEvent }
+    | { kind: 'form'; event?: CalendarEvent; scope?: SeriesScope; start?: Date }
+    | null;
 
 const navBtn = 'rounded-lg border border-border bg-background p-2 text-foreground transition-colors hover:bg-muted';
 
@@ -44,14 +57,18 @@ export default function KalenderPageContent() {
     const [calendars, setCalendars] = useState<Calendar[] | null>(null);
     const [events, setEvents] = useState<CalendarEvent[] | null>(null);
     const [permissions, setPermissions] = useState<string[]>([]);
+    const [me, setMe] = useState<EventMe | null>(null);
     const [tab, setTab] = useState<Tab>('termine');
     const [view, setView] = useState<View>('month');
     const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
     const [selectedDay, setSelectedDay] = useState(() => dayKey(new Date()));
     const [modal, setModal] = useState<EventModal>(null);
-    const [rsvpState, setRsvpState] = useState<Record<string, RsvpStatus>>({});
+    const [notice, setNotice] = useState<string | null>(null);
+    const [subscribing, setSubscribing] = useState(false);
+    const [exporting, setExporting] = useState(false);
 
     const activeClub = clubs?.[0] ?? null;
+    const pageTabs = (['termine', 'treffen', 'anwesenheit', 'zeiterfassung'] as const).filter((v) => v !== 'zeiterfassung' || canUseTimeTracking(me));
     const canWrite = permissions.includes('calendars:write');
 
     function loadClubs() {
@@ -82,9 +99,15 @@ export default function KalenderPageContent() {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         void refreshData(activeClub.clubId);
         // Missing permissions only hide write UI; the backend enforces them anyway.
-        apiFetch<{ data: { permissions?: string[] } }>(`/club-members/me?clubId=${activeClub.clubId}`)
-            .then(({ data }) => setPermissions(data.permissions ?? []))
-            .catch(() => setPermissions([]));
+        apiFetch<{ data: { clubMemberId?: string | null; permissions?: string[]; roles?: EventMe['roles'] } }>(`/club-members/me?clubId=${activeClub.clubId}`)
+            .then(({ data }) => {
+                setPermissions(data.permissions ?? []);
+                setMe({ clubMemberId: data.clubMemberId ?? null, permissions: data.permissions ?? [], roles: data.roles ?? [] });
+            })
+            .catch(() => {
+                setPermissions([]);
+                setMe(null);
+            });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeClub?.clubId]);
 
@@ -105,13 +128,28 @@ export default function KalenderPageContent() {
         const todayStart = new Date(new Date().setHours(0, 0, 0, 0)).getTime();
         return sortedEvents.filter((ev) => new Date(ev.endsAt ?? ev.startsAt).getTime() >= todayStart);
     }, [sortedEvents]);
-    const dayEvents = sortedEvents.filter((ev) => dayKey(new Date(ev.startsAt)) === selectedDay);
+    const dayEvents = sortedEvents.filter((ev) => eventDayKeys(ev).includes(selectedDay));
+    const todayKey = dayKey(new Date());
     const selectedDate = new Date(`${selectedDay}T00:00`);
 
     const openCreate = (day: Date) => setModal({ kind: 'form', start: new Date(day.getFullYear(), day.getMonth(), day.getDate(), 18) });
 
     function shiftMonth(delta: number) {
         setMonth((m) => new Date(m.getFullYear(), m.getMonth() + delta, 1));
+    }
+
+    async function exportCalendar() {
+        if (!activeClub) return;
+        setExporting(true);
+        setNotice(null);
+        try {
+            const { blob, filename } = await fetchFileBlob(`/events.ics?clubId=${activeClub.clubId}`, 'kalender.ics', { accept: 'text/calendar' });
+            saveBlob(blob, filename);
+        } catch (err) {
+            setNotice(t('kalender.export.error', { message: errorMessage(err, t) }));
+        } finally {
+            setExporting(false);
+        }
     }
 
     function goToday() {
@@ -126,12 +164,25 @@ export default function KalenderPageContent() {
         if (canWrite && calendars?.length && window.matchMedia('(min-width: 640px)').matches) openCreate(day);
     }
 
-    function afterChange() {
+    function afterChange(message?: string) {
         setModal(null);
+        setNotice(message ?? null);
         if (activeClub) void refreshData(activeClub.clubId);
     }
 
     const detailEvent = modal?.kind === 'detail' ? modal.event : null;
+
+    /** After a sign-up or withdrawal: reload that event (`myRsvp`, counts) and keep the dialog open. */
+    async function reloadEvent(id: string) {
+        if (!activeClub) return;
+        try {
+            const { data } = await apiFetch<{ data: CalendarEvent }>(`/events/${id}?clubId=${activeClub.clubId}`);
+            setEvents((prev) => prev?.map((ev) => (ev.id === id ? data : ev)) ?? prev);
+            setModal((prev) => (prev?.kind === 'detail' && prev.event.id === id ? { kind: 'detail', event: data } : prev));
+        } catch {
+            void refreshData(activeClub.clubId);
+        }
+    }
 
     return (
         <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
@@ -148,13 +199,25 @@ export default function KalenderPageContent() {
                 </div>
             ) : (
                 <>
-                    <div role="tablist" className="mt-6 flex gap-2 border-b border-border">
-                        {(['termine', 'treffen'] as const).map((value) => (
+                    <div role="tablist" aria-label={t('kalender.page.title')} className="mt-6 flex gap-2 overflow-x-auto border-b border-border">
+                        {pageTabs.map((value, index) => (
                             <button
                                 key={value}
+                                type="button"
                                 role="tab"
+                                id={`kal-tab-${value}`}
                                 aria-selected={tab === value}
+                                aria-controls="kal-panel"
+                                tabIndex={tab === value ? 0 : -1}
                                 onClick={() => setTab(value)}
+                                onKeyDown={(e) => {
+                                    const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+                                    const target = e.key === 'Home' ? 0 : e.key === 'End' ? pageTabs.length - 1 : step ? (index + step + pageTabs.length) % pageTabs.length : -1;
+                                    if (target < 0) return;
+                                    e.preventDefault();
+                                    setTab(pageTabs[target]!);
+                                    document.getElementById(`kal-tab-${pageTabs[target]}`)?.focus();
+                                }}
                                 className={`border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
                                     tab === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
                                 }`}
@@ -164,7 +227,7 @@ export default function KalenderPageContent() {
                         ))}
                     </div>
 
-                    <div className="mt-4 space-y-4">
+                    <div role="tabpanel" id="kal-panel" aria-labelledby={`kal-tab-${tab}`} className="mt-4 space-y-4">
                         {tab === 'termine' &&
                             (calendars && events ? (
                                 <>
@@ -211,6 +274,16 @@ export default function KalenderPageContent() {
                                                     </button>
                                                 ))}
                                             </div>
+                                            <button type="button" onClick={() => void exportCalendar()} disabled={exporting} className={`${secondaryBtn} inline-flex items-center gap-1.5`}>
+                                                <Download className="h-4 w-4" aria-hidden />
+                                                <span className="hidden md:inline">{t(exporting ? 'kalender.export.busy' : 'kalender.export')}</span>
+                                                <span className="sr-only md:hidden">{t('kalender.export')}</span>
+                                            </button>
+                                            <button type="button" onClick={() => setSubscribing(true)} className={`${secondaryBtn} inline-flex items-center gap-1.5`}>
+                                                <Rss className="h-4 w-4" aria-hidden />
+                                                <span className="hidden md:inline">{t('kalender.feeds.open')}</span>
+                                                <span className="sr-only md:hidden">{t('kalender.feeds.open')}</span>
+                                            </button>
                                             {canWrite && calendars.length > 0 && (
                                                 <button type="button" onClick={() => openCreate(selectedDate)} className={`${primaryBtn} inline-flex items-center gap-1.5`}>
                                                     <Plus className="h-4 w-4" aria-hidden />
@@ -220,6 +293,15 @@ export default function KalenderPageContent() {
                                             )}
                                         </div>
                                     </div>
+
+                                    {notice && (
+                                        <p role="status" className="flex items-center justify-between gap-2 rounded-lg bg-muted px-3 py-2 text-sm text-foreground">
+                                            {notice}
+                                            <button type="button" onClick={() => setNotice(null)} className="font-semibold underline">
+                                                {t('kalender.notice.dismiss')}
+                                            </button>
+                                        </p>
+                                    )}
 
                                     {calendars.length > 0 && (
                                         <ul className="flex flex-wrap gap-x-4 gap-y-1" aria-label={t('kalender.calendars.legend')}>
@@ -267,6 +349,7 @@ export default function KalenderPageContent() {
                                                         calendarName={calendarName}
                                                         onSelectEvent={(ev) => setModal({ kind: 'detail', event: ev })}
                                                         hideHeaders
+                                                        dayFilter={(key) => key === selectedDay}
                                                     />
                                                 )}
                                             </section>
@@ -283,6 +366,7 @@ export default function KalenderPageContent() {
                                                     colorFor={colorFor}
                                                     calendarName={calendarName}
                                                     onSelectEvent={(ev) => setModal({ kind: 'detail', event: ev })}
+                                                    dayFilter={(key) => key >= todayKey}
                                                 />
                                             )}
                                         </section>
@@ -302,6 +386,23 @@ export default function KalenderPageContent() {
                             ) : (
                                 <LoadingText />
                             ))}
+                        {tab === 'anwesenheit' && (
+                            <div className="space-y-4">
+                                {me?.clubMemberId && (
+                                    <SectionCard title={t('attReport.own.title')}>
+                                        <MemberAttendance clubId={activeClub.clubId} memberId={me.clubMemberId} />
+                                    </SectionCard>
+                                )}
+                                {canSeeAttendanceGroup(me) && (
+                                    <SectionCard title={t('attReport.group.title')}>
+                                        <GroupAttendance clubId={activeClub.clubId} departments={departments} />
+                                    </SectionCard>
+                                )}
+                            </div>
+                        )}
+                        {tab === 'zeiterfassung' && canUseTimeTracking(me) && (
+                            <TimeTracking clubId={activeClub.clubId} canTrack={canTrackTime(me)} canConfirm={permissions.includes('time:write')} canRates={permissions.includes('time:read_rates')} ownClubMemberId={me?.clubMemberId ?? null} events={events ?? []} />
+                        )}
                         {tab === 'treffen' && <TreffenPanel clubId={activeClub.clubId} canWrite={permissions.includes('meetings:write')} canManageAssembly={permissions.includes('assembly:manage')} canReadSensitive={permissions.includes('members:read_sensitive')} />}
                     </div>
 
@@ -313,20 +414,23 @@ export default function KalenderPageContent() {
                             color={colorFor(detailEvent.calendarId)}
                             canWrite={canWrite}
                             canSeeAbsences={permissions.includes('absences:read')}
-                            rsvp={rsvpState[detailEvent.id]}
+                            me={me}
                             language={language}
                             t={t}
                             onClose={() => setModal(null)}
-                            onRsvpChange={(status) =>
-                                setRsvpState((prev) => {
-                                    const next = { ...prev };
-                                    if (status) next[detailEvent.id] = status;
-                                    else delete next[detailEvent.id];
-                                    return next;
-                                })
-                            }
-                            onEdit={() => setModal({ kind: 'form', event: detailEvent })}
+                            onRsvpChange={() => void reloadEvent(detailEvent.id)}
+                            onEdit={() => setModal(detailEvent.seriesId ? { kind: 'scope', event: detailEvent } : { kind: 'form', event: detailEvent })}
                             onDeleted={afterChange}
+                        />
+                    )}
+                    {subscribing && calendars && <CalendarSubscribeModal clubId={activeClub.clubId} calendars={calendars} language={language} t={t} onClose={() => setSubscribing(false)} />}
+                    {modal?.kind === 'scope' && (
+                        <SeriesScopeModal
+                            mode="edit"
+                            event={modal.event}
+                            t={t}
+                            onClose={() => setModal({ kind: 'detail', event: modal.event })}
+                            onConfirm={(scope) => setModal({ kind: 'form', event: modal.event, scope })}
                         />
                     )}
                     {modal?.kind === 'form' && calendars && (
@@ -335,6 +439,8 @@ export default function KalenderPageContent() {
                             calendars={calendars}
                             colorFor={colorFor}
                             event={modal.event}
+                            scope={modal.scope}
+                            language={language}
                             initialStart={modal.start}
                             t={t}
                             onClose={() => setModal(null)}

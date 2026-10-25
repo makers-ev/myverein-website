@@ -20,6 +20,11 @@ import ProfileModulesTranslation from './ProfileModulesTranslation';
 import CommunicationTranslation from './CommunicationTranslation';
 import PrivacyTranslation from './PrivacyTranslation';
 import KalenderTranslation from './KalenderTranslation';
+import EventsCommonTranslation from './EventsCommonTranslation';
+import EventAttendanceTranslation from './EventAttendanceTranslation';
+import EventRegistrationTranslation from './EventRegistrationTranslation';
+import EventHelpersTranslation from './EventHelpersTranslation';
+import EventRidesTranslation from './EventRidesTranslation';
 import TreffenTranslation from './TreffenTranslation';
 import AssemblyTranslation from './AssemblyTranslation';
 import VerfuegbarkeitTranslation from './VerfuegbarkeitTranslation';
@@ -62,6 +67,11 @@ export const translations: Record<Language, Record<string, string>> = supportedL
             ...(id === 'de' || id === 'en' ? CommunicationTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? PrivacyTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? KalenderTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? EventsCommonTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? EventAttendanceTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? EventRegistrationTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? EventHelpersTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? EventRidesTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? TreffenTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? AssemblyTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? VerfuegbarkeitTranslation[id] : {}),
