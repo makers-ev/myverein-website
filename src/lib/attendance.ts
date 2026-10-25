@@ -107,3 +107,65 @@ export function percent(rate: number | null | undefined): string | null {
     if (rate === null || rate === undefined || Number.isNaN(rate)) return null;
     return `${Math.round(rate * 100)} %`;
 }
+
+// --- Report (W5, `GET /attendance/report`) -----------------------------------------------------
+
+export interface AttendanceCounts {
+    present: number;
+    excused: number;
+    unexcused: number;
+    recorded: number;
+    /** 0..1, `null` = no data yet. */
+    rate: number | null;
+}
+
+export interface ReportMember extends AttendanceCounts {
+    clubMemberId: string;
+    displayName: string;
+}
+
+export interface ReportEvent extends AttendanceCounts {
+    eventId: string;
+    title: string;
+    startsAt: string;
+    closed: boolean;
+    departmentId: string | null;
+    guests: number;
+}
+
+export interface AttendanceReport {
+    range: { from: string; to: string };
+    scope: 'group' | 'member';
+    departmentIds: string[] | null;
+    members: ReportMember[];
+    events: ReportEvent[];
+    member: ReportMember | null;
+    entries: Array<{ eventId: string; title: string; startsAt: string; departmentId: string | null; status: AttendanceStatus }>;
+}
+
+export interface ReportFilter {
+    memberId?: string;
+    departmentId?: string;
+    from?: string;
+    to?: string;
+}
+
+/** Query string of `/attendance/report` (and `.csv`); empty values are left out so the server defaults (last 90 days) apply. */
+export function reportQuery(clubId: string, filter: ReportFilter): string {
+    const p = new URLSearchParams({ clubId });
+    if (filter.memberId) p.set('memberId', filter.memberId);
+    if (filter.departmentId) p.set('departmentId', filter.departmentId);
+    if (filter.from) p.set('from', filter.from);
+    if (filter.to) p.set('to', filter.to);
+    return p.toString();
+}
+
+/** Server limit: at most 366 days. */
+export function reportRangeProblem(from: string, to: string): 'order' | 'long' | null {
+    if (!from || !to) return null;
+    const a = Date.parse(`${from}T00:00:00Z`);
+    const b = Date.parse(`${to}T00:00:00Z`);
+    if (Number.isNaN(a) || Number.isNaN(b)) return null;
+    if (b < a) return 'order';
+    return (b - a) / 86_400_000 > 366 ? 'long' : null;
+}

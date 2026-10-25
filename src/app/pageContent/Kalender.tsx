@@ -26,7 +26,9 @@ import {
     secondaryBtn,
 } from '@/components/kalender/calendarTypes';
 import LoadingText from '@/components/LoadingText';
-import type { EventMe } from '@/lib/eventAccess';
+import { type EventMe, canSeeAttendanceGroup } from '@/lib/eventAccess';
+import { GroupAttendance, MemberAttendance } from '@/components/kalender/AttendanceReport';
+import { SectionCard } from '@/components/standorte/ui';
 import LoadError from '@/components/LoadError';
 
 interface MyClub {
@@ -36,7 +38,7 @@ interface MyClub {
     orgRole: string;
 }
 
-type Tab = 'termine' | 'treffen';
+type Tab = 'termine' | 'treffen' | 'anwesenheit';
 type View = 'month' | 'list';
 type EventModal =
     | { kind: 'detail'; event: CalendarEvent }
@@ -196,7 +198,7 @@ export default function KalenderPageContent() {
             ) : (
                 <>
                     <div role="tablist" className="mt-6 flex gap-2 border-b border-border">
-                        {(['termine', 'treffen'] as const).map((value) => (
+                        {(['termine', 'treffen', 'anwesenheit'] as const).map((value) => (
                             <button
                                 key={value}
                                 role="tab"
@@ -370,6 +372,20 @@ export default function KalenderPageContent() {
                             ) : (
                                 <LoadingText />
                             ))}
+                        {tab === 'anwesenheit' && (
+                            <div className="space-y-4">
+                                {me?.clubMemberId && (
+                                    <SectionCard title={t('attReport.own.title')}>
+                                        <MemberAttendance clubId={activeClub.clubId} memberId={me.clubMemberId} />
+                                    </SectionCard>
+                                )}
+                                {canSeeAttendanceGroup(me) && (
+                                    <SectionCard title={t('attReport.group.title')}>
+                                        <GroupAttendance clubId={activeClub.clubId} departments={departments} />
+                                    </SectionCard>
+                                )}
+                            </div>
+                        )}
                         {tab === 'treffen' && <TreffenPanel clubId={activeClub.clubId} canWrite={permissions.includes('meetings:write')} canManageAssembly={permissions.includes('assembly:manage')} canReadSensitive={permissions.includes('members:read_sensitive')} />}
                     </div>
 

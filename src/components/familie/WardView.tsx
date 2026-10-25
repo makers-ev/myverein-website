@@ -11,6 +11,7 @@ import LoadingText from '@/components/LoadingText';
 import WardAbsences from './WardAbsences';
 import WardContacts from './WardContacts';
 import WardEvents from './WardEvents';
+import { MemberAttendance } from '@/components/kalender/AttendanceReport';
 
 /** Everything about one ward: events with answers, sick report, trainer contact and the consents (voluntary). */
 export default function WardView({ ward, onConsentsChanged }: { ward: WardEntry; onConsentsChanged: () => void }) {
@@ -57,6 +58,9 @@ export default function WardView({ ward, onConsentsChanged }: { ward: WardEntry;
                 </div>
                 <div className="space-y-4">
                     <WardContacts clubId={ward.clubId} wardId={ward.wardId} />
+                    <SectionCard title={t('attReport.ward.title')}>
+                        <MemberAttendance clubId={ward.clubId} memberId={ward.wardId} />
+                    </SectionCard>
                     <SectionCard title={t('familie.consents.title')}>
                         {!overview.link.canConsent && <p className="mb-3 text-sm text-muted-foreground">{t('familie.consents.noRight')}</p>}
                         <MemberConsents

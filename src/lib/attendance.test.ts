@@ -59,3 +59,19 @@ describe('attendance helpers', () => {
         expect(percent(null)).toBeNull();
     });
 });
+
+import { reportQuery, reportRangeProblem } from './attendance';
+
+describe('attendance report helpers', () => {
+    it('leaves empty filters out', () => {
+        expect(reportQuery('c1', {})).toBe('clubId=c1');
+        expect(reportQuery('c1', { departmentId: 'd', from: '2026-01-01', to: '' })).toBe('clubId=c1&departmentId=d&from=2026-01-01');
+    });
+
+    it('checks the date range like the server', () => {
+        expect(reportRangeProblem('2026-02-01', '2026-01-01')).toBe('order');
+        expect(reportRangeProblem('2024-01-01', '2026-01-01')).toBe('long');
+        expect(reportRangeProblem('2026-01-01', '2026-03-01')).toBeNull();
+        expect(reportRangeProblem('', '2026-03-01')).toBeNull();
+    });
+});
