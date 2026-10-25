@@ -68,6 +68,7 @@ export default function KalenderPageContent() {
     const [exporting, setExporting] = useState(false);
 
     const activeClub = clubs?.[0] ?? null;
+    const pageTabs = (['termine', 'treffen', 'anwesenheit', 'zeiterfassung'] as const).filter((v) => v !== 'zeiterfassung' || canUseTimeTracking(me));
     const canWrite = permissions.includes('calendars:write');
 
     function loadClubs() {
@@ -198,13 +199,25 @@ export default function KalenderPageContent() {
                 </div>
             ) : (
                 <>
-                    <div role="tablist" className="mt-6 flex gap-2 border-b border-border">
-                        {(['termine', 'treffen', 'anwesenheit', 'zeiterfassung'] as const).filter((v) => v !== 'zeiterfassung' || canUseTimeTracking(me)).map((value) => (
+                    <div role="tablist" aria-label={t('kalender.page.title')} className="mt-6 flex gap-2 overflow-x-auto border-b border-border">
+                        {pageTabs.map((value, index) => (
                             <button
                                 key={value}
+                                type="button"
                                 role="tab"
+                                id={`kal-tab-${value}`}
                                 aria-selected={tab === value}
+                                aria-controls="kal-panel"
+                                tabIndex={tab === value ? 0 : -1}
                                 onClick={() => setTab(value)}
+                                onKeyDown={(e) => {
+                                    const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+                                    const target = e.key === 'Home' ? 0 : e.key === 'End' ? pageTabs.length - 1 : step ? (index + step + pageTabs.length) % pageTabs.length : -1;
+                                    if (target < 0) return;
+                                    e.preventDefault();
+                                    setTab(pageTabs[target]!);
+                                    document.getElementById(`kal-tab-${pageTabs[target]}`)?.focus();
+                                }}
                                 className={`border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
                                     tab === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
                                 }`}
@@ -214,7 +227,7 @@ export default function KalenderPageContent() {
                         ))}
                     </div>
 
-                    <div className="mt-4 space-y-4">
+                    <div role="tabpanel" id="kal-panel" aria-labelledby={`kal-tab-${tab}`} className="mt-4 space-y-4">
                         {tab === 'termine' &&
                             (calendars && events ? (
                                 <>

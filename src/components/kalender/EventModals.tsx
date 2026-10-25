@@ -199,16 +199,31 @@ export function CancelEventModal({ event, clubId, calendar, t, onClose, onCancel
 /** Tab bar of the event dialog (details, attendance, ...); the panels are mounted only while their tab is open. */
 function EventTabBar({ tabs, active, onChange }: { tabs: EventTab[]; active: EventTab; onChange: (tab: EventTab) => void }) {
     const { t } = useLanguage();
+    // Roving tabindex: only the active tab is in the tab order; arrow keys, Home and End move between tabs.
+    function onKeyDown(e: React.KeyboardEvent, index: number) {
+        let next = index;
+        if (e.key === 'ArrowRight') next = (index + 1) % tabs.length;
+        else if (e.key === 'ArrowLeft') next = (index - 1 + tabs.length) % tabs.length;
+        else if (e.key === 'Home') next = 0;
+        else if (e.key === 'End') next = tabs.length - 1;
+        else return;
+        e.preventDefault();
+        onChange(tabs[next]!);
+        document.getElementById(`event-tab-${tabs[next]}`)?.focus();
+    }
     return (
         <div role="tablist" aria-label={t('events.tabs.label')} className="-mt-1 mb-4 flex gap-1 overflow-x-auto border-b border-border">
-            {tabs.map((value) => (
+            {tabs.map((value, index) => (
                 <button
                     key={value}
                     type="button"
                     role="tab"
                     id={`event-tab-${value}`}
                     aria-selected={active === value}
+                    aria-controls={`event-panel-${value}`}
+                    tabIndex={active === value ? 0 : -1}
                     onClick={() => onChange(value)}
+                    onKeyDown={(e) => onKeyDown(e, index)}
                     className={`shrink-0 border-b-2 px-3 py-2 text-sm font-medium transition-colors ${active === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
                 >
                     {t(`events.tab.${value}`)}
@@ -302,6 +317,8 @@ export function EventDetailModal({ event, clubId, calendar, color, canWrite, can
                     <div className="flex items-center gap-2">
                         {cancelled ? (
                             <span className="rounded-full bg-destructive/10 px-2.5 py-1 text-xs font-semibold text-destructive">{t('kalender.events.cancelled')}</span>
+                        ) : registration === null ? (
+                            <span className="text-xs text-muted-foreground" role="status">{t('common.loading')}</span>
                         ) : regInfo?.enabled ? (
                             <>
                                 {rsvp && (
@@ -353,6 +370,7 @@ export function EventDetailModal({ event, clubId, calendar, color, canWrite, can
             }
         >
             {tabs.length > 1 && <EventTabBar tabs={tabs} active={activeTab} onChange={setTab} />}
+            <div role={tabs.length > 1 ? 'tabpanel' : undefined} id={`event-panel-${activeTab}`} aria-labelledby={tabs.length > 1 ? `event-tab-${activeTab}` : undefined}>
             {activeTab === 'attendance' && <AttendancePanel clubId={clubId} event={event} />}
             {activeTab === 'helpers' && <HelperPlanPanel clubId={clubId} event={event} ownClubMemberId={me?.clubMemberId ?? null} />}
             {activeTab === 'rides' && <RidesPanel clubId={clubId} event={event} ownClubMemberId={me?.clubMemberId ?? null} />}
@@ -435,6 +453,7 @@ export function EventDetailModal({ event, clubId, calendar, color, canWrite, can
                 )}
             </div>
             )}
+            </div>
         </Modal>
         {deleteScope && event.seriesId && (
             <SeriesScopeModal
