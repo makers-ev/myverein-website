@@ -12,7 +12,7 @@ import { parseEuroInput, formatCost } from '@/lib/eventRegistration';
 import { fetchFileBlob, saveBlob } from '@/lib/memberCsv';
 import { type RateCard, type TimeEntry, type TimeReport, type TimeSuggestion, RATE_ROLES, defaultRange, manualProblem, rateBody, splitMinutes } from '@/lib/timeTracking';
 
-import { type CalendarEvent, inputClass, labelClass, primaryBtn, secondaryBtn, toLocalInput } from './calendarTypes';
+import { type CalendarEvent, inputClass, labelClass, primaryBtn, secondaryBtn } from './calendarTypes';
 import MemberPicker from './MemberPicker';
 
 interface Props {
@@ -50,6 +50,8 @@ export default function TimeTracking({ clubId, canConfirm, canRates, ownClubMemb
     const [clockEvent, setClockEvent] = useState('');
     const [mStart, setMStart] = useState('');
     const [mEnd, setMEnd] = useState('');
+    // Fixed when the tab opens: keeps render pure; the server re-checks "in the future" anyway.
+    const [loadedAt] = useState(() => Date.now());
 
     const load = useCallback(() => {
         setFailed(false);
@@ -86,8 +88,8 @@ export default function TimeTracking({ clubId, canConfirm, canRates, ownClubMemb
         }
     }
 
-    const manualIssue = mStart && mEnd ? manualProblem(mStart, mEnd) : null;
-    const todayEvents = events.filter((e) => !e.cancelled && Math.abs(new Date(e.startsAt).getTime() - Date.now()) < 36 * 3600_000);
+    const manualIssue = mStart && mEnd ? manualProblem(mStart, mEnd, loadedAt) : null;
+    const todayEvents = events.filter((e) => !e.cancelled && Math.abs(new Date(e.startsAt).getTime() - loadedAt) < 36 * 3600_000);
 
     if (failed) return <LoadError onRetry={load} />;
     if (!entries) return <LoadingText />;
