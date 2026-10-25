@@ -26,6 +26,7 @@ import {
     secondaryBtn,
 } from '@/components/kalender/calendarTypes';
 import LoadingText from '@/components/LoadingText';
+import type { EventMe } from '@/lib/eventAccess';
 import LoadError from '@/components/LoadError';
 
 interface MyClub {
@@ -53,6 +54,7 @@ export default function KalenderPageContent() {
     const [calendars, setCalendars] = useState<Calendar[] | null>(null);
     const [events, setEvents] = useState<CalendarEvent[] | null>(null);
     const [permissions, setPermissions] = useState<string[]>([]);
+    const [me, setMe] = useState<EventMe | null>(null);
     const [tab, setTab] = useState<Tab>('termine');
     const [view, setView] = useState<View>('month');
     const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
@@ -93,9 +95,15 @@ export default function KalenderPageContent() {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         void refreshData(activeClub.clubId);
         // Missing permissions only hide write UI; the backend enforces them anyway.
-        apiFetch<{ data: { permissions?: string[] } }>(`/club-members/me?clubId=${activeClub.clubId}`)
-            .then(({ data }) => setPermissions(data.permissions ?? []))
-            .catch(() => setPermissions([]));
+        apiFetch<{ data: { clubMemberId?: string | null; permissions?: string[]; roles?: EventMe['roles']; departments?: EventMe['departments'] } }>(`/club-members/me?clubId=${activeClub.clubId}`)
+            .then(({ data }) => {
+                setPermissions(data.permissions ?? []);
+                setMe({ clubMemberId: data.clubMemberId ?? null, permissions: data.permissions ?? [], roles: data.roles ?? [], departments: data.departments });
+            })
+            .catch(() => {
+                setPermissions([]);
+                setMe(null);
+            });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeClub?.clubId]);
 
@@ -373,6 +381,7 @@ export default function KalenderPageContent() {
                             color={colorFor(detailEvent.calendarId)}
                             canWrite={canWrite}
                             canSeeAbsences={permissions.includes('absences:read')}
+                            me={me}
                             language={language}
                             t={t}
                             onClose={() => setModal(null)}

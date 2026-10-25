@@ -9,6 +9,9 @@ import { apiFetch } from '@/lib/api-client';
 
 import EventAbsenceOverlay from './EventAbsenceOverlay';
 import SeriesScopeModal from './SeriesScopeModal';
+import AttendancePanel from './AttendancePanel';
+import { type EventMe, type EventTab, visibleEventTabs } from '@/lib/eventAccess';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 import {
     type Calendar,
@@ -186,6 +189,28 @@ export function CancelEventModal({ event, clubId, calendar, t, onClose, onCancel
     );
 }
 
+/** Tab bar of the event dialog (details, attendance, ...); the panels are mounted only while their tab is open. */
+function EventTabBar({ tabs, active, onChange }: { tabs: EventTab[]; active: EventTab; onChange: (tab: EventTab) => void }) {
+    const { t } = useLanguage();
+    return (
+        <div role="tablist" aria-label={t('events.tabs.label')} className="-mt-1 mb-4 flex gap-1 overflow-x-auto border-b border-border">
+            {tabs.map((value) => (
+                <button
+                    key={value}
+                    type="button"
+                    role="tab"
+                    id={`event-tab-${value}`}
+                    aria-selected={active === value}
+                    onClick={() => onChange(value)}
+                    className={`shrink-0 border-b-2 px-3 py-2 text-sm font-medium transition-colors ${active === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                >
+                    {t(`events.tab.${value}`)}
+                </button>
+            ))}
+        </div>
+    );
+}
+
 interface DetailProps {
     event: CalendarEvent;
     clubId: string;
@@ -194,6 +219,8 @@ interface DetailProps {
     canWrite: boolean;
     /** `absences:read`: shows who is absent on the day of the event (names and period only). */
     canSeeAbsences?: boolean;
+    /** Own permissions and roles (`GET /club-members/me`); gates the attendance and participant tabs. */
+    me?: EventMe | null;
     language: string;
     t: TFn;
     onClose: () => void;
@@ -203,13 +230,16 @@ interface DetailProps {
     onDeleted: () => void;
 }
 
-export function EventDetailModal({ event, clubId, calendar, color, canWrite, canSeeAbsences = false, language, t, onClose, onRsvpChange, onEdit, onDeleted }: DetailProps) {
+export function EventDetailModal({ event, clubId, calendar, color, canWrite, canSeeAbsences = false, me = null, language, t, onClose, onRsvpChange, onEdit, onDeleted }: DetailProps) {
     const [error, setError] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
     const [cancelling, setCancelling] = useState(false);
     const [deleteScope, setDeleteScope] = useState(false);
     const cancelled = Boolean(event.cancelled);
     const rsvp = event.myRsvp ?? undefined;
+    const [tab, setTab] = useState<EventTab>('details');
+    const tabs = visibleEventTabs(me, calendar);
+    const activeTab = tabs.includes(tab) ? tab : 'details';
 
     async function run(action: () => Promise<void>) {
         setBusy(true);
@@ -257,6 +287,7 @@ export function EventDetailModal({ event, clubId, calendar, color, canWrite, can
             open
             onClose={onClose}
             title={event.title}
+            size="lg"
             footer={
                 <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
@@ -301,6 +332,9 @@ export function EventDetailModal({ event, clubId, calendar, color, canWrite, can
                 </div>
             }
         >
+            {tabs.length > 1 && <EventTabBar tabs={tabs} active={activeTab} onChange={setTab} />}
+            {activeTab === 'attendance' && <AttendancePanel clubId={clubId} event={event} />}
+            {activeTab === 'details' && (
             <div className="space-y-3 text-sm">
                 {cancelled && (
                     <div role="status" className="flex items-start gap-2 rounded-lg bg-destructive/10 p-3 text-destructive">
@@ -362,6 +396,7 @@ export function EventDetailModal({ event, clubId, calendar, color, canWrite, can
                     </p>
                 )}
             </div>
+            )}
         </Modal>
         {deleteScope && event.seriesId && (
             <SeriesScopeModal
