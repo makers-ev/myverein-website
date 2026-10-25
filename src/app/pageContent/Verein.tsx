@@ -10,6 +10,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import ApplicationsPanel from '@/components/verein/ApplicationsPanel';
 import NoClubSection from '@/components/verein/NoClubSection';
 import CategoriesPanel from '@/components/verein/CategoriesPanel';
+import AssemblyRulesPanel from '@/components/assembly/AssemblyRulesPanel';
+import { ExpiringRolesCard, TermBadge } from '@/components/assembly/TermsOfOffice';
 import ClubSettingsPanel from '@/components/verein/ClubSettingsPanel';
 import ClubRemindersPanel from '@/components/verein/ClubRemindersPanel';
 import ClubMailTemplatePanel from '@/components/verein/ClubMailTemplatePanel';
@@ -79,9 +81,14 @@ function SectionCard({ title, children }: { title: string; children: React.React
     );
 }
 
-function VereinsinfoTab({ info, t, onPhotoExpired }: { info: ClubInfo; t: (key: string) => string; onPhotoExpired: () => void }) {
+function VereinsinfoTab({ info, t, onPhotoExpired, termsClubId }: { info: ClubInfo; t: (key: string) => string; onPhotoExpired: () => void; termsClubId: string | null }) {
     return (
         <div className="grid gap-4 sm:grid-cols-2">
+            {termsClubId && (
+                <div className="sm:col-span-2">
+                    <ExpiringRolesCard clubId={termsClubId} />
+                </div>
+            )}
             <SectionCard title={t('verein.info.board')}>
                 {info.board.length === 0 ? (
                     <p className="text-sm text-muted-foreground">{t('verein.info.board.empty')}</p>
@@ -93,7 +100,10 @@ function VereinsinfoTab({ info, t, onPhotoExpired }: { info: ClubInfo; t: (key: 
                                     <MemberAvatar name={m.name} photoUrl={m.photoUrl} onExpired={onPhotoExpired} />
                                     <span className="truncate">{m.name ?? '—'}</span>
                                 </span>
-                                <RoleBadge roleType={m.roleType} />
+                                <span className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+                                    <TermBadge termEndsAt={m.termEndsAt} />
+                                    <RoleBadge roleType={m.roleType} />
+                                </span>
                             </li>
                         ))}
                     </ul>
@@ -347,7 +357,7 @@ export default function VereinPageContent() {
                     />
 
                     <div className="mt-4">
-                        {currentTab === 'info' && (info ? <VereinsinfoTab info={info} t={t} onPhotoExpired={refetchBoardPhotos} /> : <LoadingText />)}
+                        {currentTab === 'info' && (info ? <VereinsinfoTab info={info} t={t} onPhotoExpired={refetchBoardPhotos} termsClubId={permissions.includes('assembly:manage') || permissions.includes('roles:write') ? activeClub.clubId : null} /> : <LoadingText />)}
                         {currentTab === 'profil' &&
                             (me ? (
                                 <div className="space-y-6">
@@ -423,6 +433,7 @@ export default function VereinPageContent() {
                         {currentTab === 'datenschutz' && <PrivacyPanel key={privacyStart.n} clubId={activeClub.clubId} permissions={permissions} startView={privacyStart.view} onDpaAccepted={() => setDpaReload((n) => n + 1)} />}
                         {currentTab === 'einstellungen' && (
                             <div className="space-y-6">
+                                {permissions.includes('assembly:manage') && <AssemblyRulesPanel clubId={activeClub.clubId} canReadHistory={permissions.includes('privacy:read')} />}
                                 {permissions.includes('members:write') && <ClubSettingsPanel clubId={activeClub.clubId} />}
                                 {permissions.includes('members:write') && <ClubRemindersPanel clubId={activeClub.clubId} />}
                                 {permissions.includes('announcements:write') && <ClubMailTemplatePanel clubId={activeClub.clubId} />}

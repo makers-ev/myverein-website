@@ -28,6 +28,8 @@ import { inputClass, labelClass, primaryBtn, secondaryBtn } from '@/components/k
 import LoadingText from '@/components/LoadingText';
 import LoadError from '@/components/LoadError';
 import { Toggle } from '@/components/standorte/ui';
+import AssemblyMeetingSections from '@/components/assembly/AssemblyMeetingSections';
+import type { ParticipationMode } from '@/lib/assembly';
 
 interface Meeting {
     id: string;
@@ -38,6 +40,9 @@ interface Meeting {
     agenda: string | null;
     minutes: string | null;
     status: 'terminfindung' | 'geplant' | 'abgehalten' | 'protokolliert' | 'abgesagt';
+    /** Wave 11: presence, hybrid or online (default presence) and the join link (only for invited people). */
+    participationMode?: ParticipationMode;
+    onlineUrl?: string | null;
 }
 
 interface MeetingInvitee {
@@ -279,7 +284,7 @@ function MeetingList({ clubId, t, canWrite, onSelect }: { clubId: string; t: TFn
     );
 }
 
-function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: string; meetingId: string; t: TFn; canWrite: boolean; onBack: () => void }) {
+function MeetingDetail({ clubId, meetingId, t, canWrite, canManageAssembly, canReadSensitive, onOpenRules, onBack }: { clubId: string; meetingId: string; t: TFn; canWrite: boolean; canManageAssembly: boolean; canReadSensitive: boolean; onOpenRules?: () => void; onBack: () => void }) {
     const { language } = useLanguage();
     const [meeting, setMeeting] = useState<Meeting | null>(null);
     const [invitees, setInvitees] = useState<MeetingInvitee[]>([]);
@@ -288,6 +293,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
     // Stored attendance (pre-fill) and the caller's own Better Auth member id (to find their invitation).
     const [storedAttendance, setStoredAttendance] = useState<AttendanceRow[]>([]);
     const [ownMemberId, setOwnMemberId] = useState<string | null>(null);
+    const [ownClubMemberId, setOwnClubMemberId] = useState<string | null>(null);
 
     // Only the newest load may write state, and never after unmount / meeting switch.
     const loadSeq = useRef(0);
@@ -332,9 +338,11 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
 
     useEffect(() => {
         let cancelled = false;
-        apiFetch<{ data?: { memberId?: string | null } }>(`/club-members/me?clubId=${clubId}`)
+        apiFetch<{ data?: { memberId?: string | null; clubMemberId?: string | null } }>(`/club-members/me?clubId=${clubId}`)
             .then((res) => {
-                if (!cancelled) setOwnMemberId(res.data?.memberId ?? null);
+                if (cancelled) return;
+                setOwnMemberId(res.data?.memberId ?? null);
+                setOwnClubMemberId(res.data?.clubMemberId ?? null);
             })
             .catch(() => undefined);
         return () => {
@@ -461,7 +469,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
         try {
             await apiFetch(`/meetings/${meetingId}?clubId=${clubId}`, {
                 method: 'PATCH',
-                body: { agenda, minutes, status, ...(status === 'abgesagt' && meeting?.status !== 'abgesagt' && !notifyStatus ? { notify: false } : {}) },
+                body: { agenda, ...(meeting?.type === 'mitgliederversammlung' ? {} : { minutes }), status, ...(status === 'abgesagt' && meeting?.status !== 'abgesagt' && !notifyStatus ? { notify: false } : {}) },
             });
             setSaved(true);
             setEditing(false);
@@ -651,6 +659,9 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
 
     if (!meeting) return detailLoadFailed ? <LoadError onRetry={() => void load()} /> : <LoadingText />;
 
+    // Wave 11: the minutes of a general assembly have their own versioned workflow (see AssemblyMeetingSections).
+    const isAssembly = meeting.type === 'mitgliederversammlung';
+
     const corVoteFields = [
         ['cor-for', 'treffen.resolutions.votes-for', corFor, setCorFor],
         ['cor-against', 'treffen.resolutions.votes-against', corAgainst, setCorAgainst],
@@ -707,6 +718,19 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                 <StatusBadge status={meeting.status} t={t} />
             </div>
 
+            {isAssembly && (
+                <AssemblyMeetingSections
+                    clubId={clubId}
+                    meeting={meeting}
+                    canManage={canManageAssembly}
+                    canWriteMeetings={canWrite}
+                    canSensitive={canReadSensitive}
+                    ownClubMemberId={ownClubMemberId}
+                    onChanged={() => void load()}
+                    onOpenRules={onOpenRules}
+                />
+            )}
+
             <SectionCard title={t('treffen.agenda')}>
                 {canWrite && editing ? (
                     <div className="space-y-3">
@@ -716,12 +740,14 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                             </label>
                             <textarea id="mt-agenda" value={agenda} onChange={(e) => setAgenda(e.target.value)} rows={4} className={inputClass} />
                         </div>
-                        <div>
-                            <label htmlFor="mt-minutes" className={labelClass}>
-                                {t('treffen.minutes')}
-                            </label>
-                            <textarea id="mt-minutes" value={minutes} onChange={(e) => setMinutes(e.target.value)} rows={4} className={inputClass} />
-                        </div>
+                        {!isAssembly && (
+                            <div>
+                                <label htmlFor="mt-minutes" className={labelClass}>
+                                    {t('treffen.minutes')}
+                                </label>
+                                <textarea id="mt-minutes" value={minutes} onChange={(e) => setMinutes(e.target.value)} rows={4} className={inputClass} />
+                            </div>
+                        )}
                         <div>
                             <label htmlFor="mt-status" className={labelClass}>
                                 {t('treffen.status.edit')}
@@ -767,12 +793,14 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                         <p className="whitespace-pre-line text-sm text-foreground">
                             {meeting.agenda || <span className="text-muted-foreground">{t('treffen.agenda.empty')}</span>}
                         </p>
-                        <div>
-                            <p className={labelClass}>{t('treffen.minutes')}</p>
-                            <p className="whitespace-pre-line text-sm text-foreground">
-                                {meeting.minutes || <span className="text-muted-foreground">{t('treffen.minutes.empty')}</span>}
-                            </p>
-                        </div>
+                        {!isAssembly && (
+                            <div>
+                                <p className={labelClass}>{t('treffen.minutes')}</p>
+                                <p className="whitespace-pre-line text-sm text-foreground">
+                                    {meeting.minutes || <span className="text-muted-foreground">{t('treffen.minutes.empty')}</span>}
+                                </p>
+                            </div>
+                        )}
                         {saved && <p className="text-xs text-success">{t('treffen.agenda-minutes.saved')}</p>}
                         {canWrite && (
                             <button type="button" onClick={() => setEditing(true)} className={`${secondaryBtn} !px-3 !py-1.5`}>
@@ -1309,12 +1337,12 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
     );
 }
 
-export default function TreffenPanel({ clubId, canWrite }: { clubId: string; canWrite: boolean }) {
+export default function TreffenPanel({ clubId, canWrite, canManageAssembly = false, canReadSensitive = false, onOpenRules }: { clubId: string; canWrite: boolean; canManageAssembly?: boolean; canReadSensitive?: boolean; onOpenRules?: () => void }) {
     const { t } = useLanguage();
     const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null);
 
     return selectedMeetingId ? (
-        <MeetingDetail clubId={clubId} meetingId={selectedMeetingId} t={t} canWrite={canWrite} onBack={() => setSelectedMeetingId(null)} />
+        <MeetingDetail clubId={clubId} meetingId={selectedMeetingId} t={t} canWrite={canWrite} canManageAssembly={canManageAssembly} canReadSensitive={canReadSensitive} onOpenRules={onOpenRules} onBack={() => setSelectedMeetingId(null)} />
     ) : (
         <MeetingList clubId={clubId} t={t} canWrite={canWrite} onSelect={setSelectedMeetingId} />
     );

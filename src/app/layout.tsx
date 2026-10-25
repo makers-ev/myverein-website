@@ -67,6 +67,7 @@ export default async function RootLayout({
     { name: "nav.verein", href: "/verein" },
     { name: "nav.mitteilungen", href: "/mitteilungen" },
     { name: "nav.kalender", href: "/kalender" },
+    { name: "nav.abstimmungen", href: "/abstimmungen" },
     { name: "nav.standorte", href: "/standorte" },
     { name: "nav.verfuegbarkeit", href: "/verfuegbarkeit" },
   ];

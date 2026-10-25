@@ -71,9 +71,19 @@ export function Field({ label, children }: { label: string; children: ReactNode 
     );
 }
 
-export function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (value: boolean) => void; label: string }) {
+export function Toggle({ checked, onChange, label, disabled = false, describedBy }: { checked: boolean; onChange: (value: boolean) => void; label: string; disabled?: boolean; describedBy?: string }) {
     return (
-        <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)} className="group flex items-center gap-3 rounded-md text-sm text-foreground focus-visible:outline-none">
+        <button
+            type="button"
+            role="switch"
+            aria-checked={checked}
+            aria-disabled={disabled || undefined}
+            aria-describedby={describedBy}
+            onClick={() => {
+                if (!disabled) onChange(!checked);
+            }}
+            className={`group flex items-center gap-3 rounded-md text-sm text-foreground focus-visible:outline-none ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
+        >
             <span className={`relative h-6 w-11 shrink-0 rounded-full border transition-colors group-focus-visible:ring-2 group-focus-visible:ring-primary group-focus-visible:ring-offset-2 group-focus-visible:ring-offset-background ${checked ? 'border-primary bg-primary' : 'border-muted-foreground/60 bg-muted dark:border-muted-foreground'}`}>
                 <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-background shadow transition-all ${checked ? 'left-[22px]' : 'left-0.5'}`} />
             </span>

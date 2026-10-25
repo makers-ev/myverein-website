@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import AboutTranslation from './AboutTranslation';
+import AssemblyTranslation from './AssemblyTranslation';
 import ChangelogTranslation from './ChangelogTranslation';
 import CommunicationTranslation from './CommunicationTranslation';
 import FeaturesTranslation from './FeaturesTranslation';
@@ -24,7 +25,7 @@ import VerfuegbarkeitTranslation from './VerfuegbarkeitTranslation';
 // Modules that are DE/EN-only by design (documented in each file's header; other languages fall back to English
 // per key via t()). Their keys are exempt from the "every language has every key" check.
 const DE_EN_ONLY_KEYS = new Set(
-  [AboutTranslation, ChangelogTranslation, CommunicationTranslation, CustomFieldsTranslation, FeaturesTranslation, FormBuilderTranslation, FormsTranslation, KalenderTranslation, MarketingHeroTranslation, MarketingStoryTranslation, MarketingTranslation, MarketingTrustTranslation, PrivacyTranslation, ProfileModulesTranslation, RoadmapTranslation, StandorteTranslation, TreffenTranslation, VereinTranslation, VerfuegbarkeitTranslation].flatMap(
+  [AboutTranslation, AssemblyTranslation, ChangelogTranslation, CommunicationTranslation, CustomFieldsTranslation, FeaturesTranslation, FormBuilderTranslation, FormsTranslation, KalenderTranslation, MarketingHeroTranslation, MarketingStoryTranslation, MarketingTranslation, MarketingTrustTranslation, PrivacyTranslation, ProfileModulesTranslation, RoadmapTranslation, StandorteTranslation, TreffenTranslation, VereinTranslation, VerfuegbarkeitTranslation].flatMap(
     (m) => Object.keys(m.en ?? {}),
   ),
 );
