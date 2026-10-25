@@ -58,6 +58,13 @@ describe('apiFetch date handling', () => {
 });
 
 describe('cache policy of personal-data routes', () => {
+    it('never uses the HTTP cache for event attendance, registrations, helper plans, rides and time tracking', () => {
+        for (const path of ['/events/e1/attendance?clubId=c', '/events/e1/registrations.csv?clubId=c', '/events/e1/registration?clubId=c', '/events/e1/rsvp?clubId=c', '/events/e1/helpers?clubId=c', '/events/e1/rides?clubId=c', '/events/e1/public-link?clubId=c', '/attendance/report?clubId=c', '/time-entries?clubId=c', '/rate-cards?clubId=c', '/time-report?clubId=c', '/public/events/tok']) {
+            expect(cachePolicyFor(path), path).toBe('no-store');
+        }
+        expect(cachePolicyFor('/events/e1?clubId=c')).toBeUndefined();
+    });
+
     it('never uses the HTTP cache for absences, guardian routes, consents and the access log', () => {
         for (const path of ['/absences?clubId=c', '/absences/club?clubId=c', '/my-wards', '/guardian/wards/w/events?clubId=c', '/consent-purposes?clubId=c', '/consents/overview?clubId=c', '/club-members/abc/consents?clubId=c', '/audit-log?clubId=c']) {
             expect(cachePolicyFor(path)).toBe('no-store');

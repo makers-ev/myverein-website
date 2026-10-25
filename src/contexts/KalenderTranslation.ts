@@ -12,6 +12,8 @@ const KalenderTranslation: Translation = {
         'kalender.page.title': 'Kalender',
         'kalender.tab.termine': 'Termine',
         'kalender.tab.treffen': 'Treffen',
+        'kalender.tab.anwesenheit': 'Anwesenheit',
+        'kalender.tab.zeiterfassung': 'Zeiterfassung',
 
         'kalender.calendars.title': 'Kalenderverwaltung',
         'kalender.calendars.empty': 'Die Kalender konnten nicht geladen werden. Bitte lade die Seite neu.',
@@ -211,6 +213,8 @@ const KalenderTranslation: Translation = {
         'kalender.page.title': 'Calendar',
         'kalender.tab.termine': 'Events',
         'kalender.tab.treffen': 'Meetings',
+        'kalender.tab.anwesenheit': 'Attendance',
+        'kalender.tab.zeiterfassung': 'Time tracking',
 
         'kalender.calendars.title': 'Calendar management',
         'kalender.calendars.empty': 'The calendars could not be loaded. Please reload the page.',

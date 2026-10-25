@@ -26,6 +26,10 @@ import {
     secondaryBtn,
 } from '@/components/kalender/calendarTypes';
 import LoadingText from '@/components/LoadingText';
+import { type EventMe, canSeeAttendanceGroup, canTrackTime, canUseTimeTracking } from '@/lib/eventAccess';
+import TimeTracking from '@/components/kalender/TimeTracking';
+import { GroupAttendance, MemberAttendance } from '@/components/kalender/AttendanceReport';
+import { SectionCard } from '@/components/standorte/ui';
 import LoadError from '@/components/LoadError';
 
 interface MyClub {
@@ -35,7 +39,7 @@ interface MyClub {
     orgRole: string;
 }
 
-type Tab = 'termine' | 'treffen';
+type Tab = 'termine' | 'treffen' | 'anwesenheit' | 'zeiterfassung';
 type View = 'month' | 'list';
 type EventModal =
     | { kind: 'detail'; event: CalendarEvent }
@@ -53,6 +57,7 @@ export default function KalenderPageContent() {
     const [calendars, setCalendars] = useState<Calendar[] | null>(null);
     const [events, setEvents] = useState<CalendarEvent[] | null>(null);
     const [permissions, setPermissions] = useState<string[]>([]);
+    const [me, setMe] = useState<EventMe | null>(null);
     const [tab, setTab] = useState<Tab>('termine');
     const [view, setView] = useState<View>('month');
     const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
@@ -63,6 +68,7 @@ export default function KalenderPageContent() {
     const [exporting, setExporting] = useState(false);
 
     const activeClub = clubs?.[0] ?? null;
+    const pageTabs = (['termine', 'treffen', 'anwesenheit', 'zeiterfassung'] as const).filter((v) => v !== 'zeiterfassung' || canUseTimeTracking(me));
     const canWrite = permissions.includes('calendars:write');
 
     function loadClubs() {
@@ -93,9 +99,15 @@ export default function KalenderPageContent() {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         void refreshData(activeClub.clubId);
         // Missing permissions only hide write UI; the backend enforces them anyway.
-        apiFetch<{ data: { permissions?: string[] } }>(`/club-members/me?clubId=${activeClub.clubId}`)
-            .then(({ data }) => setPermissions(data.permissions ?? []))
-            .catch(() => setPermissions([]));
+        apiFetch<{ data: { clubMemberId?: string | null; permissions?: string[]; roles?: EventMe['roles'] } }>(`/club-members/me?clubId=${activeClub.clubId}`)
+            .then(({ data }) => {
+                setPermissions(data.permissions ?? []);
+                setMe({ clubMemberId: data.clubMemberId ?? null, permissions: data.permissions ?? [], roles: data.roles ?? [] });
+            })
+            .catch(() => {
+                setPermissions([]);
+                setMe(null);
+            });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeClub?.clubId]);
 
@@ -187,13 +199,25 @@ export default function KalenderPageContent() {
                 </div>
             ) : (
                 <>
-                    <div role="tablist" className="mt-6 flex gap-2 border-b border-border">
-                        {(['termine', 'treffen'] as const).map((value) => (
+                    <div role="tablist" aria-label={t('kalender.page.title')} className="mt-6 flex gap-2 overflow-x-auto border-b border-border">
+                        {pageTabs.map((value, index) => (
                             <button
                                 key={value}
+                                type="button"
                                 role="tab"
+                                id={`kal-tab-${value}`}
                                 aria-selected={tab === value}
+                                aria-controls="kal-panel"
+                                tabIndex={tab === value ? 0 : -1}
                                 onClick={() => setTab(value)}
+                                onKeyDown={(e) => {
+                                    const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+                                    const target = e.key === 'Home' ? 0 : e.key === 'End' ? pageTabs.length - 1 : step ? (index + step + pageTabs.length) % pageTabs.length : -1;
+                                    if (target < 0) return;
+                                    e.preventDefault();
+                                    setTab(pageTabs[target]!);
+                                    document.getElementById(`kal-tab-${pageTabs[target]}`)?.focus();
+                                }}
                                 className={`border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
                                     tab === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
                                 }`}
@@ -203,7 +227,7 @@ export default function KalenderPageContent() {
                         ))}
                     </div>
 
-                    <div className="mt-4 space-y-4">
+                    <div role="tabpanel" id="kal-panel" aria-labelledby={`kal-tab-${tab}`} className="mt-4 space-y-4">
                         {tab === 'termine' &&
                             (calendars && events ? (
                                 <>
@@ -362,6 +386,23 @@ export default function KalenderPageContent() {
                             ) : (
                                 <LoadingText />
                             ))}
+                        {tab === 'anwesenheit' && (
+                            <div className="space-y-4">
+                                {me?.clubMemberId && (
+                                    <SectionCard title={t('attReport.own.title')}>
+                                        <MemberAttendance clubId={activeClub.clubId} memberId={me.clubMemberId} />
+                                    </SectionCard>
+                                )}
+                                {canSeeAttendanceGroup(me) && (
+                                    <SectionCard title={t('attReport.group.title')}>
+                                        <GroupAttendance clubId={activeClub.clubId} departments={departments} />
+                                    </SectionCard>
+                                )}
+                            </div>
+                        )}
+                        {tab === 'zeiterfassung' && canUseTimeTracking(me) && (
+                            <TimeTracking clubId={activeClub.clubId} canTrack={canTrackTime(me)} canConfirm={permissions.includes('time:write')} canRates={permissions.includes('time:read_rates')} ownClubMemberId={me?.clubMemberId ?? null} events={events ?? []} />
+                        )}
                         {tab === 'treffen' && <TreffenPanel clubId={activeClub.clubId} canWrite={permissions.includes('meetings:write')} canManageAssembly={permissions.includes('assembly:manage')} canReadSensitive={permissions.includes('members:read_sensitive')} />}
                     </div>
 
@@ -373,6 +414,7 @@ export default function KalenderPageContent() {
                             color={colorFor(detailEvent.calendarId)}
                             canWrite={canWrite}
                             canSeeAbsences={permissions.includes('absences:read')}
+                            me={me}
                             language={language}
                             t={t}
                             onClose={() => setModal(null)}

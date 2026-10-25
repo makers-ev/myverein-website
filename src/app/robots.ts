@@ -7,7 +7,7 @@ export default function robots(): MetadataRoute.Robots {
             {
                 userAgent: "Googlebot",
                 allow: "/",
-                disallow: "/admin",
+                disallow: ["/admin", "/anmeldung"],
             },
             {
                 userAgent: ["Bingbot", "SemrushBot"],

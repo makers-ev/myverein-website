@@ -24,13 +24,16 @@ export const FIELD_KEY_RE = /^[a-z][a-z0-9_]{1,40}$/;
 /** Keys that match the pattern but are reserved (object-prototype names), as in the backend. */
 const RESERVED_KEYS = new Set(['constructor', 'prototype', 'hasownproperty', 'tostring', 'valueof']);
 
+/** Purposes whose forms are answered without an upload (the exit dialog, event registrations also answered by guests). */
+const NO_UPLOAD_PURPOSES: readonly string[] = ['austritt', 'veranstaltungsanmeldung'];
+
 /** Field types a purpose's form can use: the exit dialog has no upload. */
 export function fieldTypesFor(purpose: string, all: readonly FieldType[]): FieldType[] {
-    return purpose === 'austritt' ? all.filter((t) => t !== 'file' && t !== 'image') : [...all];
+    return NO_UPLOAD_PURPOSES.includes(purpose) ? all.filter((t) => t !== 'file' && t !== 'image') : [...all];
 }
 
-/** The purposes the UI offers in Wave 8 (the data model knows more; they have no UI yet). */
-export const EDITABLE_PURPOSES = ['aufnahme', 'austritt'] as const;
+/** The purposes the UI offers (Wave 8 aufnahme/austritt, Wave 12 veranstaltungsanmeldung; the data model knows more). */
+export const EDITABLE_PURPOSES = ['aufnahme', 'austritt', 'veranstaltungsanmeldung'] as const;
 export type EditablePurpose = (typeof EDITABLE_PURPOSES)[number];
 export const isEditablePurpose = (value: unknown): value is EditablePurpose => typeof value === 'string' && (EDITABLE_PURPOSES as readonly string[]).includes(value);
 
@@ -602,7 +605,7 @@ export function publishChecks(
         if (f.sensitive && f.mapsTo !== undefined) problems.push({ code: 'sensitive_mapping_not_allowed', fieldKey: f.key });
         if (purpose !== 'aufnahme' && (f.mapsTo !== undefined || f.customField !== undefined)) problems.push({ code: 'mapping_not_allowed', fieldKey: f.key });
         // The cancellation dialog has no upload: a file or photo field there could never be answered.
-        if (purpose === 'austritt' && (f.type === 'file' || f.type === 'image')) problems.push({ code: 'file_not_supported', fieldKey: f.key });
+        if (NO_UPLOAD_PURPOSES.includes(purpose) && (f.type === 'file' || f.type === 'image')) problems.push({ code: 'file_not_supported', fieldKey: f.key });
         // Driving licence, qualification and Kinderschutz modules are never mandatory (server code `module_never_mandatory`).
         if (purpose === 'aufnahme' && f.required === true && f.customField !== undefined && isNeverMandatoryModuleKey(f.customField)) problems.push({ code: 'module_never_mandatory', fieldKey: f.key });
         // Custom field links, when the definitions are known (the server checks the same on publishing).

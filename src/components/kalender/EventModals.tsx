@@ -9,6 +9,16 @@ import { apiFetch } from '@/lib/api-client';
 
 import EventAbsenceOverlay from './EventAbsenceOverlay';
 import SeriesScopeModal from './SeriesScopeModal';
+import AttendancePanel from './AttendancePanel';
+import HelperPlanPanel from './HelperPlanPanel';
+import ParticipantsPanel from './ParticipantsPanel';
+import RidesPanel from './RidesPanel';
+import RegistrationPanel from './RegistrationPanel';
+import RegistrationSettings from './RegistrationSettings';
+import { useRegistration } from './useRegistration';
+import { type EventMe, type EventTab, visibleEventTabs } from '@/lib/eventAccess';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { centsToEuroInput, parseEuroInput } from '@/lib/eventRegistration';
 
 import {
     type Calendar,
@@ -186,6 +196,43 @@ export function CancelEventModal({ event, clubId, calendar, t, onClose, onCancel
     );
 }
 
+/** Tab bar of the event dialog (details, attendance, ...); the panels are mounted only while their tab is open. */
+function EventTabBar({ tabs, active, onChange }: { tabs: EventTab[]; active: EventTab; onChange: (tab: EventTab) => void }) {
+    const { t } = useLanguage();
+    // Roving tabindex: only the active tab is in the tab order; arrow keys, Home and End move between tabs.
+    function onKeyDown(e: React.KeyboardEvent, index: number) {
+        let next = index;
+        if (e.key === 'ArrowRight') next = (index + 1) % tabs.length;
+        else if (e.key === 'ArrowLeft') next = (index - 1 + tabs.length) % tabs.length;
+        else if (e.key === 'Home') next = 0;
+        else if (e.key === 'End') next = tabs.length - 1;
+        else return;
+        e.preventDefault();
+        onChange(tabs[next]!);
+        document.getElementById(`event-tab-${tabs[next]}`)?.focus();
+    }
+    return (
+        <div role="tablist" aria-label={t('events.tabs.label')} className="-mt-1 mb-4 flex gap-1 overflow-x-auto border-b border-border">
+            {tabs.map((value, index) => (
+                <button
+                    key={value}
+                    type="button"
+                    role="tab"
+                    id={`event-tab-${value}`}
+                    aria-selected={active === value}
+                    aria-controls={`event-panel-${value}`}
+                    tabIndex={active === value ? 0 : -1}
+                    onClick={() => onChange(value)}
+                    onKeyDown={(e) => onKeyDown(e, index)}
+                    className={`shrink-0 border-b-2 px-3 py-2 text-sm font-medium transition-colors ${active === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                >
+                    {t(`events.tab.${value}`)}
+                </button>
+            ))}
+        </div>
+    );
+}
+
 interface DetailProps {
     event: CalendarEvent;
     clubId: string;
@@ -194,6 +241,8 @@ interface DetailProps {
     canWrite: boolean;
     /** `absences:read`: shows who is absent on the day of the event (names and period only). */
     canSeeAbsences?: boolean;
+    /** Own permissions and roles (`GET /club-members/me`); gates the attendance and participant tabs. */
+    me?: EventMe | null;
     language: string;
     t: TFn;
     onClose: () => void;
@@ -203,13 +252,18 @@ interface DetailProps {
     onDeleted: () => void;
 }
 
-export function EventDetailModal({ event, clubId, calendar, color, canWrite, canSeeAbsences = false, language, t, onClose, onRsvpChange, onEdit, onDeleted }: DetailProps) {
+export function EventDetailModal({ event, clubId, calendar, color, canWrite, canSeeAbsences = false, me = null, language, t, onClose, onRsvpChange, onEdit, onDeleted }: DetailProps) {
     const [error, setError] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
     const [cancelling, setCancelling] = useState(false);
     const [deleteScope, setDeleteScope] = useState(false);
     const cancelled = Boolean(event.cancelled);
     const rsvp = event.myRsvp ?? undefined;
+    const [tab, setTab] = useState<EventTab>('details');
+    const { info: registration, reload: reloadRegistration } = useRegistration(clubId, event.id);
+    const regInfo = registration && registration !== 'error' ? registration : null;
+    const tabs = visibleEventTabs(me, calendar, { registrationEnabled: Boolean(regInfo?.enabled), canManageRegistration: Boolean(regInfo?.canManage) });
+    const activeTab = tabs.includes(tab) ? tab : 'details';
 
     async function run(action: () => Promise<void>) {
         setBusy(true);
@@ -257,11 +311,25 @@ export function EventDetailModal({ event, clubId, calendar, color, canWrite, can
             open
             onClose={onClose}
             title={event.title}
+            size="lg"
             footer={
                 <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                         {cancelled ? (
                             <span className="rounded-full bg-destructive/10 px-2.5 py-1 text-xs font-semibold text-destructive">{t('kalender.events.cancelled')}</span>
+                        ) : registration === null ? (
+                            <span className="text-xs text-muted-foreground" role="status">{t('common.loading')}</span>
+                        ) : regInfo?.enabled ? (
+                            <>
+                                {rsvp && (
+                                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${rsvp === 'angemeldet' ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning'}`}>
+                                        {t(rsvp === 'angemeldet' ? 'kalender.events.rsvp.confirmed' : 'kalender.events.rsvp.waitlist')}
+                                    </span>
+                                )}
+                                <button type="button" onClick={() => setTab('registration')} className={rsvp ? secondaryBtn : primaryBtn}>
+                                    {t(rsvp ? 'register.manage' : 'register.cta')}
+                                </button>
+                            </>
                         ) : rsvp ? (
                             <>
                                 <span
@@ -301,6 +369,28 @@ export function EventDetailModal({ event, clubId, calendar, color, canWrite, can
                 </div>
             }
         >
+            {tabs.length > 1 && <EventTabBar tabs={tabs} active={activeTab} onChange={setTab} />}
+            <div role={tabs.length > 1 ? 'tabpanel' : undefined} id={`event-panel-${activeTab}`} aria-labelledby={tabs.length > 1 ? `event-tab-${activeTab}` : undefined}>
+            {activeTab === 'attendance' && <AttendancePanel clubId={clubId} event={event} />}
+            {activeTab === 'helpers' && <HelperPlanPanel clubId={clubId} event={event} ownClubMemberId={me?.clubMemberId ?? null} />}
+            {activeTab === 'rides' && <RidesPanel clubId={clubId} event={event} ownClubMemberId={me?.clubMemberId ?? null} />}
+            {activeTab === 'participants' && <ParticipantsPanel clubId={clubId} event={event} canManage={canWrite} />}
+            {activeTab === 'registration' && regInfo && (
+                <div className="space-y-6">
+                    {regInfo.canManage && <RegistrationSettings clubId={clubId} event={event} info={regInfo} onSaved={reloadRegistration} />}
+                    {regInfo.enabled && (
+                        <section aria-labelledby="my-registration">
+                            {regInfo.canManage && (
+                                <h3 id="my-registration" className="mb-2 text-sm font-semibold text-foreground">
+                                    {t('register.mine')}
+                                </h3>
+                            )}
+                            <RegistrationPanel clubId={clubId} event={event} info={regInfo} canRegisterOthers={Boolean(me?.permissions.includes('members:write'))} onChanged={onRsvpChange} />
+                        </section>
+                    )}
+                </div>
+            )}
+            {activeTab === 'details' && (
             <div className="space-y-3 text-sm">
                 {cancelled && (
                     <div role="status" className="flex items-start gap-2 rounded-lg bg-destructive/10 p-3 text-destructive">
@@ -361,6 +451,8 @@ export function EventDetailModal({ event, clubId, calendar, color, canWrite, can
                         {error}
                     </p>
                 )}
+            </div>
+            )}
             </div>
         </Modal>
         {deleteScope && event.seriesId && (
@@ -425,6 +517,13 @@ export function EventFormModal({ clubId, calendars, colorFor, event, scope, init
             : toLocalInput(new Date(defaultStart.getTime() + 2 * 3600_000)),
     );
     const [capacity, setCapacity] = useState(event?.capacity != null ? String(event.capacity) : '');
+    // Wave 12: cost hint (display only) and attendance tracking; single events only (series routes do not take them).
+    const [costAmount, setCostAmount] = useState(centsToEuroInput(event?.costCents));
+    const [costNote, setCostNote] = useState(event?.costNote ?? '');
+    const [tracking, setTracking] = useState(Boolean(event?.attendanceTracking));
+    const [locationId, setLocationId] = useState(event?.locationId ?? '');
+    const [locations, setLocations] = useState<Array<{ id: string; name: string; bookable?: boolean }>>([]);
+    const [locationBusy, setLocationBusy] = useState(false);
     // Wave 9 W5: members affected by a change are told by default; the switch only exists when editing.
     const [notify, setNotify] = useState(true);
     const [reason, setReason] = useState('');
@@ -453,6 +552,16 @@ export function EventFormModal({ clubId, calendars, colorFor, event, scope, init
         };
     }, [bulk, event?.seriesId, clubId]);
 
+    useEffect(() => {
+        let alive = true;
+        apiFetch<{ data: Array<{ id: string; name: string; bookable?: boolean }> }>(`/locations?clubId=${clubId}`)
+            .then((res) => alive && setLocations(res.data))
+            .catch(() => alive && setLocations([]));
+        return () => {
+            alive = false;
+        };
+    }, [clubId]);
+
     const startDay = startsAt.slice(0, 10);
     const endDay = (endsAt || startsAt).slice(0, 10);
     const startTime = startsAt.slice(11, 16);
@@ -469,7 +578,10 @@ export function EventFormModal({ clubId, calendars, colorFor, event, scope, init
     const showRule = (!event && repeat) || (bulk && ruleLoad === 'idle' && series !== null);
     const ruleStart = bulk ? (series?.startDate ?? startDay) : startDay;
     const problem = showRule ? ruleProblem(rule, ruleStart) : null;
-    const invalid = !calendarId || !title.trim() || !startsAt || endBeforeStart || capacityInvalid || problem !== null || (bulk && ruleLoad === 'loading');
+    const costCents = parseEuroInput(costAmount);
+    const costInvalid = costCents === undefined;
+    const showSingleOnly = !seriesEdit && !(repeat && !event);
+    const invalid = costInvalid || !calendarId || !title.trim() || !startsAt || endBeforeStart || capacityInvalid || problem !== null || (bulk && ruleLoad === 'loading');
 
     const template: SeriesTemplate = {
         calendarId,
@@ -484,6 +596,28 @@ export function EventFormModal({ clubId, calendars, colorFor, event, scope, init
         endTime,
     };
     const previewBody = !event && repeat && !invalid ? createSeriesBody(template, rule) : null;
+
+    const chosenLocation = locations.find((l) => l.id === locationId);
+    useEffect(() => {
+        if (!chosenLocation?.bookable || !startsAt || endBeforeStart) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setLocationBusy(false);
+            return;
+        }
+        let alive = true;
+        const timer = setTimeout(() => {
+            const qs = new URLSearchParams({ clubId, startsAt: new Date(startIso).toISOString(), endsAt: new Date(endIso ?? new Date(new Date(startIso).getTime() + 3600_000).toISOString()).toISOString() });
+            if (event) qs.set('excludeEventId', event.id);
+            apiFetch<{ data: { free: boolean } }>(`/locations/${chosenLocation.id}/conflicts?${qs.toString()}`)
+                .then((res) => alive && setLocationBusy(!res.data.free))
+                .catch(() => alive && setLocationBusy(false));
+        }, 400);
+        return () => {
+            alive = false;
+            clearTimeout(timer);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [chosenLocation?.id, chosenLocation?.bookable, startIso, endIso, endBeforeStart]);
 
     function toggleAllDay(value: boolean) {
         setAllDay(value);
@@ -531,7 +665,18 @@ export function EventFormModal({ clubId, calendars, colorFor, event, scope, init
                 const a = res.data.affected;
                 onSaved(t('kalender.series.saved', { updated: a.updated, created: a.created, removed: a.removed, cancelled: a.cancelled }));
             } else {
-                const body = { calendarId, ...common, allDay, startsAt: startIso, endsAt: endIso ?? empty, ...(event ? { notify } : {}) };
+                const body = {
+                    calendarId,
+                    ...common,
+                    allDay,
+                    startsAt: startIso,
+                    endsAt: endIso ?? empty,
+                    costNote: costNote.trim() || empty,
+                    costCents: costCents ?? empty,
+                    attendanceTracking: tracking,
+                    locationId: locationId || empty,
+                    ...(event ? { notify } : {}),
+                };
                 await apiFetch(event ? `/events/${event.id}?clubId=${clubId}` : `/events?clubId=${clubId}`, { method: event ? 'PATCH' : 'POST', body });
                 onSaved();
             }
@@ -714,6 +859,52 @@ export function EventFormModal({ clubId, calendars, colorFor, event, scope, init
                     </label>
                     <textarea id="ev-description" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} className={inputClass} />
                 </div>
+                {showSingleOnly && locations.length > 0 && (
+                    <div>
+                        <label htmlFor="ev-location" className={labelClass}>
+                            {t('kalender.events.location')}
+                        </label>
+                        <select id="ev-location" value={locationId} onChange={(e) => setLocationId(e.target.value)} className={inputClass}>
+                            <option value="">{t('kalender.events.location.none')}</option>
+                            {locations.map((l) => (
+                                <option key={l.id} value={l.id}>
+                                    {l.name}
+                                </option>
+                            ))}
+                        </select>
+                        {locationBusy && (
+                            <p role="status" className="mt-1 rounded-lg bg-warning/10 px-3 py-2 text-xs text-foreground">
+                                {t('occupancy.eventWarning')}
+                            </p>
+                        )}
+                    </div>
+                )}
+                {showSingleOnly && (
+                    <div className="space-y-3 rounded-lg border border-border p-3">
+                        <p className="text-sm font-semibold text-foreground">{t('kalender.events.cost')}</p>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            <div>
+                                <label htmlFor="ev-cost" className={labelClass}>
+                                    {t('kalender.events.cost.amount')}
+                                </label>
+                                <input id="ev-cost" type="text" inputMode="decimal" value={costAmount} onChange={(e) => setCostAmount(e.target.value)} aria-invalid={costInvalid} aria-describedby={costInvalid ? 'ev-cost-error' : undefined} className={`${inputClass} ${costInvalid ? 'border-destructive' : ''}`} />
+                                {costInvalid && (
+                                    <p id="ev-cost-error" className="mt-1 text-xs text-destructive">
+                                        {t('kalender.events.cost.invalid')}
+                                    </p>
+                                )}
+                            </div>
+                            <div>
+                                <label htmlFor="ev-cost-note" className={labelClass}>
+                                    {t('kalender.events.cost.note')}
+                                </label>
+                                <input id="ev-cost-note" type="text" maxLength={300} value={costNote} onChange={(e) => setCostNote(e.target.value)} placeholder={t('kalender.events.cost.note.placeholder')} className={inputClass} />
+                            </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{t('kalender.events.cost.hint')}</p>
+                        <Toggle checked={tracking} onChange={setTracking} label={t('kalender.events.tracking')} />
+                    </div>
+                )}
                 {event && (
                     <div className="space-y-2 rounded-lg border border-border p-3">
                         <Toggle checked={notify} onChange={setNotify} label={t('kalender.notify.label')} />
