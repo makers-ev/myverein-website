@@ -466,6 +466,8 @@ describe('publish checks and problem mapping', () => {
         const file: FormField = { key: 'beleg', type: 'file', label: 'B' };
         expect(publishChecks([file, { key: 'foto', type: 'image', label: 'F' }], '', 'austritt').map((p) => p.code)).toEqual(['file_not_supported', 'file_not_supported']);
         expect(publishChecks([file], '', 'aufnahme').map((p) => p.code)).not.toContain('file_not_supported');
+        // Event registrations are also answered by guests: no uploads there either.
+        expect(publishChecks([file], '', 'veranstaltungsanmeldung').map((p) => p.code)).toEqual(['file_not_supported']);
         const all = ['text', 'file', 'image', 'info'] as const;
         expect(fieldTypesFor('austritt', all)).toEqual(['text', 'info']);
         expect(fieldTypesFor('aufnahme', all)).toEqual(['text', 'file', 'image', 'info']);

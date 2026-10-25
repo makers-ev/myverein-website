@@ -45,6 +45,10 @@ export interface CalendarEvent {
     seriesId?: string | null;
     originalStartsAt?: string | null;
     isOverride?: boolean;
+    /** Wave 12 B13: display-only cost hint and the attendance switch. */
+    costNote?: string | null;
+    costCents?: number | null;
+    attendanceTracking?: boolean;
 }
 
 export type RsvpStatus = 'angemeldet' | 'warteliste';

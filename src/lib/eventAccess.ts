@@ -64,8 +64,11 @@ export type EventTab = 'details' | 'registration' | 'participants' | 'attendance
 export function visibleEventTabs(
     me: EventMe | null | undefined,
     calendar: { departmentId: string | null } | null | undefined,
+    flags: { registrationEnabled: boolean; canManageRegistration: boolean } = { registrationEnabled: false, canManageRegistration: false },
 ): EventTab[] {
     const tabs: EventTab[] = ['details'];
+    if (flags.registrationEnabled || flags.canManageRegistration) tabs.push('registration');
+    if (canForCalendar(me, 'registrations:read', calendar)) tabs.push('participants');
     if (canForCalendar(me, 'attendance:read', calendar)) tabs.push('attendance');
     return tabs;
 }

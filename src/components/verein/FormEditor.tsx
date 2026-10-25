@@ -451,7 +451,7 @@ export default function FormEditor({
                         {t(nameIssue.code === 'name_missing' ? 'forms.editor.checks.name' : 'forms.editor.checks.nameText')}
                     </p>
                 )}
-                <p className="mt-1 text-xs text-muted-foreground">{purpose === 'aufnahme' ? t('forms.editor.purpose.aufnahme.hint') : t('forms.editor.purpose.austritt.hint')}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{t(`forms.editor.purpose.${purpose}.hint`)}</p>
             </div>
 
             {(flash || error) && (
@@ -594,7 +594,7 @@ export default function FormEditor({
                         <h3 id="form-editor-privacy" className="text-sm font-bold text-foreground">
                             {t('forms.editor.privacy.title')}
                         </h3>
-                        <p className="mt-1 text-xs text-muted-foreground">{purpose === 'aufnahme' ? t('forms.editor.privacy.hintAufnahme') : t('forms.editor.privacy.hintAustritt')}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">{t(purpose === 'aufnahme' ? 'forms.editor.privacy.hintAufnahme' : purpose === 'austritt' ? 'forms.editor.privacy.hintAustritt' : 'forms.editor.privacy.hintEvent')}</p>
                         <textarea
                             aria-labelledby="form-editor-privacy"
                             rows={8}
@@ -788,7 +788,7 @@ export default function FormEditor({
                         </div>
                     }
                 >
-                    <p className="text-sm text-foreground">{purpose === 'aufnahme' ? t('forms.editor.archive.bodyAufnahme') : t('forms.editor.archive.bodyAustritt')}</p>
+                    <p className="text-sm text-foreground">{t(purpose === 'aufnahme' ? 'forms.editor.archive.bodyAufnahme' : purpose === 'austritt' ? 'forms.editor.archive.bodyAustritt' : 'forms.editor.archive.bodyEvent')}</p>
                     {dirty && <p className="mt-2 text-sm text-muted-foreground">{t('forms.editor.archive.unsaved')}</p>}
                 </Modal>
             )}

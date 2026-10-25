@@ -10,8 +10,12 @@ import { apiFetch } from '@/lib/api-client';
 import EventAbsenceOverlay from './EventAbsenceOverlay';
 import SeriesScopeModal from './SeriesScopeModal';
 import AttendancePanel from './AttendancePanel';
+import ParticipantsPanel from './ParticipantsPanel';
+import RegistrationSettings from './RegistrationSettings';
+import { useRegistration } from './useRegistration';
 import { type EventMe, type EventTab, visibleEventTabs } from '@/lib/eventAccess';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { centsToEuroInput, parseEuroInput } from '@/lib/eventRegistration';
 
 import {
     type Calendar,
@@ -238,7 +242,9 @@ export function EventDetailModal({ event, clubId, calendar, color, canWrite, can
     const cancelled = Boolean(event.cancelled);
     const rsvp = event.myRsvp ?? undefined;
     const [tab, setTab] = useState<EventTab>('details');
-    const tabs = visibleEventTabs(me, calendar);
+    const { info: registration, reload: reloadRegistration } = useRegistration(clubId, event.id);
+    const regInfo = registration && registration !== 'error' ? registration : null;
+    const tabs = visibleEventTabs(me, calendar, { registrationEnabled: false, canManageRegistration: Boolean(regInfo?.canManage) });
     const activeTab = tabs.includes(tab) ? tab : 'details';
 
     async function run(action: () => Promise<void>) {
@@ -334,6 +340,8 @@ export function EventDetailModal({ event, clubId, calendar, color, canWrite, can
         >
             {tabs.length > 1 && <EventTabBar tabs={tabs} active={activeTab} onChange={setTab} />}
             {activeTab === 'attendance' && <AttendancePanel clubId={clubId} event={event} />}
+            {activeTab === 'participants' && <ParticipantsPanel clubId={clubId} event={event} canManage={canWrite} />}
+            {activeTab === 'registration' && regInfo?.canManage && <RegistrationSettings clubId={clubId} event={event} info={regInfo} onSaved={reloadRegistration} />}
             {activeTab === 'details' && (
             <div className="space-y-3 text-sm">
                 {cancelled && (
@@ -460,6 +468,10 @@ export function EventFormModal({ clubId, calendars, colorFor, event, scope, init
             : toLocalInput(new Date(defaultStart.getTime() + 2 * 3600_000)),
     );
     const [capacity, setCapacity] = useState(event?.capacity != null ? String(event.capacity) : '');
+    // Wave 12: cost hint (display only) and attendance tracking; single events only (series routes do not take them).
+    const [costAmount, setCostAmount] = useState(centsToEuroInput(event?.costCents));
+    const [costNote, setCostNote] = useState(event?.costNote ?? '');
+    const [tracking, setTracking] = useState(Boolean(event?.attendanceTracking));
     // Wave 9 W5: members affected by a change are told by default; the switch only exists when editing.
     const [notify, setNotify] = useState(true);
     const [reason, setReason] = useState('');
@@ -504,7 +516,10 @@ export function EventFormModal({ clubId, calendars, colorFor, event, scope, init
     const showRule = (!event && repeat) || (bulk && ruleLoad === 'idle' && series !== null);
     const ruleStart = bulk ? (series?.startDate ?? startDay) : startDay;
     const problem = showRule ? ruleProblem(rule, ruleStart) : null;
-    const invalid = !calendarId || !title.trim() || !startsAt || endBeforeStart || capacityInvalid || problem !== null || (bulk && ruleLoad === 'loading');
+    const costCents = parseEuroInput(costAmount);
+    const costInvalid = costCents === undefined;
+    const showSingleOnly = !seriesEdit && !(repeat && !event);
+    const invalid = costInvalid || !calendarId || !title.trim() || !startsAt || endBeforeStart || capacityInvalid || problem !== null || (bulk && ruleLoad === 'loading');
 
     const template: SeriesTemplate = {
         calendarId,
@@ -566,7 +581,17 @@ export function EventFormModal({ clubId, calendars, colorFor, event, scope, init
                 const a = res.data.affected;
                 onSaved(t('kalender.series.saved', { updated: a.updated, created: a.created, removed: a.removed, cancelled: a.cancelled }));
             } else {
-                const body = { calendarId, ...common, allDay, startsAt: startIso, endsAt: endIso ?? empty, ...(event ? { notify } : {}) };
+                const body = {
+                    calendarId,
+                    ...common,
+                    allDay,
+                    startsAt: startIso,
+                    endsAt: endIso ?? empty,
+                    costNote: costNote.trim() || empty,
+                    costCents: costCents ?? empty,
+                    attendanceTracking: tracking,
+                    ...(event ? { notify } : {}),
+                };
                 await apiFetch(event ? `/events/${event.id}?clubId=${clubId}` : `/events?clubId=${clubId}`, { method: event ? 'PATCH' : 'POST', body });
                 onSaved();
             }
@@ -749,6 +774,32 @@ export function EventFormModal({ clubId, calendars, colorFor, event, scope, init
                     </label>
                     <textarea id="ev-description" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} className={inputClass} />
                 </div>
+                {showSingleOnly && (
+                    <div className="space-y-3 rounded-lg border border-border p-3">
+                        <p className="text-sm font-semibold text-foreground">{t('kalender.events.cost')}</p>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            <div>
+                                <label htmlFor="ev-cost" className={labelClass}>
+                                    {t('kalender.events.cost.amount')}
+                                </label>
+                                <input id="ev-cost" type="text" inputMode="decimal" value={costAmount} onChange={(e) => setCostAmount(e.target.value)} aria-invalid={costInvalid} aria-describedby={costInvalid ? 'ev-cost-error' : undefined} className={`${inputClass} ${costInvalid ? 'border-destructive' : ''}`} />
+                                {costInvalid && (
+                                    <p id="ev-cost-error" className="mt-1 text-xs text-destructive">
+                                        {t('kalender.events.cost.invalid')}
+                                    </p>
+                                )}
+                            </div>
+                            <div>
+                                <label htmlFor="ev-cost-note" className={labelClass}>
+                                    {t('kalender.events.cost.note')}
+                                </label>
+                                <input id="ev-cost-note" type="text" maxLength={300} value={costNote} onChange={(e) => setCostNote(e.target.value)} placeholder={t('kalender.events.cost.note.placeholder')} className={inputClass} />
+                            </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{t('kalender.events.cost.hint')}</p>
+                        <Toggle checked={tracking} onChange={setTracking} label={t('kalender.events.tracking')} />
+                    </div>
+                )}
                 {event && (
                     <div className="space-y-2 rounded-lg border border-border p-3">
                         <Toggle checked={notify} onChange={setNotify} label={t('kalender.notify.label')} />
