@@ -26,7 +26,8 @@ import {
     secondaryBtn,
 } from '@/components/kalender/calendarTypes';
 import LoadingText from '@/components/LoadingText';
-import { type EventMe, canSeeAttendanceGroup } from '@/lib/eventAccess';
+import { type EventMe, canSeeAttendanceGroup, canUseTimeTracking } from '@/lib/eventAccess';
+import TimeTracking from '@/components/kalender/TimeTracking';
 import { GroupAttendance, MemberAttendance } from '@/components/kalender/AttendanceReport';
 import { SectionCard } from '@/components/standorte/ui';
 import LoadError from '@/components/LoadError';
@@ -38,7 +39,7 @@ interface MyClub {
     orgRole: string;
 }
 
-type Tab = 'termine' | 'treffen' | 'anwesenheit';
+type Tab = 'termine' | 'treffen' | 'anwesenheit' | 'zeiterfassung';
 type View = 'month' | 'list';
 type EventModal =
     | { kind: 'detail'; event: CalendarEvent }
@@ -198,7 +199,7 @@ export default function KalenderPageContent() {
             ) : (
                 <>
                     <div role="tablist" className="mt-6 flex gap-2 border-b border-border">
-                        {(['termine', 'treffen', 'anwesenheit'] as const).map((value) => (
+                        {(['termine', 'treffen', 'anwesenheit', 'zeiterfassung'] as const).filter((v) => v !== 'zeiterfassung' || canUseTimeTracking(me)).map((value) => (
                             <button
                                 key={value}
                                 role="tab"
@@ -385,6 +386,9 @@ export default function KalenderPageContent() {
                                     </SectionCard>
                                 )}
                             </div>
+                        )}
+                        {tab === 'zeiterfassung' && canUseTimeTracking(me) && (
+                            <TimeTracking clubId={activeClub.clubId} canConfirm={permissions.includes('time:write')} canRates={permissions.includes('time:read_rates')} ownClubMemberId={me?.clubMemberId ?? null} events={events ?? []} />
                         )}
                         {tab === 'treffen' && <TreffenPanel clubId={activeClub.clubId} canWrite={permissions.includes('meetings:write')} canManageAssembly={permissions.includes('assembly:manage')} canReadSensitive={permissions.includes('members:read_sensitive')} />}
                     </div>
