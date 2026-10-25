@@ -53,11 +53,11 @@ describe('event access gating', () => {
 
     it('builds the tab list per caller', () => {
         const off = { registrationEnabled: false, canManageRegistration: false };
-        expect(visibleEventTabs(plain, { departmentId: 'A' }, off)).toEqual(['details', 'helpers']);
-        expect(visibleEventTabs(plain, { departmentId: 'A' }, { ...off, registrationEnabled: true })).toEqual(['details', 'registration', 'helpers']);
-        expect(visibleEventTabs(plain, { departmentId: 'A' }, { ...off, canManageRegistration: true })).toEqual(['details', 'registration', 'helpers']);
-        expect(visibleEventTabs(trainerA, { departmentId: 'A' }, off)).toEqual(['details', 'participants', 'attendance', 'helpers']);
-        expect(visibleEventTabs(trainerA, { departmentId: 'B' }, off)).toEqual(['details', 'helpers']);
-        expect(visibleEventTabs(board, { departmentId: null }, off)).toEqual(['details', 'participants', 'attendance', 'helpers']);
+        expect(visibleEventTabs(plain, { departmentId: 'A' }, off)).toEqual(['details', 'helpers', 'rides']);
+        expect(visibleEventTabs(plain, { departmentId: 'A' }, { ...off, registrationEnabled: true })).toEqual(['details', 'registration', 'helpers', 'rides']);
+        expect(visibleEventTabs(plain, { departmentId: 'A' }, { ...off, canManageRegistration: true })).toEqual(['details', 'registration', 'helpers', 'rides']);
+        expect(visibleEventTabs(trainerA, { departmentId: 'A' }, off)).toEqual(['details', 'participants', 'attendance', 'helpers', 'rides']);
+        expect(visibleEventTabs(trainerA, { departmentId: 'B' }, off)).toEqual(['details', 'helpers', 'rides']);
+        expect(visibleEventTabs(board, { departmentId: null }, off)).toEqual(['details', 'participants', 'attendance', 'helpers', 'rides']);
     });
 });

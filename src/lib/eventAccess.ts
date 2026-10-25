@@ -70,6 +70,6 @@ export function visibleEventTabs(
     if (flags.registrationEnabled || flags.canManageRegistration) tabs.push('registration');
     if (canForCalendar(me, 'registrations:read', calendar)) tabs.push('participants');
     if (canForCalendar(me, 'attendance:read', calendar)) tabs.push('attendance');
-    tabs.push('helpers');
+    tabs.push('helpers', 'rides');
     return tabs;
 }

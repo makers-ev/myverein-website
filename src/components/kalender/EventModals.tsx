@@ -12,6 +12,7 @@ import SeriesScopeModal from './SeriesScopeModal';
 import AttendancePanel from './AttendancePanel';
 import HelperPlanPanel from './HelperPlanPanel';
 import ParticipantsPanel from './ParticipantsPanel';
+import RidesPanel from './RidesPanel';
 import RegistrationPanel from './RegistrationPanel';
 import RegistrationSettings from './RegistrationSettings';
 import { useRegistration } from './useRegistration';
@@ -354,6 +355,7 @@ export function EventDetailModal({ event, clubId, calendar, color, canWrite, can
             {tabs.length > 1 && <EventTabBar tabs={tabs} active={activeTab} onChange={setTab} />}
             {activeTab === 'attendance' && <AttendancePanel clubId={clubId} event={event} />}
             {activeTab === 'helpers' && <HelperPlanPanel clubId={clubId} event={event} />}
+            {activeTab === 'rides' && <RidesPanel clubId={clubId} event={event} ownClubMemberId={me?.clubMemberId ?? null} />}
             {activeTab === 'participants' && <ParticipantsPanel clubId={clubId} event={event} canManage={canWrite} />}
             {activeTab === 'registration' && regInfo && (
                 <div className="space-y-6">
