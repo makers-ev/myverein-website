@@ -64,6 +64,9 @@ export function splitMinutes(minutes: number): { hours: number; minutes: number 
     return { hours: Math.floor(m / 60), minutes: m % 60 };
 }
 
+/** Server limit of a single entry. */
+export const MAX_ENTRY_HOURS = 16;
+
 export type ManualProblem = 'order' | 'future' | 'long';
 
 /** Client-side mirror of the obvious server checks (`invalid_time`, `in_future`, `too_long`); the server decides. */
@@ -72,7 +75,7 @@ export function manualProblem(startedAt: string, endedAt: string, now = Date.now
     const b = new Date(endedAt).getTime();
     if (Number.isNaN(a) || Number.isNaN(b) || b <= a) return 'order';
     if (b > now + 60_000) return 'future';
-    if (b - a > 24 * 3600_000) return 'long';
+    if (b - a > MAX_ENTRY_HOURS * 3600_000) return 'long';
     return null;
 }
 

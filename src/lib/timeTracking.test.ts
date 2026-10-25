@@ -13,7 +13,7 @@ describe('time tracking helpers', () => {
         expect(manualProblem('2026-05-10T08:00:00Z', '2026-05-10T10:00:00Z', now)).toBeNull();
         expect(manualProblem('2026-05-10T10:00:00Z', '2026-05-10T08:00:00Z', now)).toBe('order');
         expect(manualProblem('2026-05-10T10:00:00Z', '2026-05-10T14:00:00Z', now)).toBe('future');
-        expect(manualProblem('2026-05-08T08:00:00Z', '2026-05-09T10:00:00Z', now)).toBe('long');
+        expect(manualProblem('2026-05-09T08:00:00Z', '2026-05-10T01:00:00Z', now)).toBe('long');
     });
 
     it('builds a rate with exactly one target', () => {
