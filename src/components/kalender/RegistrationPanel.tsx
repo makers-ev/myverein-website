@@ -9,11 +9,10 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { ApiError, apiFetch } from '@/lib/api-client';
 import { eventErrorKey } from '@/lib/eventErrors';
 import { type MyRegistration, type RegistrationInfo, type RsvpResult, formatCost, partySizeOptions, rsvpBody } from '@/lib/eventRegistration';
-import { type WardClub } from '@/lib/familie';
 import { type Answers, type FieldErrorCode, fieldErrorsFromError, validateAnswers, visibleAnswers } from '@/lib/formSchema';
 
 import { type CalendarEvent, inputClass, labelClass, primaryBtn, secondaryBtn } from './calendarTypes';
-import MemberPicker from './MemberPicker';
+import ActingFor, { type Actor, SELF, useWards } from './ActingFor';
 
 interface Props {
     clubId: string;
@@ -25,71 +24,21 @@ interface Props {
     onChanged: () => void;
 }
 
-interface Target {
-    /** `null` = the caller. */
-    clubMemberId: string | null;
-    name: string;
-}
-
 /** Registration of the caller, a ward (parents) or any member (board) with form and party size (W7). */
 export default function RegistrationPanel({ clubId, event, info, canRegisterOthers, onChanged }: Props) {
     const { t } = useLanguage();
-    const [target, setTarget] = useState<Target>({ clubMemberId: null, name: '' });
-    const [wards, setWards] = useState<Array<{ id: string; name: string }>>([]);
-
-    useEffect(() => {
-        let alive = true;
-        apiFetch<{ data: WardClub[] }>('/my-wards')
-            .then((res) => {
-                if (!alive) return;
-                setWards(res.data.filter((c) => c.clubId === clubId).flatMap((c) => c.wards.map((w) => ({ id: w.wardId, name: w.name }))));
-            })
-            .catch(() => alive && setWards([]));
-        return () => {
-            alive = false;
-        };
-    }, [clubId]);
-
-    const showTargets = wards.length > 0 || canRegisterOthers;
+    const [target, setTarget] = useState<Actor>(SELF);
+    const wards = useWards(clubId);
 
     return (
         <div className="space-y-4 text-sm">
-            {showTargets && (
-                <div>
-                    <label htmlFor="reg-target" className={labelClass}>
-                        {t('register.for')}
-                    </label>
-                    <select
-                        id="reg-target"
-                        value={target.clubMemberId ?? ''}
-                        onChange={(e) => {
-                            const id = e.target.value;
-                            const ward = wards.find((w) => w.id === id);
-                            setTarget(id ? { clubMemberId: id, name: ward?.name ?? target.name } : { clubMemberId: null, name: '' });
-                        }}
-                        className={inputClass}
-                    >
-                        <option value="">{t('register.for.me')}</option>
-                        {wards.map((w) => (
-                            <option key={w.id} value={w.id}>
-                                {t('register.for.child', { name: w.name })}
-                            </option>
-                        ))}
-                        {canRegisterOthers && target.clubMemberId && !wards.some((w) => w.id === target.clubMemberId) && <option value={target.clubMemberId}>{target.name}</option>}
-                    </select>
-                    {canRegisterOthers && (
-                        <div className="mt-2">
-                            <MemberPicker clubId={clubId} label={t('register.for.member')} onPick={(m) => setTarget({ clubMemberId: m.id, name: m.name })} />
-                        </div>
-                    )}
-                </div>
-            )}
+            <ActingFor clubId={clubId} wards={wards} canPickAny={canRegisterOthers} value={target} onChange={setTarget} label={t('register.for')} />
             <RegistrationForm key={target.clubMemberId ?? 'self'} clubId={clubId} event={event} info={info} target={target} onChanged={onChanged} />
         </div>
     );
 }
 
-function RegistrationForm({ clubId, event, info, target, onChanged }: { clubId: string; event: CalendarEvent; info: RegistrationInfo; target: Target; onChanged: () => void }) {
+function RegistrationForm({ clubId, event, info, target, onChanged }: { clubId: string; event: CalendarEvent; info: RegistrationInfo; target: Actor; onChanged: () => void }) {
     const { t, language } = useLanguage();
     const form = info.form;
     const forQuery = target.clubMemberId ? `&forClubMemberId=${target.clubMemberId}` : '';
