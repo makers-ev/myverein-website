@@ -502,6 +502,9 @@ export function EventFormModal({ clubId, calendars, colorFor, event, scope, init
     const [costAmount, setCostAmount] = useState(centsToEuroInput(event?.costCents));
     const [costNote, setCostNote] = useState(event?.costNote ?? '');
     const [tracking, setTracking] = useState(Boolean(event?.attendanceTracking));
+    const [locationId, setLocationId] = useState(event?.locationId ?? '');
+    const [locations, setLocations] = useState<Array<{ id: string; name: string; bookable?: boolean }>>([]);
+    const [locationBusy, setLocationBusy] = useState(false);
     // Wave 9 W5: members affected by a change are told by default; the switch only exists when editing.
     const [notify, setNotify] = useState(true);
     const [reason, setReason] = useState('');
@@ -529,6 +532,16 @@ export function EventFormModal({ clubId, calendars, colorFor, event, scope, init
             alive = false;
         };
     }, [bulk, event?.seriesId, clubId]);
+
+    useEffect(() => {
+        let alive = true;
+        apiFetch<{ data: Array<{ id: string; name: string; bookable?: boolean }> }>(`/locations?clubId=${clubId}`)
+            .then((res) => alive && setLocations(res.data))
+            .catch(() => alive && setLocations([]));
+        return () => {
+            alive = false;
+        };
+    }, [clubId]);
 
     const startDay = startsAt.slice(0, 10);
     const endDay = (endsAt || startsAt).slice(0, 10);
@@ -564,6 +577,28 @@ export function EventFormModal({ clubId, calendars, colorFor, event, scope, init
         endTime,
     };
     const previewBody = !event && repeat && !invalid ? createSeriesBody(template, rule) : null;
+
+    const chosenLocation = locations.find((l) => l.id === locationId);
+    useEffect(() => {
+        if (!chosenLocation?.bookable || !startsAt || endBeforeStart) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setLocationBusy(false);
+            return;
+        }
+        let alive = true;
+        const timer = setTimeout(() => {
+            const qs = new URLSearchParams({ clubId, startsAt: new Date(startIso).toISOString(), endsAt: new Date(endIso ?? new Date(new Date(startIso).getTime() + 3600_000).toISOString()).toISOString() });
+            if (event) qs.set('excludeEventId', event.id);
+            apiFetch<{ data: { free: boolean } }>(`/locations/${chosenLocation.id}/conflicts?${qs.toString()}`)
+                .then((res) => alive && setLocationBusy(!res.data.free))
+                .catch(() => alive && setLocationBusy(false));
+        }, 400);
+        return () => {
+            alive = false;
+            clearTimeout(timer);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [chosenLocation?.id, chosenLocation?.bookable, startIso, endIso, endBeforeStart]);
 
     function toggleAllDay(value: boolean) {
         setAllDay(value);
@@ -620,6 +655,7 @@ export function EventFormModal({ clubId, calendars, colorFor, event, scope, init
                     costNote: costNote.trim() || empty,
                     costCents: costCents ?? empty,
                     attendanceTracking: tracking,
+                    locationId: locationId || empty,
                     ...(event ? { notify } : {}),
                 };
                 await apiFetch(event ? `/events/${event.id}?clubId=${clubId}` : `/events?clubId=${clubId}`, { method: event ? 'PATCH' : 'POST', body });
@@ -804,6 +840,26 @@ export function EventFormModal({ clubId, calendars, colorFor, event, scope, init
                     </label>
                     <textarea id="ev-description" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} className={inputClass} />
                 </div>
+                {showSingleOnly && locations.length > 0 && (
+                    <div>
+                        <label htmlFor="ev-location" className={labelClass}>
+                            {t('kalender.events.location')}
+                        </label>
+                        <select id="ev-location" value={locationId} onChange={(e) => setLocationId(e.target.value)} className={inputClass}>
+                            <option value="">{t('kalender.events.location.none')}</option>
+                            {locations.map((l) => (
+                                <option key={l.id} value={l.id}>
+                                    {l.name}
+                                </option>
+                            ))}
+                        </select>
+                        {locationBusy && (
+                            <p role="status" className="mt-1 rounded-lg bg-warning/10 px-3 py-2 text-xs text-foreground">
+                                {t('occupancy.eventWarning')}
+                            </p>
+                        )}
+                    </div>
+                )}
                 {showSingleOnly && (
                     <div className="space-y-3 rounded-lg border border-border p-3">
                         <p className="text-sm font-semibold text-foreground">{t('kalender.events.cost')}</p>

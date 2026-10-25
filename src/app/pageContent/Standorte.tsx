@@ -7,6 +7,7 @@ import { isGuestRole } from '@/lib/loans';
 import { useLanguage } from '@/contexts/LanguageContext';
 import StandorteTab, { type Location } from '@/components/standorte/StandorteTab';
 import MaterialTab from '@/components/standorte/MaterialTab';
+import OccupancyTab from '@/components/standorte/OccupancyTab';
 import LoadingText from '@/components/LoadingText';
 import LoadError from '@/components/LoadError';
 
@@ -17,7 +18,7 @@ interface MyClub {
     orgRole: string;
 }
 
-type Tab = 'standorte' | 'material';
+type Tab = 'standorte' | 'material' | 'belegung';
 
 export default function StandortePageContent() {
     const { t } = useLanguage();
@@ -90,7 +91,7 @@ export default function StandortePageContent() {
             ) : (
                 <>
                     <div className="mt-6 flex gap-2 border-b border-border">
-                        {(['standorte', 'material'] as const).map((value) => (
+                        {(['standorte', 'material', 'belegung'] as const).filter((v) => v !== 'belegung' || !isGuest).map((value) => (
                             <button
                                 key={value}
                                 type="button"
@@ -118,6 +119,7 @@ export default function StandortePageContent() {
                                         onLocationsChanged={() => void refreshLocations(activeClub.clubId)}
                                     />
                                 )}
+                                {tab === 'belegung' && !isGuest && <OccupancyTab clubId={activeClub.clubId} locations={locations} canWrite={permissions.includes('locations:write')} />}
                                 {tab === 'material' && (
                                     <MaterialTab clubId={activeClub.clubId} locations={locations} canWrite={permissions.includes('inventory:write')} ownMemberId={ownMemberId} isGuest={isGuest} />
                                 )}

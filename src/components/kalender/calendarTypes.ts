@@ -49,6 +49,7 @@ export interface CalendarEvent {
     costNote?: string | null;
     costCents?: number | null;
     attendanceTracking?: boolean;
+    locationId?: string | null;
 }
 
 export type RsvpStatus = 'angemeldet' | 'warteliste';
