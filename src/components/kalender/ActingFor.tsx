@@ -17,16 +17,27 @@ export interface Actor {
 
 export const SELF: Actor = { clubMemberId: null, name: '' };
 
+type WardList = Array<{ id: string; name: string }>;
+// One request per club for all panels of the dialog (registration, helpers, rides); a failed request is not cached.
+const wardCache = new Map<string, { at: number; promise: Promise<WardList> }>();
+const WARD_TTL_MS = 60_000;
+
+function loadWards(clubId: string): Promise<WardList> {
+    const hit = wardCache.get(clubId);
+    if (hit && Date.now() - hit.at < WARD_TTL_MS) return hit.promise;
+    const promise = apiFetch<{ data: WardClub[] }>('/my-wards').then((res) => res.data.filter((c) => c.clubId === clubId).flatMap((c) => c.wards.map((w) => ({ id: w.wardId, name: w.name }))));
+    wardCache.set(clubId, { at: Date.now(), promise });
+    promise.catch(() => wardCache.delete(clubId));
+    return promise;
+}
+
 /** Wards (children without an own account) of the caller in this club. */
-export function useWards(clubId: string): Array<{ id: string; name: string }> {
-    const [wards, setWards] = useState<Array<{ id: string; name: string }>>([]);
+export function useWards(clubId: string): WardList {
+    const [wards, setWards] = useState<WardList>([]);
     useEffect(() => {
         let alive = true;
-        apiFetch<{ data: WardClub[] }>('/my-wards')
-            .then((res) => {
-                if (!alive) return;
-                setWards(res.data.filter((c) => c.clubId === clubId).flatMap((c) => c.wards.map((w) => ({ id: w.wardId, name: w.name }))));
-            })
+        loadWards(clubId)
+            .then((list) => alive && setWards(list))
             .catch(() => alive && setWards([]));
         return () => {
             alive = false;
