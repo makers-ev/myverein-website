@@ -8,7 +8,7 @@ import LoadingText from '@/components/LoadingText';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api-client';
 import { eventErrorKey } from '@/lib/eventErrors';
-import { type HelperPlan, type Shift, canOfferSwap, planTotals, shiftLight, swapActions } from '@/lib/helperPlan';
+import { type HelperPlan, type Shift, canOfferSwap, isOnShift, planTotals, shiftLight, swapActions } from '@/lib/helperPlan';
 
 import ActingFor, { type Actor, SELF, useWards } from './ActingFor';
 import HelperManage, { ShiftEditor, StationEditor } from './HelperManage';
@@ -28,13 +28,15 @@ function timeRange(startsAt: string, endsAt: string, language: string): string {
 interface Props {
     clubId: string;
     event: CalendarEvent;
+    /** Club member id of the caller (`GET /club-members/me`); the acting person when no ward is chosen. */
+    ownClubMemberId: string | null;
 }
 
 /**
  * Helper plan of an event (W8): stations and shifts with a traffic light, sign-up / withdraw / hand over / swap for yourself,
  * your wards and (organisers) anybody; organisers also edit the plan and get availability hints per shift.
  */
-export default function HelperPlanPanel({ clubId, event }: Props) {
+export default function HelperPlanPanel({ clubId, event, ownClubMemberId }: Props) {
     const { t, language } = useLanguage();
     const [plan, setPlan] = useState<HelperPlan | null>(null);
     const [failed, setFailed] = useState(false);
@@ -92,6 +94,7 @@ export default function HelperPlanPanel({ clubId, event }: Props) {
     const totals = planTotals(plan);
     const locked = plan.cancelled || Boolean(event.cancelled);
     const forSelf = actor.clubMemberId === null;
+    const actingId = actor.clubMemberId ?? ownClubMemberId;
 
     return (
         <div className="space-y-4 text-sm">
@@ -153,7 +156,8 @@ export default function HelperPlanPanel({ clubId, event }: Props) {
                         <ul className="divide-y divide-border">
                             {station.shifts.map((shift) => {
                                 const light = shiftLight(shift);
-                                const swaps = swapActions(shift);
+                                const swaps = swapActions(shift, actingId);
+                                const onShift = isOnShift(shift, actingId);
                                 const past = new Date(shift.endsAt).getTime() < Date.now();
                                 return (
                                     <li key={shift.id} className="space-y-2 px-3 py-3">
@@ -215,12 +219,12 @@ export default function HelperPlanPanel({ clubId, event }: Props) {
 
                                         {!locked && !past && (
                                             <div className="flex flex-wrap gap-2">
-                                                {forSelf && shift.mine ? (
+                                                {onShift ? (
                                                     <>
                                                         <button type="button" disabled={busy !== null} onClick={() => void withdraw(shift)} className={secondaryBtn}>
-                                                            {t('helpers.withdraw')}
+                                                            {forSelf ? t('helpers.withdraw') : t('helpers.withdraw.for', { name: actor.name })}
                                                         </button>
-                                                        {canOfferSwap(shift) && (
+                                                        {canOfferSwap(shift, actingId) && (
                                                             <>
                                                                 <button type="button" disabled={busy !== null} onClick={() => void offer(shift)} className={secondaryBtn}>
                                                                     {t('helpers.offer')}
@@ -232,17 +236,9 @@ export default function HelperPlanPanel({ clubId, event }: Props) {
                                                         )}
                                                     </>
                                                 ) : (
-                                                    <>
-                                                        {shift.signups.some((s) => s.clubMemberId === actor.clubMemberId) ? (
-                                                            <button type="button" disabled={busy !== null} onClick={() => void withdraw(shift)} className={secondaryBtn}>
-                                                                {t('helpers.withdraw.for', { name: actor.name })}
-                                                            </button>
-                                                        ) : (
-                                                            <button type="button" disabled={busy !== null || (shift.full && forSelf) || (forSelf && shift.mine)} onClick={() => void signUp(shift)} className={primaryBtn}>
-                                                                {forSelf ? t(shift.full ? 'helpers.full' : 'helpers.signup') : t('helpers.signup.for', { name: actor.name })}
-                                                            </button>
-                                                        )}
-                                                    </>
+                                                    <button type="button" disabled={busy !== null || shift.full} onClick={() => void signUp(shift)} className={primaryBtn}>
+                                                        {shift.full ? t('helpers.full') : forSelf ? t('helpers.signup') : t('helpers.signup.for', { name: actor.name })}
+                                                    </button>
                                                 )}
                                             </div>
                                         )}

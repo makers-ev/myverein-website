@@ -27,23 +27,29 @@ describe('helper plan', () => {
         expect(shiftBody('2026-05-01T10:00', '2026-05-01T12:00', '3', '').minStaff).toBe(0);
     });
 
-    it('splits swap actions by viewer', () => {
-        const mine = swap({ id: '1', mine: true });
-        const toMe = swap({ id: '2', toMe: true, toClubMemberId: 'me' });
-        const open = swap({ id: '3' });
-        const toOther = swap({ id: '4', toClubMemberId: 'other' });
-        const a = swapActions({ mine: false, swaps: [mine, toMe, open, toOther] });
-        expect(a.respond.map((w) => w.id)).toEqual(['2']);
-        expect(a.takeOver.map((w) => w.id)).toEqual(['3']);
-        expect(a.withdraw.map((w) => w.id)).toEqual(['1']);
-        // somebody already on the shift cannot take a give-away of the same shift
-        expect(swapActions({ mine: true, swaps: [open] }).takeOver).toEqual([]);
+    it('splits swap actions by the person acted for', () => {
+        const sig = (id: string) => ({ signupId: id, clubMemberId: id, displayName: null, mine: false });
+        const own = swap({ id: '1', fromClubMemberId: 'me' });
+        const toKid = swap({ id: '2', fromClubMemberId: 'x', toClubMemberId: 'kid' });
+        const open = swap({ id: '3', fromClubMemberId: 'x' });
+        const toOther = swap({ id: '4', fromClubMemberId: 'x', toClubMemberId: 'other' });
+        const swaps = [own, toKid, open, toOther];
+        const forMe = swapActions({ signups: [sig('me')], swaps }, 'me');
+        expect(forMe.respond).toEqual([]);
+        expect(forMe.takeOver).toEqual([]);
+        expect(forMe.withdraw.map((w) => w.id)).toEqual(['1']);
+        const forKid = swapActions({ signups: [sig('x')], swaps }, 'kid');
+        expect(forKid.respond.map((w) => w.id)).toEqual(['2']);
+        expect(forKid.takeOver.map((w) => w.id)).toEqual(['1', '3']);
+        expect(forKid.withdraw).toEqual([]);
     });
 
-    it('offers a swap only for own sign-ups without an open request', () => {
-        expect(canOfferSwap({ mine: true, swaps: [] })).toBe(true);
-        expect(canOfferSwap({ mine: true, swaps: [swap({ mine: true })] })).toBe(false);
-        expect(canOfferSwap({ mine: false, swaps: [] })).toBe(false);
+    it('offers a swap only for sign-ups of the acting person without an open request', () => {
+        const signups = [{ signupId: 's', clubMemberId: 'kid', displayName: null, mine: false }];
+        expect(canOfferSwap({ signups, swaps: [] }, 'kid')).toBe(true);
+        expect(canOfferSwap({ signups, swaps: [swap({ fromClubMemberId: 'kid' })] }, 'kid')).toBe(false);
+        expect(canOfferSwap({ signups, swaps: [] }, 'me')).toBe(false);
+        expect(canOfferSwap({ signups, swaps: [] }, null)).toBe(false);
     });
 
     it('sorts candidates by availability then name', () => {

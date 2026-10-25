@@ -123,17 +123,26 @@ export interface SwapActions {
     withdraw: Swap[];
 }
 
-export function swapActions(shift: Pick<Shift, 'swaps' | 'mine'>): SwapActions {
+/**
+ * Swap actions for the person acted for (`actingId` = their club member id; the caller or a ward). Derived from the
+ * sign-ups and the swap addressee, not from the caller-relative `mine`/`toMe` flags, so acting for a ward is correct.
+ */
+export function swapActions(shift: Pick<Shift, 'swaps' | 'signups'>, actingId: string | null): SwapActions {
+    const onShift = actingId !== null && shift.signups.some((s) => s.clubMemberId === actingId);
     return {
-        respond: shift.swaps.filter((w) => w.toMe),
-        takeOver: shift.mine ? [] : shift.swaps.filter((w) => !w.mine && w.toClubMemberId === null),
-        withdraw: shift.swaps.filter((w) => w.mine),
+        respond: shift.swaps.filter((w) => actingId !== null && w.toClubMemberId === actingId),
+        takeOver: onShift ? [] : shift.swaps.filter((w) => w.fromClubMemberId !== actingId && w.toClubMemberId === null),
+        withdraw: shift.swaps.filter((w) => actingId !== null && w.fromClubMemberId === actingId),
     };
 }
 
-/** Whether an own sign-up can be offered for swapping (it has no open request yet). */
-export function canOfferSwap(shift: Pick<Shift, 'mine' | 'swaps'>): boolean {
-    return shift.mine && !shift.swaps.some((w) => w.mine);
+export function isOnShift(shift: Pick<Shift, 'signups'>, actingId: string | null): boolean {
+    return actingId !== null && shift.signups.some((s) => s.clubMemberId === actingId);
+}
+
+/** Whether the person's sign-up can be offered for swapping (no open request of theirs yet). */
+export function canOfferSwap(shift: Pick<Shift, 'signups' | 'swaps'>, actingId: string | null): boolean {
+    return isOnShift(shift, actingId) && !shift.swaps.some((w) => w.fromClubMemberId === actingId);
 }
 
 /** Sorts candidates: available first, unknown next, unavailable last; ties by name (the server returns no ranking). */
