@@ -155,11 +155,12 @@ export default function AttendancePanel({ clubId, event }: Props) {
     const needsReason = Boolean(shown?.closed);
     const canEdit = Boolean(shown?.canWrite) && !locked && (!needsReason || reason.trim().length > 0);
 
-    async function addPerson(change: AttendanceChange) {
+    async function addPerson(change: AttendanceChange): Promise<boolean> {
         setError(null);
         setSaveState('saving');
         const ok = await send([change]);
         setSaveState(ok ? 'saved' : 'error');
+        return ok;
     }
 
     async function setSupervisors(ids: string[]) {
@@ -306,7 +307,9 @@ export default function AttendancePanel({ clubId, event }: Props) {
                                 e.preventDefault();
                                 const name = guestName.trim();
                                 if (!name) return;
-                                void addPerson({ guestName: name, status: 'anwesend' }).then(() => setGuestName(''));
+                                void addPerson({ guestName: name, status: 'anwesend' }).then((ok) => {
+                                    if (ok) setGuestName('');
+                                });
                             }}
                         >
                             <div className="min-w-48 flex-1">
