@@ -24,7 +24,12 @@ export interface ClubSettings {
     noticeMode: NoticeMode | null;
     memberNumberPrefix?: string | null;
     allowSelfLoans: boolean;
+    /** Wave 12: German federal state (public holidays of event series); `null` = nationwide holidays only. */
+    state?: string | null;
 }
+
+/** Federal state codes accepted by `PATCH /club-settings`. */
+export const FEDERAL_STATES = ['BW', 'BY', 'BE', 'BB', 'HB', 'HH', 'HE', 'MV', 'NI', 'NW', 'RP', 'SL', 'SN', 'ST', 'SH', 'TH'] as const;
 
 export interface NoticePreview {
     requestedOn: string;

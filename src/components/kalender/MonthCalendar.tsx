@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 
-import { type CalendarEvent, type TFn, dayKey, formatTime } from './calendarTypes';
+import { type CalendarEvent, type TFn, dayKey, eventDayKeys, formatTime, isContinuation } from './calendarTypes';
 
 const MAX_PILLS = 3;
 
@@ -23,10 +23,9 @@ interface MonthCalendarProps {
 export default function MonthCalendar({ month, events, selectedDay, language, t, colorFor, onSelectEvent, onSelectDay, onCellClick }: MonthCalendarProps) {
     const byDay = useMemo(() => {
         const map = new Map<string, CalendarEvent[]>();
-        // ponytail: multi-day events only show on their start day
+        // multi-day events are painted on every day they cover
         for (const ev of events) {
-            const key = dayKey(new Date(ev.startsAt));
-            map.set(key, [...(map.get(key) ?? []), ev]);
+            for (const key of eventDayKeys(ev)) map.set(key, [...(map.get(key) ?? []), ev]);
         }
         return map;
     }, [events]);
@@ -113,7 +112,15 @@ export default function MonthCalendar({ month, events, selectedDay, language, t,
                                         className={`block w-full truncate rounded px-1.5 py-0.5 text-left text-[11px] font-medium text-white hover:opacity-90 ${ev.cancelled ? 'italic line-through decoration-2 opacity-80' : ''}`}
                                         style={{ backgroundColor: colorFor(ev.calendarId) }}
                                     >
-                                        <span className="opacity-80">{formatTime(ev.startsAt, language)}</span> {ev.title}
+                                        {isContinuation(ev, key) ? (
+                                            <span className="opacity-80" aria-hidden>
+                                                ›{' '}
+                                            </span>
+                                        ) : (
+                                            !ev.allDay && <span className="opacity-80">{formatTime(ev.startsAt, language)} </span>
+                                        )}
+                                        {ev.title}
+                                        {isContinuation(ev, key) && <span className="sr-only"> ({t('kalender.events.ongoing')})</span>}
                                         {ev.cancelled && <span className="sr-only"> ({t('kalender.events.cancelled')})</span>}
                                     </button>
                                 ))}
