@@ -11,6 +11,7 @@ import EventAbsenceOverlay from './EventAbsenceOverlay';
 import SeriesScopeModal from './SeriesScopeModal';
 import AttendancePanel from './AttendancePanel';
 import ParticipantsPanel from './ParticipantsPanel';
+import RegistrationPanel from './RegistrationPanel';
 import RegistrationSettings from './RegistrationSettings';
 import { useRegistration } from './useRegistration';
 import { type EventMe, type EventTab, visibleEventTabs } from '@/lib/eventAccess';
@@ -244,7 +245,7 @@ export function EventDetailModal({ event, clubId, calendar, color, canWrite, can
     const [tab, setTab] = useState<EventTab>('details');
     const { info: registration, reload: reloadRegistration } = useRegistration(clubId, event.id);
     const regInfo = registration && registration !== 'error' ? registration : null;
-    const tabs = visibleEventTabs(me, calendar, { registrationEnabled: false, canManageRegistration: Boolean(regInfo?.canManage) });
+    const tabs = visibleEventTabs(me, calendar, { registrationEnabled: Boolean(regInfo?.enabled), canManageRegistration: Boolean(regInfo?.canManage) });
     const activeTab = tabs.includes(tab) ? tab : 'details';
 
     async function run(action: () => Promise<void>) {
@@ -299,6 +300,17 @@ export function EventDetailModal({ event, clubId, calendar, color, canWrite, can
                     <div className="flex items-center gap-2">
                         {cancelled ? (
                             <span className="rounded-full bg-destructive/10 px-2.5 py-1 text-xs font-semibold text-destructive">{t('kalender.events.cancelled')}</span>
+                        ) : regInfo?.enabled ? (
+                            <>
+                                {rsvp && (
+                                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${rsvp === 'angemeldet' ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning'}`}>
+                                        {t(rsvp === 'angemeldet' ? 'kalender.events.rsvp.confirmed' : 'kalender.events.rsvp.waitlist')}
+                                    </span>
+                                )}
+                                <button type="button" onClick={() => setTab('registration')} className={rsvp ? secondaryBtn : primaryBtn}>
+                                    {t(rsvp ? 'register.manage' : 'register.cta')}
+                                </button>
+                            </>
                         ) : rsvp ? (
                             <>
                                 <span
@@ -341,7 +353,21 @@ export function EventDetailModal({ event, clubId, calendar, color, canWrite, can
             {tabs.length > 1 && <EventTabBar tabs={tabs} active={activeTab} onChange={setTab} />}
             {activeTab === 'attendance' && <AttendancePanel clubId={clubId} event={event} />}
             {activeTab === 'participants' && <ParticipantsPanel clubId={clubId} event={event} canManage={canWrite} />}
-            {activeTab === 'registration' && regInfo?.canManage && <RegistrationSettings clubId={clubId} event={event} info={regInfo} onSaved={reloadRegistration} />}
+            {activeTab === 'registration' && regInfo && (
+                <div className="space-y-6">
+                    {regInfo.canManage && <RegistrationSettings clubId={clubId} event={event} info={regInfo} onSaved={reloadRegistration} />}
+                    {regInfo.enabled && (
+                        <section aria-labelledby="my-registration">
+                            {regInfo.canManage && (
+                                <h3 id="my-registration" className="mb-2 text-sm font-semibold text-foreground">
+                                    {t('register.mine')}
+                                </h3>
+                            )}
+                            <RegistrationPanel clubId={clubId} event={event} info={regInfo} canRegisterOthers={Boolean(me?.permissions.includes('members:write'))} onChanged={onRsvpChange} />
+                        </section>
+                    )}
+                </div>
+            )}
             {activeTab === 'details' && (
             <div className="space-y-3 text-sm">
                 {cancelled && (
