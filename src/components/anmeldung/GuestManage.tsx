@@ -121,7 +121,7 @@ export default function GuestManage({ token }: { token: string }) {
                         <label htmlFor="manage-name" className="block text-sm font-medium text-foreground">
                             {t('guest.name')}
                         </label>
-                        <input id="manage-name" type="text" required maxLength={120} value={name} onChange={(e) => setName(e.target.value)} className={`${inputClass} mt-1`} />
+                        <input id="manage-name" type="text" required maxLength={100} value={name} onChange={(e) => setName(e.target.value)} className={`${inputClass} mt-1`} />
                     </div>
                     {registration.maxCompanions > 0 && (
                         <div>

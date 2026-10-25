@@ -124,13 +124,13 @@ export default function GuestRegistration({ token }: { token: string }) {
                         <label htmlFor="guest-name" className="block text-sm font-medium text-foreground">
                             {t('guest.name')} <span aria-hidden className="text-destructive">*</span>
                         </label>
-                        <input id="guest-name" type="text" required maxLength={120} autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} className={`${inputClass} mt-1`} />
+                        <input id="guest-name" type="text" required maxLength={100} autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} className={`${inputClass} mt-1`} />
                     </div>
                     <div>
                         <label htmlFor="guest-email" className="block text-sm font-medium text-foreground">
                             {t('guest.email')} <span aria-hidden className="text-destructive">*</span>
                         </label>
-                        <input id="guest-email" type="email" required maxLength={254} autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} aria-describedby="guest-email-hint" className={`${inputClass} mt-1`} />
+                        <input id="guest-email" type="email" required maxLength={200} autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} aria-describedby="guest-email-hint" className={`${inputClass} mt-1`} />
                         <p id="guest-email-hint" className="mt-1 text-xs text-muted-foreground">
                             {t('guest.email.hint')}
                         </p>
@@ -161,11 +161,18 @@ export default function GuestRegistration({ token }: { token: string }) {
                         />
                     )}
                     {/* Honeypot: hidden from people and assistive technology, bots fill it in. */}
-                    <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
-                        <label htmlFor="guest-website">Website</label>
-                        <input id="guest-website" type="text" tabIndex={-1} autoComplete="off" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} />
+                    <div aria-hidden="true" inert className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
+                        <input name="xq_contact_ref" type="text" tabIndex={-1} autoComplete="off" data-lpignore="true" data-1p-ignore value={honeypot} onChange={(e) => setHoneypot(e.target.value)} />
                     </div>
                     <div>
+                        {!form?.privacyNotice && (
+                            <p className="mb-2 rounded-lg bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+                                {t('guest.privacy.generic', { club: event.clubName })}{' '}
+                                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="font-medium text-primary underline">
+                                    {t('guest.privacy.link')}
+                                </a>
+                            </p>
+                        )}
                         <label className="flex items-start gap-2 text-sm text-foreground">
                             <input type="checkbox" required checked={accepted} onChange={(e) => setAccepted(e.target.checked)} className="mt-1" />
                             <span>{t('guest.privacy.accept', { club: event.clubName })}</span>
@@ -177,6 +184,7 @@ export default function GuestRegistration({ token }: { token: string }) {
                             {message}
                         </p>
                     )}
+                    {!busy && (!accepted || !name.trim() || !email.trim()) && <p className="text-center text-xs text-muted-foreground">{t('guest.submit.hint')}</p>}
                     <button type="submit" disabled={busy || !accepted || !name.trim() || !email.trim()} className={publicButton}>
                         {t(busy ? 'guest.submit.busy' : registration.full ? 'guest.submit.waitlist' : 'guest.submit')}
                     </button>
