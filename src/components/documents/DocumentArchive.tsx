@@ -296,7 +296,7 @@ export default function DocumentArchive({ clubId, gate, departments, initial }: 
                 )}
             </section>
 
-            {openDoc && <DocumentDetailDialog clubId={clubId} docId={openDoc} folders={folders} onClose={() => setOpenDoc(null)} onChanged={refresh} />}
+            {openDoc && <DocumentDetailDialog clubId={clubId} docId={openDoc} folders={folders} departments={departments} onClose={() => setOpenDoc(null)} onChanged={refresh} />}
             {folderDialog && (
                 <FolderNameDialog
                     clubId={clubId}

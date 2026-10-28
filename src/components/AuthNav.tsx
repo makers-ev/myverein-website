@@ -34,7 +34,7 @@ const APP_LINK_ICONS: Record<string, typeof Users> = {
 
 // Guardian area (Wave 10 W3): offered to accounts with wards; a guardian-only account sees nothing else of the club.
 const FAMILY_LINK: AuthNavAppLink = { name: 'nav.familie', href: '/familie' };
-// Document archive (Wave 13 W2): only offered when the archive lists something for the caller (`scope.hasDocuments`).
+// Document archive (Wave 13 W2): one page for every club member: archive (folder rights), confirmations, membership card.
 const DOCUMENTS_LINK: AuthNavAppLink = { name: 'nav.dokumente', href: '/dokumente' };
 
 /**

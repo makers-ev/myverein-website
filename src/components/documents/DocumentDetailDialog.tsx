@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Download, RotateCcw, Trash2 } from 'lucide-react';
+import { ClipboardCheck, Download, RotateCcw, Trash2 } from 'lucide-react';
 
 import { Modal } from '@/components/Modal';
 import LoadingText from '@/components/LoadingText';
@@ -12,13 +12,14 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api-client';
 import { formatDate, todayIso } from '@/lib/clubMembers';
 import { type ArchiveDocument, type DocumentVersionRow, type Folder, atLeast, clubQuery, documentErrorKey, downloadDocument, folderPath, formatBytes, retentionState, uploadWithProgress } from '@/lib/documents';
+import RequestAcknowledgementDialog from './RequestAcknowledgementDialog';
 import RetentionChip from './RetentionChip';
 import UploadControl from './UploadControl';
 
 type Detail = ArchiveDocument & { versions: DocumentVersionRow[] };
 
 /** One archive document: versions (download each), new version, rename, move, trash / restore / delete for good (Wave 13 W2). */
-export default function DocumentDetailDialog({ clubId, docId, folders, onClose, onChanged }: { clubId: string; docId: string; folders: Folder[]; onClose: () => void; onChanged: () => void }) {
+export default function DocumentDetailDialog({ clubId, docId, folders, departments = [], onClose, onChanged }: { clubId: string; docId: string; folders: Folder[]; departments?: { id: string; name: string }[]; onClose: () => void; onChanged: () => void }) {
     const { t, language } = useLanguage();
     const { confirm, dialog } = useConfirm();
     const [doc, setDoc] = useState<Detail | null>(null);
@@ -27,6 +28,7 @@ export default function DocumentDetailDialog({ clubId, docId, folders, onClose, 
     const [title, setTitle] = useState('');
     const [folderId, setFolderId] = useState<string>('');
     const [busy, setBusy] = useState(false);
+    const [asking, setAsking] = useState(false);
     const q = clubQuery(clubId);
 
     const load = useCallback(async () => {
@@ -157,6 +159,12 @@ export default function DocumentDetailDialog({ clubId, docId, folders, onClose, 
                         )}
 
                         <div className="flex flex-wrap gap-2 border-t border-border pt-3">
+                            {writable && !trashed && (
+                                <button type="button" className={secondaryButtonClass} disabled={busy} onClick={() => setAsking(true)}>
+                                    <ClipboardCheck className="h-4 w-4" aria-hidden="true" />
+                                    {t('docs.ack.request.open')}
+                                </button>
+                            )}
                             {writable && trashed && (
                                 <button type="button" className={secondaryButtonClass} disabled={busy} onClick={() => void run(() => apiFetch(`/documents/${encodeURIComponent(doc.id)}/restore?${q}`, { method: 'POST', body: {} }))}>
                                     <RotateCcw className="h-4 w-4" aria-hidden="true" />
@@ -198,6 +206,7 @@ export default function DocumentDetailDialog({ clubId, docId, folders, onClose, 
                     </div>
                 )}
             </Modal>
+            {asking && doc && <RequestAcknowledgementDialog clubId={clubId} departments={departments} documentId={doc.id} documentTitle={doc.title} onClose={() => setAsking(false)} onDone={() => undefined} />}
             {dialog}
         </>
     );

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Download, Eye, EyeOff, FileText, Trash2 } from 'lucide-react';
+import { ClipboardCheck, Download, Eye, EyeOff, FileText, Trash2 } from 'lucide-react';
 
 import { Modal } from '@/components/Modal';
 import LoadingText from '@/components/LoadingText';
@@ -13,6 +13,7 @@ import { formatDate, todayIso } from '@/lib/clubMembers';
 import { type PersonalDocument, type PersonalDocuments, clubQuery, documentErrorKey, downloadDocument, formatBytes, retentionState, uploadWithProgress } from '@/lib/documents';
 import RetentionChip from './RetentionChip';
 import MembershipConfirmationAction from './MembershipConfirmationAction';
+import RequestAcknowledgementDialog from './RequestAcknowledgementDialog';
 import UploadControl from './UploadControl';
 
 export const DELETE_REASONS = ['wunsch_mitglied', 'falsch_zugeordnet', 'fehlerhaft', 'sonstiges'] as const;
@@ -30,7 +31,7 @@ interface AccessLogRow {
  * `documents:read_personal`, any member's -- also members without an account. The server decides the relation (`self`, `guardian`,
  * `board`) and answers `404` for everybody else; the UI only follows `relation`, `canDelete` and `canHide`.
  */
-export default function MemberDocuments({ clubId, memberId, extra }: { clubId: string; memberId: string; extra?: React.ReactNode }) {
+export default function MemberDocuments({ clubId, memberId, extra, canAcknowledge = false }: { clubId: string; memberId: string; extra?: React.ReactNode; canAcknowledge?: boolean }) {
     const { t, language } = useLanguage();
     const [res, setRes] = useState<PersonalDocuments | null>(null);
     const [failed, setFailed] = useState(false);
@@ -41,6 +42,7 @@ export default function MemberDocuments({ clubId, memberId, extra }: { clubId: s
     const [logOpen, setLogOpen] = useState(false);
     const [logFailed, setLogFailed] = useState(false);
     const [reload, setReload] = useState(0);
+    const [asking, setAsking] = useState(false);
     const base = `/member-documents/${encodeURIComponent(memberId)}`;
     const q = clubQuery(clubId);
 
@@ -112,6 +114,12 @@ export default function MemberDocuments({ clubId, memberId, extra }: { clubId: s
 
             <div className="flex flex-wrap gap-2">
                 <MembershipConfirmationAction clubId={clubId} clubMemberId={res.owner.clubMemberId} onDone={refresh} />
+                {canAcknowledge && relation === 'board' && (
+                    <button type="button" className={secondaryButtonClass} onClick={() => setAsking(true)}>
+                        <ClipboardCheck className="h-4 w-4" aria-hidden="true" />
+                        {t('docs.ack.request.open')}
+                    </button>
+                )}
             </div>
 
             <UploadControl
@@ -200,6 +208,8 @@ export default function MemberDocuments({ clubId, memberId, extra }: { clubId: s
                     )}
                 </div>
             )}
+
+            {asking && <RequestAcknowledgementDialog clubId={clubId} departments={[]} person={{ id: res.owner.clubMemberId, name: res.owner.displayName }} onClose={() => setAsking(false)} onDone={() => undefined} />}
 
             {deleting && (
                 <DeleteDialog

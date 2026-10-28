@@ -8,7 +8,7 @@ import { type ArchiveDocument, clubQuery } from '@/lib/documents';
 import { inputClass, secondaryButtonClass } from '@/components/standorte/ui';
 
 /** Picks an active PDF of the archive as the attachment of a club document (the server checks the right and the type again). */
-export default function AttachmentPicker({ clubId, value, valueTitle, onChange }: { clubId: string; value: string | null; valueTitle: string | null; onChange: (id: string | null, title: string | null) => void }) {
+export default function AttachmentPicker({ clubId, value, valueTitle, onChange, anyType = false, label }: { clubId: string; value: string | null; valueTitle: string | null; onChange: (id: string | null, title: string | null) => void; anyType?: boolean; label?: string }) {
     const { t } = useLanguage();
     const [q, setQ] = useState('');
     const [results, setResults] = useState<ArchiveDocument[] | null>(null);
@@ -25,16 +25,16 @@ export default function AttachmentPicker({ clubId, value, valueTitle, onChange }
             apiFetch<{ data: ArchiveDocument[] }>(`/documents?${clubQuery(clubId)}&q=${encodeURIComponent(term)}&status=aktiv&pageSize=20`)
                 .then((res) => {
                     setFailed(false);
-                    setResults(res.data.filter((d) => d.currentVersion?.mimeType === 'application/pdf'));
+                    setResults(anyType ? res.data : res.data.filter((d) => d.currentVersion?.mimeType === 'application/pdf'));
                 })
                 .catch(() => setFailed(true));
         }, 300);
         return () => clearTimeout(timer);
-    }, [q, clubId]);
+    }, [q, clubId, anyType]);
 
     return (
         <div>
-            <span className="mb-1 block text-xs font-medium text-muted-foreground">{t('docs.info.attachment')}</span>
+            <span className="mb-1 block text-xs font-medium text-muted-foreground">{label ?? t('docs.info.attachment')}</span>
             {value ? (
                 <div className="flex flex-wrap items-center gap-2 text-sm text-foreground">
                     <span>{valueTitle ?? t('docs.info.attachment.chosen')}</span>

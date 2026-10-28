@@ -1,7 +1,5 @@
 import { ApiError, apiFetch } from './api-client';
 import { addDaysIso, memberErrorKey, todayIso } from './clubMembers';
-import { archiveVisible } from './documentAccess';
-import type { Folder } from './documents';
 
 /**
  * Guardian area `/familie` (Wave 10 W3). Everything is bound to a ward (child) through the backend's `guardianScope`: a
@@ -132,8 +130,6 @@ export async function postLoginTarget(fallback: string): Promise<string> {
 export interface AccountScope {
     hasClub: boolean;
     hasWards: boolean;
-    /** Wave 13: the archive lists at least one readable folder for the caller (menu entry "Dokumente"). */
-    hasDocuments?: boolean;
 }
 
 export async function loadAccountScope(): Promise<AccountScope> {
@@ -141,9 +137,7 @@ export async function loadAccountScope(): Promise<AccountScope> {
         apiFetch<{ data: { clubId: string }[] }>('/my-clubs').then((r) => r.data[0] ?? null),
         apiFetch<{ data: WardClub[] }>('/my-wards').then((r) => r.data.some((c) => c.wards.length > 0)),
     ]);
-    // The archive entry only shows when something is shared with the caller; any failure simply hides it.
-    const hasDocuments = club ? await apiFetch<{ data: Folder[]; rootLevel: string | null }>(`/documents/folders?clubId=${encodeURIComponent(club.clubId)}`).then(archiveVisible, () => false) : false;
-    return { hasClub: !!club, hasWards: wards, hasDocuments };
+    return { hasClub: !!club, hasWards: wards };
 }
 
 /**
@@ -154,6 +148,6 @@ export async function loadAccountScope(): Promise<AccountScope> {
 export function visibleAppLinks<L extends { href: string }>(links: readonly L[], scope: AccountScope | null, familyLink: L, failed = false, documentsLink?: L): L[] {
     if (!scope) return failed ? [...links] : [];
     if (!scope.hasClub && scope.hasWards) return [familyLink];
-    const withDocs = documentsLink && scope.hasDocuments ? [...links, documentsLink] : [...links];
+    const withDocs = documentsLink && scope.hasClub ? [...links, documentsLink] : [...links];
     return scope.hasWards ? [...withDocs, familyLink] : withDocs;
 }

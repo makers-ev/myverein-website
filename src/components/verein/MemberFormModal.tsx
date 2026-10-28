@@ -164,6 +164,7 @@ export default function MemberFormModal({
     canReadSensitive,
     canManageAccount,
     canDocuments = false,
+    canAcknowledge = false,
     onClose,
     onChanged,
 }: {
@@ -178,6 +179,8 @@ export default function MemberFormModal({
     canManageAccount: boolean;
     /** `documents:read_personal`: tab "Dokumente" of the member file (Wave 13 W4). */
     canDocuments?: boolean;
+    /** Documents tab: may ask the person for a confirmation (`documents:write` / `documents:manage`, Wave 13 W4). */
+    canAcknowledge?: boolean;
     onClose: () => void;
     /** Something was saved on the server (list should reload). */
     onChanged: () => void;
@@ -402,7 +405,7 @@ export default function MemberFormModal({
                         ))}
                     </div>
                 )}
-                {!isCreate && member && canDocuments && panel === 'docs' && <MemberDocuments clubId={clubId} memberId={member.id} />}
+                {!isCreate && member && canDocuments && panel === 'docs' && <MemberDocuments clubId={clubId} memberId={member.id} canAcknowledge={canAcknowledge} />}
                 <div hidden={!isCreate && !!member && canDocuments && panel === 'docs'}>
                 {isCreate && (
                     <div className="mb-4 flex gap-2 rounded-lg border border-border bg-muted/50 p-3 text-xs text-foreground">
