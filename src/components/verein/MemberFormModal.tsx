@@ -165,6 +165,7 @@ export default function MemberFormModal({
     canManageAccount,
     canDocuments = false,
     canAcknowledge = false,
+    canManageCard = false,
     onClose,
     onChanged,
 }: {
@@ -181,6 +182,8 @@ export default function MemberFormModal({
     canDocuments?: boolean;
     /** Documents tab: may ask the person for a confirmation (`documents:write` / `documents:manage`, Wave 13 W4). */
     canAcknowledge?: boolean;
+    /** Documents tab: issue / re-issue / revoke the membership card (`member_cards:manage`, Wave 13 W8). */
+    canManageCard?: boolean;
     onClose: () => void;
     /** Something was saved on the server (list should reload). */
     onChanged: () => void;
@@ -405,7 +408,7 @@ export default function MemberFormModal({
                         ))}
                     </div>
                 )}
-                {!isCreate && member && canDocuments && panel === 'docs' && <MemberDocuments clubId={clubId} memberId={member.id} canAcknowledge={canAcknowledge} />}
+                {!isCreate && member && canDocuments && panel === 'docs' && <MemberDocuments clubId={clubId} memberId={member.id} canAcknowledge={canAcknowledge} canManageCard={canManageCard} />}
                 <div hidden={!isCreate && !!member && canDocuments && panel === 'docs'}>
                 {isCreate && (
                     <div className="mb-4 flex gap-2 rounded-lg border border-border bg-muted/50 p-3 text-xs text-foreground">

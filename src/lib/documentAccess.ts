@@ -22,6 +22,10 @@ export interface DocumentsGate {
     branding: boolean;
     /** Storage usage (`storage:read`). */
     storage: boolean;
+    /** Issue, re-issue, revoke membership cards and print them (`member_cards:manage`). */
+    cardsManage: boolean;
+    /** Check a card by pasted code or link (`member_cards:verify`). */
+    cardsVerify: boolean;
 }
 
 export function documentsGate(permissions: readonly string[] | null | undefined): DocumentsGate {
@@ -33,6 +37,8 @@ export function documentsGate(permissions: readonly string[] | null | undefined)
         generate: can(permissions, 'documents:generate'),
         branding: can(permissions, 'branding:write'),
         storage: can(permissions, 'storage:read'),
+        cardsManage: can(permissions, 'member_cards:manage'),
+        cardsVerify: can(permissions, 'member_cards:verify'),
     };
 }
 

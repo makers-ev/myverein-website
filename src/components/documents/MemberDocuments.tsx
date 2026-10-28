@@ -12,6 +12,7 @@ import { apiFetch } from '@/lib/api-client';
 import { formatDate, todayIso } from '@/lib/clubMembers';
 import { type PersonalDocument, type PersonalDocuments, clubQuery, documentErrorKey, downloadDocument, formatBytes, retentionState, uploadWithProgress } from '@/lib/documents';
 import RetentionChip from './RetentionChip';
+import MemberCardAdmin from './MemberCardAdmin';
 import MembershipConfirmationAction from './MembershipConfirmationAction';
 import RequestAcknowledgementDialog from './RequestAcknowledgementDialog';
 import UploadControl from './UploadControl';
@@ -31,7 +32,7 @@ interface AccessLogRow {
  * `documents:read_personal`, any member's -- also members without an account. The server decides the relation (`self`, `guardian`,
  * `board`) and answers `404` for everybody else; the UI only follows `relation`, `canDelete` and `canHide`.
  */
-export default function MemberDocuments({ clubId, memberId, extra, canAcknowledge = false }: { clubId: string; memberId: string; extra?: React.ReactNode; canAcknowledge?: boolean }) {
+export default function MemberDocuments({ clubId, memberId, extra, canAcknowledge = false, canManageCard = false }: { clubId: string; memberId: string; extra?: React.ReactNode; canAcknowledge?: boolean; canManageCard?: boolean }) {
     const { t, language } = useLanguage();
     const [res, setRes] = useState<PersonalDocuments | null>(null);
     const [failed, setFailed] = useState(false);
@@ -111,6 +112,8 @@ export default function MemberDocuments({ clubId, memberId, extra, canAcknowledg
             </div>
 
             {extra}
+
+            {canManageCard && relation === 'board' && <MemberCardAdmin clubId={clubId} clubMemberId={res.owner.clubMemberId} />}
 
             <div className="flex flex-wrap gap-2">
                 <MembershipConfirmationAction clubId={clubId} clubMemberId={res.owner.clubMemberId} onDone={refresh} />

@@ -8,6 +8,7 @@ import { type WardEntry, type WardOverview } from '@/lib/familie';
 import { SectionCard } from '@/components/standorte/ui';
 import MemberConsents from '@/components/privacy/MemberConsents';
 import AcknowledgementInbox from '@/components/documents/AcknowledgementInbox';
+import { CardLoader } from '@/components/documents/MyCardPanel';
 import MemberDocuments from '@/components/documents/MemberDocuments';
 import LoadingText from '@/components/LoadingText';
 import WardAbsences from './WardAbsences';
@@ -62,6 +63,9 @@ export default function WardView({ ward, onConsentsChanged }: { ward: WardEntry;
                     <WardContacts clubId={ward.clubId} wardId={ward.wardId} />
                     <SectionCard title={t('attReport.ward.title')}>
                         <MemberAttendance clubId={ward.clubId} memberId={ward.wardId} />
+                    </SectionCard>
+                    <SectionCard title={t('docs.card.ward.title')}>
+                        <CardLoader clubId={ward.clubId} memberId={ward.wardId} />
                     </SectionCard>
                     <SectionCard title={t('docs.ack.ward.title')}>
                         <AcknowledgementInbox clubId={ward.clubId} onlyMemberId={ward.wardId} />

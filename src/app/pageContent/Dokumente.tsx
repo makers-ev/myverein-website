@@ -8,6 +8,9 @@ import { type DocLevel, type Folder, clubQuery } from '@/lib/documents';
 import { useLanguage } from '@/contexts/LanguageContext';
 import AcknowledgementInbox from '@/components/documents/AcknowledgementInbox';
 import AcknowledgementManager from '@/components/documents/AcknowledgementManager';
+import CardsBoardPanel from '@/components/documents/CardsBoardPanel';
+import CardVerify from '@/components/documents/CardVerify';
+import MyCardPanel from '@/components/documents/MyCardPanel';
 import DocumentArchive from '@/components/documents/DocumentArchive';
 import LoadError from '@/components/LoadError';
 import LoadingText from '@/components/LoadingText';
@@ -17,7 +20,7 @@ interface MyClub {
     clubName: string | null;
 }
 
-type DocTab = 'archiv' | 'bestaetigungen' | 'verwalten';
+type DocTab = 'archiv' | 'bestaetigungen' | 'ausweis' | 'verwalten' | 'ausweise' | 'pruefen';
 
 interface Loaded {
     openAcks: number;
@@ -64,7 +67,7 @@ export default function DokumentePageContent() {
 
     const loaded = state && state !== 'none' ? state : null;
     const gate = loaded ? documentsGate(loaded.permissions) : null;
-    const tabs: DocTab[] = loaded && gate ? [...(archiveVisible(loaded.folders) ? (['archiv'] as const) : []), 'bestaetigungen', ...(gate.write || gate.manage ? (['verwalten'] as const) : [])] : [];
+    const tabs: DocTab[] = loaded && gate ? [...(archiveVisible(loaded.folders) ? (['archiv'] as const) : []), 'bestaetigungen', 'ausweis', ...(gate.write || gate.manage ? (['verwalten'] as const) : []), ...(gate.cardsManage ? (['ausweise'] as const) : []), ...(gate.cardsVerify ? (['pruefen'] as const) : [])] : [];
     const current: DocTab | null = tab && tabs.includes(tab) ? tab : (tabs[0] ?? null);
 
     return (
@@ -102,6 +105,9 @@ export default function DokumentePageContent() {
                         <div id="doc-panel" role="tabpanel" aria-labelledby={current ? `doc-tab-${current}` : undefined}>
                             {current === 'archiv' && gate && <DocumentArchive clubId={state.clubId} gate={gate} departments={state.departments} initial={state.folders} />}
                             {current === 'bestaetigungen' && <AcknowledgementInbox clubId={state.clubId} onCount={(n) => setState((s) => (s && s !== 'none' ? { ...s, openAcks: n } : s))} />}
+                            {current === 'ausweis' && <MyCardPanel clubId={state.clubId} />}
+                            {current === 'ausweise' && <CardsBoardPanel clubId={state.clubId} />}
+                            {current === 'pruefen' && <CardVerify clubId={state.clubId} />}
                             {current === 'verwalten' && <AcknowledgementManager clubId={state.clubId} departments={state.departments} />}
                         </div>
                     </>

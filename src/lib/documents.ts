@@ -235,8 +235,8 @@ export async function downloadDocument(path: string, fallbackName: string): Prom
 }
 
 /** Opens a PDF in a new tab from an authenticated request (blob URL, not a public link). */
-export async function openPdf(path: string, method: 'GET' | 'POST' = 'GET'): Promise<void> {
-    const { blob } = await fetchFileBlob(path, 'document.pdf', { accept: 'application/pdf', method, body: method === 'POST' ? {} : undefined });
+export async function openPdf(path: string, method: 'GET' | 'POST' = 'GET', body?: unknown): Promise<void> {
+    const { blob } = await fetchFileBlob(path, 'document.pdf', { accept: 'application/pdf', method, body: method === 'POST' ? (body ?? {}) : undefined });
     const url = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
     window.open(url, '_blank', 'noopener');
     setTimeout(() => URL.revokeObjectURL(url), 60_000);

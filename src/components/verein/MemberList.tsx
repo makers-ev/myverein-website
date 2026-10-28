@@ -593,6 +593,7 @@ export default function MemberList({
                     canManageAccount={canWrite}
                     canDocuments={permissions.includes('documents:read_personal')}
                     canAcknowledge={permissions.includes('documents:write') || permissions.includes('documents:manage')}
+                    canManageCard={permissions.includes('member_cards:manage')}
                     onClose={() => {
                         setEditing(null);
                         setCreating(false);

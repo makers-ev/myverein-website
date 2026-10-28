@@ -58,8 +58,8 @@ describe('apiFetch date handling', () => {
 });
 
 describe('cache policy of document routes', () => {
-    it('never uses the HTTP cache for the archive, personal storage, generation, storage and branding', () => {
-        for (const path of ['/documents?clubId=c', '/documents/folders?clubId=c', '/documents/d1/download?clubId=c', '/member-documents/me?clubId=c', '/document-generation/jobs/j1?clubId=c', '/club-storage?clubId=c', '/club-settings/branding?clubId=c', '/club-settings/assembly?clubId=c']) {
+    it('never uses the HTTP cache for the archive, personal storage, generation, acknowledgements, cards, storage and branding', () => {
+        for (const path of ['/documents?clubId=c', '/documents/folders?clubId=c', '/documents/d1/download?clubId=c', '/member-documents/me?clubId=c', '/document-generation/jobs/j1?clubId=c', '/club-storage?clubId=c', '/club-settings/branding?clubId=c', '/club-settings/assembly?clubId=c', '/acknowledgements/mine?clubId=c', '/acknowledgements/a1?clubId=c', '/club-members/me/card?clubId=c', '/club-members/m1/card?clubId=c']) {
             expect(cachePolicyFor(path), path).toBe('no-store');
         }
         expect(cachePolicyFor('/club-settings?clubId=c')).toBeUndefined();
