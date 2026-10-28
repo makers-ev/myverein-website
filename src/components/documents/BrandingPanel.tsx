@@ -38,7 +38,7 @@ export default function BrandingPanel({ clubId }: { clubId: string }) {
                 setFailed(true);
             }
         },
-        [q],
+        [base, q],
     );
 
     useEffect(() => {

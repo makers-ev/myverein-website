@@ -47,8 +47,15 @@ export default function AcknowledgementInbox({ clubId, onlyMemberId, onCount }: 
     const load = useCallback(async () => {
         setFailed(false);
         try {
-            const res = await apiFetch<{ data: MyAcknowledgement[] }>(`/acknowledgements/mine?${clubQuery(clubId)}&pageSize=100`);
-            const list = onlyMemberId ? res.data.filter((r) => r.clubMemberId === onlyMemberId) : res.data;
+            // Open requests are never cut off by a long history: ask for them separately from the recent completed ones.
+            const q = clubQuery(clubId);
+            const [open, rest] = await Promise.all([
+                apiFetch<{ data: MyAcknowledgement[] }>(`/acknowledgements/mine?${q}&status=offen&pageSize=100`),
+                apiFetch<{ data: MyAcknowledgement[] }>(`/acknowledgements/mine?${q}&pageSize=50`),
+            ]);
+            const merged = new Map([...rest.data, ...open.data].map((r) => [r.id, r] as const));
+            const all = [...merged.values()];
+            const list = onlyMemberId ? all.filter((r) => r.clubMemberId === onlyMemberId) : all;
             setRows(sortInbox(list));
             onCountRef.current?.(list.filter((r) => r.status === 'offen').length);
         } catch {
@@ -80,8 +87,9 @@ export default function AcknowledgementInbox({ clubId, onlyMemberId, onCount }: 
             {r.status === 'offen' && dueSoon(r.dueAt, today) && <Chip tone="warning">{t('docs.ack.dueSoon')}</Chip>}
             <Chip tone={ACK_TONE[r.status]}>{t(`docs.ack.status.${r.status}`)}</Chip>
             {r.status === 'offen' && (
-                <button type="button" className={r.canAnswer ? primaryButtonClass : secondaryButtonClass} onClick={() => setAnswering(r)} aria-label={t('docs.ack.openNamed', { title: r.documentTitle })}>
+                <button type="button" className={r.canAnswer ? primaryButtonClass : secondaryButtonClass} onClick={() => setAnswering(r)}>
                     {t(r.canAnswer ? 'docs.ack.answer' : 'docs.ack.view')}
+                    <span className="sr-only"> {t('docs.ack.openNamed', { title: r.documentTitle })}</span>
                 </button>
             )}
         </li>

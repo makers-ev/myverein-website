@@ -207,8 +207,9 @@ export default function AcknowledgementManager({ clubId, departments }: { clubId
                                     </div>
                                     <Chip tone={ACK_TONE[r.status]}>{t(`docs.ack.status.${r.status}`)}</Chip>
                                     {(r.status === 'offen' || r.status === 'abgelaufen') && (
-                                        <button type="button" className={secondaryButtonClass} onClick={() => setPaper(r)} aria-label={t('docs.ack.paper.openNamed', { name: r.personName })}>
+                                        <button type="button" className={secondaryButtonClass} onClick={() => setPaper(r)}>
                                             {t('docs.ack.paper.open')}
+                                            <span className="sr-only"> {t('docs.ack.paper.openNamed', { name: r.personName })}</span>
                                         </button>
                                     )}
                                 </li>

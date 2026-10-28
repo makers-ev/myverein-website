@@ -130,7 +130,12 @@ export function loadTemplates(clubId: string, now = Date.now()): Promise<Generat
     const promise = apiFetch<{ data: GenerationTemplate[] }>(`/document-generation/templates?clubId=${encodeURIComponent(clubId)}`)
         .then((res) => res.data)
         // No access (external guest, no club) or a network problem: offer nothing, the action simply does not appear.
-        .catch(() => null);
+        .catch(() => null)
+        .then((list) => {
+            // A failure is not remembered, the next page view asks again.
+            if (list === null) templateCache.delete(clubId);
+            return list;
+        });
     templateCache.set(clubId, { at: now, promise });
     return promise;
 }
