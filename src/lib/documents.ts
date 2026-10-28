@@ -321,3 +321,43 @@ export type QuotaTone = 'ok' | 'warn' | 'full';
 export const quotaTone = (percent: number): QuotaTone => (percent >= 100 ? 'full' : percent >= 80 ? 'warn' : 'ok');
 
 export const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
+
+export interface BrandingForm {
+    primaryColor: string;
+    accentColor: string;
+    address: string;
+    register: string;
+    representatives: string;
+    contact: string;
+    footer: string;
+}
+
+export const BRANDING_LIMITS = { address: 300, register: 200, representatives: 300, contact: 300, footer: 160 } as const;
+
+export function brandingToForm(b: Branding): BrandingForm {
+    return {
+        primaryColor: b.primaryColor ?? '',
+        accentColor: b.accentColor ?? '',
+        address: b.letterhead.address ?? '',
+        register: b.letterhead.register ?? '',
+        representatives: b.letterhead.representatives ?? '',
+        contact: b.letterhead.contact ?? '',
+        footer: b.letterhead.footer ?? '',
+    };
+}
+
+/** Partial PATCH body: only changed fields, an emptied field becomes `null` (clears it). */
+export function brandingPatch(original: BrandingForm, next: BrandingForm): Record<string, string | null> {
+    const patch: Record<string, string | null> = {};
+    for (const key of Object.keys(original) as (keyof BrandingForm)[]) {
+        if (original[key] !== next[key]) patch[key] = next[key].trim() === '' ? null : next[key];
+    }
+    return patch;
+}
+
+/** Translation key of the first problem of the branding form, `null` if it can be sent. */
+export function brandingProblem(form: BrandingForm): string | null {
+    for (const key of ['primaryColor', 'accentColor'] as const) if (form[key] !== '' && !HEX_COLOR.test(form[key])) return 'docs.branding.err.color';
+    for (const key of Object.keys(BRANDING_LIMITS) as (keyof typeof BRANDING_LIMITS)[]) if (form[key].length > BRANDING_LIMITS[key]) return 'docs.branding.err.tooLong';
+    return null;
+}

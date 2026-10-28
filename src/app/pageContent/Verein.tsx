@@ -13,6 +13,8 @@ import NoClubSection from '@/components/verein/NoClubSection';
 import CategoriesPanel from '@/components/verein/CategoriesPanel';
 import AssemblyRulesPanel from '@/components/assembly/AssemblyRulesPanel';
 import { ExpiringRolesCard, TermBadge } from '@/components/assembly/TermsOfOffice';
+import BrandingPanel from '@/components/documents/BrandingPanel';
+import StoragePanel from '@/components/documents/StoragePanel';
 import ClubInfoDialog from '@/components/documents/ClubInfoDialog';
 import ClubSettingsPanel from '@/components/verein/ClubSettingsPanel';
 import ClubRemindersPanel from '@/components/verein/ClubRemindersPanel';
@@ -460,6 +462,8 @@ export default function VereinPageContent() {
                                 {permissions.includes('members:write') && <ClubSettingsPanel clubId={activeClub.clubId} />}
                                 {permissions.includes('members:write') && <ClubRemindersPanel clubId={activeClub.clubId} />}
                                 {permissions.includes('announcements:write') && <ClubMailTemplatePanel clubId={activeClub.clubId} />}
+                                {docsGate.branding && <BrandingPanel clubId={activeClub.clubId} />}
+                                {docsGate.storage && <StoragePanel clubId={activeClub.clubId} canEmptyTrash={docsGate.manage} />}
                                 {permissions.includes('members:write') && <CategoriesPanel clubId={activeClub.clubId} onChanged={() => setMembersReload((n) => n + 1)} />}
                             </div>
                         )}

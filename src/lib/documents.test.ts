@@ -89,3 +89,18 @@ describe('quota', () => {
         expect([quotaTone(10), quotaTone(80), quotaTone(100)]).toEqual(['ok', 'warn', 'full']);
     });
 });
+
+import { brandingPatch, brandingProblem, brandingToForm } from './documents';
+
+describe('branding form', () => {
+    const base = brandingToForm({ primaryColor: '#112233', accentColor: null, effective: { primaryColor: '#112233', accentColor: '#000000' }, letterhead: { address: 'Weg 1', register: null, representatives: null, contact: null, footer: null }, logo: null });
+    it('sends only changed fields and clears emptied ones', () => {
+        expect(brandingPatch(base, base)).toEqual({});
+        expect(brandingPatch(base, { ...base, address: '', footer: 'Danke' })).toEqual({ address: null, footer: 'Danke' });
+    });
+    it('rejects bad colours and too long texts', () => {
+        expect(brandingProblem({ ...base, primaryColor: 'red' })).toBe('docs.branding.err.color');
+        expect(brandingProblem({ ...base, footer: 'x'.repeat(161) })).toBe('docs.branding.err.tooLong');
+        expect(brandingProblem({ ...base, accentColor: '' })).toBeNull();
+    });
+});
