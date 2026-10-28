@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { CalendarDays, Vote, ChevronDown, Clock, HeartHandshake, LogOut, MapPin, Megaphone, Settings as SettingsIcon, Users } from 'lucide-react';
+import { CalendarDays, FileText, Vote, ChevronDown, Clock, HeartHandshake, LogOut, MapPin, Megaphone, Settings as SettingsIcon, Users } from 'lucide-react';
 
 import { authClient } from '@/lib/auth-client';
 import { clearReminder } from '@/lib/consents';
@@ -29,10 +29,13 @@ const APP_LINK_ICONS: Record<string, typeof Users> = {
     'nav.standorte': MapPin,
     'nav.verfuegbarkeit': Clock,
     'nav.familie': HeartHandshake,
+    'nav.dokumente': FileText,
 };
 
 // Guardian area (Wave 10 W3): offered to accounts with wards; a guardian-only account sees nothing else of the club.
 const FAMILY_LINK: AuthNavAppLink = { name: 'nav.familie', href: '/familie' };
+// Document archive (Wave 13 W2): only offered when the archive lists something for the caller (`scope.hasDocuments`).
+const DOCUMENTS_LINK: AuthNavAppLink = { name: 'nav.dokumente', href: '/dokumente' };
 
 /**
  * Client-side, optimistic auth slot for the Navbar's `guestNav`/`mobileGuestNav`
@@ -91,7 +94,7 @@ export function AuthNav({ appLinks = [] }: { appLinks?: AuthNavAppLink[] }) {
     }
 
     const displayName = session.user.name ?? session.user.email;
-    const links = visibleAppLinks(appLinks, scope, FAMILY_LINK, scopeFailed);
+    const links = visibleAppLinks(appLinks, scope, FAMILY_LINK, scopeFailed, DOCUMENTS_LINK);
 
     return (
         <div className="flex items-center gap-1">

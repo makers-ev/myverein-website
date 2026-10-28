@@ -68,5 +68,11 @@ describe('visibleAppLinks', () => {
     it('falls back to the full menu when the lookup failed', () => expect(visibleAppLinks(links, null, family, true)).toEqual(links));
     it('reduces a guardian-only account to the family area', () => expect(visibleAppLinks(links, { hasClub: false, hasWards: true }, family)).toEqual([family]));
     it('adds the family link for a member with wards', () => expect(visibleAppLinks(links, { hasClub: true, hasWards: true }, family)).toEqual([...links, family]));
+    it('adds the archive link only when documents are shared', () => {
+        const docs = { name: 'docs', href: '/dokumente' };
+        expect(visibleAppLinks(links, { hasClub: true, hasWards: false, hasDocuments: true }, family, false, docs)).toEqual([...links, docs]);
+        expect(visibleAppLinks(links, { hasClub: true, hasWards: false, hasDocuments: false }, family, false, docs)).toEqual(links);
+        expect(visibleAppLinks(links, { hasClub: false, hasWards: true, hasDocuments: true }, family, false, docs)).toEqual([family]);
+    });
     it('does not add it without wards', () => expect(visibleAppLinks(links, { hasClub: true, hasWards: false }, family)).toEqual(links));
 });
