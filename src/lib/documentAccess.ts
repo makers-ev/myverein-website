@@ -50,6 +50,17 @@ export function archiveVisible(res: { data: readonly Folder[]; rootLevel: string
     return !!res && (res.data.length > 0 || res.rootLevel !== null);
 }
 
+export type DocumentsTab = 'archiv' | 'bestaetigungen' | 'ausweis' | 'verwalten' | 'ausweise' | 'pruefen';
+
+/**
+ * Tabs of `/dokumente` in display order. Every club member gets confirmations and their own card; the archive follows the folder
+ * rights (`archiveVisible`); the management tabs follow `documents:write|manage`, `member_cards:manage` and `member_cards:verify`.
+ */
+export function documentsTabs(permissions: readonly string[] | null | undefined, archiveShown: boolean): DocumentsTab[] {
+    const g = documentsGate(permissions);
+    return [...(archiveShown ? (['archiv'] as const) : []), 'bestaetigungen', 'ausweis', ...(g.write || g.manage ? (['verwalten'] as const) : []), ...(g.cardsManage ? (['ausweise'] as const) : []), ...(g.cardsVerify ? (['pruefen'] as const) : [])];
+}
+
 /** The settings tab holds branding and storage: shown for either right. */
 export function showsDocumentSettings(permissions: readonly string[] | null | undefined): boolean {
     const g = documentsGate(permissions);

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { apiFetch } from '@/lib/api-client';
-import { archiveVisible, documentsGate } from '@/lib/documentAccess';
+import { type DocumentsTab, archiveVisible, documentsGate, documentsTabs } from '@/lib/documentAccess';
 import { type DocLevel, type Folder, clubQuery } from '@/lib/documents';
 import { useLanguage } from '@/contexts/LanguageContext';
 import AcknowledgementInbox from '@/components/documents/AcknowledgementInbox';
@@ -20,8 +20,6 @@ interface MyClub {
     clubName: string | null;
 }
 
-type DocTab = 'archiv' | 'bestaetigungen' | 'ausweis' | 'verwalten' | 'ausweise' | 'pruefen';
-
 interface Loaded {
     openAcks: number;
     clubId: string;
@@ -36,7 +34,7 @@ export default function DokumentePageContent() {
     const { t } = useLanguage();
     const [state, setState] = useState<Loaded | 'none' | null>(null);
     const [failed, setFailed] = useState(false);
-    const [tab, setTab] = useState<DocTab | null>(null);
+    const [tab, setTab] = useState<DocumentsTab | null>(null);
 
     const load = useCallback(async () => {
         setFailed(false);
@@ -67,8 +65,8 @@ export default function DokumentePageContent() {
 
     const loaded = state && state !== 'none' ? state : null;
     const gate = loaded ? documentsGate(loaded.permissions) : null;
-    const tabs: DocTab[] = loaded && gate ? [...(archiveVisible(loaded.folders) ? (['archiv'] as const) : []), 'bestaetigungen', 'ausweis', ...(gate.write || gate.manage ? (['verwalten'] as const) : []), ...(gate.cardsManage ? (['ausweise'] as const) : []), ...(gate.cardsVerify ? (['pruefen'] as const) : [])] : [];
-    const current: DocTab | null = tab && tabs.includes(tab) ? tab : (tabs[0] ?? null);
+    const tabs: DocumentsTab[] = loaded ? documentsTabs(loaded.permissions, archiveVisible(loaded.folders)) : [];
+    const current: DocumentsTab | null = tab && tabs.includes(tab) ? tab : (tabs[0] ?? null);
 
     return (
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">

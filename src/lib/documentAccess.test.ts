@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { archiveVisible, documentsGate, showsDocumentSettings } from './documentAccess';
+import { archiveVisible, documentsGate, documentsTabs, showsDocumentSettings } from './documentAccess';
 import { visibleTabs } from './clubPermissions';
 
 describe('documentsGate', () => {
@@ -13,6 +13,27 @@ describe('documentsGate', () => {
         expect(documentsGate(['club_info:write']).editClubInfo).toBe(true);
         expect(documentsGate(['branding:write'])).toMatchObject({ branding: true, storage: false });
         expect(documentsGate(['storage:read'])).toMatchObject({ storage: true, branding: false });
+    });
+});
+
+describe('card and confirmation gates', () => {
+    it('maps the card permissions', () => {
+        expect(documentsGate(['member_cards:manage'])).toMatchObject({ cardsManage: true, cardsVerify: false });
+        expect(documentsGate(['member_cards:verify'])).toMatchObject({ cardsVerify: true, cardsManage: false });
+        expect(documentsGate(['documents:generate'])).toMatchObject({ generate: true, cardsManage: false });
+    });
+});
+
+describe('documentsTabs', () => {
+    it('gives every member confirmations and their own card, nothing else', () => {
+        expect(documentsTabs([], false)).toEqual(['bestaetigungen', 'ausweis']);
+        expect(documentsTabs(['members:read'], true)).toEqual(['archiv', 'bestaetigungen', 'ausweis']);
+    });
+    it('adds management tabs by permission only', () => {
+        expect(documentsTabs(['documents:write'], true)).toEqual(['archiv', 'bestaetigungen', 'ausweis', 'verwalten']);
+        expect(documentsTabs(['member_cards:verify'], false)).toEqual(['bestaetigungen', 'ausweis', 'pruefen']);
+        expect(documentsTabs(['documents:manage', 'member_cards:manage', 'member_cards:verify'], true)).toEqual(['archiv', 'bestaetigungen', 'ausweis', 'verwalten', 'ausweise', 'pruefen']);
+        expect(documentsTabs(['documents:generate'], false)).toEqual(['bestaetigungen', 'ausweis']);
     });
 });
 
