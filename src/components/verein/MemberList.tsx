@@ -589,6 +589,7 @@ export default function MemberList({
                     departments={departments}
                     canReadSensitive={canSensitive}
                     canManageAccount={canWrite}
+                    canDocuments={permissions.includes('documents:read_personal')}
                     onClose={() => {
                         setEditing(null);
                         setCreating(false);

@@ -190,6 +190,8 @@ const DocumentsTranslation: Translation = {
         'docs.person.log.action.download': 'heruntergeladen',
         'docs.person.log.action.upload': 'hochgeladen',
         'docs.person.log.action.delete': 'gelöscht',
+        'docs.member.tab.data': 'Stammdaten',
+        'docs.member.tab.docs': 'Dokumente',
         // @@DE
     },
     en: {
@@ -376,6 +378,8 @@ const DocumentsTranslation: Translation = {
         'docs.person.log.action.download': 'downloaded',
         'docs.person.log.action.upload': 'uploaded',
         'docs.person.log.action.delete': 'deleted',
+        'docs.member.tab.data': 'Member data',
+        'docs.member.tab.docs': 'Documents',
         // @@EN
     },
 };
