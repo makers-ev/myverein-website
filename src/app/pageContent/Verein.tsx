@@ -27,6 +27,7 @@ import PrivacyPanel, { type PrivacyView } from '@/components/privacy/PrivacyPane
 import DpaBanner from '@/components/privacy/DpaBanner';
 import { useDpaCurrent } from '@/components/privacy/useDpaCurrent';
 import OwnAbsencesPanel from '@/components/absences/OwnAbsencesPanel';
+import MyDocumentsPanel from '@/components/documents/MyDocumentsPanel';
 import MyPrivacyPanel from '@/components/privacy/MyPrivacyPanel';
 import MemberList from '@/components/verein/MemberList';
 import MemberAvatar from '@/components/verein/MemberAvatar';
@@ -384,6 +385,7 @@ export default function VereinPageContent() {
                                 <div className="space-y-6">
                                     <ProfilTab me={me} clubId={activeClub.clubId} onDirtyChange={onProfilDirty} onSaved={() => void refreshClubData(activeClub.clubId)} onPhotoExpired={refetchOwnPhoto} onOpenCustomFields={() => void selectTab('zusatzfelder')} />
                                     {!isGuardianOnly(permissions, me.roles) && <OwnAbsencesPanel clubId={activeClub.clubId} />}
+                                    {!isGuardianOnly(permissions, me.roles) && me.clubMemberId && <MyDocumentsPanel clubId={activeClub.clubId} />}
                                     {!isGuardianOnly(permissions, me.roles) && me.clubMemberId && <MyPrivacyPanel clubId={activeClub.clubId} clubMemberId={me.clubMemberId} />}
                                 </div>
                             ) : (
