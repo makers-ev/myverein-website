@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Download, Eye, Pencil, Search, ShieldCheck, Upload, UserPlus, X } from 'lucide-react';
 
 import MemberAvatar from '@/components/verein/MemberAvatar';
+import { MemberListReportAction } from '@/components/documents/ReportActions';
 import MemberExportDialog from '@/components/verein/MemberExportDialog';
 import MemberDetailDialog from '@/components/verein/MemberDetailDialog';
 import MemberFormModal from '@/components/verein/MemberFormModal';
@@ -302,6 +303,7 @@ export default function MemberList({
                         {t('verein.export.open')}
                     </button>
                 )}
+                <MemberListReportAction clubId={clubId} departments={departments} canSensitive={canSensitive} />
                 {canWrite && (
                     <button type="button" onClick={() => setCreating(true)} className={`${primaryButtonClass} inline-flex items-center gap-1.5`}>
                         <UserPlus className="h-4 w-4" aria-hidden="true" />

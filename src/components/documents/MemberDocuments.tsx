@@ -12,6 +12,7 @@ import { apiFetch } from '@/lib/api-client';
 import { formatDate, todayIso } from '@/lib/clubMembers';
 import { type PersonalDocument, type PersonalDocuments, clubQuery, documentErrorKey, downloadDocument, formatBytes, retentionState, uploadWithProgress } from '@/lib/documents';
 import RetentionChip from './RetentionChip';
+import MembershipConfirmationAction from './MembershipConfirmationAction';
 import UploadControl from './UploadControl';
 
 export const DELETE_REASONS = ['wunsch_mitglied', 'falsch_zugeordnet', 'fehlerhaft', 'sonstiges'] as const;
@@ -108,6 +109,10 @@ export default function MemberDocuments({ clubId, memberId, extra }: { clubId: s
             </div>
 
             {extra}
+
+            <div className="flex flex-wrap gap-2">
+                <MembershipConfirmationAction clubId={clubId} clubMemberId={res.owner.clubMemberId} onDone={refresh} />
+            </div>
 
             <UploadControl
                 multiple

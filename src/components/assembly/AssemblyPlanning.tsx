@@ -1,5 +1,6 @@
 'use client';
 
+import { GenerateAction } from '@/components/documents/GenerateDialog';
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowDown, ArrowUp, Download, Trash2 } from 'lucide-react';
@@ -280,9 +281,12 @@ function InvitationProof({ clubId, meetingId, invitation, canSensitive, onChange
                 <p className="text-sm font-semibold text-foreground">
                     {t(invitation.kind === 'nachtrag' ? 'assembly.invite.history.nachtrag' : 'assembly.invite.history.einladung', { version: invitation.version })} · {formatWhen(invitation.sentAt, language)}
                 </p>
-                <button type="button" aria-expanded={open} onClick={() => setOpen((o) => !o)} className={`${secondaryBtn} !px-3 !py-1.5`}>
-                    {t(open ? 'assembly.invite.proof.hide' : 'assembly.invite.proof.show')}
-                </button>
+                <div className="flex flex-wrap gap-2">
+                    <GenerateAction clubId={clubId} templateId="versammlung-einladung" label={t('docs.gen.invitation.action')} title={t('docs.gen.invitation.title')} intro={t('docs.gen.invitation.intro')} params={{ meetingId, version: invitation.version }} target={{ kind: 'archive' }} className={`${secondaryBtn} !px-3 !py-1.5`} />
+                    <button type="button" aria-expanded={open} onClick={() => setOpen((o) => !o)} className={`${secondaryBtn} !px-3 !py-1.5`}>
+                        {t(open ? 'assembly.invite.proof.hide' : 'assembly.invite.proof.show')}
+                    </button>
+                </div>
             </div>
             {invitation.exceptionReason && <p className="mt-1 text-xs text-warning">{t('assembly.invite.exceptionNote', { reason: invitation.exceptionReason })}</p>}
             <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-5">
