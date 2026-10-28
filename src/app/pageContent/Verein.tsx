@@ -6,12 +6,14 @@ import { apiFetch } from '@/lib/api-client';
 import { useThrottledCallback } from '@/lib/useThrottledCallback';
 import { memberErrorKey } from '@/lib/clubMembers';
 import { type ClubTab, canSeeCredentialOverview, formsGate, isGuardianOnly, visibleTabs } from '@/lib/clubPermissions';
+import { documentsGate } from '@/lib/documentAccess';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ApplicationsPanel from '@/components/verein/ApplicationsPanel';
 import NoClubSection from '@/components/verein/NoClubSection';
 import CategoriesPanel from '@/components/verein/CategoriesPanel';
 import AssemblyRulesPanel from '@/components/assembly/AssemblyRulesPanel';
 import { ExpiringRolesCard, TermBadge } from '@/components/assembly/TermsOfOffice';
+import ClubInfoDialog from '@/components/documents/ClubInfoDialog';
 import ClubSettingsPanel from '@/components/verein/ClubSettingsPanel';
 import ClubRemindersPanel from '@/components/verein/ClubRemindersPanel';
 import ClubMailTemplatePanel from '@/components/verein/ClubMailTemplatePanel';
@@ -57,11 +59,18 @@ interface Department {
     leadMemberId: string | null;
 }
 
+/** Metadata only (Wave 13): the text is fetched per slug by `ClubInfoDialog`. */
 interface ClubInfoPage {
     id: string;
     clubId: string;
     slug: string;
     title: string;
+    externalUrl: string | null;
+    hasContent: boolean;
+    hasAttachment: boolean;
+    validFrom: string | null;
+    currentVersion: number;
+    updatedAt: string;
 }
 
 interface ClubInfo {
@@ -81,7 +90,9 @@ function SectionCard({ title, children }: { title: string; children: React.React
     );
 }
 
-function VereinsinfoTab({ info, t, onPhotoExpired, termsClubId }: { info: ClubInfo; t: (key: string) => string; onPhotoExpired: () => void; termsClubId: string | null }) {
+function VereinsinfoTab({ info, t, onPhotoExpired, termsClubId, clubId, canWriteInfo, onInfoChanged }: { info: ClubInfo; t: (key: string) => string; onPhotoExpired: () => void; termsClubId: string | null; clubId: string; canWriteInfo: boolean; onInfoChanged: () => void }) {
+    // Slug of the open club document; '' = the editor for a new one.
+    const [openSlug, setOpenSlug] = useState<string | null>(null);
     return (
         <div className="grid gap-4 sm:grid-cols-2">
             {termsClubId && (
@@ -117,12 +128,21 @@ function VereinsinfoTab({ info, t, onPhotoExpired, termsClubId }: { info: ClubIn
                     <ul className="space-y-2">
                         {info.pages.map((p) => (
                             <li key={p.id} className="text-sm text-foreground">
-                                {p.title}
+                                <button type="button" onClick={() => setOpenSlug(p.slug)} className="text-left font-medium text-primary underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
+                                    {p.title}
+                                </button>
+                                {p.hasAttachment && <span className="ml-2 text-xs text-muted-foreground">PDF</span>}
                             </li>
                         ))}
                     </ul>
                 )}
+                {canWriteInfo && (
+                    <button type="button" onClick={() => setOpenSlug('')} className="mt-3 rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted">
+                        {t('docs.info.new')}
+                    </button>
+                )}
             </SectionCard>
+            {openSlug !== null && <ClubInfoDialog clubId={clubId} slug={openSlug || null} canWrite={canWriteInfo} onClose={() => setOpenSlug(null)} onChanged={onInfoChanged} />}
         </div>
     );
 }
@@ -291,6 +311,7 @@ export default function VereinPageContent() {
     const permissions = me?.permissions ?? [];
     const dpa = useDpaCurrent(activeClub?.clubId ?? null, permissions.includes('privacy:read') || permissions.includes('privacy:manage'), dpaReload);
     const gate = formsGate(permissions);
+    const docsGate = documentsGate(permissions);
     // Every tab beyond the basics hangs on a permission from GET /club-members/me (the backend enforces them too).
     // Guardians (external role) have no right to the member list; hide the tab instead of showing a 403.
     const tabs: Tab[] = visibleTabs(permissions, me?.roles ?? []);
@@ -357,7 +378,7 @@ export default function VereinPageContent() {
                     />
 
                     <div className="mt-4">
-                        {currentTab === 'info' && (info ? <VereinsinfoTab info={info} t={t} onPhotoExpired={refetchBoardPhotos} termsClubId={permissions.includes('assembly:manage') || permissions.includes('roles:write') ? activeClub.clubId : null} /> : <LoadingText />)}
+                        {currentTab === 'info' && (info ? <VereinsinfoTab info={info} t={t} onPhotoExpired={refetchBoardPhotos} termsClubId={permissions.includes('assembly:manage') || permissions.includes('roles:write') ? activeClub.clubId : null} clubId={activeClub.clubId} canWriteInfo={docsGate.editClubInfo} onInfoChanged={() => void refreshClubData(activeClub.clubId)} /> : <LoadingText />)}
                         {currentTab === 'profil' &&
                             (me ? (
                                 <div className="space-y-6">

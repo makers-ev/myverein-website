@@ -11,6 +11,7 @@ import EventRidesTranslation from './EventRidesTranslation';
 import EventsCommonTranslation from './EventsCommonTranslation';
 import FeaturesTranslation from './FeaturesTranslation';
 import CustomFieldsTranslation from './CustomFieldsTranslation';
+import DocumentsTranslation from './DocumentsTranslation';
 import FormBuilderTranslation from './FormBuilderTranslation';
 import FormsTranslation from './FormsTranslation';
 import KalenderTranslation from './KalenderTranslation';
@@ -30,7 +31,7 @@ import VerfuegbarkeitTranslation from './VerfuegbarkeitTranslation';
 // Modules that are DE/EN-only by design (documented in each file's header; other languages fall back to English
 // per key via t()). Their keys are exempt from the "every language has every key" check.
 const DE_EN_ONLY_KEYS = new Set(
-  [AboutTranslation, AssemblyTranslation, ChangelogTranslation, CommunicationTranslation, CustomFieldsTranslation, EventAttendanceTranslation, EventHelpersTranslation, EventRegistrationTranslation, EventRidesTranslation, EventsCommonTranslation, FeaturesTranslation, FormBuilderTranslation, FormsTranslation, KalenderTranslation, MarketingHeroTranslation, MarketingStoryTranslation, MarketingTranslation, MarketingTrustTranslation, PrivacyTranslation, ProfileModulesTranslation, RoadmapTranslation, StandorteTranslation, TreffenTranslation, VereinTranslation, VerfuegbarkeitTranslation].flatMap(
+  [AboutTranslation, AssemblyTranslation, ChangelogTranslation, CommunicationTranslation, CustomFieldsTranslation, DocumentsTranslation, EventAttendanceTranslation, EventHelpersTranslation, EventRegistrationTranslation, EventRidesTranslation, EventsCommonTranslation, FeaturesTranslation, FormBuilderTranslation, FormsTranslation, KalenderTranslation, MarketingHeroTranslation, MarketingStoryTranslation, MarketingTranslation, MarketingTrustTranslation, PrivacyTranslation, ProfileModulesTranslation, RoadmapTranslation, StandorteTranslation, TreffenTranslation, VereinTranslation, VerfuegbarkeitTranslation].flatMap(
     (m) => Object.keys(m.en ?? {}),
   ),
 );
