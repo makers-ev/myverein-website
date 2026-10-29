@@ -122,6 +122,7 @@ Everything under `(protected)/` is wrapped by `src/components/shell/AppShell.tsx
 - **Breadcrumbs** (`breadcrumbsFor`): Heute / page / tab. The tab of `/verein` is now the URL (`/verein?tab=austritte`), so sidebar, breadcrumbs and reload share it.
 - **Global search** (`GlobalSearch.tsx`, `src/lib/globalSearch.ts`, Ctrl/Cmd+K): `GET /clubs/:clubId/search?q=&limit=5` after 250 ms debounce and at least 2 characters (`query_too_short` is mapped to a hint); groups Mitglieder, Termine, Dokumente, Orte appear only when the backend returns them (rights filter is server-side); results link to the matching page. Errors go through `mapApiError`.
 - **Skip link** (`SkipLink.tsx`): first focusable element of every page, jumps to `<main id="main-content">`.
+- **Member table (S3):** sticky header inside a scroll area (max 70vh), a "Spalten" chooser hides optional columns (Kategorie, Konto, Abteilungen, Rollen, Mitglied seit; remembered in `localStorage` `myverein.memberColumns.hidden`), filter chips and sorting as before. The crowded `/verein` tab bar is now reachable grouped through the sidebar (*Verein* vs. *Verwaltung*). Not done yet: bulk actions and detail side panels (still dialogs).
 - Landing after login is `/heute` (`resolveCallbackUrl` default).
 - Account menu (`AuthNav`) keeps the same links for the marketing pages; the notification bell and the club inbox link stay in the navbar.
 
