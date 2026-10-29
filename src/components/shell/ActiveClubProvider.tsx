@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { apiFetch } from '@/lib/api-client';
-import { chooseClub, storeClubId } from '@/lib/activeClub';
+import { chooseClub, storeClubId, useStoredClubId } from '@/lib/activeClub';
 
 export interface ShellClub {
     clubId: string;
@@ -39,7 +39,8 @@ export function ActiveClubProvider({ children }: { children: (key: number) => Re
     const [clubs, setClubs] = useState<ShellClub[] | null>(null);
     const [failed, setFailed] = useState(false);
     const [hasWards, setHasWards] = useState(false);
-    const [activeId, setActiveId] = useState<string | null>(null);
+    // The remembered choice is the single source: a switch in another tab (`storage` event) or the inbox link follows too.
+    const stored = useStoredClubId();
     const [me, setMe] = useState<{ clubId: string; permissions: string[]; roles: { roleType: string }[] } | null>(null);
     const [switches, setSwitches] = useState(0);
     const [attempt, setAttempt] = useState(0);
@@ -51,7 +52,6 @@ export function ActiveClubProvider({ children }: { children: (key: number) => Re
                 if (cancelled) return;
                 setClubs(c.data);
                 setHasWards(w.data.some((x) => x.wards.length > 0));
-                setActiveId(chooseClub(c.data)?.clubId ?? null);
                 setFailed(false);
             })
             .catch(() => !cancelled && setFailed(true));
@@ -59,6 +59,14 @@ export function ActiveClubProvider({ children }: { children: (key: number) => Re
             cancelled = true;
         };
     }, [attempt]);
+
+    const activeId = useMemo(() => chooseClub(clubs, stored)?.clubId ?? null, [clubs, stored]);
+    // Re-key the page subtree whenever the active club changes, whoever changed it (render-time derivation, no effect).
+    const [seenId, setSeenId] = useState<string | null>(null);
+    if (seenId !== activeId) {
+        setSeenId(activeId);
+        if (seenId !== null) setSwitches((n) => n + 1);
+    }
 
     useEffect(() => {
         if (!activeId) return;
@@ -73,9 +81,6 @@ export function ActiveClubProvider({ children }: { children: (key: number) => Re
 
     const switchClub = useCallback((clubId: string) => {
         storeClubId(clubId);
-        setActiveId(clubId);
-        setMe(null);
-        setSwitches((n) => n + 1);
     }, []);
     const reload = useCallback(() => setAttempt((n) => n + 1), []);
 
