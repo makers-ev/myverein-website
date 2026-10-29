@@ -449,6 +449,9 @@ const DocumentsTranslation: Translation = {
         'docs.card.verify.explain.ungueltig': 'Dieser Code ist keine gültige Mitgliedschaft.',
         'docs.card.verify.notStored': 'Das Ergebnis wird hier nicht gespeichert.',
         'docs.card.verify.offline': 'Keine Verbindung, Kontrolle nicht möglich.',
+        'docs.card.offline': 'Keine Verbindung: Es wird der letzte bekannte Stand angezeigt. Die Aktualisierung wird automatisch erneut versucht.',
+        'docs.card.qrExpired': 'Der Code ist abgelaufen und wird neu geladen, sobald eine Verbindung besteht.',
+        'docs.card.admin.err.past': 'Das Ende der Gültigkeit darf nicht in der Vergangenheit liegen.',
     },
     en: {
         'docs.common.back': 'Back',
@@ -893,6 +896,9 @@ const DocumentsTranslation: Translation = {
         'docs.card.verify.explain.ungueltig': 'This code is not a valid membership.',
         'docs.card.verify.notStored': 'The result is not stored here.',
         'docs.card.verify.offline': 'No connection, the check is not possible.',
+        'docs.card.offline': 'No connection: the last known state is shown. The refresh is retried automatically.',
+        'docs.card.qrExpired': 'The code has expired and reloads as soon as there is a connection.',
+        'docs.card.admin.err.past': 'The end of validity must not be in the past.',
     },
 };
 

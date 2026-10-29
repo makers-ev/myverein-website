@@ -9,7 +9,7 @@ import { useConfirm } from '@/components/useConfirm';
 import { Chip, inputClass, primaryButtonClass, secondaryButtonClass } from '@/components/standorte/ui';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ApiError, apiFetch } from '@/lib/api-client';
-import { formatDate } from '@/lib/clubMembers';
+import { formatDate, todayIso } from '@/lib/clubMembers';
 import { clubQuery } from '@/lib/documents';
 import { CARD_STATE_TONE, type MemberCard, cardErrorKey } from '@/lib/memberCard';
 
@@ -46,7 +46,13 @@ export default function MemberCardAdmin({ clubId, clubMemberId }: { clubId: stri
         void load();
     }, [load]);
 
+    const pastDate = validUntil !== '' && validUntil < todayIso();
+
     async function act(path: string, method: 'POST', done: string) {
+        if (pastDate && path !== '/revoke') {
+            setMessage({ text: t('docs.card.admin.err.past'), error: true });
+            return;
+        }
         setBusy(true);
         setMessage(null);
         try {
@@ -83,7 +89,7 @@ export default function MemberCardAdmin({ clubId, clubMemberId }: { clubId: stri
             )}
             <label className="block max-w-xs">
                 <span className="mb-1 block text-xs font-medium text-muted-foreground">{t('docs.card.admin.validUntil')}</span>
-                <input type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} className={inputClass} />
+                <input type="date" min={todayIso()} aria-invalid={pastDate} value={validUntil} onChange={(e) => setValidUntil(e.target.value)} className={inputClass} />
             </label>
             <div className="flex flex-wrap gap-2">
                 {!issued && (

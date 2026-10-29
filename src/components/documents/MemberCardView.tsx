@@ -12,7 +12,7 @@ import { CARD_STATE_TONE, type MemberCard, safeColor, textOn } from '@/lib/membe
  * card is valid, the QR code. The QR sits on a white tile in dark mode too (scanners need the contrast). Colours come from the server
  * but only valid `#RRGGBB` values reach the inline style.
  */
-export default function MemberCardView({ card }: { card: MemberCard }) {
+export default function MemberCardView({ card, offline = false }: { card: MemberCard; offline?: boolean }) {
     const { t, language } = useLanguage();
     const primary = safeColor(card.club.primaryColor, '#1f4e8c');
     const accent = safeColor(card.club.accentColor, primary);
@@ -57,7 +57,12 @@ export default function MemberCardView({ card }: { card: MemberCard }) {
                         <p className="text-center text-xs text-muted-foreground">{t('docs.card.qrHint')}</p>
                     </div>
                 ) : (
-                    <p className="text-sm text-muted-foreground">{t(`docs.card.noQr.${card.state}`)}</p>
+                    <p className="text-sm text-muted-foreground">{t(valid && offline ? 'docs.card.qrExpired' : `docs.card.noQr.${card.state}`)}</p>
+                )}
+                {offline && (
+                    <p role="status" className="text-xs text-warning">
+                        {t('docs.card.offline')}
+                    </p>
                 )}
                 <p className="text-xs text-muted-foreground">
                     {card.validUntil ? t('docs.card.validUntil', { date: formatDate(card.validUntil, language) }) : t('docs.card.validOpen')}

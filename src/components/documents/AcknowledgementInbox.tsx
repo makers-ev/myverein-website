@@ -119,6 +119,7 @@ export default function AcknowledgementInbox({ clubId, onlyMemberId, onCount }: 
                     clubId={clubId}
                     row={answering}
                     onClose={() => setAnswering(null)}
+                    onStale={() => void load()}
                     onAnswered={() => {
                         setAnswering(null);
                         void load();
@@ -129,7 +130,7 @@ export default function AcknowledgementInbox({ clubId, onlyMemberId, onCount }: 
     );
 }
 
-function AnswerDialog({ clubId, row, onClose, onAnswered }: { clubId: string; row: MyAcknowledgement; onClose: () => void; onAnswered: () => void }) {
+function AnswerDialog({ clubId, row, onClose, onStale, onAnswered }: { clubId: string; row: MyAcknowledgement; onClose: () => void; onStale: () => void; onAnswered: () => void }) {
     const { t } = useLanguage();
     const q = clubQuery(clubId);
     const [detail, setDetail] = useState<AcknowledgementDetail | null>(null);
@@ -137,6 +138,7 @@ function AnswerDialog({ clubId, row, onClose, onAnswered }: { clubId: string; ro
     const [password, setPassword] = useState('');
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [stale, setStale] = useState(false);
 
     useEffect(() => {
         let cancelled = false;
@@ -167,11 +169,18 @@ function AnswerDialog({ clubId, row, onClose, onAnswered }: { clubId: string; ro
             onAnswered();
         } catch (err) {
             setError(t(ackErrorKey(err)));
+            const code = (err as { details?: { code?: string } }).details?.code;
+            if (code === 'reauth_failed') setPassword('');
+            if (code === 'already_answered' || code === 'expired') {
+                // The list is out of date: refresh it behind the dialog and take the buttons away.
+                setStale(true);
+                onStale();
+            }
             setBusy(false);
         }
     }
 
-    const canAnswer = row.canAnswer && !!detail?.canAnswer;
+    const canAnswer = row.canAnswer && !!detail?.canAnswer && !stale;
     return (
         <Modal
             open

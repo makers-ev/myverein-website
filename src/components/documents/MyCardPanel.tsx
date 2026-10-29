@@ -24,22 +24,35 @@ export function CardLoader({ clubId, memberId }: { clubId: string; memberId: str
     const [state, setState] = useState<'loading' | 'ok' | 'none' | 'error'>('loading');
     const [message, setMessage] = useState<string | null>(null);
     const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const retry = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const loadRef = useRef<(() => Promise<void>) | null>(null);
+    const [offline, setOffline] = useState(false);
+    const [expired, setExpired] = useState(false);
 
     const load = useCallback(async () => {
         try {
             const res = await apiFetch<{ data: MemberCard }>(`/club-members/${encodeURIComponent(memberId)}/card?${q}`);
             setCard(res.data);
             setState('ok');
+            setOffline(false);
+            setExpired(false);
         } catch (err) {
             // 404: no valid membership / not allowed -- the stale card must not stay on screen.
             if (err instanceof ApiError && err.status === 404) {
                 setCard(null);
                 setState('none');
-            } else setState((prev) => (prev === 'ok' ? 'ok' : 'error'));
+            } else {
+                setState((prev) => (prev === 'ok' ? 'ok' : 'error'));
+                // Keep what we have, say so, and try again shortly.
+                setOffline(true);
+                if (retry.current) clearTimeout(retry.current);
+                retry.current = setTimeout(() => void loadRef.current?.(), 15_000);
+            }
         }
     }, [memberId, q]);
 
     useEffect(() => {
+        loadRef.current = load;
         // eslint-disable-next-line react-hooks/set-state-in-effect
         void load();
     }, [load]);
@@ -48,10 +61,21 @@ export function CardLoader({ clubId, memberId }: { clubId: string; memberId: str
         if (!card) return;
         const delay = refreshDelayMs(card);
         if (delay !== null) timer.current = setTimeout(() => void load(), delay);
+        // Once the token is past its expiry the QR is hidden, whatever the network does.
+        const left = card.tokenExpiresAt ? Date.parse(card.tokenExpiresAt) - Date.now() : null;
+        let hide: ReturnType<typeof setTimeout> | null = null;
+        if (left !== null && Number.isFinite(left)) {
+            hide = setTimeout(() => setExpired(true), Math.max(left, 0));
+        }
         return () => {
             if (timer.current) clearTimeout(timer.current);
+            if (hide) clearTimeout(hide);
         };
     }, [card, load]);
+
+    useEffect(() => () => {
+        if (retry.current) clearTimeout(retry.current);
+    }, []);
 
     useEffect(() => {
         const onVisible = () => {
@@ -76,7 +100,7 @@ export function CardLoader({ clubId, memberId }: { clubId: string; memberId: str
 
     return (
         <div className="space-y-3">
-            <MemberCardView card={card} />
+            <MemberCardView card={expired ? { ...card, token: null } : card} offline={offline || expired} />
             <div className="flex flex-wrap gap-2">
                 <button type="button" className={secondaryButtonClass} onClick={() => void load()}>
                     <RefreshCw className="h-4 w-4" aria-hidden="true" />

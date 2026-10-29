@@ -47,7 +47,8 @@ export default function DokumentePageContent() {
             }
             const q = clubQuery(club.clubId);
             const [folders, me, info, acks] = await Promise.all([
-                apiFetch<Loaded['folders']>(`/documents/folders?${q}`),
+                // A failing folder list only means "no archive", not a broken page (confirmations and the card still work).
+                apiFetch<Loaded['folders']>(`/documents/folders?${q}`).catch(() => ({ data: [], rootLevel: null, maxDepth: 0 }) as Loaded['folders']),
                 apiFetch<{ data: { permissions: string[] } }>(`/club-members/me?${q}`),
                 apiFetch<{ data: { departments: { id: string; name: string }[] } }>(`/club-info?${q}`).catch(() => ({ data: { departments: [] } })),
                 apiFetch<{ total: number }>(`/acknowledgements/mine?${q}&status=offen&pageSize=1`).catch(() => ({ total: 0 })),
