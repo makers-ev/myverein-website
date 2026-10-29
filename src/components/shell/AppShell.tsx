@@ -9,6 +9,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { breadcrumbsFor, buildNavGroups } from '@/lib/navigation';
 import { ActiveClubProvider, useActiveClub } from '@/components/shell/ActiveClubProvider';
 import ClubSwitcher from '@/components/shell/ClubSwitcher';
+import GlobalSearch from '@/components/shell/GlobalSearch';
 import Sidebar from '@/components/shell/Sidebar';
 import { Skeleton } from '@/components/ui';
 
@@ -113,6 +114,9 @@ function ShellBody({ switchKey, children }: { switchKey: number; children: React
                         <Suspense fallback={null}>
                             <Breadcrumbs />
                         </Suspense>
+                    </div>
+                    <div className="ml-auto flex-1 sm:max-w-sm">
+                        <GlobalSearch />
                     </div>
                 </div>
                 {ready && drawer && (
