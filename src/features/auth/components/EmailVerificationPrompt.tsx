@@ -18,7 +18,7 @@ interface EmailVerificationPromptProps {
  * requires email verification before it's usable, so this replaces the
  * immediate redirect with a "check your inbox" screen and a resend action.
  */
-export function EmailVerificationPrompt({ email, callbackUrl = '/settings', onBackToLogin }: EmailVerificationPromptProps) {
+export function EmailVerificationPrompt({ email, callbackUrl = '/heute', onBackToLogin }: EmailVerificationPromptProps) {
     const { t } = useLanguage();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [resent, setResent] = useState(false);

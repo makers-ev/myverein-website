@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { CalendarDays, ChevronLeft, ChevronRight, Download, List, Plus, Rss } from 'lucide-react';
 
 import { apiFetch } from '@/lib/api-client';
+import { chooseClub } from '@/lib/activeClub';
 import { fetchFileBlob, saveBlob } from '@/lib/memberCsv';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getDepartmentColor } from '@/theme/departmentColors';
@@ -67,7 +68,7 @@ export default function KalenderPageContent() {
     const [subscribing, setSubscribing] = useState(false);
     const [exporting, setExporting] = useState(false);
 
-    const activeClub = clubs?.[0] ?? null;
+    const activeClub = chooseClub(clubs) ?? null;
     const pageTabs = (['termine', 'treffen', 'anwesenheit', 'zeiterfassung'] as const).filter((v) => v !== 'zeiterfassung' || canUseTimeTracking(me));
     const canWrite = permissions.includes('calendars:write');
 

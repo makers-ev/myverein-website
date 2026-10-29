@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { apiFetch } from '@/lib/api-client';
+import { chooseClub } from '@/lib/activeClub';
 import { isGuestRole } from '@/lib/loans';
 import { useLanguage } from '@/contexts/LanguageContext';
 import StandorteTab, { type Location } from '@/components/standorte/StandorteTab';
@@ -31,7 +32,7 @@ export default function StandortePageContent() {
     const [ownMemberId, setOwnMemberId] = useState<string | null>(null);
     const [isGuest, setIsGuest] = useState(false);
 
-    const activeClub = clubs?.[0] ?? null;
+    const activeClub = chooseClub(clubs) ?? null;
 
     function loadClubs() {
         apiFetch<{ data: MyClub[] }>('/my-clubs')

@@ -1,8 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import { apiFetch } from '@/lib/api-client';
+import { chooseClub } from '@/lib/activeClub';
 import { useThrottledCallback } from '@/lib/useThrottledCallback';
 import { memberErrorKey } from '@/lib/clubMembers';
 import { type ClubTab, canSeeCredentialOverview, formsGate, isGuardianOnly, visibleTabs } from '@/lib/clubPermissions';
@@ -229,7 +231,10 @@ export default function VereinPageContent() {
     const [clubsError, setClubsError] = useState(false);
     const [info, setInfo] = useState<ClubInfo | null>(null);
     const [me, setMe] = useState<OwnMembership | null>(null);
-    const [tab, setTab] = useState<Tab>('info');
+    // The tab lives in the URL (`/verein?tab=austritte`), so the sidebar, breadcrumbs, reload and links share it.
+    const router = useRouter();
+    const tab = (useSearchParams().get('tab') ?? 'info') as Tab;
+    const setTab = (next: Tab) => router.replace(next === 'info' ? '/verein' : `/verein?tab=${next}`, { scroll: false });
     // Number of open applications (badge on the "Mitglieder" tab); the panel itself pages through them.
     const [applicationsTotal, setApplicationsTotal] = useState<number | null>(null);
     // Open exit requests (badge on the "Austritte" tab); null = unknown / no permission.
@@ -250,7 +255,7 @@ export default function VereinPageContent() {
     const [dpaReload, setDpaReload] = useState(0);
     const [privacyStart, setPrivacyStart] = useState<{ view: PrivacyView; n: number }>({ view: 'consents', n: 0 });
 
-    const activeClub = clubs?.[0] ?? null;
+    const activeClub = chooseClub(clubs) ?? null;
 
     // Signed photo URLs expire: a failed image load refetches only the resource that carried the URL, throttled.
     const refetchBoardPhotos = useThrottledCallback(async () => {

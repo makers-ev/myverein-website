@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { apiFetch } from '@/lib/api-client';
+import { chooseClub } from '@/lib/activeClub';
 import { clearReminder, takeReminder, type ReminderPrefill } from '@/lib/consents';
 import { communicationGate, ownDepartmentIds, selectableDepartments, type Announcement } from '@/lib/communication';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -47,7 +48,7 @@ export default function MitteilungenPageContent() {
     // Consent reminder handed over from Datenschutz > Einwilligungen (Wave 10 W1): opens the composer pre-filled.
     const [prefill, setPrefill] = useState<ReminderPrefill | null>(null);
 
-    const activeClub = clubs?.[0] ?? null;
+    const activeClub = chooseClub(clubs) ?? null;
 
     const loadClubs = useCallback(() => {
         apiFetch<{ data: MyClub[] }>('/my-clubs')

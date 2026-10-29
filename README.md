@@ -112,6 +112,17 @@ Dates and numbers: `dateLocale(language)` (`src/lib/clubMembers.ts`) is the only
 
 German and English are complete (every key, same `{{placeholders}}`); `src/contexts/i18nParity.test.ts` fails on a missing key, an empty text or a placeholder mismatch and runs with `npm test`; `npm run check:i18n` runs just that check (plus the all-language check of `LanguageContext.test.ts`). The other nine languages (fr, es, pt, it, nl, pl, ru, ja, zh-Hans) are deliberately partial: the shell texts of the early waves exist in all of them, everything newer falls back to English per key via `t()` (ADR-009). Translation need, by priority: shell/navigation/"Heute"/errors (`UxTranslation.ts`), then login/privacy texts, then the club modules.
 
+### App shell and navigation (Wave 14 S1-S4)
+
+Everything under `(protected)/` is wrapped by `src/components/shell/AppShell.tsx` (mounted in `(protected)/layout.tsx`).
+
+- **Sidebar** (`Sidebar.tsx`, model in `src/lib/navigation.ts` `buildNavGroups`): groups *Heute*, *Verein* (Vereinsinfo, Mitglieder, Abteilungen, Mein Profil, Mitteilungen, Abstimmungen, Familie only with wards), *Kalender & Treffen* (Kalender, Verfügbarkeit), *Orte & Material*, *Dokumente* and, only with the matching permission, *Verwaltung* (Anträge, Austritte, Kennzahlen, Formulare, Wer fehlt, Datenschutz, Vereinseinstellungen). The structure is identical for every role, only *Verwaltung* varies (deny-by-default, derived from `GET /club-members/me` permissions via `visibleTabs`). A guardian-only account sees only *Familie*. Collapsible on desktop (choice in `localStorage` `myverein.sidebarCollapsed`), a drawer with Escape and focus handling below `md`.
+- **Club switcher** (`ClubSwitcher.tsx`, `ActiveClubProvider.tsx`, `src/lib/activeClub.ts`): the active club is shown in the header; with more than one club a select switches it without a reload (children of the shell are re-keyed so every page refetches). The choice is remembered in `localStorage` `myverein.activeClubId`; every page picks its club with `chooseClub(clubs)` (remembered one, else the first), `InboxLink` follows via `useStoredClubId()`.
+- **Breadcrumbs** (`breadcrumbsFor`): Heute / page / tab. The tab of `/verein` is now the URL (`/verein?tab=austritte`), so sidebar, breadcrumbs and reload share it.
+- **Skip link** (`SkipLink.tsx`): first focusable element of every page, jumps to `<main id="main-content">`.
+- Landing after login is `/heute` (`resolveCallbackUrl` default).
+- Account menu (`AuthNav`) keeps the same links for the marketing pages; the notification bell and the club inbox link stay in the navbar.
+
 ### Shared helpers (Wave 7)
 
 - `src/lib/memberCsv.ts` (W6) — import report/mapping helpers, export column logic and query, blob download (`fetchCsvBlob`/`saveBlob`); `src/lib/keyHistory.ts` (W11) — key-history types, query, Berlin date-time; `src/lib/wifiQr.ts` — WLAN security helpers and `wifiQrValue`. Tested in `memberCsv.test.ts`, `keyHistory.test.ts`, `wifiQr.test.ts`.

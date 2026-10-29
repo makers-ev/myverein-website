@@ -1,4 +1,4 @@
-const DEFAULT_REDIRECT = '/settings';
+const DEFAULT_REDIRECT = '/heute';
 
 /**
  * Only same-origin relative paths are allowed for the post-login redirect,

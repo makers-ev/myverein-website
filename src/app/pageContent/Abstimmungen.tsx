@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 import { apiFetch } from '@/lib/api-client';
+import { chooseClub } from '@/lib/activeClub';
 import { ASSEMBLY_MANAGE } from '@/lib/assembly';
 import { can } from '@/lib/clubPermissions';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -39,7 +40,7 @@ export default function AbstimmungenPageContent() {
             .then(({ data }) => {
                 setClubs(data);
                 setClubsError(false);
-                setClubId((current) => (current && data.some((c) => c.clubId === current) ? current : (data[0]?.clubId ?? null)));
+                setClubId((current) => (current && data.some((c) => c.clubId === current) ? current : (chooseClub(data)?.clubId ?? null)));
             })
             .catch(() => setClubsError(true));
     }, [retry]);

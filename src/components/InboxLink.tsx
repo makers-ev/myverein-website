@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Megaphone } from 'lucide-react';
 
 import { apiFetch } from '@/lib/api-client';
+import { chooseClub, useStoredClubId } from '@/lib/activeClub';
 import { INBOX_CHANGED_EVENT, badgeText, loadUnreadCount } from '@/lib/communication';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -20,18 +21,20 @@ export function InboxLink() {
     const { t } = useLanguage();
     const [clubId, setClubId] = useState<string | null>(null);
     const [count, setCount] = useState(0);
+    // Follows the club switcher without a reload.
+    const stored = useStoredClubId();
 
     useEffect(() => {
         let cancelled = false;
         apiFetch<{ data: { clubId: string }[] }>('/my-clubs')
             .then((res) => {
-                if (!cancelled) setClubId(res.data[0]?.clubId ?? null);
+                if (!cancelled) setClubId(chooseClub(res.data, stored)?.clubId ?? null);
             })
             .catch(() => undefined);
         return () => {
             cancelled = true;
         };
-    }, []);
+    }, [stored]);
 
     useEffect(() => {
         if (!clubId) return;
