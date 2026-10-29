@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { apiFetch } from '@/lib/api-client';
@@ -37,20 +37,29 @@ export default function HeutePageContent() {
     const [error, setError] = useState<unknown>(null);
     const clubId = activeClub?.clubId ?? null;
 
-    const load = useCallback(async () => {
-        if (!clubId) return;
-        setError(null);
-        try {
-            setData((await apiFetch<{ data: TodayData }>(todayPath(clubId))).data);
-        } catch (e) {
-            setError(e);
-        }
-    }, [clubId]);
+    const [attempt, setAttempt] = useState(0);
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        void load();
-    }, [load]);
+        if (!clubId) return;
+        let cancelled = false;
+        apiFetch<{ data: TodayData }>(todayPath(clubId))
+            .then((r) => {
+                if (cancelled) return;
+                setData(r.data);
+                setError(null);
+            })
+            .catch((e: unknown) => {
+                if (!cancelled) setError(e);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [clubId, attempt]);
+
+    const retry = () => {
+        setError(null);
+        setAttempt((n) => n + 1);
+    };
 
     // A guardian-only account has no club overview: its area is /familie.
     useEffect(() => {
@@ -63,9 +72,11 @@ export default function HeutePageContent() {
     let body: ReactNode;
     if (failed) body = <ErrorState onRetry={reload} />;
     else if (clubs === null) body = <Skeleton lines={5} />;
+    // A guardian-only account is on its way to /familie: no "no club" flash.
+    else if (clubs.length === 0 && hasWards) body = <Skeleton lines={5} />;
     else if (clubs.length === 0) {
         body = <EmptyState title={t('today.noClub.title')} hint={t('today.noClub.hint')} action={<Link href="/verein" className={linkCls}>{t('today.noClub.action')}</Link>} />;
-    } else if (error) body = <ErrorState error={error} onRetry={() => void load()} />;
+    } else if (error) body = <ErrorState error={error} onRetry={retry} />;
     else if (!data) body = <Skeleton lines={5} />;
     else {
         const todos = boardTodos(data);
