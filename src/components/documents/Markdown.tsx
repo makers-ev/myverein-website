@@ -1,6 +1,9 @@
+'use client';
+
 import type { ReactNode } from 'react';
 
-import { type Block, type Inline, parseMarkdown } from '@/lib/markdown';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { type Block, type Inline, type TableAlign, parseMarkdown } from '@/lib/markdown';
 
 function renderInline(nodes: Inline[]): ReactNode[] {
     return nodes.map((n, i) => {
@@ -11,6 +14,8 @@ function renderInline(nodes: Inline[]): ReactNode[] {
                 return <strong key={i}>{renderInline(n.children)}</strong>;
             case 'em':
                 return <em key={i}>{renderInline(n.children)}</em>;
+            case 'br':
+                return <br key={i} />;
             case 'code':
                 return (
                     <code key={i} className="rounded bg-muted px-1 py-0.5 text-[0.85em]">
@@ -29,7 +34,7 @@ function renderInline(nodes: Inline[]): ReactNode[] {
 
 const HEADING_CLASS = ['', 'text-xl', 'text-lg', 'text-base', 'text-base', 'text-sm', 'text-sm'];
 
-function renderBlock(b: Block, i: number): ReactNode {
+function renderBlock(b: Block, i: number, tableLabel: string): ReactNode {
     switch (b.t) {
         case 'heading': {
             // The page owns the h1; document headings start at h2.
@@ -68,6 +73,35 @@ function renderBlock(b: Block, i: number): ReactNode {
                     <code>{b.text}</code>
                 </pre>
             );
+        case 'table': {
+            const alignClass = (a: TableAlign) => (a === 'center' ? 'text-center' : a === 'right' ? 'text-right' : 'text-left');
+            return (
+                <div key={i} className="mt-3 overflow-x-auto rounded-lg border border-border" tabIndex={0} role="region" aria-label={tableLabel}>
+                    <table className="w-full border-collapse text-sm text-foreground">
+                        <thead className="bg-muted">
+                            <tr>
+                                {b.head.map((cell, c) => (
+                                    <th key={c} scope="col" className={`border-b border-border px-3 py-2 font-semibold ${alignClass(b.align[c] ?? null)}`}>
+                                        {renderInline(cell)}
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {b.rows.map((row, r) => (
+                                <tr key={r} className="border-b border-border last:border-b-0">
+                                    {row.map((cell, c) => (
+                                        <td key={c} className={`px-3 py-2 align-top ${alignClass(b.align[c] ?? null)}`}>
+                                            {renderInline(cell)}
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            );
+        }
         case 'hr':
             return <hr key={i} className="my-4 border-border" />;
     }
@@ -75,5 +109,7 @@ function renderBlock(b: Block, i: number): ReactNode {
 
 /** Sanitised Markdown: typed tree rendered as React elements (no HTML injection), only http(s)/mailto links. */
 export default function Markdown({ source, className = '' }: { source: string; className?: string }) {
-    return <div className={`break-words text-sm leading-relaxed text-foreground ${className}`.trim()}>{parseMarkdown(source).map(renderBlock)}</div>;
+    const { t } = useLanguage();
+    const label = t('docs.markdown.table');
+    return <div className={`break-words text-sm leading-relaxed text-foreground ${className}`.trim()}>{parseMarkdown(source).map((b, i) => renderBlock(b, i, label))}</div>;
 }

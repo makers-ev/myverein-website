@@ -452,6 +452,7 @@ const DocumentsTranslation: Translation = {
         'docs.card.offline': 'Keine Verbindung: Es wird der letzte bekannte Stand angezeigt. Die Aktualisierung wird automatisch erneut versucht.',
         'docs.card.qrExpired': 'Der Code ist abgelaufen und wird neu geladen, sobald eine Verbindung besteht.',
         'docs.card.admin.err.past': 'Das Ende der Gültigkeit darf nicht in der Vergangenheit liegen.',
+        'docs.markdown.table': 'Tabelle (horizontal scrollbar)',
     },
     en: {
         'docs.common.back': 'Back',
@@ -899,6 +900,7 @@ const DocumentsTranslation: Translation = {
         'docs.card.offline': 'No connection: the last known state is shown. The refresh is retried automatically.',
         'docs.card.qrExpired': 'The code has expired and reloads as soon as there is a connection.',
         'docs.card.admin.err.past': 'The end of validity must not be in the past.',
+        'docs.markdown.table': 'Table (horizontally scrollable)',
     },
 };
 

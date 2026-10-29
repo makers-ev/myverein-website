@@ -10,6 +10,7 @@ export type Inline =
     | { t: 'strong'; children: Inline[] }
     | { t: 'em'; children: Inline[] }
     | { t: 'code'; text: string }
+    | { t: 'br' }
     | { t: 'link'; href: string; children: Inline[] };
 
 export type Block =
@@ -18,7 +19,13 @@ export type Block =
     | { t: 'list'; ordered: boolean; items: Inline[][] }
     | { t: 'quote'; children: Inline[] }
     | { t: 'code'; text: string }
+    | { t: 'table'; align: TableAlign[]; head: Inline[][]; rows: Inline[][][] }
     | { t: 'hr' };
+
+export type TableAlign = 'left' | 'center' | 'right' | null;
+
+const MAX_TABLE_COLUMNS = 20;
+const MAX_TABLE_ROWS = 500;
 
 /** Only `http(s)` and `mailto` targets are links; anything else (javascript:, data:, relative, with whitespace or control characters) is not. */
 export function safeHref(raw: string): string | null {
@@ -60,10 +67,61 @@ export function parseInline(src: string, depth = 0): Inline[] {
     return out;
 }
 
+/** Cells of a pipe-table row: optional outer pipes, `\|` is a literal pipe, cells are trimmed. */
+export function splitTableRow(line: string): string[] {
+    const cells: string[] = [];
+    let cur = '';
+    const text = line.trim();
+    for (let k = 0; k < text.length; k++) {
+        const ch = text[k]!;
+        if (ch === '\\' && text[k + 1] === '|') {
+            cur += '|';
+            k++;
+        } else if (ch === '|') {
+            cells.push(cur);
+            cur = '';
+        } else cur += ch;
+    }
+    cells.push(cur);
+    if (text.startsWith('|')) cells.shift();
+    if (cells.length > 0 && text.endsWith('|') && !text.endsWith('\\|')) cells.pop();
+    return cells.map((c) => c.trim());
+}
+
+const SEPARATOR_CELL = /^:?-+:?$/;
+
+function separatorAlign(line: string): TableAlign[] | null {
+    if (!line.includes('-') || !/^[\s|:-]+$/.test(line)) return null;
+    const cells = splitTableRow(line);
+    if (cells.length === 0 || !cells.every((c) => SEPARATOR_CELL.test(c))) return null;
+    return cells.map((c) => (c.startsWith(':') && c.endsWith(':') ? 'center' : c.endsWith(':') ? 'right' : c.startsWith(':') ? 'left' : null));
+}
+
+/** Inline content of a paragraph: a line ending in two spaces or a backslash is a hard line break, otherwise lines flow together. */
+function paragraphInline(rawLines: string[]): Inline[] {
+    const out: Inline[] = [];
+    rawLines.forEach((raw, idx) => {
+        const hard = / {2,}$/.test(raw) || raw.endsWith('\\');
+        const text = raw.trim().replace(/\\$/, '').trim();
+        const nodes = parseInline(text);
+        if (idx > 0 && !(out[out.length - 1]?.t === 'br')) out.push({ t: 'text', text: ' ' });
+        out.push(...nodes);
+        if (hard && idx < rawLines.length - 1) out.push({ t: 'br' });
+    });
+    // Merge neighbouring text nodes so soft line breaks do not split a sentence into pieces.
+    return out.reduce<Inline[]>((acc, n) => {
+        const prev = acc[acc.length - 1];
+        if (prev?.t === 'text' && n.t === 'text') prev.text += n.text;
+        else acc.push(n);
+        return acc;
+    }, []);
+}
+
 export function parseMarkdown(source: string): Block[] {
     const lines = source.replace(/\r\n?/g, '\n').split('\n');
     const blocks: Block[] = [];
     let i = 0;
+    const tableAt = (k: number) => k + 1 < lines.length && lines[k]!.includes('|') && separatorAlign(lines[k + 1]!) !== null && splitTableRow(lines[k]!).length === separatorAlign(lines[k + 1]!)!.length;
     const startsBlock = (line: string) => /^(#{1,6}\s|>\s?|```|\s*[-*]\s+|\s*\d+[.)]\s+|(-{3,}|\*{3,}|_{3,})\s*$)/.test(line);
     while (i < lines.length) {
         const line = lines[i]!;
@@ -109,9 +167,24 @@ export function parseMarkdown(source: string): Block[] {
             blocks.push({ t: 'list', ordered, items });
             continue;
         }
+        if (tableAt(i)) {
+            const align = separatorAlign(lines[i + 1]!)!.slice(0, MAX_TABLE_COLUMNS);
+            const width = align.length;
+            const cell = (c: string | undefined) => parseInline(c ?? '');
+            const head = splitTableRow(lines[i]!).slice(0, width).map(cell);
+            i += 2;
+            const rows: Inline[][][] = [];
+            while (i < lines.length && lines[i]!.trim() !== '' && lines[i]!.includes('|') && !startsBlock(lines[i]!) && rows.length < MAX_TABLE_ROWS) {
+                const cells = splitTableRow(lines[i]!);
+                rows.push(Array.from({ length: width }, (_, c) => cell(cells[c])));
+                i++;
+            }
+            blocks.push({ t: 'table', align, head, rows });
+            continue;
+        }
         const para: string[] = [];
-        while (i < lines.length && lines[i]!.trim() !== '' && (para.length === 0 || !startsBlock(lines[i]!))) para.push(lines[i++]!.trim());
-        blocks.push({ t: 'paragraph', children: parseInline(para.join(' ')) });
+        while (i < lines.length && lines[i]!.trim() !== '' && (para.length === 0 || (!startsBlock(lines[i]!) && !tableAt(i)))) para.push(lines[i++]!);
+        blocks.push({ t: 'paragraph', children: paragraphInline(para) });
     }
     return blocks;
 }

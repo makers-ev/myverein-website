@@ -48,3 +48,59 @@ describe('parseMarkdown', () => {
     });
     it('returns nothing for empty input', () => expect(parseMarkdown('  \n\n')).toEqual([]));
 });
+
+describe('tables', () => {
+    const t = (s: string) => parseMarkdown(s)[0] as Extract<ReturnType<typeof parseMarkdown>[number], { t: 'table' }>;
+    const text = (cell: ReturnType<typeof parseInline>) => cell.map((n) => (n.t === 'text' ? n.text : '?')).join('');
+
+    it('parses the exact sample from the bylaws', () => {
+        const blocks = parseMarkdown('| Kategorie | Jahresbeitrag |\n| --- | --- |\n| Aktiv | 120 € |');
+        expect(blocks).toHaveLength(1);
+        const table = blocks[0] as { t: string; head: never[]; rows: never[][]; align: unknown[] };
+        expect(table.t).toBe('table');
+        expect(table.head.map(text)).toEqual(['Kategorie', 'Jahresbeitrag']);
+        expect(table.rows.map((r) => r.map(text))).toEqual([['Aktiv', '120 €']]);
+        expect(table.align).toEqual([null, null]);
+    });
+    it('does not merge consecutive rows into a paragraph, also after text', () => {
+        const blocks = parseMarkdown('Beiträge:\n| A | B |\n|---|---|\n| 1 | 2 |\n| 3 | 4 |\n\nDanach.');
+        expect(blocks.map((b) => b.t)).toEqual(['paragraph', 'table', 'paragraph']);
+        expect(t('| A |\n|---|\n| 1 |\n| 2 |').rows).toHaveLength(2);
+    });
+    it('reads alignment colons', () => {
+        expect(t('a | b | c | d\n:--- | :---: | ---: | ---\n1|2|3|4').align).toEqual(['left', 'center', 'right', null]);
+    });
+    it('tolerates ragged rows and escaped pipes', () => {
+        const table = t('| A | B |\n| - | - |\n| only |\n| x \\| y | 2 | extra |');
+        expect(table.rows[0]!.map(text)).toEqual(['only', '']);
+        expect(table.rows[1]!.map(text)).toEqual(['x | y', '2']);
+    });
+    it('formats cell content inline', () => {
+        const table = t('| **Name** | Link |\n| --- | --- |\n| *kursiv* | [x](https://x.de) |');
+        expect(table.head[0]![0]!.t).toBe('strong');
+        expect(table.rows[0]![0]![0]!.t).toBe('em');
+        expect(table.rows[0]![1]![0]!.t).toBe('link');
+    });
+    it('keeps HTML and unsafe links in cells harmless', () => {
+        const table = t('| <script>alert(1)</script> | [a](javascript:alert) |\n| --- | --- |\n| <img src=x onerror=alert(1)> | ![i](data:x) |');
+        expect(text(table.head[0]!)).toBe('<script>alert(1)</script>');
+        expect(text(table.head[1]!)).toBe('a');
+        expect(text(table.rows[0]![0]!)).toBe('<img src=x onerror=alert(1)>');
+        expect(text(table.rows[0]![1]!)).toBe('i');
+    });
+    it('needs a separator row, otherwise it stays a paragraph', () => {
+        expect(parseMarkdown('| a | b |\n| c | d |').map((b) => b.t)).toEqual(['paragraph']);
+        expect(parseMarkdown('| a | b |\n| --- |').map((b) => b.t)).toEqual(['paragraph']);
+    });
+    it('does not turn a horizontal rule under text into a table', () => {
+        expect(parseMarkdown('Text\n---').map((b) => b.t)).toEqual(['paragraph', 'hr']);
+    });
+});
+
+describe('line breaks', () => {
+    it('breaks hard after two spaces or a backslash, flows soft lines together', () => {
+        const [p] = parseMarkdown('eins  \nzwei\\\ndrei\nvier');
+        expect((p as { children: { t: string }[] }).children.map((n) => n.t)).toEqual(['text', 'br', 'text', 'br', 'text']);
+        expect(parseMarkdown('a\nb')[0]).toEqual({ t: 'paragraph', children: [{ t: 'text', text: 'a b' }] });
+    });
+});
