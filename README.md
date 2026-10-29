@@ -89,6 +89,29 @@ project](#rebranding-this-template-for-a-new-project)) and embed
 Responds 503 if `CONTACT_SMTP_*`/`CONTACT_TO_EMAIL` are unset (fails closed,
 not a silent no-op).
 
+### Components (Wave 14 DS1)
+
+The shared building blocks, named identically in myverein-mobile (`src/components/ui`). Use these instead of per-screen copies.
+
+| Component | Where | Props | When to use |
+|---|---|---|---|
+| `EmptyState` | `src/components/ui.tsx` | `title`, `hint?`, `action?`, `className?` | Empty list/page; always offer the next action (button or link) |
+| `Skeleton` | `src/components/ui.tsx` | `lines?` (3), `className?` | Loading of a block with unknown content; announced once via `role="status"` |
+| `ErrorState` | `src/components/ui.tsx` | `error?` (any caught value), `onRetry?`, `className?` | Failed load; prints `mapApiError(error)`, never the server text; with `onRetry` shows "Erneut versuchen" |
+| `Badge` | `src/components/ui.tsx` | `tone?` (`neutral`/`primary`/`danger`), `children` | Counts and short statuses; always with text, never color alone |
+| `LoadError` | `src/components/LoadError.tsx` | `onRetry`, `error?`, `className?` | Thin wrapper around `ErrorState` kept for the existing pages |
+| `LoadingText` | `src/components/LoadingText.tsx` | `className?` | Inline "…" loading placeholder |
+| `Modal` | `src/components/Modal.tsx` | `open`, `onClose`, `title`, `footer?`, `size?` | Every dialog: focus trap, Escape (topmost only), focus restore, `aria-modal` |
+| `useConfirm` | `src/components/useConfirm.tsx` | `confirm({title, body, confirmLabel, danger?})` -> `Promise<boolean>`, `dialog` | Every confirmation; never `window.confirm` |
+
+Error texts: `mapApiError(err, t, overrides?)` in `src/lib/mapApiError.ts` is the one place that turns a failed request into a localized plain-language text (keys `err.*` in `UxTranslation.ts`): `overrides[code]`, then the shared code table (`DPA_REQUIRED`, `QUOTA_EXCEEDED`, `query_too_short`, ...; case-insensitive), then the HTTP status (401/403/404/409/429/4xx/5xx), then a generic text; a thrown non-`ApiError` is a network problem. `apiFetch` reads both the nested `{ error: { code, message } }` and the flat `{ error, code }` body. Older per-domain mappers (`memberErrorKey`, `eventErrorKey`, ...) stay for their screens and fall back to the same plain texts.
+
+Dates and numbers: `dateLocale(language)` (`src/lib/clubMembers.ts`) is the only source of the formatting locale (`de-DE` / `en-GB` from the UI language, which defaults to the browser's `Accept-Language`); no page hardcodes a locale.
+
+### Internationalisation (Wave 14 DS3)
+
+German and English are complete (every key, same `{{placeholders}}`); `src/contexts/i18nParity.test.ts` fails on a missing key, an empty text or a placeholder mismatch and runs with `npm test`; `npm run check:i18n` runs just that check (plus the all-language check of `LanguageContext.test.ts`). The other nine languages (fr, es, pt, it, nl, pl, ru, ja, zh-Hans) are deliberately partial: the shell texts of the early waves exist in all of them, everything newer falls back to English per key via `t()` (ADR-009). Translation need, by priority: shell/navigation/"Heute"/errors (`UxTranslation.ts`), then login/privacy texts, then the club modules.
+
 ### Shared helpers (Wave 7)
 
 - `src/lib/memberCsv.ts` (W6) — import report/mapping helpers, export column logic and query, blob download (`fetchCsvBlob`/`saveBlob`); `src/lib/keyHistory.ts` (W11) — key-history types, query, Berlin date-time; `src/lib/wifiQr.ts` — WLAN security helpers and `wifiQrValue`. Tested in `memberCsv.test.ts`, `keyHistory.test.ts`, `wifiQr.test.ts`.

@@ -75,7 +75,8 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
         const apiError = new ApiError(
             error.status,
             nested?.code ?? body.code ?? 'UNKNOWN',
-            nested?.message ?? body.message ?? 'Request failed',
+            // Tolerates the flat `{ error: string, code }` shape too.
+            nested?.message ?? (typeof body.error === 'string' ? body.error : undefined) ?? body.message ?? 'Request failed',
             nested?.details ?? body.details,
         );
         // Wave 10: the DPA gate locks writes of the whole club; every screen hears about it (see DpaRequiredNotice).

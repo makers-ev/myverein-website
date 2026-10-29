@@ -1,5 +1,6 @@
 'use client';
 
+import { dateLocale } from '@/lib/clubMembers';
 import { History, Sparkles, Wrench, Bug } from 'lucide-react';
 
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -51,7 +52,7 @@ export default function ChangelogPageContent() {
                                         <div className={`mb-2 flex items-baseline gap-2 ${isRight ? '' : 'sm:justify-end'}`}>
                                             <h2 className="text-sm font-bold text-foreground">{localizeDeEn(release.title, language)}</h2>
                                             <time dateTime={release.date} className="text-xs font-medium text-muted-foreground">
-                                                {new Date(release.date).toLocaleDateString(language === 'de' ? 'de-DE' : 'en-US', {
+                                                {new Date(release.date).toLocaleDateString(dateLocale(language), {
                                                     year: 'numeric',
                                                     month: 'short',
                                                     day: 'numeric',

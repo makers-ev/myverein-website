@@ -1,3 +1,5 @@
+import { dateLocale } from './clubMembers';
+
 /** Meeting types of the backend (`MEETING_TYPES`, `meetings.type` enum, Wave 7 B17). */
 export const MEETING_TYPES = ['vorstandssitzung', 'mitgliederversammlung', 'sonstige'] as const;
 export type MeetingType = (typeof MEETING_TYPES)[number];
@@ -101,7 +103,7 @@ export function fromDatetimeLocal(value: string): string | null {
 
 /** Date and time of a meeting in Europe/Berlin, formatted for the UI language. */
 export function formatMeetingDateTime(iso: string | Date, language: string): string {
-    return new Date(iso).toLocaleString(language === 'de' ? 'de-DE' : 'en-GB', { timeZone: TZ, dateStyle: 'short', timeStyle: 'short' });
+    return new Date(iso).toLocaleString(dateLocale(language), { timeZone: TZ, dateStyle: 'short', timeStyle: 'short' });
 }
 
 /**
