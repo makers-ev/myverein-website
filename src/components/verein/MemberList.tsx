@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Download, Eye, Pencil, Search, ShieldCheck, Upload, UserPlus, X } from 'lucide-react';
 
 import MemberAvatar from '@/components/verein/MemberAvatar';
@@ -116,12 +116,33 @@ export default function MemberList({
         setHiddenCols(readHiddenColumns());
     }, []);
     const show = (c: OptionalColumn) => !hiddenCols.includes(c);
+    const [columnsOpen, setColumnsOpen] = useState(false);
+    const columnsRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (!columnsOpen) return;
+        const onDown = (e: MouseEvent) => {
+            if (columnsRef.current && !columnsRef.current.contains(e.target as Node)) setColumnsOpen(false);
+        };
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setColumnsOpen(false);
+        };
+        document.addEventListener('mousedown', onDown);
+        document.addEventListener('keydown', onKey);
+        return () => {
+            document.removeEventListener('mousedown', onDown);
+            document.removeEventListener('keydown', onKey);
+        };
+    }, [columnsOpen]);
     function toggleColumn(c: OptionalColumn) {
-        setHiddenCols((cur) => {
-            const next = cur.includes(c) ? cur.filter((x) => x !== c) : [...cur, c];
-            writeHiddenColumns(next);
-            return next;
-        });
+        const next = hiddenCols.includes(c) ? hiddenCols.filter((x) => x !== c) : [...hiddenCols, c];
+        setHiddenCols(next);
+        writeHiddenColumns(next);
+        // A hidden column can no longer be the sort column (the header that shows the arrow is gone).
+        if (c === 'joined' && next.includes('joined') && sort === 'joinedAt') {
+            setSort('name');
+            setOrder('asc');
+            setPage(1);
+        }
     }
     const [sort, setSort] = useState<SortKey>('name');
     const [order, setOrder] = useState<'asc' | 'desc'>('asc');
@@ -338,17 +359,21 @@ export default function MemberList({
                         {t('verein.export.open')}
                     </button>
                 )}
-                <details className="relative">
-                    <summary className={`${secondaryButtonClass} inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 !px-3 !py-2`}>{t('verein.members.columns')}</summary>
-                    <div className="absolute right-0 z-20 mt-1 w-56 rounded-xl border border-border bg-card p-2 shadow-lg">
-                        {OPTIONAL_COLUMNS.map((c) => (
-                            <label key={c} className="flex min-h-11 items-center gap-2 rounded px-2 text-sm text-foreground hover:bg-muted">
-                                <input type="checkbox" checked={show(c)} onChange={() => toggleColumn(c)} />
-                                {t(`verein.members.table.${c === 'joined' ? 'joined' : c}`)}
-                            </label>
-                        ))}
-                    </div>
-                </details>
+                <div ref={columnsRef} className="relative">
+                    <button type="button" aria-expanded={columnsOpen} onClick={() => setColumnsOpen((o) => !o)} className={`${secondaryButtonClass} inline-flex min-h-11 items-center gap-1.5 !px-3 !py-2`}>
+                        {t('verein.members.columns')}
+                    </button>
+                    {columnsOpen && (
+                        <div className="absolute right-0 z-20 mt-1 w-56 rounded-xl border border-border bg-card p-2 shadow-lg">
+                            {OPTIONAL_COLUMNS.map((c) => (
+                                <label key={c} className="flex min-h-11 items-center gap-2 rounded px-2 text-sm text-foreground hover:bg-muted">
+                                    <input type="checkbox" checked={show(c)} onChange={() => toggleColumn(c)} />
+                                    {t(`verein.members.table.${c === 'joined' ? 'joined' : c}`)}
+                                </label>
+                            ))}
+                        </div>
+                    )}
+                </div>
                 <MemberListReportAction clubId={clubId} departments={departments} canSensitive={canSensitive} />
                 {canWrite && (
                     <button type="button" onClick={() => setCreating(true)} className={`${primaryButtonClass} inline-flex items-center gap-1.5`}>
