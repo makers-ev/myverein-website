@@ -14,6 +14,8 @@ export interface NavEntry {
     icon: NavIcon;
     /** Tab of `/verein` the entry opens (active-state matching). */
     tab?: ClubTab;
+    /** Second door to a tab that another entry already marks: never shown as the active one (exactly one active entry). */
+    secondary?: boolean;
 }
 
 export interface NavGroup {
@@ -37,7 +39,16 @@ export function buildNavGroups({ hasClub, hasWards, permissions, roles }: NavInp
     if (!hasClub) {
         return hasWards ? [{ id: 'club', labelKey: 'nav.group.club', entries: [{ id: 'family', labelKey: 'nav.familie', href: '/familie', icon: 'family' }] }] : [{ id: 'today', labelKey: 'nav.group.today', entries: [{ id: 'today', labelKey: 'nav.heute', href: '/heute', icon: 'today' }] }];
     }
-    const perms = permissions ?? [];
+    // Rights not known yet (loading / switching club): only the basics, so the sidebar does not flash entries that vanish again.
+    if (permissions === null) {
+        const basics: NavEntry[] = [verein('info', 'nav.verein', 'club', 'info'), verein('profile', 'nav.profile', 'profile', 'profil')];
+        if (hasWards) basics.push({ id: 'family', labelKey: 'nav.familie', href: '/familie', icon: 'family' });
+        return [
+            { id: 'today', labelKey: 'nav.group.today', entries: [{ id: 'today', labelKey: 'nav.heute', href: '/heute', icon: 'today' }] },
+            { id: 'club', labelKey: 'nav.group.club', entries: basics },
+        ];
+    }
+    const perms = permissions;
     const tabs = visibleTabs(perms, roles);
     const clubEntries: NavEntry[] = [verein('info', 'nav.verein', 'club', 'info')];
     if (tabs.includes('mitglieder')) clubEntries.push(verein('members', 'nav.members', 'members', 'mitglieder'));
@@ -56,7 +67,7 @@ export function buildNavGroups({ hasClub, hasWards, permissions, roles }: NavInp
     if (isGuardianOnly(perms, roles)) return groups.filter((g) => g.id === 'today' || g.id === 'club');
 
     const admin: NavEntry[] = [];
-    if (can(perms, 'members:write')) admin.push(verein('applications', 'nav.admin.applications', 'applications', 'mitglieder'));
+    if (can(perms, 'members:write')) admin.push({ ...verein('applications', 'nav.admin.applications', 'applications', 'mitglieder'), secondary: true });
     if (tabs.includes('austritte')) admin.push(verein('exits', 'nav.admin.exits', 'exits', 'austritte'));
     if (tabs.includes('kennzahlen')) admin.push(verein('stats', 'nav.admin.stats', 'stats', 'kennzahlen'));
     if (tabs.includes('formulare')) admin.push(verein('forms', 'nav.admin.forms', 'forms', 'formulare'));
@@ -87,19 +98,38 @@ const PAGE_LABELS: Record<string, string> = {
     '/notifications': 'nav.notifications',
 };
 
+const CLUB_TABS: readonly ClubTab[] = ['info', 'profil', 'mitglieder', 'abteilungen', 'austritte', 'kennzahlen', 'formulare', 'zusatzfelder', 'einstellungen', 'fehlt', 'datenschutz'];
+
+/** `?tab=` as the club page reads it: an unknown value falls back to the default tab. */
+export function normalizeTab(tab: string | null): ClubTab {
+    return CLUB_TABS.find((t) => t === tab) ?? 'info';
+}
+
+/** Label of the page `pathname` belongs to (longest prefix, so sub-routes keep their section). */
+function pageLabel(pathname: string): string | undefined {
+    const key = Object.keys(PAGE_LABELS)
+        .filter((k) => pathname === k || pathname.startsWith(`${k}/`))
+        .sort((a, b) => b.length - a.length)[0];
+    return key ? PAGE_LABELS[key] : undefined;
+}
+
 /** Home > page [> tab of the club page]. The club name is shown by the switcher next to it. */
 export function breadcrumbsFor(pathname: string, tab: string | null): Crumb[] {
+    if (pathname === '/heute') return [{ labelKey: 'nav.heute' }];
     const crumbs: Crumb[] = [{ labelKey: 'nav.heute', href: '/heute' }];
-    const label = PAGE_LABELS[pathname];
-    if (!label || pathname === '/heute') return pathname === '/heute' ? [{ labelKey: 'nav.heute' }] : crumbs;
-    if (pathname === '/verein' && tab && tab !== 'info') return [...crumbs, { labelKey: label, href: '/verein' }, { labelKey: `verein.tab.${tab}` }];
+    const label = pageLabel(pathname);
+    if (!label) return crumbs;
+    if (pathname === '/verein') {
+        const current = normalizeTab(tab);
+        if (current !== 'info') return [...crumbs, { labelKey: label, href: '/verein' }, { labelKey: `verein.tab.${current}` }];
+    }
     return [...crumbs, { labelKey: label }];
 }
 
 /** Whether `entry` is the current page. */
 export function isEntryActive(entry: NavEntry, pathname: string, tab: string | null): boolean {
     const path = entry.href.split('?')[0]!;
-    if (pathname !== path) return false;
+    if (pathname !== path && !pathname.startsWith(`${path}/`)) return false;
     if (path !== '/verein') return true;
-    return (entry.tab ?? 'info') === (tab ?? 'info');
+    return !entry.secondary && (entry.tab ?? 'info') === normalizeTab(tab);
 }

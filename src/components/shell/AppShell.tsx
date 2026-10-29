@@ -159,7 +159,7 @@ function ShellBody({ switchKey, children }: { switchKey: number; children: React
                 {ready && drawer && (
                     <div className="fixed inset-0 top-16 z-20 md:hidden" role="presentation">
                         <button type="button" aria-label={t('shell.menu.close')} tabIndex={-1} className="absolute inset-0 bg-black/40" onClick={() => setDrawer(false)} />
-                        <div id="mobile-sidebar" ref={drawerRef} className="absolute inset-y-0 left-0 w-72 max-w-[85vw] overflow-y-auto border-r border-border bg-card shadow-xl">
+                        <div id="mobile-sidebar" ref={drawerRef} className="absolute inset-y-0 left-0 w-72 pt-16 max-w-[85vw] overflow-y-auto border-r border-border bg-card shadow-xl">
                             <Sidebar groups={groups} collapsed={false} onNavigate={() => setDrawer(false)} />
                         </div>
                     </div>

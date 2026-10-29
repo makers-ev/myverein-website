@@ -52,4 +52,22 @@ describe('breadcrumbsFor / isEntryActive', () => {
         expect(isEntryActive(info, '/verein', 'mitglieder')).toBe(false);
         expect(isEntryActive(members, '/verein', 'mitglieder')).toBe(true);
     });
+    it('keeps exactly one club entry active (applications is only a second door to Mitglieder)', () => {
+        const groups = buildNavGroups({ ...base, permissions: ['members:write'] });
+        const active = groups.flatMap((x) => x.entries).filter((e) => isEntryActive(e, '/verein', 'mitglieder'));
+        expect(active.map((e) => e.id)).toEqual(['members']);
+    });
+    it('falls back to the info tab for an unknown ?tab and keeps sub-routes in their section', () => {
+        expect(breadcrumbsFor('/verein', 'bogus').map((c) => c.labelKey)).toEqual(['nav.heute', 'nav.verein']);
+        expect(breadcrumbsFor('/kalender/abc', null).map((c) => c.labelKey)).toEqual(['nav.heute', 'nav.kalender']);
+        expect(breadcrumbsFor('/unbekannt', null).map((c) => c.labelKey)).toEqual(['nav.heute']);
+    });
+});
+
+describe('buildNavGroups while rights are unknown', () => {
+    it('shows only Heute and the club basics', () => {
+        const g = buildNavGroups({ ...base, permissions: null });
+        expect(ids(g)).toEqual(['today', 'club']);
+        expect(g.find((x) => x.id === 'club')!.entries.map((e) => e.id)).toEqual(['info', 'profile']);
+    });
 });
