@@ -371,10 +371,11 @@ each palette defines its own light *and* dark token set.
 
 | Piece | File | Role |
 |---|---|---|
-| Palette registry | `src/theme/palettes.ts` | `palettes` — a `Record<paletteId, { label, light, dark }>` of predefined palettes (`ink-navy`, `ocean`, `forest`, `sunset`). `ink-navy` is the default and must always match `globals.css`'s `:root`/`.dark` values exactly (see below) |
+| Palette registry | `src/theme/palettes.ts` | `palettes` — a `Record<paletteId, { label, light, dark }>` of predefined palettes (`vereinsblau`, `ink-navy`, `ocean`, `forest`, `sunset`). The `vereinsblau` default must always match `globals.css`'s `:root`/`.dark` values exactly (see below) |
 | Runtime application | `src/components/PaletteProvider.tsx` | Wraps the app (inside `ThemeProvider`, since it reads `next-themes`' `resolvedTheme` to know which mode's tokens to apply). On every palette/mode change, writes the active token set as inline CSS custom properties on `<html>` (`--background`, `--primary`, etc.), overriding `globals.css`'s defaults. Persists the chosen palette id and any custom colors to `localStorage` (`color-palette-id` / `color-palette-custom`) — exposes both via the `usePalette()` hook |
 | Custom palette derivation | `src/theme/deriveTokens.ts` | Pure function: 3 anchor colors (background/foreground/primary, one set per mode) → a full token set, mixing card/muted/border from the anchors and picking black/white foreground text by contrast. No WCAG contrast enforcement — a user can pick a poorly-readable combination (deliberate, see the vault's `ADR-008`) |
 | Custom palette UI | `src/components/PaletteSettings.tsx` | Predefined-palette swatches + (when "Custom" is selected) 6 native `<input type="color">` pickers, wired to `usePalette()` |
+| Contrast guard (Wave 14 N5) | `src/theme/contrast.ts`, `src/theme/contrast.test.ts` | Vitest: every palette (light + dark) must reach WCAG AA 4.5:1 for text pairs, `FIXED_COLORS` (`destructive`/`success`/`warning`, palette-independent, exported from `palettes.ts`) must pass on every surface, and `globals.css`'s defaults must equal the `vereinsblau` palette. Values mirror the mobile app's `src/theme/palettes.ts` — change both together |
 
 **Adding a new predefined palette:** add an entry to the `palettes` object in
 `src/theme/palettes.ts` with a `label`, `light`, and `dark` token set — the
