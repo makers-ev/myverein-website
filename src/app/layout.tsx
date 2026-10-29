@@ -10,6 +10,7 @@ import { PaletteProvider } from "@/components/PaletteProvider";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import CookieConsent from "@/components/CookieConsent";
+import { SkipLink } from "@/components/SkipLink";
 import { AuthNav } from "@/components/AuthNav";
 import Logo from "@/components/Logo";
 import { url, defaultLanguage } from "../../project.config.json";
@@ -110,13 +111,14 @@ export default async function RootLayout({
         <ThemeProvider nonce={nonce}>
           <PaletteProvider>
             <LanguageProvider initialLanguage={initialLanguage}>
+              <SkipLink />
               <Navbar
                 mainLinks={mainLinks}
                 logo={<Logo />}
                 guestNav={<AuthNav appLinks={appLinks} />}
                 mobileGuestNav={<AuthNav appLinks={appLinks} />}
               />
-              <main className="flex-1">{children}</main>
+              <main id="main-content" tabIndex={-1} className="flex-1 focus:outline-none">{children}</main>
               <Footer />
               <CookieConsent />
             </LanguageProvider>

@@ -45,9 +45,15 @@ export function Navbar({
                 setIsLangOpen(false);
             }
         }
+        function handleEscape(event: KeyboardEvent) {
+            if (event.key === 'Escape') setIsLangOpen(false);
+        }
         document.addEventListener('mousedown', handleClickOutside);
-        return () =>
+        document.addEventListener('keydown', handleEscape);
+        return () => {
             document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleEscape);
+        };
     }, []);
 
     // Close menus on route change
@@ -106,7 +112,9 @@ export function Navbar({
                     <div className="relative hidden md:block" ref={langRef}>
                         <button
                             onClick={() => setIsLangOpen(!isLangOpen)}
-                            className="flex items-center gap-1 rounded-md px-2 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                            aria-expanded={isLangOpen}
+                            aria-label={t('nav.language_label')}
+                            className="flex min-h-11 items-center gap-1 rounded-md px-2 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                         >
                             <Globe size={18} />
                             <span>{supportedLanguages.find((l) => l.id === language)?.flag}</span>
@@ -145,7 +153,9 @@ export function Navbar({
 
                     {/* Mobile Toggle Button */}
                     <button
-                        className="flex md:hidden items-center justify-center rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+                        className="flex min-h-11 min-w-11 md:hidden items-center justify-center rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+                        aria-expanded={isMobileMenuOpen}
+                        aria-label={t(isMobileMenuOpen ? 'shell.menu.close' : 'shell.menu.open')}
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                     >
                         {isMobileMenuOpen ? (
