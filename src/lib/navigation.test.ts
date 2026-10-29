@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { breadcrumbsFor, buildNavGroups, isEntryActive } from '@/lib/navigation';
+import { visibleTabs } from '@/lib/clubPermissions';
 
 const ids = (g: ReturnType<typeof buildNavGroups>) => g.map((x) => x.id);
 const base = { hasClub: true, hasWards: false, roles: [{ roleType: 'mitglied' }] };
@@ -18,6 +19,13 @@ describe('buildNavGroups', () => {
         const g = buildNavGroups({ ...base, permissions: ['members:write', 'club_stats:read'] });
         const admin = g.find((x) => x.id === 'admin')!;
         expect(admin.entries.map((e) => e.id)).toEqual(['applications', 'exits', 'stats', 'settings']);
+    });
+    it('offers every club tab through the sidebar (custom fields with forms:write)', () => {
+        const perms = ['members:write', 'club_stats:read', 'forms:write', 'absences:read', 'privacy:read'];
+        const g = buildNavGroups({ ...base, permissions: perms });
+        const tabs = g.flatMap((x) => x.entries).map((e) => e.tab).filter(Boolean);
+        for (const t of visibleTabs(perms, base.roles)) expect(tabs).toContain(t);
+        expect(g.find((x) => x.id === 'admin')!.entries.map((e) => e.id)).toContain('customFields');
     });
     it('reduces a guardian-only account to the family area', () => {
         const g = buildNavGroups({ hasClub: false, hasWards: true, permissions: null, roles: [] });

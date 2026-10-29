@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { Building2, CalendarDays, ClipboardList, Clock, FileText, Home, HeartHandshake, LayoutGrid, LogOut, Megaphone, MapPin, PanelLeftClose, PanelLeftOpen, Settings as SettingsIcon, ShieldCheck, UserCircle, Users, Vote, BarChart3, FormInput, CalendarOff, type LucideIcon } from 'lucide-react';
+import { Building2, CalendarDays, ClipboardList, Clock, FileText, Home, HeartHandshake, LayoutGrid, LogOut, Megaphone, MapPin, PanelLeftClose, PanelLeftOpen, Settings as SettingsIcon, ShieldCheck, UserCircle, Users, Vote, BarChart3, FormInput, ListPlus, CalendarOff, type LucideIcon } from 'lucide-react';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 import { isEntryActive, type NavGroup, type NavIcon } from '@/lib/navigation';
@@ -24,6 +24,7 @@ const ICONS: Record<NavIcon, LucideIcon> = {
     exits: LogOut,
     stats: BarChart3,
     forms: FormInput,
+    customFields: ListPlus,
     absences: CalendarOff,
     privacy: ShieldCheck,
     settings: SettingsIcon,
