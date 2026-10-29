@@ -217,7 +217,7 @@ export default function MemberList({
         };
     }, [clubId, reloadToken, localReload]);
 
-    const query = useMemo(() => {
+    const query = (() => {
         const p = new URLSearchParams({ clubId, page: String(page), pageSize: String(pageSize), sort, order });
         if (q) p.set('q', q);
         if (filters.status) p.set('status', filters.status);
@@ -227,7 +227,7 @@ export default function MemberList({
         if (canSensitive && filters.ageMin !== '') p.set('ageMin', filters.ageMin);
         if (canSensitive && filters.ageMax !== '') p.set('ageMax', filters.ageMax);
         return p.toString();
-    }, [clubId, page, pageSize, sort, order, q, filters, canSensitive]);
+    })();
 
     const requestKey = `${query}#${reloadToken}#${localReload}`;
 
