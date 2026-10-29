@@ -133,11 +133,11 @@ export interface AccountScope {
 }
 
 export async function loadAccountScope(): Promise<AccountScope> {
-    const [clubs, wards] = await Promise.all([
-        apiFetch<{ data: unknown[] }>('/my-clubs').then((r) => r.data.length > 0),
+    const [club, wards] = await Promise.all([
+        apiFetch<{ data: { clubId: string }[] }>('/my-clubs').then((r) => r.data[0] ?? null),
         apiFetch<{ data: WardClub[] }>('/my-wards').then((r) => r.data.some((c) => c.wards.length > 0)),
     ]);
-    return { hasClub: clubs, hasWards: wards };
+    return { hasClub: !!club, hasWards: wards };
 }
 
 /**
@@ -145,8 +145,9 @@ export async function loadAccountScope(): Promise<AccountScope> {
  * only a failed lookup (`failed`) falls back to the full menu (the pages enforce access anyway). A guardian-only account sees
  * `Familie` only.
  */
-export function visibleAppLinks<L extends { href: string }>(links: readonly L[], scope: AccountScope | null, familyLink: L, failed = false): L[] {
+export function visibleAppLinks<L extends { href: string }>(links: readonly L[], scope: AccountScope | null, familyLink: L, failed = false, documentsLink?: L): L[] {
     if (!scope) return failed ? [...links] : [];
     if (!scope.hasClub && scope.hasWards) return [familyLink];
-    return scope.hasWards ? [...links, familyLink] : [...links];
+    const withDocs = documentsLink && scope.hasClub ? [...links, documentsLink] : [...links];
+    return scope.hasWards ? [...withDocs, familyLink] : withDocs;
 }

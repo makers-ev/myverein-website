@@ -24,6 +24,7 @@ import { eventErrorKey } from '@/lib/eventErrors';
 
 import { type CalendarEvent, inputClass, labelClass, primaryBtn, secondaryBtn } from './calendarTypes';
 import MemberPicker from './MemberPicker';
+import { GenerateAction } from '@/components/documents/GenerateDialog';
 
 interface Props {
     clubId: string;
@@ -224,6 +225,7 @@ export default function AttendancePanel({ clubId, event }: Props) {
                 <p aria-live="polite" className="text-foreground">
                     {t('attendance.summary', { present: shown.summary.anwesend, excused: shown.summary.entschuldigt, unexcused: shown.summary.unentschuldigt, open: shown.summary.offen })}
                 </p>
+                <GenerateAction clubId={clubId} templateId="anwesenheitsliste" label={t('docs.gen.attendance.action')} title={t('docs.gen.attendance.title')} intro={t('docs.gen.attendance.intro')} params={{ eventId: event.id }} target={{ kind: 'archive' }} />
                 {shown.canWrite && !locked && (
                     <button
                         type="button"

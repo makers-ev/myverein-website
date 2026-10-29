@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
+import { AnnualReportAction } from '@/components/documents/ReportActions';
+
 import { ColumnChart } from '@/components/charts/ColumnChart';
 import { HBarList } from '@/components/charts/HBarList';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -97,7 +99,10 @@ export default function ClubStatsPanel({ clubId }: { clubId: string }) {
 
     return (
         <div className="space-y-4">
-            <p className="text-xs text-muted-foreground">{t('verein.stats.hint')}</p>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs text-muted-foreground">{t('verein.stats.hint')}</p>
+                <AnnualReportAction clubId={clubId} />
+            </div>
 
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
                 <Kpi label={t('verein.stats.total')} value={members.total} hint={t('verein.stats.total.hint')} />

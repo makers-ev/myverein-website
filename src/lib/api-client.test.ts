@@ -57,6 +57,15 @@ describe('apiFetch date handling', () => {
     });
 });
 
+describe('cache policy of document routes', () => {
+    it('never uses the HTTP cache for the archive, personal storage, generation, acknowledgements, cards, storage and branding', () => {
+        for (const path of ['/documents?clubId=c', '/documents/folders?clubId=c', '/documents/d1/download?clubId=c', '/member-documents/me?clubId=c', '/document-generation/jobs/j1?clubId=c', '/club-storage?clubId=c', '/club-settings/branding?clubId=c', '/club-settings/assembly?clubId=c', '/acknowledgements/mine?clubId=c', '/acknowledgements/a1?clubId=c', '/club-members/me/card?clubId=c', '/club-members/m1/card?clubId=c', '/club-members/me/card.pdf?clubId=c']) {
+            expect(cachePolicyFor(path), path).toBe('no-store');
+        }
+        expect(cachePolicyFor('/club-settings?clubId=c')).toBeUndefined();
+    });
+});
+
 describe('cache policy of personal-data routes', () => {
     it('never uses the HTTP cache for event attendance, registrations, helper plans, rides and time tracking', () => {
         for (const path of ['/events/e1/attendance?clubId=c', '/events/e1/registrations.csv?clubId=c', '/events/e1/registration?clubId=c', '/events/e1/rsvp?clubId=c', '/events/e1/helpers?clubId=c', '/events/e1/rides?clubId=c', '/events/e1/public-link?clubId=c', '/attendance/report?clubId=c', '/time-entries?clubId=c', '/rate-cards?clubId=c', '/time-report?clubId=c', '/public/events/tok']) {

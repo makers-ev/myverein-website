@@ -1,5 +1,6 @@
 'use client';
 
+import { GenerateAction } from '@/components/documents/GenerateDialog';
 import { useCallback, useEffect, useState } from 'react';
 import { Download, Users } from 'lucide-react';
 
@@ -97,9 +98,12 @@ export default function ParticipantsPanel({ clubId, event, canManage }: Props) {
 
     return (
         <div className="space-y-4 text-sm">
+            <div className="flex flex-wrap items-center justify-between gap-2">
             <p aria-live="polite" className="text-foreground">
                 {t('participants.summary', { taken: data.seatsTaken, capacity: data.capacity ?? '∞', waiting: data.seatsWaiting, pending: data.pendingConfirmation })}
             </p>
+            <GenerateAction clubId={clubId} templateId="teilnehmerliste" label={t('docs.gen.participants.action')} title={t('docs.gen.participants.title')} intro={t('docs.gen.participants.intro')} params={{ eventId: event.id }} target={{ kind: 'archive' }} />
+            </div>
             {hiddenSensitive && <p className="rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">{t('participants.sensitive.hidden')}</p>}
             {error && (
                 <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-destructive">

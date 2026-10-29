@@ -1,5 +1,6 @@
 'use client';
 
+import { GenerateAction } from '@/components/documents/GenerateDialog';
 import { useCallback, useEffect, useState } from 'react';
 import { Download } from 'lucide-react';
 
@@ -219,6 +220,9 @@ export default function MinutesPanel({ clubId, meetingId, canWrite, canAssembly 
                         <button type="button" disabled={busy} onClick={() => void run(() => post('/archive'))} className={secondaryBtn}>
                             {t('assembly.minutes.archive')}
                         </button>
+                    )}
+                    {current?.approved && (
+                        <GenerateAction clubId={clubId} templateId="versammlung-protokoll" label={t('docs.gen.minutes.action')} title={t('docs.gen.minutes.title')} intro={t('docs.gen.minutes.intro')} params={{ meetingId }} target={{ kind: 'archive' }} className={`${secondaryBtn} inline-flex items-center gap-1.5`} />
                     )}
                     {current && (
                         <>
