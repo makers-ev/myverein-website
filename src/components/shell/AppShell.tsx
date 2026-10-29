@@ -15,6 +15,24 @@ import { Skeleton } from '@/components/ui';
 
 const COLLAPSED_KEY = 'myverein.sidebarCollapsed';
 
+function readCollapsed(): boolean {
+    try {
+        return window.localStorage.getItem(COLLAPSED_KEY) === '1';
+    } catch {
+        return false;
+    }
+}
+
+function writeCollapsed(value: boolean): void {
+    try {
+        window.localStorage.setItem(COLLAPSED_KEY, value ? '1' : '0');
+    } catch {
+        // Storage disabled: the choice lives until reload.
+    }
+}
+
+const FOCUSABLE = 'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
 function Breadcrumbs() {
     const { t } = useLanguage();
     const pathname = usePathname();
@@ -54,7 +72,7 @@ function ShellBody({ switchKey, children }: { switchKey: number; children: React
     useEffect(() => {
         // localStorage is browser-only; read after mount.
         // eslint-disable-next-line react-hooks/set-state-in-effect
-        setCollapsed(window.localStorage.getItem(COLLAPSED_KEY) === '1');
+        setCollapsed(readCollapsed());
     }, []);
 
     useEffect(() => {
@@ -63,24 +81,43 @@ function ShellBody({ switchKey, children }: { switchKey: number; children: React
         setDrawer(false);
     }, [pathname]);
 
+    // Drawer: focus moves in, Tab is trapped, Escape closes; focus returns to the toggle on every close path (link, backdrop, Escape, toggle).
+    const wasOpen = useRef(false);
     useEffect(() => {
-        if (!drawer) return;
+        if (!drawer) {
+            if (wasOpen.current) menuButton.current?.focus();
+            wasOpen.current = false;
+            return;
+        }
+        wasOpen.current = true;
         const onKey = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
                 setDrawer(false);
-                menuButton.current?.focus();
+                return;
+            }
+            if (e.key !== 'Tab' || !drawerRef.current) return;
+            const items = Array.from(drawerRef.current.querySelectorAll<HTMLElement>(FOCUSABLE));
+            if (items.length === 0) return;
+            const first = items[0]!;
+            const last = items[items.length - 1]!;
+            const active = document.activeElement;
+            if (e.shiftKey && (active === first || !drawerRef.current.contains(active))) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && (active === last || !drawerRef.current.contains(active))) {
+                e.preventDefault();
+                first.focus();
             }
         };
         document.addEventListener('keydown', onKey);
-        drawerRef.current?.querySelector<HTMLElement>('a, button')?.focus();
+        drawerRef.current?.querySelector<HTMLElement>(FOCUSABLE)?.focus();
         return () => document.removeEventListener('keydown', onKey);
     }, [drawer]);
 
     const toggleCollapsed = () => {
-        setCollapsed((c) => {
-            window.localStorage.setItem(COLLAPSED_KEY, c ? '0' : '1');
-            return !c;
-        });
+        const next = !collapsed;
+        setCollapsed(next);
+        writeCollapsed(next);
     };
 
     const groups = buildNavGroups({ hasClub: (clubs?.length ?? 0) > 0, hasWards, permissions, roles });
@@ -120,7 +157,7 @@ function ShellBody({ switchKey, children }: { switchKey: number; children: React
                     </div>
                 </div>
                 {ready && drawer && (
-                    <div className="fixed inset-0 top-16 z-40 md:hidden" role="presentation">
+                    <div className="fixed inset-0 top-16 z-20 md:hidden" role="presentation">
                         <button type="button" aria-label={t('shell.menu.close')} tabIndex={-1} className="absolute inset-0 bg-black/40" onClick={() => setDrawer(false)} />
                         <div id="mobile-sidebar" ref={drawerRef} className="absolute inset-y-0 left-0 w-72 max-w-[85vw] overflow-y-auto border-r border-border bg-card shadow-xl">
                             <Sidebar groups={groups} collapsed={false} onNavigate={() => setDrawer(false)} />
