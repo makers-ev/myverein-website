@@ -5,6 +5,7 @@ import { Trash2 } from 'lucide-react';
 
 import { memberErrorKey } from '@/lib/clubMembers';
 import { apiFetch } from '@/lib/api-client';
+import { chooseClub } from '@/lib/activeClub';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { inputClass, labelClass, primaryBtn } from '@/components/kalender/calendarTypes';
 import LoadingText from '@/components/LoadingText';
@@ -51,7 +52,7 @@ export default function VerfuegbarkeitPageContent() {
     const [initialized, setInitialized] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const activeClub = clubs?.[0] ?? null;
+    const activeClub = chooseClub(clubs) ?? null;
 
     useEffect(() => {
         void apiFetch<{ data: MyClub[] }>('/my-clubs').then(({ data }) => setClubs(data));

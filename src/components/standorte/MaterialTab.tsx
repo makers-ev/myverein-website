@@ -1,5 +1,6 @@
 'use client';
 
+import { dateLocale } from '@/lib/clubMembers';
 import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, ArrowLeft, MapPin, Package, Pencil, Plus, Search, Trash2, Wrench } from 'lucide-react';
 
@@ -83,9 +84,9 @@ function conditionTone(condition: string): Tone {
     return 'muted';
 }
 
-function formatEuros(cents: number | null): string {
+function formatEuros(cents: number | null, language: string): string {
     if (cents === null) return '—';
-    return `${(cents / 100).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+    return `${(cents / 100).toLocaleString(dateLocale(language), { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
 }
 
 function ItemChips({ item, t }: { item: InventoryItem; t: T }) {
@@ -268,6 +269,7 @@ function ItemList({
     onChange: () => void;
     onSelect: (id: string) => void;
 }) {
+    const { language } = useLanguage();
     const [showCreate, setShowCreate] = useState(false);
     const [query, setQuery] = useState('');
     const [category, setCategory] = useState<string | null>(null);
@@ -345,7 +347,7 @@ function ItemList({
                                         </>
                                     )}
                                 </span>
-                                {item.acquisitionValueCents !== null && <span className="shrink-0">{formatEuros(item.acquisitionValueCents)}</span>}
+                                {item.acquisitionValueCents !== null && <span className="shrink-0">{formatEuros(item.acquisitionValueCents, language)}</span>}
                             </div>
                         </button>
                     ))}
@@ -667,7 +669,7 @@ function ItemDetail({
     const facts: [string, string][] = [
         [t('standorte.items.table.category'), item.category ?? '—'],
         [t('standorte.items.table.location'), locations.find((l) => l.id === item.locationId)?.name ?? '—'],
-        [t('standorte.items.table.value'), formatEuros(item.acquisitionValueCents)],
+        [t('standorte.items.table.value'), formatEuros(item.acquisitionValueCents, language)],
         [t('standorte.items.new.acquiredAt'), formatDate(item.acquiredAt, language)],
         [t('standorte.items.new.maintenanceInterval'), item.maintenanceIntervalDays !== null ? String(item.maintenanceIntervalDays) : '—'],
         [t('standorte.items.new.lastMaintenance'), formatDate(item.lastMaintenanceAt, language)],

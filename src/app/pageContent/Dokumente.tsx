@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { apiFetch } from '@/lib/api-client';
+import { chooseClub } from '@/lib/activeClub';
 import { type DocumentsTab, archiveVisible, documentsGate, documentsTabs } from '@/lib/documentAccess';
 import { type DocLevel, type Folder, clubQuery } from '@/lib/documents';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -40,7 +41,7 @@ export default function DokumentePageContent() {
         setFailed(false);
         try {
             const clubs = await apiFetch<{ data: MyClub[] }>('/my-clubs');
-            const club = clubs.data[0];
+            const club = chooseClub(clubs.data);
             if (!club) {
                 setState('none');
                 return;

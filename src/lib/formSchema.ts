@@ -1,5 +1,5 @@
 import { ApiError } from './api-client';
-import { memberErrorKey } from './clubMembers';
+import { dateLocale, memberErrorKey } from './clubMembers';
 import { credentialProblem } from './credentials';
 
 /**
@@ -540,7 +540,7 @@ export function checkFieldFile(file: { type: string; size: number }): FieldError
 
 /** Human readable size (`1,2 MB`), not locale-sensitive beyond the decimal separator. */
 export function formatBytes(bytes: number, language = 'de'): string {
-    const nf = (n: number) => n.toLocaleString(language === 'de' ? 'de-DE' : 'en-GB', { maximumFractionDigits: 1 });
+    const nf = (n: number) => n.toLocaleString(dateLocale(language), { maximumFractionDigits: 1 });
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${nf(bytes / 1024)} KB`;
     return `${nf(bytes / (1024 * 1024))} MB`;

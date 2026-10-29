@@ -61,8 +61,15 @@ export function AuthNav({ appLinks = [] }: { appLinks?: AuthNavAppLink[] }) {
                 setIsOpen(false);
             }
         }
+        function handleEscape(event: KeyboardEvent) {
+            if (event.key === 'Escape') setIsOpen(false);
+        }
         document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleEscape);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleEscape);
+        };
     }, []);
 
     useEffect(() => {
@@ -101,7 +108,9 @@ export function AuthNav({ appLinks = [] }: { appLinks?: AuthNavAppLink[] }) {
             <div className="relative" ref={ref}>
                 <button
                     onClick={() => setIsOpen((v) => !v)}
-                    className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                    aria-expanded={isOpen}
+                    aria-haspopup="true"
+                    className="flex min-h-11 items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors"
                 >
                     <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
                         {displayName.slice(0, 1).toUpperCase()}

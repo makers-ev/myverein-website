@@ -7,6 +7,7 @@ import { apiFetch } from '@/lib/api-client';
 import type { ClubMember } from '@/lib/clubMembers';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { inputClass, labelClass } from '@/components/kalender/calendarTypes';
+import { dateLocale } from '@/lib/clubMembers';
 
 /** Inline error of a failed action; announced to screen readers. */
 export function ErrorText({ children }: { children: React.ReactNode }) {
@@ -103,5 +104,5 @@ export function MemberPicker({ clubId, label, onPick, excludeIds = [], disabled 
 export function formatWhen(iso: string | null | undefined, language: string): string {
     if (!iso) return '—';
     const d = new Date(iso);
-    return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString(language === 'de' ? 'de-DE' : 'en-GB', { timeZone: 'Europe/Berlin', dateStyle: 'short', timeStyle: 'short' });
+    return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString(dateLocale(language), { timeZone: 'Europe/Berlin', dateStyle: 'short', timeStyle: 'short' });
 }

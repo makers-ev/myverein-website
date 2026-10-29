@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start -p 3011",
     "lint": "eslint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "check:i18n": "node scripts/check-i18n.mjs"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",

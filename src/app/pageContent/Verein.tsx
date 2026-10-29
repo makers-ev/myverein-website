@@ -1,8 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import { apiFetch } from '@/lib/api-client';
+import { chooseClub } from '@/lib/activeClub';
 import { useThrottledCallback } from '@/lib/useThrottledCallback';
 import { memberErrorKey } from '@/lib/clubMembers';
 import { type ClubTab, canSeeCredentialOverview, formsGate, isGuardianOnly, visibleTabs } from '@/lib/clubPermissions';
@@ -229,11 +231,10 @@ export default function VereinPageContent() {
     const [clubsError, setClubsError] = useState(false);
     const [info, setInfo] = useState<ClubInfo | null>(null);
     const [me, setMe] = useState<OwnMembership | null>(null);
-    const [tab, setTab] = useState<Tab>('info');
-    // Number of open applications (badge on the "Mitglieder" tab); the panel itself pages through them.
-    const [applicationsTotal, setApplicationsTotal] = useState<number | null>(null);
-    // Open exit requests (badge on the "Austritte" tab); null = unknown / no permission.
-    const [exitPending, setExitPending] = useState<number | null>(null);
+    // The tab lives in the URL (`/verein?tab=austritte`), so the sidebar, breadcrumbs, reload and links share it.
+    const router = useRouter();
+    const tab = (useSearchParams().get('tab') ?? 'info') as Tab;
+    const setTab = (next: Tab) => router.replace(next === 'info' ? '/verein' : `/verein?tab=${next}`, { scroll: false });
     // Bumped whenever the member list must reload (an application was decided, ...).
     const [membersReload, setMembersReload] = useState(0);
     // The form editor holds unsaved changes (guards the tab switch).
@@ -250,7 +251,7 @@ export default function VereinPageContent() {
     const [dpaReload, setDpaReload] = useState(0);
     const [privacyStart, setPrivacyStart] = useState<{ view: PrivacyView; n: number }>({ view: 'consents', n: 0 });
 
-    const activeClub = clubs?.[0] ?? null;
+    const activeClub = chooseClub(clubs) ?? null;
 
     // Signed photo URLs expire: a failed image load refetches only the resource that carried the URL, throttled.
     const refetchBoardPhotos = useThrottledCallback(async () => {
@@ -284,24 +285,6 @@ export default function VereinPageContent() {
         setInfo(infoRes.data);
         setMe(meRes.data);
         setMembersReload((n) => n + 1);
-        // Open applications are only readable with members:write.
-        if (meRes.data.permissions.includes('members:write')) {
-            try {
-                const appsRes = await apiFetch<{ total: number }>(`/club-applications?clubId=${clubId}&pageSize=1`);
-                setApplicationsTotal(appsRes.total);
-            } catch {
-                setApplicationsTotal(null);
-            }
-            try {
-                const exitRes = await apiFetch<{ total: number }>(`/club-exit-requests?clubId=${clubId}&status=pending&pageSize=1`);
-                setExitPending(exitRes.total);
-            } catch {
-                setExitPending(null);
-            }
-        } else {
-            setApplicationsTotal(null);
-            setExitPending(null);
-        }
     }
 
     useEffect(() => {
@@ -346,32 +329,6 @@ export default function VereinPageContent() {
                 <NoClubSection onRefreshClubs={loadClubs} />
             ) : (
                 <>
-                    <div className="mt-6 flex gap-2 overflow-x-auto border-b border-border">
-                        {tabs.map((value) => (
-                            <button
-                                key={value}
-                                type="button"
-                                aria-current={currentTab === value ? 'page' : undefined}
-                                onClick={() => void selectTab(value)}
-                                className={`whitespace-nowrap px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
-                                    currentTab === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
-                                }`}
-                            >
-                                {t(`verein.tab.${value}`)}
-                                {value === 'austritte' && exitPending !== null && exitPending > 0 && (
-                                    <span className="ml-1.5 rounded-full bg-primary px-1.5 py-0.5 text-xs font-semibold text-primary-foreground">
-                                        {exitPending}
-                                    </span>
-                                )}
-                                {value === 'mitglieder' && applicationsTotal !== null && applicationsTotal > 0 && (
-                                    <span className="ml-1.5 rounded-full bg-primary px-1.5 py-0.5 text-xs font-semibold text-primary-foreground">
-                                        {applicationsTotal}
-                                    </span>
-                                )}
-                            </button>
-                        ))}
-                    </div>
-
                     <DpaBanner
                         current={dpa}
                         onOpen={() => {

@@ -33,7 +33,7 @@
   --card-foreground: #22252b;
 
   --muted: #eef0f2;
-  --muted-foreground: #6b7280;
+  --muted-foreground: #5b6270;
 
   --border: #e2e4e8;
 
@@ -52,11 +52,11 @@
    * template gap, not introduced here) -- fixed alongside adding
    * success/warning, which club material/beitrag status views need.
    */
-  --destructive: #b3261e;
+  --destructive: #A81818;
   --destructive-foreground: #ffffff;
-  --success: #3f7a47;
+  --success: #256B2B;
   --success-foreground: #ffffff;
-  --warning: #9c5f13;
+  --warning: #8A5310;
   --warning-foreground: #ffffff;
 }
 
@@ -78,9 +78,9 @@
   --accent: #e0b84d;
   --accent-foreground: #16181d;
 
-  --destructive: #e8776c;
+  --destructive: #FCA5A5;
   --destructive-foreground: #16181d;
-  --success: #8fc47c;
+  --success: #66BB6A;
   --success-foreground: #16181d;
   --warning: #e8b84b;
   --warning-foreground: #16181d;

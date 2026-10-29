@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Download, Eye, Pencil, Search, ShieldCheck, Upload, UserPlus, X } from 'lucide-react';
 
 import MemberAvatar from '@/components/verein/MemberAvatar';
@@ -42,6 +42,27 @@ interface Filters {
     hasAccount: '' | 'true' | 'false';
     ageMin: string;
     ageMax: string;
+}
+
+type OptionalColumn = 'category' | 'account' | 'departments' | 'roles' | 'joined';
+const OPTIONAL_COLUMNS: OptionalColumn[] = ['category', 'account', 'departments', 'roles', 'joined'];
+const COLUMNS_KEY = 'myverein.memberColumns.hidden';
+
+function readHiddenColumns(): OptionalColumn[] {
+    try {
+        const raw = JSON.parse(window.localStorage.getItem(COLUMNS_KEY) ?? '[]') as unknown;
+        return Array.isArray(raw) ? OPTIONAL_COLUMNS.filter((c) => raw.includes(c)) : [];
+    } catch {
+        return [];
+    }
+}
+
+function writeHiddenColumns(cols: OptionalColumn[]): void {
+    try {
+        window.localStorage.setItem(COLUMNS_KEY, JSON.stringify(cols));
+    } catch {
+        // Storage disabled: the choice only lasts for this visit.
+    }
 }
 
 const EMPTY_FILTERS: Filters = { status: '', category: '', departmentId: '', hasAccount: '', ageMin: '', ageMax: '' };
@@ -88,6 +109,41 @@ export default function MemberList({
     const [searchInput, setSearchInput] = useState('');
     const [q, setQ] = useState('');
     const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
+    // Column chooser (S3): optional columns can be hidden; the choice is remembered in this browser.
+    const [hiddenCols, setHiddenCols] = useState<OptionalColumn[]>([]);
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setHiddenCols(readHiddenColumns());
+    }, []);
+    const show = (c: OptionalColumn) => !hiddenCols.includes(c);
+    const [columnsOpen, setColumnsOpen] = useState(false);
+    const columnsRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (!columnsOpen) return;
+        const onDown = (e: MouseEvent) => {
+            if (columnsRef.current && !columnsRef.current.contains(e.target as Node)) setColumnsOpen(false);
+        };
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setColumnsOpen(false);
+        };
+        document.addEventListener('mousedown', onDown);
+        document.addEventListener('keydown', onKey);
+        return () => {
+            document.removeEventListener('mousedown', onDown);
+            document.removeEventListener('keydown', onKey);
+        };
+    }, [columnsOpen]);
+    function toggleColumn(c: OptionalColumn) {
+        const next = hiddenCols.includes(c) ? hiddenCols.filter((x) => x !== c) : [...hiddenCols, c];
+        setHiddenCols(next);
+        writeHiddenColumns(next);
+        // A hidden column can no longer be the sort column (the header that shows the arrow is gone).
+        if (c === 'joined' && next.includes('joined') && sort === 'joinedAt') {
+            setSort('name');
+            setOrder('asc');
+            setPage(1);
+        }
+    }
     const [sort, setSort] = useState<SortKey>('name');
     const [order, setOrder] = useState<'asc' | 'desc'>('asc');
     const [page, setPage] = useState(1);
@@ -161,7 +217,7 @@ export default function MemberList({
         };
     }, [clubId, reloadToken, localReload]);
 
-    const query = useMemo(() => {
+    const query = (() => {
         const p = new URLSearchParams({ clubId, page: String(page), pageSize: String(pageSize), sort, order });
         if (q) p.set('q', q);
         if (filters.status) p.set('status', filters.status);
@@ -171,7 +227,7 @@ export default function MemberList({
         if (canSensitive && filters.ageMin !== '') p.set('ageMin', filters.ageMin);
         if (canSensitive && filters.ageMax !== '') p.set('ageMax', filters.ageMax);
         return p.toString();
-    }, [clubId, page, pageSize, sort, order, q, filters, canSensitive]);
+    })();
 
     const requestKey = `${query}#${reloadToken}#${localReload}`;
 
@@ -303,6 +359,21 @@ export default function MemberList({
                         {t('verein.export.open')}
                     </button>
                 )}
+                <div ref={columnsRef} className="relative">
+                    <button type="button" aria-expanded={columnsOpen} onClick={() => setColumnsOpen((o) => !o)} className={`${secondaryButtonClass} inline-flex min-h-11 items-center gap-1.5 !px-3 !py-2`}>
+                        {t('verein.members.columns')}
+                    </button>
+                    {columnsOpen && (
+                        <div className="absolute right-0 z-20 mt-1 w-56 rounded-xl border border-border bg-card p-2 shadow-lg">
+                            {OPTIONAL_COLUMNS.map((c) => (
+                                <label key={c} className="flex min-h-11 items-center gap-2 rounded px-2 text-sm text-foreground hover:bg-muted">
+                                    <input type="checkbox" checked={show(c)} onChange={() => toggleColumn(c)} />
+                                    {t(`verein.members.table.${c === 'joined' ? 'joined' : c}`)}
+                                </label>
+                            ))}
+                        </div>
+                    )}
+                </div>
                 <MemberListReportAction clubId={clubId} departments={departments} canSensitive={canSensitive} />
                 {canWrite && (
                     <button type="button" onClick={() => setCreating(true)} className={`${primaryButtonClass} inline-flex items-center gap-1.5`}>
@@ -428,17 +499,17 @@ export default function MemberList({
                 </div>
             ) : (
                 <>
-                    <div className={`relative overflow-x-auto rounded-xl border border-border transition-opacity ${loading ? 'opacity-60' : ''}`} aria-busy={loading}>
+                    <div className={`relative overflow-x-auto overflow-y-auto max-h-[70vh] rounded-xl border border-border transition-opacity ${loading ? 'opacity-60' : ''}`} aria-busy={loading}>
                         <table className="w-full text-sm">
                             <thead>
-                                <tr className="border-b border-border bg-muted/50 text-left text-xs text-muted-foreground">
+                                <tr className="sticky top-0 z-10 border-b border-border bg-muted text-left text-xs text-muted-foreground">
                                     {sortHeader(t('verein.members.table.name'), 'name')}
-                                    <th className="px-3 py-2 uppercase tracking-wide">{t('verein.members.table.category')}</th>
+                                    {show('category') && <th className="px-3 py-2 uppercase tracking-wide">{t('verein.members.table.category')}</th>}
                                     <th className="px-3 py-2 uppercase tracking-wide">{t('verein.members.table.status')}</th>
-                                    <th className="px-3 py-2 uppercase tracking-wide">{t('verein.members.table.account')}</th>
-                                    <th className="px-3 py-2 uppercase tracking-wide">{t('verein.members.table.departments')}</th>
-                                    <th className="px-3 py-2 uppercase tracking-wide">{t('verein.members.table.roles')}</th>
-                                    {sortHeader(t('verein.members.table.joined'), 'joinedAt')}
+                                    {show('account') && <th className="px-3 py-2 uppercase tracking-wide">{t('verein.members.table.account')}</th>}
+                                    {show('departments') && <th className="px-3 py-2 uppercase tracking-wide">{t('verein.members.table.departments')}</th>}
+                                    {show('roles') && <th className="px-3 py-2 uppercase tracking-wide">{t('verein.members.table.roles')}</th>}
+                                    {show('joined') && sortHeader(t('verein.members.table.joined'), 'joinedAt')}
                                     {canSensitive && sortHeader(t('verein.members.table.number'), 'memberNumber')}
                                     {canPrivacy && (
                                         <th className="px-3 py-2">
@@ -460,7 +531,7 @@ export default function MemberList({
                                                     <span>{m.name ?? '—'}</span>
                                                 </span>
                                             </td>
-                                            <td className="px-3 py-2 text-muted-foreground">{categoryLabel(m, t)}</td>
+                                            {show('category') && <td className="px-3 py-2 text-muted-foreground">{categoryLabel(m, t)}</td>}
                                             <td className="px-3 py-2">
                                                 <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusChipClass(m.effectiveStatus)}`}>
                                                     {t(`verein.status.${m.effectiveStatus}`)}
@@ -469,9 +540,9 @@ export default function MemberList({
                                                     <span className="mt-0.5 block text-xs text-muted-foreground">{t('verein.status.pendingExit.short', { date: formatDate(m.leftAt, language) })}</span>
                                                 )}
                                             </td>
-                                            <td className="px-3 py-2 text-muted-foreground">{m.hasAccount ? t('verein.members.account.yes') : t('verein.members.account.no')}</td>
-                                            <td className="px-3 py-2 text-muted-foreground">{depts.length > 0 ? depts.map((d) => d.name).join(', ') : '—'}</td>
-                                            <td className="px-3 py-2">
+                                            {show('account') && <td className="px-3 py-2 text-muted-foreground">{m.hasAccount ? t('verein.members.account.yes') : t('verein.members.account.no')}</td>}
+                                            {show('departments') && <td className="px-3 py-2 text-muted-foreground">{depts.length > 0 ? depts.map((d) => d.name).join(', ') : '—'}</td>}
+                                            {show('roles') && <td className="px-3 py-2">
                                                 {m.hasAccount ? (
                                                     <MemberRoleCell memberId={m.id} roles={m.roles} clubId={clubId} canEdit={canRoles && !left} onChange={reload} />
                                                 ) : (
@@ -479,8 +550,8 @@ export default function MemberList({
                                                         —
                                                     </span>
                                                 )}
-                                            </td>
-                                            <td className="px-3 py-2 text-muted-foreground">{formatDate(m.joinedAt, language)}</td>
+                                            </td>}
+                                            {show('joined') && <td className="px-3 py-2 text-muted-foreground">{formatDate(m.joinedAt, language)}</td>}
                                             {canSensitive && <td className="px-3 py-2 text-muted-foreground">{m.memberNumber ?? '—'}</td>}
                                             {canPrivacy && (
                                                 <td className="px-3 py-2 text-right">

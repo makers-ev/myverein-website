@@ -12,19 +12,14 @@ import ElectionsPanel from '@/components/assembly/ElectionsPanel';
 import VotingPanel from '@/components/assembly/VotingPanel';
 import LoadError from '@/components/LoadError';
 import LoadingText from '@/components/LoadingText';
-
-interface MyClub {
-    clubId: string;
-    clubName: string | null;
-}
+import { useActiveClub } from '@/components/shell/ActiveClubProvider';
 
 type Tab = 'abstimmungen' | 'umlauf' | 'wahlen';
 
 export default function AbstimmungenPageContent() {
     const { t } = useLanguage();
-    const [clubs, setClubs] = useState<MyClub[] | null>(null);
-    const [clubsError, setClubsError] = useState(false);
-    const [clubId, setClubId] = useState<string | null>(null);
+    // The club is the one of the shell's switcher (no second selector here).
+    const { clubs, failed: clubsError, activeClub, reload } = useActiveClub();
     // Rights and departments are loaded per club; `loaded` names the club they belong to so a switch never shows the old club's rights.
     const [access, setAccess] = useState<{ clubId: string; permissions: string[]; departments: { id: string; name: string }[]; failed: boolean } | null>(null);
     // "Neuwahl planen" in the club info links here with ?tab=wahlen&role=...&department=...
@@ -33,18 +28,6 @@ export default function AbstimmungenPageContent() {
     const prefillRole = params.get('role');
     const prefill = prefillRole ? { roleType: prefillRole, departmentId: params.get('department') } : null;
     const [retry, setRetry] = useState(0);
-
-    useEffect(() => {
-        apiFetch<{ data: MyClub[] }>('/my-clubs')
-            .then(({ data }) => {
-                setClubs(data);
-                setClubsError(false);
-                setClubId((current) => (current && data.some((c) => c.clubId === current) ? current : (data[0]?.clubId ?? null)));
-            })
-            .catch(() => setClubsError(true));
-    }, [retry]);
-
-    const activeClub = clubs?.find((c) => c.clubId === clubId) ?? null;
 
     useEffect(() => {
         if (!activeClub) return;
@@ -79,27 +62,13 @@ export default function AbstimmungenPageContent() {
             <p className="mt-1 text-sm text-muted-foreground">{t('assembly.page.subtitle')}</p>
 
             {clubsError ? (
-                <LoadError className="mt-6" onRetry={() => setRetry((n) => n + 1)} />
+                <LoadError className="mt-6" onRetry={reload} />
             ) : clubs === null ? (
                 <LoadingText className="mt-6" />
             ) : !activeClub ? (
                 <p className="mt-6 text-sm text-muted-foreground">{t('assembly.page.noClub')}</p>
             ) : (
                 <>
-                    {clubs.length > 1 && (
-                        <div className="mt-4">
-                            <label htmlFor="ab-club" className="mb-1 block text-xs font-semibold text-muted-foreground">
-                                {t('assembly.page.club')}
-                            </label>
-                            <select id="ab-club" value={activeClub.clubId} onChange={(e) => setClubId(e.target.value)} className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground">
-                                {clubs.map((c) => (
-                                    <option key={c.clubId} value={c.clubId}>
-                                        {c.clubName ?? c.clubId}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    )}
                     {!current ? (
                         <LoadingText className="mt-6" />
                     ) : current.failed ? (
