@@ -1,4 +1,4 @@
-/** `GET /clubs/:clubId/today` (Wave 14): the personal overview of a club member; `board` and `setup` only for callers with the matching rights. */
+/** `GET /clubs/:clubId/today` (Wave 14, wrapped in `{ data }` like every backend route): the personal overview of a club member; `board` and `setup` only for callers with the matching rights. */
 export interface TodayData {
     generatedAt: string;
     openRsvps: { eventId: string; title: string; startsAt: string }[];

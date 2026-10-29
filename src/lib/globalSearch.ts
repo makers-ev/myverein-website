@@ -1,4 +1,4 @@
-/** `GET /clubs/:clubId/search` (Wave 14): every group is present only when the caller may read it. */
+/** `GET /clubs/:clubId/search` (Wave 14, wrapped in `{ data }`): every group is present only when the caller may read it. */
 export interface SearchResult {
     members?: { id: string; name: string; departmentNames?: string[] }[];
     events?: { id: string; title: string; startsAt: string }[];

@@ -52,10 +52,10 @@ export default function GlobalSearch() {
         let cancelled = false;
         const timer = setTimeout(() => {
             setPending(true);
-            apiFetch<SearchResult>(searchPath(clubId, q))
+            apiFetch<{ data: SearchResult }>(searchPath(clubId, q))
                 .then((r) => {
                     if (cancelled) return;
-                    setResult(r);
+                    setResult(r.data);
                     setError(null);
                 })
                 .catch((e: unknown) => !cancelled && setError(e))

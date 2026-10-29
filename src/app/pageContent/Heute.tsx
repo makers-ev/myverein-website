@@ -41,7 +41,7 @@ export default function HeutePageContent() {
         if (!clubId) return;
         setError(null);
         try {
-            setData(await apiFetch<TodayData>(todayPath(clubId)));
+            setData((await apiFetch<{ data: TodayData }>(todayPath(clubId))).data);
         } catch (e) {
             setError(e);
         }
