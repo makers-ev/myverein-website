@@ -35,7 +35,7 @@ interface VersionDetail {
  * Club document (Satzung, Beitragsordnung, ...): reader for every member, editor and version history with restore for
  * `club_info:write` (Wave 13 W1). `slug === null` creates a new document. Markdown is rendered sanitised.
  */
-export default function ClubInfoDialog({ clubId, slug, canWrite, onClose, onChanged }: { clubId: string; slug: string | null; canWrite: boolean; onClose: () => void; onChanged: () => void }) {
+export default function ClubInfoDialog({ clubId, slug, canWrite, existingSlugs = [], onClose, onChanged }: { clubId: string; slug: string | null; canWrite: boolean; existingSlugs?: string[]; onClose: () => void; onChanged: () => void }) {
     const { t, language } = useLanguage();
     const { confirm, dialog } = useConfirm();
     const [current, setCurrent] = useState<string | null>(slug);
@@ -91,6 +91,7 @@ export default function ClubInfoDialog({ clubId, slug, canWrite, onClose, onChan
                 {mode === 'edit' ? (
                     <Editor
                         clubId={clubId}
+                        existingSlugs={existingSlugs}
                         detail={current ? detail : null}
                         waiting={!!current && !detail && !failed}
                         onCancel={() => (current ? setMode('read') : onClose())}
@@ -173,7 +174,7 @@ export default function ClubInfoDialog({ clubId, slug, canWrite, onClose, onChan
     );
 }
 
-function Editor({ clubId, detail, waiting, onCancel, onSaved }: { clubId: string; detail: ClubInfoDetail | null; waiting: boolean; onCancel: () => void; onSaved: (saved: ClubInfoDetail, unchanged: boolean) => void }) {
+function Editor({ clubId, existingSlugs, detail, waiting, onCancel, onSaved }: { clubId: string; existingSlugs: string[]; detail: ClubInfoDetail | null; waiting: boolean; onCancel: () => void; onSaved: (saved: ClubInfoDetail, unchanged: boolean) => void }) {
     const { t } = useLanguage();
     const isNew = !detail;
     const [title, setTitle] = useState(detail?.title ?? '');
@@ -191,7 +192,7 @@ function Editor({ clubId, detail, waiting, onCancel, onSaved }: { clubId: string
     if (waiting) return <LoadingText />;
 
     const problem =
-        !title.trim() ? 'docs.info.err.title' : isNew && !SLUG_PATTERN.test(slug) ? 'docs.info.err.slug' : markdown.length > MAX_MARKDOWN ? 'docs.info.err.tooLong' : externalUrl.trim() && !isHttpUrl(externalUrl.trim()) ? 'docs.info.err.url' : null;
+        !title.trim() ? 'docs.info.err.title' : isNew && !SLUG_PATTERN.test(slug) ? 'docs.info.err.slug' : isNew && existingSlugs.includes(slug) ? 'docs.info.err.slugTaken' : markdown.length > MAX_MARKDOWN ? 'docs.info.err.tooLong' : externalUrl.trim() && !isHttpUrl(externalUrl.trim()) ? 'docs.info.err.url' : null;
 
     async function save(e: React.FormEvent) {
         e.preventDefault();

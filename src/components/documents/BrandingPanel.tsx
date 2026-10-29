@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { FileText, Trash2 } from 'lucide-react';
 
 import LoadingText from '@/components/LoadingText';
@@ -24,6 +24,7 @@ export default function BrandingPanel({ clubId }: { clubId: string }) {
     const [error, setError] = useState<string | null>(null);
     const [notice, setNotice] = useState<string | null>(null);
     const [previewing, setPreviewing] = useState(false);
+    const logoRetried = useRef(false);
     const q = clubQuery(clubId);
     const base = `/club-settings/branding`;
 
@@ -40,6 +41,12 @@ export default function BrandingPanel({ clubId }: { clubId: string }) {
         },
         [base, q],
     );
+
+    const logoUrl = branding?.logo?.url ?? null;
+    useEffect(() => {
+        // A different logo (new upload) gets its own single retry.
+        logoRetried.current = false;
+    }, [logoUrl]);
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -96,7 +103,13 @@ export default function BrandingPanel({ clubId }: { clubId: string }) {
                     {branding.logo ? (
                         <div className="flex flex-wrap items-center gap-3">
                             {/* eslint-disable-next-line @next/next/no-img-element -- signed short-lived URL from the media layer */}
-                            <img src={branding.logo.url} alt={t('docs.branding.logo.alt')} onError={() => void load(true)} className="max-h-20 max-w-48 rounded-lg border border-border bg-white object-contain p-2" />
+                            <img src={branding.logo.url} alt={t('docs.branding.logo.alt')} onError={() => {
+                                    // The signed URL may have expired: reload once, then stop (no endless loop on a broken image).
+                                    if (!logoRetried.current) {
+                                        logoRetried.current = true;
+                                        void load(true);
+                                    }
+                                }} className="max-h-20 max-w-48 rounded-lg border border-border bg-white object-contain p-2" />
                             <button
                                 type="button"
                                 className={`${secondaryButtonClass} text-destructive`}

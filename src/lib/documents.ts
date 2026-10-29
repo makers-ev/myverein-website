@@ -236,10 +236,26 @@ export async function downloadDocument(path: string, fallbackName: string): Prom
 
 /** Opens a PDF in a new tab from an authenticated request (blob URL, not a public link). */
 export async function openPdf(path: string, method: 'GET' | 'POST' = 'GET', body?: unknown): Promise<void> {
-    const { blob } = await fetchFileBlob(path, 'document.pdf', { accept: 'application/pdf', method, body: method === 'POST' ? (body ?? {}) : undefined });
-    const url = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
-    window.open(url, '_blank', 'noopener');
-    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    // Open the tab first (inside the click), so a popup blocker does not swallow it after the async request.
+    const win = window.open('', '_blank');
+    let blob: Blob;
+    try {
+        ({ blob } = await fetchFileBlob(path, 'document.pdf', { accept: 'application/pdf', method, body: method === 'POST' ? (body ?? {}) : undefined }));
+    } catch (err) {
+        win?.close();
+        throw err;
+    }
+    const pdf = new Blob([blob], { type: 'application/pdf' });
+    if (!win) {
+        // Popups are blocked: hand the file over as a download instead.
+        saveBlob(pdf, 'document.pdf');
+        return;
+    }
+    win.opener = null;
+    const url = URL.createObjectURL(pdf);
+    win.location.href = url;
+    // Kept for 10 minutes: the tab may reload or the user may print late.
+    setTimeout(() => URL.revokeObjectURL(url), 10 * 60_000);
 }
 
 export const clubQuery = (clubId: string) => `clubId=${encodeURIComponent(clubId)}`;

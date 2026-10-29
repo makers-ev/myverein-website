@@ -145,7 +145,7 @@ function VereinsinfoTab({ info, t, onPhotoExpired, termsClubId, clubId, canWrite
                     </button>
                 )}
             </SectionCard>
-            {openSlug !== null && <ClubInfoDialog clubId={clubId} slug={openSlug || null} canWrite={canWriteInfo} onClose={() => setOpenSlug(null)} onChanged={onInfoChanged} />}
+            {openSlug !== null && <ClubInfoDialog clubId={clubId} slug={openSlug || null} canWrite={canWriteInfo} existingSlugs={info.pages.map((p) => p.slug)} onClose={() => setOpenSlug(null)} onChanged={onInfoChanged} />}
         </div>
     );
 }
