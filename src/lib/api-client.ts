@@ -23,6 +23,8 @@ interface ApiFetchOptions {
     body?: unknown;
     /** Server Component calls need the incoming request's cookie forwarded explicitly, see below. */
     cookie?: string;
+    /** Aborts the request (superseded search, unmount). */
+    signal?: AbortSignal;
 }
 
 /**
@@ -59,6 +61,7 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
     const { data, error } = await authClient.$fetch<T>(`${backendUrl}${path}`, {
         method: options.method ?? 'GET',
         body: options.body,
+        ...(options.signal ? { signal: options.signal } : {}),
         // better-fetch's default parser revives ISO date strings into Date objects; all date helpers (and the types)
         // expect the strings the backend sent, so parse plain.
         jsonParser: parseJsonPlain,
