@@ -19,11 +19,12 @@ const CODE_KEYS: Record<string, string> = {
  * localized text. Never returns the server's own message. Lookup order: `overrides[code]` (a screen's own wording), the shared
  * code table, the HTTP status, a generic fallback. A non-`ApiError` (fetch threw) is a network problem.
  */
-export function mapApiError(err: unknown, t: Translate, overrides: Record<string, string> = {}): string {
+export function mapApiError(err: unknown, t: Translate, rawOverrides: Record<string, string> = {}): string {
+    const overrides = Object.fromEntries(Object.entries(rawOverrides).map(([k, v]) => [k.toUpperCase(), v]));
     if (!(err instanceof ApiError)) return t('err.network');
     const code = err.code.toUpperCase();
     const detailsCode = ((err.details as { code?: unknown } | undefined)?.code ?? '') as string;
-    const own = overrides[code] ?? overrides[err.code] ?? (detailsCode ? overrides[detailsCode] : undefined);
+    const own = overrides[code] ?? (detailsCode ? overrides[detailsCode.toUpperCase()] : undefined);
     if (own) return t(own);
     const byCode = CODE_KEYS[code] ?? (detailsCode ? CODE_KEYS[detailsCode.toUpperCase()] : undefined);
     if (byCode) return t(byCode);

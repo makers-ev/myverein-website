@@ -22,6 +22,10 @@ describe('mapApiError', () => {
         expect(mapApiError(new ApiError(418, 'UNKNOWN', 'x'), t)).toBe('err.unknown');
     });
 
+    it('matches override keys case-insensitively', () => {
+        expect(mapApiError(new ApiError(409, 'ALREADY_VOTED', 'x'), t, { already_voted: 'own.key' })).toBe('own.key');
+    });
+
     it('lets a screen override a code', () => {
         expect(mapApiError(new ApiError(409, 'CONFLICT', 'x'), t, { CONFLICT: 'my.key' })).toBe('my.key');
     });
