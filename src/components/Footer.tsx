@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Github, Twitter, Linkedin } from 'lucide-react';
 import Logo from './Logo';
+import { docsUrl } from '@/lib/docs';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export function Footer() {
@@ -133,6 +134,17 @@ export function Footer() {
                                             </Link>
                                         </li>
                                     ))}
+                                    <li>
+                                        <a
+                                            href={docsUrl()}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            aria-label={t('help.nav.label')}
+                                            className="text-sm leading-6 text-muted-foreground hover:text-primary transition-colors"
+                                        >
+                                            {t('help.nav')}
+                                        </a>
+                                    </li>
                                     <button
                                         onClick={openCookieSettings}
                                         className="text-sm leading-6 text-muted-foreground hover:text-primary transition-colors"

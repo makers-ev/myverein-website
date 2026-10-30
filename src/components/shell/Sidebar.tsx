@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { Building2, CalendarDays, ClipboardList, Clock, FileText, Home, HeartHandshake, LayoutGrid, LogOut, Megaphone, MapPin, PanelLeftClose, PanelLeftOpen, Settings as SettingsIcon, ShieldCheck, UserCircle, Users, Vote, BarChart3, FormInput, ListPlus, CalendarOff, type LucideIcon } from 'lucide-react';
+import { Building2, CalendarDays, ClipboardList, Clock, FileText, Home, HeartHandshake, LayoutGrid, LogOut, Megaphone, MapPin, PanelLeftClose, PanelLeftOpen, Settings as SettingsIcon, ShieldCheck, CircleHelp, UserCircle, Users, Vote, BarChart3, FormInput, ListPlus, CalendarOff, type LucideIcon } from 'lucide-react';
 
 import { useLanguage } from '@/contexts/LanguageContext';
+import { docsUrl } from '@/lib/docs';
 import { isEntryActive, type NavGroup, type NavIcon } from '@/lib/navigation';
 
 const ICONS: Record<NavIcon, LucideIcon> = {
@@ -62,12 +63,23 @@ export default function Sidebar({ groups, collapsed, onToggleCollapsed, onNaviga
                     </ul>
                 </div>
             ))}
+            <a
+                href={docsUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={t('help.nav.label')}
+                title={collapsed ? t('help.sidebar') : undefined}
+                className={`flex min-h-11 items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium text-foreground hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary`}
+            >
+                <CircleHelp aria-hidden="true" className="h-5 w-5 shrink-0" />
+                <span className={collapsed ? 'sr-only' : 'truncate'}>{t('help.sidebar')}</span>
+            </a>
             {onToggleCollapsed && (
                 <button
                     type="button"
                     onClick={onToggleCollapsed}
                     aria-expanded={!collapsed}
-                    className="mt-auto flex min-h-11 items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+                    className="flex min-h-11 items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
                 >
                     {collapsed ? <PanelLeftOpen aria-hidden="true" className="h-5 w-5" /> : <PanelLeftClose aria-hidden="true" className="h-5 w-5" />}
                     <span className={collapsed ? 'sr-only' : ''}>{t(collapsed ? 'shell.sidebar.expand' : 'shell.sidebar.collapse')}</span>

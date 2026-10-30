@@ -26,6 +26,13 @@ const UxTranslation: Translation = {
         'nav.admin.privacy': 'Datenschutz',
         'nav.admin.settings': 'Vereinseinstellungen',
 
+        // Help / docs portal
+        'help.nav': 'Hilfe',
+        'help.sidebar': 'Hilfe & Anleitungen',
+        'help.page.label': 'Hilfe zu dieser Seite (öffnet in neuem Tab)',
+        'help.nav.label': 'Hilfe und Anleitungen (öffnet in neuem Tab)',
+        'help.setup.link': 'Anleitung: Verein aufsetzen',
+
         // App shell
         'shell.skip': 'Zum Inhalt springen',
         'shell.sidebar.label': 'Hauptnavigation',
@@ -107,6 +114,11 @@ const UxTranslation: Translation = {
         'err.queryTooShort': 'Gib mindestens 2 Zeichen ein.',
     },
     en: {
+        'help.nav': 'Help',
+        'help.sidebar': 'Help & guides',
+        'help.page.label': 'Help for this page (opens in a new tab)',
+        'help.nav.label': 'Help and guides (opens in a new tab)',
+        'help.setup.link': 'Guide: Setting up your club',
         'nav.heute': 'Today',
         'nav.group.today': 'Today',
         'nav.group.club': 'Club',

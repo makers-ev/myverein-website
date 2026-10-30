@@ -7,6 +7,7 @@ import { chooseClub } from '@/lib/activeClub';
 import { clearReminder, takeReminder, type ReminderPrefill } from '@/lib/consents';
 import { communicationGate, ownDepartmentIds, selectableDepartments, type Announcement } from '@/lib/communication';
 import { useLanguage } from '@/contexts/LanguageContext';
+import HelpLink from '@/components/HelpLink';
 import ComposePanel from '@/components/mitteilungen/ComposePanel';
 import HistoryPanel from '@/components/mitteilungen/HistoryPanel';
 import InboxPanel from '@/components/mitteilungen/InboxPanel';
@@ -106,7 +107,10 @@ export default function MitteilungenPageContent() {
 
     return (
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-            <h1 className="text-2xl font-bold text-foreground">{t('mitteilungen.page.title')}</h1>
+            <div className="flex items-center gap-1">
+                <h1 className="text-2xl font-bold text-foreground">{t('mitteilungen.page.title')}</h1>
+                <HelpLink topic="announcements" />
+            </div>
             <p className="mt-1 text-sm text-muted-foreground">{t('mitteilungen.page.subtitle')}</p>
 
             {clubsError ? (

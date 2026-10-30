@@ -7,6 +7,7 @@ import { ChevronDown, Menu, X, Globe } from 'lucide-react';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supportedLanguages, type Language } from '@/contexts/supportedLanguages';
+import { docsUrl } from '@/lib/docs';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 export interface NavItem {
@@ -100,6 +101,15 @@ export function Navbar({
                                 </Link>
                             );
                         })}
+                        <a
+                            href={docsUrl()}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={t('help.nav.label')}
+                            className="text-sm font-medium text-muted-foreground transition-colors duration-200 hover:text-foreground"
+                        >
+                            {t('help.nav')}
+                        </a>
                     </div>
                 </div>
 
@@ -184,6 +194,15 @@ export function Navbar({
                                 {t(link.name)}
                             </Link>
                         ))}
+                        <a
+                            href={docsUrl()}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={t('help.nav.label')}
+                            className="block rounded-md px-3 py-2 text-base font-medium text-muted-foreground transition-colors hover:bg-muted"
+                        >
+                            {t('help.nav')}
+                        </a>
 
                         {/* Mobile Language Selector */}
                         <div className="flex flex-col gap-2 px-3 py-2 border-t border-border mt-2 pt-3">
