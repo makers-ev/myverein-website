@@ -1,8 +1,15 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { X } from 'lucide-react';
 import type { ReactNode } from 'react';
+
+import { useLanguage } from '@/contexts/LanguageContext';
+
+/** Open modals, topmost last: only the topmost reacts to Escape and keeps Tab focus inside itself. */
+const modalStack: string[] = [];
+
+const FOCUSABLE = 'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 interface ModalProps {
   open: boolean;
@@ -10,18 +17,67 @@ interface ModalProps {
   title: string;
   children: ReactNode;
   footer?: ReactNode;
+  /** `lg` for form-heavy dialogs (member form); default `md`. */
+  size?: 'md' | 'lg';
 }
 
 /** Centered dialog -- the first generic modal/dialog primitive in this template, used by IntroModal.tsx. */
-export function Modal({ open, onClose, title, children, footer }: ModalProps) {
+export function Modal({ open, onClose, title, children, footer, size = 'md' }: ModalProps) {
+  const { t } = useLanguage();
+  const titleId = useId();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const previouslyFocused = useRef<HTMLElement | null>(null);
+  // Callers pass inline arrows; keeping the latest in a ref keeps the effect (and the stack position) stable.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
   useEffect(() => {
     if (!open) return;
+    modalStack.push(titleId);
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (modalStack[modalStack.length - 1] !== titleId) return;
+      if (e.key === 'Escape') {
+        onCloseRef.current();
+        return;
+      }
+      if (e.key === 'Tab' && dialogRef.current) {
+        const items = Array.from(dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE));
+        if (items.length === 0) {
+          e.preventDefault();
+          return;
+        }
+        const first = items[0]!;
+        const last = items[items.length - 1]!;
+        const active = document.activeElement;
+        if (e.shiftKey && (active === first || active === dialogRef.current)) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && active === last) {
+          e.preventDefault();
+          first.focus();
+        } else if (!dialogRef.current.contains(active)) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     };
     document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [open, onClose]);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      const i = modalStack.indexOf(titleId);
+      if (i >= 0) modalStack.splice(i, 1);
+    };
+  }, [open, titleId]);
+
+  // Focus the dialog on open, restore focus to the trigger on close.
+  useEffect(() => {
+    if (!open) return;
+    previouslyFocused.current = document.activeElement as HTMLElement | null;
+    dialogRef.current?.focus();
+    return () => previouslyFocused.current?.focus();
+  }, [open]);
 
   if (!open) return null;
 
@@ -31,12 +87,17 @@ export function Modal({ open, onClose, title, children, footer }: ModalProps) {
       onClick={onClose}
     >
       <div
-        className="flex max-h-[85vh] w-full max-w-lg flex-col rounded-2xl bg-card shadow-xl"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className={`flex max-h-[90vh] w-full flex-col rounded-2xl bg-card shadow-xl ${size === 'lg' ? 'max-w-2xl' : 'max-w-lg'}`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
-          <h2 className="truncate pr-3 text-lg font-bold text-foreground">{title}</h2>
-          <button onClick={onClose} className="rounded p-1 hover:bg-muted" aria-label="Close">
+          <h2 id={titleId} className="truncate pr-3 text-lg font-bold text-foreground">{title}</h2>
+          <button type="button" onClick={onClose} className="rounded p-1 hover:bg-muted" aria-label={t('common.close')}>
             <X className="h-5 w-5 text-muted-foreground" />
           </button>
         </div>

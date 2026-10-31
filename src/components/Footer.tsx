@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Github, Twitter, Linkedin } from 'lucide-react';
 import Logo from './Logo';
+import { docsUrl } from '@/lib/docs';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export function Footer() {
@@ -16,13 +17,11 @@ export function Footer() {
     const footerLinks = {
         product: [
             { name: t('footer.product.features'), href: '/features' },
-            { name: t('footer.product.pricing'), href: '/pricing' },
+            { name: t('footer.product.roadmap'), href: '/roadmap' },
             { name: t('footer.product.changelog'), href: '/changelog' },
         ],
         company: [
             { name: t('footer.company.about'), href: '/about' },
-            { name: t('footer.company.blog'), href: '/blog' },
-            { name: t('footer.company.careers'), href: '/careers' },
             { name: t('footer.company.contact'), href: '/contact' },
         ],
         legal: [
@@ -135,6 +134,17 @@ export function Footer() {
                                             </Link>
                                         </li>
                                     ))}
+                                    <li>
+                                        <a
+                                            href={docsUrl()}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            aria-label={t('help.nav.label')}
+                                            className="text-sm leading-6 text-muted-foreground hover:text-primary transition-colors"
+                                        >
+                                            {t('help.nav')}
+                                        </a>
+                                    </li>
                                     <button
                                         onClick={openCookieSettings}
                                         className="text-sm leading-6 text-muted-foreground hover:text-primary transition-colors"
@@ -154,7 +164,7 @@ export function Footer() {
                 {/* Bottom Bar */}
                 <div className="mt-16 pt-8 sm:mt-20 lg:mt-24 flex flex-col items-center justify-between">
                     <p className="text-xs leading-5 text-muted-foreground">
-                        &copy; {currentYear} LPJ IT-Solutions, {t('footer.rights')}
+                        &copy; {currentYear} MyVerein, {t('footer.rights')}
                     </p>
                 </div>
             </div>

@@ -15,5 +15,5 @@ export default async function TermsOfServicePage() {
     // Forces dynamic rendering so the proxy's per-request CSP nonce applies -- see login-signup/page.tsx.
     await connection();
 
-    return <LegalDocument keyPrefix="legal.tos" sectionCount={8} />;
+    return <LegalDocument keyPrefix="legal.tos" sectionCount={11} />;
 }

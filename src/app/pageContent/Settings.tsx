@@ -1,12 +1,15 @@
 "use client"
 
 import { useState, useEffect, FormEvent } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { HelpCircle } from "lucide-react"
 
 import { authClient } from "@/lib/auth-client"
 import { useLanguage } from "@/contexts/LanguageContext"
 import { PaletteSettings } from "@/components/PaletteSettings"
+import NotificationPreferences from "@/components/NotificationPreferences"
+import { accountDeletionErrorKey } from "@/lib/privacyAdmin"
 
 function Avatar({ name }: { name: string }) {
 	const initials = name
@@ -148,7 +151,7 @@ export default function SettingsPageContent() {
 			return
 		}
 
-		setTotpUri(data?.totpURI ?? null)
+		setTotpUri(data && "totpURI" in data ? data.totpURI : null)
 		setTwoFactorPassword("")
 		setTwoFactorStep("verify")
 	}
@@ -207,7 +210,10 @@ export default function SettingsPageContent() {
 		setDeleteSubmitting(false)
 
 		if (error) {
-			setDeleteError(error.message ?? "Unable to delete account.")
+			// Wave 10: deleting the account runs the club data erasure; a blocker (open loans, board role, sole owner, ...) is
+			// reported as `ERASURE_<BLOCKER>` and explained in plain words instead of the raw server text.
+			const blockerKey = accountDeletionErrorKey(error.code)
+			setDeleteError(blockerKey ? t(blockerKey) : (error.message ?? "Unable to delete account."))
 			return
 		}
 
@@ -226,6 +232,8 @@ export default function SettingsPageContent() {
 
 			<div className="space-y-6">
 				<PaletteSettings />
+
+				<NotificationPreferences />
 
 				<form onSubmit={handleSaveProfile} className="bg-card border border-border rounded-lg p-6 shadow-sm">
 					<h2 className="text-lg font-semibold">Profile</h2>
@@ -467,6 +475,12 @@ export default function SettingsPageContent() {
 				<h2 className="text-lg font-semibold text-red-600">Danger zone</h2>
 				<p className="text-sm text-muted-foreground">
 					Permanently delete your account and all associated data. This cannot be undone.
+				</p>
+				<p className="mt-2 text-sm text-foreground">
+					{t('privacy.settings.clubHint')}{' '}
+					<Link href="/verein" className="font-semibold text-primary underline">
+						{t('privacy.settings.clubLink')}
+					</Link>
 				</p>
 
 				{!showDeleteForm ? (

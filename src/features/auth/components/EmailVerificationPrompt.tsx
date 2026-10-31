@@ -4,9 +4,12 @@ import { useState } from 'react';
 
 import { authClient, siteUrl } from '@/lib/auth-client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { verifyEmailCallback } from '@/lib/resolveCallbackUrl';
 
 interface EmailVerificationPromptProps {
     email: string;
+    /** Post-login target to carry through the verification e-mail (default `/settings`). */
+    callbackUrl?: string;
     onBackToLogin: () => void;
 }
 
@@ -15,7 +18,7 @@ interface EmailVerificationPromptProps {
  * requires email verification before it's usable, so this replaces the
  * immediate redirect with a "check your inbox" screen and a resend action.
  */
-export function EmailVerificationPrompt({ email, onBackToLogin }: EmailVerificationPromptProps) {
+export function EmailVerificationPrompt({ email, callbackUrl = '/heute', onBackToLogin }: EmailVerificationPromptProps) {
     const { t } = useLanguage();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [resent, setResent] = useState(false);
@@ -28,7 +31,7 @@ export function EmailVerificationPrompt({ email, onBackToLogin }: EmailVerificat
 
         const { error: resendError } = await authClient.sendVerificationEmail({
             email,
-            callbackURL: `${siteUrl}/verify-email`,
+            callbackURL: verifyEmailCallback(siteUrl, callbackUrl),
         });
 
         setIsSubmitting(false);

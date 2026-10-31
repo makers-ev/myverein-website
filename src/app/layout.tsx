@@ -10,6 +10,7 @@ import { PaletteProvider } from "@/components/PaletteProvider";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import CookieConsent from "@/components/CookieConsent";
+import { SkipLink } from "@/components/SkipLink";
 import { AuthNav } from "@/components/AuthNav";
 import Logo from "@/components/Logo";
 import { url, defaultLanguage } from "../../project.config.json";
@@ -50,10 +51,26 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Public, always-visible info links (marketing side of the site) -- the
+  // member-only function links below only make sense once a user actually
+  // has a club membership, so they live in AuthNav's account dropdown
+  // instead of here.
   const mainLinks = [
+    { name: "nav.features", href: "/features" },
+    { name: "nav.roadmap", href: "/roadmap" },
+    { name: "nav.changelog", href: "/changelog" },
+    { name: "nav.contact", href: "/contact" },
+  ];
+
+  // Member-only function links, shown inside AuthNav's account dropdown
+  // (only rendered once a session exists) rather than in the public navbar.
+  const appLinks = [
     { name: "nav.verein", href: "/verein" },
-    { name: "nav.notifications", href: "/notifications" },
-    { name: "nav.settings", href: "/settings" },
+    { name: "nav.mitteilungen", href: "/mitteilungen" },
+    { name: "nav.kalender", href: "/kalender" },
+    { name: "nav.abstimmungen", href: "/abstimmungen" },
+    { name: "nav.standorte", href: "/standorte" },
+    { name: "nav.verfuegbarkeit", href: "/verfuegbarkeit" },
   ];
 
   // next-themes injects a raw inline <script> (FOUC prevention) and,
@@ -94,13 +111,14 @@ export default async function RootLayout({
         <ThemeProvider nonce={nonce}>
           <PaletteProvider>
             <LanguageProvider initialLanguage={initialLanguage}>
+              <SkipLink />
               <Navbar
                 mainLinks={mainLinks}
                 logo={<Logo />}
-                guestNav={<AuthNav />}
-                mobileGuestNav={<AuthNav />}
+                guestNav={<AuthNav appLinks={appLinks} />}
+                mobileGuestNav={<AuthNav appLinks={appLinks} />}
               />
-              <main className="flex-1">{children}</main>
+              <main id="main-content" tabIndex={-1} className="flex-1 focus:outline-none">{children}</main>
               <Footer />
               <CookieConsent />
             </LanguageProvider>

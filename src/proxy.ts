@@ -66,14 +66,22 @@ export function proxy(request: NextRequest) {
     // The backend's origin must be reachable from `connect-src` since the
     // Better Auth client (src/lib/auth-client.ts) fetches it directly from
     // the browser (sign-in/sign-up/session calls never go through this app's
-    // own server).
+    // own server). `img-src` needs it too: member/location photos are signed
+    // `<backend>/media/...` URLs (media security layer), loaded by plain <img>.
     const backendOrigin = process.env.NEXT_PUBLIC_BACKEND_URL ?? "'self'";
+
+    // /verein hosts the sandboxed club-mail preview iframe. A srcdoc iframe inherits this page's CSP (a <meta> CSP inside
+    // it can only tighten, never relax), and the e-mail HTML styles itself with inline `style="..."` attributes, which a
+    // nonce cannot cover. So only that page allows inline style ATTRIBUTES (no <style> blocks, no scripts).
+    const path = request.nextUrl.pathname;
+    const allowInlineStyleAttr = path === '/verein' || path.startsWith('/verein/');
 
     const cspHeader = `
         default-src 'self';
         script-src 'self' ${isDev ? "'unsafe-inline' 'unsafe-eval'" : `'nonce-${nonce}' 'strict-dynamic'`};
         style-src 'self' ${isDev ? "'unsafe-inline'" : `'nonce-${nonce}'`};
-        img-src 'self' blob: data:;
+        ${allowInlineStyleAttr && !isDev ? "style-src-attr 'unsafe-inline';" : ''}
+        img-src 'self' blob: data: ${backendOrigin};
         font-src 'self';
         connect-src 'self' ${backendOrigin};
         object-src 'none';
@@ -98,7 +106,10 @@ export function proxy(request: NextRequest) {
     response.headers.set('Content-Security-Policy', contentSecurityPolicyHeaderValue);
     response.headers.set('X-Frame-Options', 'DENY');
     response.headers.set('X-Content-Type-Options', 'nosniff');
-    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    // The invitation and unsubscribe landing pages carry a secret token in their URL: never send that URL on as Referer.
+    const tokenPaths = ['/einladung', '/abmelden', '/anmeldung'];
+    const invitationPage = tokenPaths.some((p) => request.nextUrl.pathname === p || request.nextUrl.pathname.startsWith(`${p}/`));
+    response.headers.set('Referrer-Policy', invitationPage ? 'no-referrer' : 'strict-origin-when-cross-origin');
 
     return response;
 }

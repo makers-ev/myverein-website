@@ -3,6 +3,8 @@ import { headers } from 'next/headers';
 
 import { authClient } from '@/lib/auth-client';
 import IntroModal from '@/components/IntroModal';
+import AppShell from '@/components/shell/AppShell';
+import DpaRequiredNotice from '@/components/privacy/DpaRequiredNotice';
 
 /**
  * Fail-safe server-side re-check for everything under the (protected) route
@@ -33,14 +35,15 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     });
 
     if (!session) {
-        const currentPath = incomingHeaders.get('x-url') ?? '/dashboard';
+        const currentPath = incomingHeaders.get('x-url') ?? '/heute';
         redirect(`/login-signup?callbackUrl=${encodeURIComponent(currentPath)}`);
     }
 
     return (
         <div className="min-h-[calc(100vh-4rem)] bg-background">
-            {children}
+            <AppShell>{children}</AppShell>
             <IntroModal />
+            <DpaRequiredNotice />
         </div>
     );
 }

@@ -34,4 +34,21 @@ describe('validateContactPayload', () => {
     const result = validateContactPayload({ name: 'Alex', email: 'alex@example.com', category: 'general' });
     expect('error' in result).toBe(true);
   });
+
+  it('accepts a beta submission without a message, optionally with a referral', () => {
+    const result = validateContactPayload({ name: 'Alex', email: 'alex@example.com', category: 'beta', referral: 'A friend' });
+    expect('data' in result).toBe(true);
+    if ('data' in result) {
+      expect(result.data.category).toBe('beta');
+      expect(result.data.referral).toBe('A friend');
+    }
+  });
+
+  it('accepts a beta submission without a referral', () => {
+    const result = validateContactPayload({ name: 'Alex', email: 'alex@example.com', category: 'beta' });
+    expect('data' in result).toBe(true);
+    if ('data' in result) {
+      expect(result.data.referral).toBeUndefined();
+    }
+  });
 });

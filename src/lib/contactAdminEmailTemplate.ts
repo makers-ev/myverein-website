@@ -15,7 +15,7 @@ function escapeHtml(value: string): string {
  * into Excel/Sheets keeps the rows intact.
  */
 export function buildAdminNotificationEmail(payload: ContactPayload): { subject: string; html: string; text: string } {
-  const { name, email, category, message } = payload;
+  const { name, email, category, message, referral } = payload;
   const subject = `Kontaktanfrage über ${appName} (${category}) von ${name}`;
 
   const rows: [string, string][] = [
@@ -24,6 +24,10 @@ export function buildAdminNotificationEmail(payload: ContactPayload): { subject:
     ['Kategorie', category],
     ['Nachricht', message],
   ];
+  // Only the `beta` category collects a referral ("how did you hear about
+  // us") field -- add the row only when there's actually a value, so every
+  // other category's table stays exactly as it was.
+  if (referral) rows.push(['Empfohlen durch', referral]);
 
   const body = rows
     .map(

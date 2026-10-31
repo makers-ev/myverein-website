@@ -1,13 +1,13 @@
 {
-  "title": "Better Auth Website Template",
-  "description": "Next.js website template with Better Auth authentication built in",
-  "url": "https://<url>.com",
-  "logoUrl": "<public-logo-path>",
-  "logoPath": "public/lpj-its.svg",
-  "author": "LPJ IT-Solutions",
+  "title": "MyVerein",
+  "description": "MyVerein ist die Vereinsverwaltung für Mitglieder, Vorstand und externe Kontakte: Mitgliederverwaltung, Vereinsinfo, Rollen und Abteilungen an einem Ort.",
+  "url": "https://myverein.lpj.app",
+  "logoUrl": "/myverein-logo.png",
+  "logoPath": "public/myverein.svg",
+  "author": "Luca-Pascal Junge",
   "authorUrl": "https://github.com/lpj-app",
-  "appName": "<app-name>",
-  "primaryColor": "#1e293b",
-  "defaultLanguage": "en",
-  "keywords": ["auth", "better-auth", "nextjs", "typescript", "react", "authentication", "starter-template"]
+  "appName": "MyVerein",
+  "primaryColor": "#2c4870",
+  "defaultLanguage": "de",
+  "keywords": ["verein", "vereinsverwaltung", "mitgliederverwaltung", "vorstand", "ehrenamt", "club management"]
 }
