@@ -50,4 +50,18 @@ describe('LegalTranslation', () => {
         expect(all).not.toMatch(/Entwurf|draft|rechtlich prüfen/i);
         expect(LegalTranslation.de['legal.privacy.updated']).toBe('Stand: November 2026');
     });
+
+    it('names the real providers and leaves no provider, third-country or venue placeholders', () => {
+        for (const lang of ['de', 'en'] as const) {
+            const privacy = LegalTranslation[lang]['legal.privacy.section5.text'];
+            expect(privacy).toContain('STRATO AG');
+            expect(privacy).toContain('Expo');
+            expect(privacy).toMatch(/SMTP/);
+            expect(privacy).not.toMatch(/Resend/i);
+            expect(LegalTranslation[lang]['legal.tos.section11.text']).toContain('Gelnhausen');
+        }
+        const all = [...Object.values(LegalTranslation.de), ...Object.values(LegalTranslation.en)].join('\n');
+        expect((all.match(/\[[^\]]*\]/g) ?? []).sort()).toEqual(['[Dauer der Server-Protokolle]', '[duration of server logs]', '[competent authority]', '[zuständige Aufsichtsbehörde]'].sort());
+        expect(all).not.toMatch(/Resend|keine Personendaten, nur/);
+    });
 });
