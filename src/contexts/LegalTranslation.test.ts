@@ -61,7 +61,10 @@ describe('LegalTranslation', () => {
             expect(LegalTranslation[lang]['legal.tos.section11.text']).toContain('Gelnhausen');
         }
         const all = [...Object.values(LegalTranslation.de), ...Object.values(LegalTranslation.en)].join('\n');
-        expect((all.match(/\[[^\]]*\]/g) ?? []).sort()).toEqual(['[Dauer der Server-Protokolle]', '[duration of server logs]', '[competent authority]', '[zuständige Aufsichtsbehörde]'].sort());
+        expect((all.match(/\[[^\]]*\]/g) ?? []).sort()).toEqual(['[Dauer der Server-Protokolle]', '[duration of server logs]'].sort());
+        expect(LegalTranslation.de['legal.privacy.section8.text']).toContain('Hessische Beauftragte');
+        expect(LegalTranslation.de['legal.privacy.section6.text']).toContain('Data Privacy Framework');
+        expect(LegalTranslation.de['legal.privacy.section5.text']).toContain('vServer');
         expect(all).not.toMatch(/Resend|keine Personendaten, nur/);
     });
 });
