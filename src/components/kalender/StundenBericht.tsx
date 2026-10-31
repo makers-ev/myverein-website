@@ -7,7 +7,7 @@ import LoadError from '@/components/LoadError';
 import LoadingText from '@/components/LoadingText';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api-client';
-import { eventErrorKey } from '@/lib/eventErrors';
+import { eventErrorCode, eventErrorKey } from '@/lib/eventErrors';
 import { formatCost } from '@/lib/eventRegistration';
 import { fetchFileBlob, saveBlob } from '@/lib/memberCsv';
 import { MAX_REPORT_PEOPLE, REPORT_FILENAME, REPORT_MIME, type ReportGroupBy, type ReportPeopleOptions, type TimeReport, reportQuery, reportRows, toggleId, totalHours } from '@/lib/timeTracking';
@@ -35,6 +35,7 @@ export default function StundenBericht({ clubId, range: initialRange, department
     const [options, setOptions] = useState<ReportPeopleOptions | null>(null);
     const [report, setReport] = useState<TimeReport | null>(null);
     const [failed, setFailed] = useState(false);
+    const [tooLarge, setTooLarge] = useState(false);
     const [exporting, setExporting] = useState<'csv' | 'xlsx' | null>(null);
     const [error, setError] = useState<string | null>(null);
 
@@ -46,7 +47,7 @@ export default function StundenBericht({ clubId, range: initialRange, department
 
     const loadOptions = useCallback(() => {
         apiFetch<{ data: ReportPeopleOptions }>(`/time-report/people?clubId=${clubId}&from=${range.from}&to=${range.to}`)
-            .then((res) => setOptions({ people: res.data.people ?? [], roleTypes: res.data.roleTypes ?? [], events: res.data.events ?? [] }))
+            .then((res) => setOptions({ people: res.data.people ?? [], roleTypes: res.data.roleTypes ?? [], events: res.data.events ?? [], truncated: res.data.truncated }))
             .catch(() => setOptions({ people: [], roleTypes: [], events: [] }));
     }, [clubId, range.from, range.to]);
     useEffect(() => {
@@ -55,10 +56,14 @@ export default function StundenBericht({ clubId, range: initialRange, department
 
     const load = useCallback(() => {
         setFailed(false);
+        setTooLarge(false);
         setReport(null);
         apiFetch<{ data: TimeReport }>(`/time-report?${qs}`)
             .then((res) => setReport(res.data))
-            .catch(() => setFailed(true));
+            .catch((err) => {
+                if (eventErrorCode(err) === 'report_too_large') setTooLarge(true);
+                else setFailed(true);
+            });
     }, [qs]);
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -174,6 +179,7 @@ export default function StundenBericht({ clubId, range: initialRange, department
                         </ul>
                     )}
                     {memberIds.length >= MAX_REPORT_PEOPLE && <p className="mt-1 text-xs text-warning">{t('time.report.people.max', { max: MAX_REPORT_PEOPLE })}</p>}
+                    {options?.truncated && <p className="mt-1 text-xs text-warning">{t('time.report.people.truncated')}</p>}
                     {options && (
                         <ul className="mt-2 max-h-40 divide-y divide-border overflow-y-auto rounded-lg border border-border" aria-label={t('time.report.people')}>
                             {hits.length === 0 ? (
@@ -203,7 +209,9 @@ export default function StundenBericht({ clubId, range: initialRange, department
                 </div>
             </div>
 
-            {failed ? (
+            {tooLarge ? (
+                <p role="alert" className="rounded-lg border border-dashed border-border p-4 text-center text-warning">{t('events.err.report_too_large')}</p>
+            ) : failed ? (
                 <LoadError onRetry={load} />
             ) : !report ? (
                 <LoadingText />
@@ -238,7 +246,7 @@ export default function StundenBericht({ clubId, range: initialRange, department
                                     {showEvent && <td className="px-3 py-2 tabular-nums">{fmtDate(p.eventDate)}</td>}
                                     <td className="px-3 py-2 tabular-nums">{p.entries ?? ''}</td>
                                     <td className="px-3 py-2 tabular-nums">{fmtHours(p.hours ?? (p.minutes ?? 0) / 60)}</td>
-                                    {report.includesRates && <td className="px-3 py-2 tabular-nums">{p.rateMissing && p.rateCents == null ? <span className="text-warning">{t('time.report.rateMissing')}</span> : (formatCost(p.rateCents, language) ?? '–')}</td>}
+                                    {report.includesRates && <td className="px-3 py-2 tabular-nums">{p.rateMissing ? <span className="text-warning">{t('time.report.rateMissing')}</span> : (formatCost(p.rateCents, language) ?? '–')}</td>}
                                     {report.includesRates && <td className="px-3 py-2 tabular-nums">{formatCost(p.amountCents, language) ?? '–'}</td>}
                                 </tr>
                             ))}

@@ -68,6 +68,8 @@ export interface ReportPeopleOptions {
     roleTypes: string[];
     /** Events with confirmed hours in the period, newest first. */
     events?: Array<{ eventId: string; title: string; startsAt: string }>;
+    /** The server cut the people (1000) or events (300) list. */
+    truncated?: boolean;
 }
 
 export interface ReportFilters {

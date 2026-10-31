@@ -6,6 +6,11 @@ import { translations } from '@/contexts/LanguageContext';
 import { EVENT_ERROR_CODES } from './eventErrors';
 
 describe('eventErrorKey', () => {
+    it('maps report_too_large and too_long', () => {
+        expect(eventErrorKey(new ApiError(422, 'UNPROCESSABLE_ENTITY', 'x', { code: 'report_too_large' }))).toBe('events.err.report_too_large');
+        expect(eventErrorKey(new ApiError(422, 'UNPROCESSABLE_ENTITY', 'x', { code: 'too_long' }))).toBe('events.err.too_long');
+    });
+
     it('maps known detail codes', () => {
         expect(eventErrorKey(new ApiError(409, 'CONFLICT', 'x', { code: 'shift_full' }))).toBe('events.err.shift_full');
         expect(eventErrorCode(new ApiError(409, 'CONFLICT', 'x', { code: 'nope' }))).toBeNull();
