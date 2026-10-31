@@ -58,6 +58,7 @@ export const EVENT_ERROR_CODES = [
     'answers_too_large',
     'unknown_column',
     'no_rate',
+    'rate_overlap',
 ] as const;
 
 export type EventErrorCode = (typeof EVENT_ERROR_CODES)[number];

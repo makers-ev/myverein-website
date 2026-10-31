@@ -1,3 +1,6 @@
+import { ApiError } from './api-client';
+import { eventErrorKey } from './eventErrors';
+
 /**
  * Time tracking for trainers (Wave 12 W10, backend `/time-entries`, `/rate-cards`, `/time-report`). REPORT ONLY: hours and,
  * with `time:read_rates`, hours x rate as a calculation basis. There is no payout, no booking and no payment status anywhere.
@@ -126,7 +129,48 @@ export interface RateCard {
     validUntil: string | null;
 }
 
-export const RATE_ROLES = ['trainer', 'abteilungsleitung'] as const;
+/** Every club role type the backend accepts for a rate card (`CLUB_ROLE_TYPES`), implicit base role first. */
+export const RATE_ROLES = ['mitglied', 'vorsitz', 'stellv_vorsitz', 'kassenwart', 'schriftfuehrer', 'beisitzer', 'abteilungsleitung', 'trainer', 'erziehungsberechtigt'] as const;
+
+/** Text key of a role in the rate UI: the implicit `mitglied` role reads "Alle Mitglieder", the rest reuses the role names. */
+export function rateRoleKey(role: string): string {
+    return role === 'mitglied' ? 'time.role.mitglied' : `verein.role.${role}`;
+}
+
+/** `order` = "Gültig bis" before "Gültig ab" (the backend rejects it too). */
+export function rateRangeProblem(validFrom: string, validUntil: string): 'order' | null {
+    return validFrom && validUntil && validUntil < validFrom ? 'order' : null;
+}
+
+/** Body of `PATCH /rate-cards/:id`: a cleared end date is sent as `null`. */
+export function ratePatchBody(cents: number, validFrom: string, validUntil: string): Record<string, unknown> {
+    return { hourlyRateCents: cents, validFrom, validUntil: validUntil || null };
+}
+
+export interface RateCardGroups {
+    roles: RateCard[];
+    people: RateCard[];
+}
+
+/** Role cards (in `RATE_ROLES` order) and personal cards (by name), each newest "Gültig ab" first. */
+export function groupRateCards(cards: readonly RateCard[]): RateCardGroups {
+    const newest = (a: RateCard, b: RateCard) => b.validFrom.localeCompare(a.validFrom);
+    const roleIdx = (c: RateCard) => {
+        const i = (RATE_ROLES as readonly string[]).indexOf(c.roleType ?? '');
+        return i === -1 ? RATE_ROLES.length : i;
+    };
+    const personal = cards.filter((c) => c.clubMemberId);
+    return {
+        roles: cards.filter((c) => !c.clubMemberId).sort((a, b) => roleIdx(a) - roleIdx(b) || newest(a, b)),
+        people: personal.sort((a, b) => (a.displayName ?? '').localeCompare(b.displayName ?? '') || newest(a, b)),
+    };
+}
+
+/** Text key for a failed rate-card request; 409 = an overlapping card of the same target. */
+export function rateErrorKey(err: unknown): string {
+    if (err instanceof ApiError && err.status === 409) return 'events.err.rate_overlap';
+    return eventErrorKey(err);
+}
 
 export function splitMinutes(minutes: number): { hours: number; minutes: number } {
     const m = Math.max(0, Math.round(minutes));

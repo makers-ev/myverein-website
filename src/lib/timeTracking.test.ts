@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { MAX_REPORT_PEOPLE, defaultRange, manualProblem, rateBody, reportQuery, reportRows, splitMinutes, toggleId, totalHours } from './timeTracking';
+import { ApiError } from './api-client';
+import { MAX_REPORT_PEOPLE, RATE_ROLES, groupRateCards, rateErrorKey, ratePatchBody, rateRangeProblem, rateRoleKey, defaultRange, manualProblem, rateBody, reportQuery, reportRows, splitMinutes, toggleId, totalHours } from './timeTracking';
 
 describe('time tracking helpers', () => {
     it('splits minutes', () => {
@@ -50,5 +51,43 @@ describe('report helpers', () => {
         expect(reportRows({ range: { from: 'a', to: 'b' }, includesRates: false, note: '', people: [], totals })).toEqual([]);
         expect(reportRows({ range: { from: 'a', to: 'b' }, includesRates: false, note: '', rows: [{ displayName: 'A' }], totals })).toHaveLength(1);
         expect(totalHours({ range: { from: 'a', to: 'b' }, includesRates: false, note: '', totals })).toBe(1.5);
+    });
+});
+
+describe('rate card helpers', () => {
+    const card = (o: Partial<import('./timeTracking').RateCard>) => ({ id: 'x', clubMemberId: null, displayName: null, roleType: null, hourlyRateCents: 1000, validFrom: '2026-01-01', validUntil: null, ...o });
+
+    it('offers every club role incl. the implicit member role', () => {
+        expect(RATE_ROLES).toContain('mitglied');
+        expect(RATE_ROLES).toHaveLength(9);
+        expect(rateRoleKey('mitglied')).toBe('time.role.mitglied');
+        expect(rateRoleKey('trainer')).toBe('verein.role.trainer');
+    });
+
+    it('validates the period', () => {
+        expect(rateRangeProblem('2026-02-01', '2026-01-01')).toBe('order');
+        expect(rateRangeProblem('2026-02-01', '2026-02-01')).toBeNull();
+        expect(rateRangeProblem('2026-02-01', '')).toBeNull();
+    });
+
+    it('builds the PATCH body, clearing the end date with null', () => {
+        expect(ratePatchBody(1500, '2026-01-01', '')).toEqual({ hourlyRateCents: 1500, validFrom: '2026-01-01', validUntil: null });
+        expect(ratePatchBody(1500, '2026-01-01', '2026-06-30').validUntil).toBe('2026-06-30');
+    });
+
+    it('groups role and person cards, newest first', () => {
+        const g = groupRateCards([
+            card({ id: 'a', roleType: 'trainer', validFrom: '2025-01-01' }),
+            card({ id: 'b', roleType: 'trainer', validFrom: '2026-01-01' }),
+            card({ id: 'c', roleType: 'mitglied' }),
+            card({ id: 'd', clubMemberId: 'm', displayName: 'Zoe' }),
+            card({ id: 'e', clubMemberId: 'n', displayName: 'Anna' }),
+        ]);
+        expect(g.roles.map((c) => c.id)).toEqual(['c', 'b', 'a']);
+        expect(g.people.map((c) => c.id)).toEqual(['e', 'd']);
+    });
+
+    it('maps 409 to the overlap text', () => {
+        expect(rateErrorKey(new ApiError(409, 'CONFLICT', 'x'))).toBe('events.err.rate_overlap');
     });
 });
