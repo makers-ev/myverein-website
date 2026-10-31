@@ -69,28 +69,40 @@ export const marketingItems: MarketingItem[] = defineItems([
     { id: 'sensitive-audit', status: 'live', group: 'rights', featureRef: ['11.33'], icon: 'log' },
     { id: 'found-club', status: 'live', group: 'club', featureRef: ['10.1'], icon: 'flag' },
     { id: 'club-switcher', status: 'live', group: 'club', featureRef: ['2.5', '11.19'], icon: 'switch' },
-    // ---- planned (gap analysis / waves) ----
-    { id: 'bulletin-board', status: 'soon', group: 'communication', wave: 9, icon: 'pin-board' },
-    { id: 'broadcast', status: 'soon', group: 'communication', wave: 9, icon: 'megaphone' },
-    { id: 'reminders', status: 'soon', group: 'communication', wave: 9, icon: 'bell' },
-    { id: 'consents', status: 'soon', group: 'consent', wave: 10, icon: 'check' },
-    { id: 'data-requests', status: 'soon', group: 'consent', wave: 10, icon: 'folder' },
-    { id: 'parent-access', status: 'soon', group: 'consent', wave: 10, icon: 'family' },
-    { id: 'sick-notice', status: 'soon', group: 'consent', wave: 10, icon: 'thermometer' },
-    { id: 'voting', status: 'soon', group: 'voting', wave: 11, icon: 'ballot' },
-    { id: 'circular-resolution', status: 'soon', group: 'voting', wave: 11, icon: 'loop' },
-    { id: 'elections', status: 'soon', group: 'voting', wave: 11, icon: 'ballot' },
-    { id: 'invitation-deadline', status: 'soon', group: 'voting', wave: 11, icon: 'hourglass' },
-    { id: 'recurring-events', status: 'soon', group: 'planning', wave: 12, icon: 'repeat' },
-    { id: 'training-attendance', status: 'soon', group: 'planning', wave: 12, icon: 'clipboard' },
-    { id: 'shift-planning', status: 'soon', group: 'planning', wave: 12, icon: 'hands' },
-    { id: 'event-signup', status: 'soon', group: 'planning', wave: 12, icon: 'ticket' },
-    { id: 'member-card', status: 'soon', group: 'documents', wave: 13, icon: 'card' },
-    { id: 'documents-read', status: 'soon', group: 'documents', wave: 13, icon: 'book' },
-    { id: 'pdf-receipts', status: 'soon', group: 'documents', wave: 13, icon: 'pdf' },
-    { id: 'custom-forms', status: 'soon', group: 'forms', wave: 8, icon: 'form' },
+    { id: 'bulletin-board', status: 'live', group: 'communication', wave: 9, featureRef: ['14.5'], icon: 'pin-board' },
+    { id: 'broadcast', status: 'live', group: 'communication', wave: 9, featureRef: ['14.1', '14.2', '14.3'], icon: 'megaphone' },
+    { id: 'reminders', status: 'live', group: 'communication', wave: 9, featureRef: ['14.12'], icon: 'bell' },
+    { id: 'consents', status: 'live', group: 'consent', wave: 10, featureRef: ['15.4', '15.7'], icon: 'check' },
+    { id: 'data-requests', status: 'live', group: 'consent', wave: 10, featureRef: ['15.20', '15.24'], icon: 'folder' },
+    { id: 'parent-access', status: 'live', group: 'consent', wave: 10, featureRef: ['15.11', '15.12', '15.14'], icon: 'family' },
+    { id: 'sick-notice', status: 'live', group: 'consent', wave: 10, featureRef: ['15.15', '15.16'], icon: 'thermometer' },
+    { id: 'privacy-tools', status: 'live', group: 'consent', wave: 10, featureRef: ['15.21', '15.27', '15.35'], icon: 'shield' },
+    { id: 'voting', status: 'live', group: 'voting', wave: 11, featureRef: ['16.10', '16.12'], icon: 'ballot' },
+    { id: 'circular-resolution', status: 'live', group: 'voting', wave: 11, featureRef: ['16.14'], icon: 'loop' },
+    { id: 'elections', status: 'live', group: 'voting', wave: 11, featureRef: ['16.15', '16.16'], icon: 'ballot' },
+    { id: 'invitation-deadline', status: 'live', group: 'voting', wave: 11, featureRef: ['16.4'], icon: 'hourglass' },
+    { id: 'minutes', status: 'live', group: 'voting', wave: 11, featureRef: ['16.19', '16.20'], icon: 'gavel' },
+    { id: 'recurring-events', status: 'live', group: 'planning', wave: 12, featureRef: ['17.3', '17.4'], icon: 'repeat' },
+    { id: 'training-attendance', status: 'live', group: 'planning', wave: 12, featureRef: ['17.8', '17.10'], icon: 'clipboard' },
+    { id: 'shift-planning', status: 'live', group: 'planning', wave: 12, featureRef: ['17.14', '17.15'], icon: 'hands' },
+    { id: 'event-signup', status: 'live', group: 'planning', wave: 12, featureRef: ['17.11', '17.12'], icon: 'ticket' },
+    { id: 'guest-signup', status: 'live', group: 'planning', wave: 12, featureRef: ['17.13'], icon: 'ticket' },
+    { id: 'rides', status: 'live', group: 'planning', wave: 12, featureRef: ['17.17'], icon: 'car' },
+    { id: 'room-booking', status: 'live', group: 'planning', wave: 12, featureRef: ['17.18'], icon: 'pin' },
+    { id: 'time-tracking', status: 'live', group: 'planning', wave: 12, featureRef: ['17.19', '21.1'], icon: 'clock' },
+    { id: 'hours-report', status: 'live', group: 'planning', wave: 12, featureRef: ['21.2', '21.3', '21.5'], icon: 'sheet' },
+    { id: 'member-card', status: 'live', group: 'documents', wave: 13, featureRef: ['18.13', '18.14', '18.15'], icon: 'card' },
+    { id: 'documents-read', status: 'live', group: 'documents', wave: 13, featureRef: ['18.1', '18.2'], icon: 'book' },
+    { id: 'document-archive', status: 'live', group: 'documents', wave: 13, featureRef: ['18.3', '18.4'], icon: 'folder' },
+    { id: 'pdf-receipts', status: 'live', group: 'documents', wave: 13, featureRef: ['18.10', '18.11'], icon: 'pdf' },
+    { id: 'acknowledgements', status: 'live', group: 'documents', wave: 13, featureRef: ['18.12'], icon: 'check' },
+    { id: 'custom-forms', status: 'live', group: 'forms', wave: 8, featureRef: ['12.17', '12.18', '12.19'], icon: 'form' },
+    { id: 'global-search', status: 'live', group: 'club', wave: 14, featureRef: ['19.4', '19.2'], icon: 'search' },
+    // ---- planned (Wave 15 plan, not started; no dates) ----
     { id: 'sponsor-profiles', status: 'soon', group: 'public', wave: 15, icon: 'handshake' },
     { id: 'public-page', status: 'soon', group: 'public', wave: 15, icon: 'globe' },
+    { id: 'lead-inbox', status: 'soon', group: 'public', wave: 15, icon: 'form' },
+    { id: 'association-export', status: 'soon', group: 'public', wave: 15, icon: 'sheet' },
 ]);
 
 /** Billing is out of scope by design; shown as a friendly boundary, never as a planned feature. */
@@ -139,5 +151,6 @@ export const heroCardLineCount = 4;
 export const rolePointCount = 4;
 export const clubIds = ['sport', 'chor', 'feuerwehr', 'schach', 'tanz', 'schuetzen', 'kleingarten', 'musik'] as const;
 export const clubListKeys = ['cat', 'dep', 'rol'] as const;
-export const roadmapGroups = ['communication', 'consent', 'voting', 'planning', 'documents', 'forms', 'public'] as const;
+/** Groups that still hold planned items (the rest has shipped); RoadmapSketches hides empty groups anyway. */
+export const roadmapGroups = ['public'] as const;
 export const quizToolIds = ['excel', 'whatsapp', 'doodle', 'attendance', 'notes'] as const;
