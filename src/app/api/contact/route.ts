@@ -4,6 +4,7 @@ import nodemailer from 'nodemailer';
 
 import { buildAdminNotificationEmail } from '../../../lib/contactAdminEmailTemplate';
 import { buildConfirmationEmail } from '../../../lib/contactEmailTemplate';
+import { PUBLIC_ONLY } from '../../../lib/siteMode';
 
 export type ContactCategory = 'beta' | 'bug' | 'feature' | 'general';
 
@@ -72,6 +73,8 @@ function buildTransporter() {
 }
 
 export async function POST(req: Request) {
+  // Public-only mode: the contact form does not exist, so neither does its endpoint.
+  if (PUBLIC_ONLY) return new Response(null, { status: 404 });
   let payload: ContactPayload;
   try {
     const result = validateContactPayload(await req.json());

@@ -1,4 +1,7 @@
+import { notFound } from 'next/navigation';
 import { connection } from 'next/server';
+
+import { PUBLIC_ONLY } from '@/lib/siteMode';
 
 import { createSiteMetadata } from '@/seo/createSiteMetadata';
 import { title, description, url, keywords } from '../../../project.config.json';
@@ -15,6 +18,7 @@ export const metadata = createSiteMetadata({
 export default async function ContactPage() {
     // Forces dynamic rendering so the proxy's per-request CSP nonce applies -- see login-signup/page.tsx.
     await connection();
+    if (PUBLIC_ONLY) notFound();
 
     return (
         <div className="mx-auto max-w-xl px-4 py-16 sm:px-6 lg:px-8">

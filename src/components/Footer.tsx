@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Github, Twitter, Linkedin } from 'lucide-react';
 import Logo from './Logo';
 import { docsUrl } from '@/lib/docs';
+import { footerCompanyLinks } from '@/lib/siteLinks';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export function Footer() {
@@ -20,10 +21,7 @@ export function Footer() {
             { name: t('footer.product.roadmap'), href: '/roadmap' },
             { name: t('footer.product.changelog'), href: '/changelog' },
         ],
-        company: [
-            { name: t('footer.company.about'), href: '/about' },
-            { name: t('footer.company.contact'), href: '/contact' },
-        ],
+        company: footerCompanyLinks().map((l) => ({ name: t(l.key), href: l.href })),
         legal: [
             { name: t('footer.legal.privacy'), href: '/privacy' },
             { name: t('footer.legal.terms'), href: '/terms' },

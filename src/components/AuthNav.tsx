@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { CalendarDays, FileText, Vote, ChevronDown, Clock, HeartHandshake, LogOut, MapPin, Megaphone, Settings as SettingsIcon, Users } from 'lucide-react';
 
+import { PUBLIC_ONLY } from '@/lib/siteMode';
 import { authClient } from '@/lib/auth-client';
 import { clearReminder } from '@/lib/consents';
 import { clearAllStoredInviteTokens } from '@/lib/memberLifecycle';
@@ -88,6 +89,8 @@ export function AuthNav({ appLinks = [] }: { appLinks?: AuthNavAppLink[] }) {
     }
 
     if (!session) {
+        // Public-only mode: no sign-in button on the marketing site.
+        if (PUBLIC_ONLY) return null;
         return (
             <Link
                 href="/login-signup"

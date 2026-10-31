@@ -5,6 +5,7 @@ import Link from 'next/link';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 import { docsUrl } from '@/lib/docs';
+import { PUBLIC_ONLY } from '@/lib/siteMode';
 
 import { heroCardLineCount, heroToolIds, heroWordCount } from './marketingData';
 import Network from './Network';
@@ -126,12 +127,14 @@ export default function HeroScene() {
             </p>
 
             <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-                <Link
-                    href="/contact#beta"
-                    className="btn-shimmer inline-flex min-h-11 items-center rounded-xl bg-primary px-6 py-3 font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition hover:-translate-y-0.5 hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                >
-                    {t('mk.hero.cta')}
-                </Link>
+                {!PUBLIC_ONLY && (
+                    <Link
+                        href="/contact#beta"
+                        className="btn-shimmer inline-flex min-h-11 items-center rounded-xl bg-primary px-6 py-3 font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition hover:-translate-y-0.5 hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    >
+                        {t('mk.hero.cta')}
+                    </Link>
+                )}
                 <a
                     href="#woche"
                     className="inline-flex min-h-11 items-center rounded-xl border border-border px-6 py-3 font-semibold text-foreground transition hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"

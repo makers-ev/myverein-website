@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Map, CircleDot, Loader, CircleCheck, Bug, Search, Wrench, ArrowRight } from 'lucide-react';
 
+import { PUBLIC_ONLY } from '@/lib/siteMode';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeDeEn } from '@/contexts/supportedLanguages';
 
@@ -162,16 +163,18 @@ export default function RoadmapPageContent() {
                     </div>
                 )}
 
-                <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-dashed border-border p-4">
-                    <p className="text-sm text-muted-foreground">{t('roadmap.bugs.report-info')}</p>
-                    <Link
-                        href="/contact#bug"
-                        className="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-primary hover:brightness-110"
-                    >
-                        {t('roadmap.bugs.report-link')}
-                        <ArrowRight className="h-4 w-4" />
-                    </Link>
-                </div>
+                {!PUBLIC_ONLY && (
+                    <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-dashed border-border p-4">
+                        <p className="text-sm text-muted-foreground">{t('roadmap.bugs.report-info')}</p>
+                        <Link
+                            href="/contact#bug"
+                            className="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-primary hover:brightness-110"
+                        >
+                            {t('roadmap.bugs.report-link')}
+                            <ArrowRight className="h-4 w-4" />
+                        </Link>
+                    </div>
+                )}
             </section>
         </div>
     );

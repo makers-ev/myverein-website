@@ -13,6 +13,8 @@ import CookieConsent from "@/components/CookieConsent";
 import { SkipLink } from "@/components/SkipLink";
 import { AuthNav } from "@/components/AuthNav";
 import Logo from "@/components/Logo";
+import { mainNavLinks } from "@/lib/siteLinks";
+import { PUBLIC_ONLY } from "@/lib/siteMode";
 import { url, defaultLanguage } from "../../project.config.json";
 import "./globals.css";
 
@@ -55,12 +57,7 @@ export default async function RootLayout({
   // member-only function links below only make sense once a user actually
   // has a club membership, so they live in AuthNav's account dropdown
   // instead of here.
-  const mainLinks = [
-    { name: "nav.features", href: "/features" },
-    { name: "nav.roadmap", href: "/roadmap" },
-    { name: "nav.changelog", href: "/changelog" },
-    { name: "nav.contact", href: "/contact" },
-  ];
+  const mainLinks = mainNavLinks();
 
   // Member-only function links, shown inside AuthNav's account dropdown
   // (only rendered once a session exists) rather than in the public navbar.
@@ -115,8 +112,8 @@ export default async function RootLayout({
               <Navbar
                 mainLinks={mainLinks}
                 logo={<Logo />}
-                guestNav={<AuthNav appLinks={appLinks} />}
-                mobileGuestNav={<AuthNav appLinks={appLinks} />}
+                guestNav={PUBLIC_ONLY ? undefined : <AuthNav appLinks={appLinks} />}
+                mobileGuestNav={PUBLIC_ONLY ? undefined : <AuthNav appLinks={appLinks} />}
               />
               <main id="main-content" tabIndex={-1} className="flex-1 focus:outline-none">{children}</main>
               <Footer />

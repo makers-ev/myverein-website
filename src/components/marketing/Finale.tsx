@@ -2,12 +2,16 @@
 
 import Link from 'next/link';
 
+import { PUBLIC_ONLY } from '@/lib/siteMode';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 import { Draw, Marker } from './Sketch';
 
 export default function Finale() {
     const { t } = useLanguage();
+
+    // Public-only mode: the whole closing chapter is a pilot/beta call to action, so it is not rendered.
+    if (PUBLIC_ONLY) return null;
 
     return (
         <section id="finale" className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-6 sm:py-28" aria-labelledby="mk-finale-title">
