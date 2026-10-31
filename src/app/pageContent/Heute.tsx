@@ -8,6 +8,8 @@ import { apiFetch } from '@/lib/api-client';
 import { dateLocale } from '@/lib/clubMembers';
 import { boardTodos, hasOpenItems, isOverdue, SETUP_STEPS, todayPath, type TodayData } from '@/lib/today';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { docsTopicUrl } from '@/lib/docs';
+import HelpLink from '@/components/HelpLink';
 import { useActiveClub } from '@/components/shell/ActiveClubProvider';
 import { Badge, EmptyState, ErrorState, Skeleton } from '@/components/ui';
 
@@ -86,7 +88,13 @@ export default function HeutePageContent() {
             <div className="space-y-4">
                 {setup && setup.open.length > 0 && (
                     <section className="rounded-xl border border-primary/30 bg-primary/5 p-4">
-                        <h2 className="text-sm font-bold text-foreground">{t('today.setup.title')}</h2>
+                        <div className="flex items-center justify-between gap-2">
+                            <h2 className="text-sm font-bold text-foreground">{t('today.setup.title')}</h2>
+                            <a href={docsTopicUrl('setup')} target="_blank" rel="noopener noreferrer" className={linkCls}>
+                                {t('help.setup.link')}
+                                <span className="sr-only"> {t('help.nav.label')}</span>
+                            </a>
+                        </div>
                         <p className="mt-1 text-sm text-muted-foreground">{t('today.setup.progress', { done: setup.done.length, total: setupTotal })}</p>
                         <ul className="mt-3 space-y-1">
                             {SETUP_STEPS.filter((s) => setup.open.includes(s.key) || setup.done.includes(s.key)).map((s) => {
@@ -173,7 +181,10 @@ export default function HeutePageContent() {
 
     return (
         <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-            <h1 className="text-2xl font-bold text-foreground">{t('nav.heute')}</h1>
+            <div className="flex items-center gap-1">
+                <h1 className="text-2xl font-bold text-foreground">{t('nav.heute')}</h1>
+                <HelpLink topic="today" />
+            </div>
             {activeClub?.clubName && <p className="mt-1 text-sm text-muted-foreground">{activeClub.clubName}</p>}
             <div className="mt-6">{body}</div>
         </div>

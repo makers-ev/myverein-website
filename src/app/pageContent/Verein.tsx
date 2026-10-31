@@ -1,5 +1,6 @@
 'use client';
 
+import HelpLink from '@/components/HelpLink';
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -317,9 +318,12 @@ export default function VereinPageContent() {
 
     return (
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-            <h1 className="text-2xl font-bold text-foreground">
-                {activeClub?.clubName ?? t('verein.page.title')}
-            </h1>
+            <div className="flex items-center gap-1">
+                <h1 className="text-2xl font-bold text-foreground">
+                    {activeClub?.clubName ?? t('verein.page.title')}
+                </h1>
+                <HelpLink topic={currentTab === 'datenschutz' ? 'privacy' : 'members'} />
+            </div>
 
             {clubsError ? (
                 <LoadError className="mt-6" onRetry={loadClubs} />

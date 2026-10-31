@@ -6,6 +6,7 @@ import { apiFetch } from '@/lib/api-client';
 import { chooseClub } from '@/lib/activeClub';
 import { isGuestRole } from '@/lib/loans';
 import { useLanguage } from '@/contexts/LanguageContext';
+import HelpLink from '@/components/HelpLink';
 import StandorteTab, { type Location } from '@/components/standorte/StandorteTab';
 import MaterialTab from '@/components/standorte/MaterialTab';
 import OccupancyTab from '@/components/standorte/OccupancyTab';
@@ -78,7 +79,10 @@ export default function StandortePageContent() {
 
     return (
         <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
-            <h1 className="text-2xl font-bold text-foreground">{t('standorte.page.title')}</h1>
+            <div className="flex items-center gap-1">
+                <h1 className="text-2xl font-bold text-foreground">{t('standorte.page.title')}</h1>
+                <HelpLink topic="places" />
+            </div>
 
             {loadError ? (
                 <LoadError className="mt-6" onRetry={() => (activeClub ? void refreshLocations(activeClub.clubId) : loadClubs())} />

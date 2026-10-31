@@ -127,6 +127,25 @@ Everything under `(protected)/` is wrapped by `src/components/shell/AppShell.tsx
 - Landing after login is `/heute` (`resolveCallbackUrl` default).
 - Account menu (`AuthNav`) keeps the same links for the marketing pages; the notification bell and the club inbox link stay in the navbar.
 
+### Docs links (Wave 14 D9)
+
+Help for the docs portal (`docs.myverein.<domain>`, Nextra, German pages under `/de/...`; origin from `NEXT_PUBLIC_DOCS_URL`, see Configuration). All links open in a new tab with `rel="noopener noreferrer"`. `src/lib/docs.ts` holds `docsUrl(path)` and the topic map `DOCS_TOPICS`; `src/components/HelpLink.tsx` is the "?" button next to page titles (`aria-label` `help.page.label`).
+
+| Where | Link | Label key |
+|---|---|---|
+| Navbar (desktop and mobile menu) and footer | docs home | `help.nav`, `aria-label` `help.nav.label` |
+| Signed-in sidebar (bottom, above collapse) | docs home | `help.sidebar` ("Hilfe & Anleitungen") |
+| `/heute` | `handbuch/konto-und-app/startseite-heute`; setup checklist -> `verein-aufsetzen` | `help.page.label`, `help.setup.link` |
+| `/verein` | `handbuch/mitglieder` (tab Datenschutz: `handbuch/datenschutz-und-recht`) | `help.page.label` |
+| `/kalender` | `handbuch/termine-und-anwesenheit` | `help.page.label` |
+| `/mitteilungen` | `handbuch/mitteilungen` | `help.page.label` |
+| `/dokumente` | `handbuch/dokumente-und-pdf` | `help.page.label` |
+| `/abstimmungen` | `handbuch/abstimmungen-und-versammlung` | `help.page.label` |
+| `/standorte` | `handbuch/material-und-orte` | `help.page.label` |
+| `/familie` | `handbuch/familie-und-eltern` | `help.page.label` |
+
+`docs.test.ts` checks every mapped path exists as a directory or `.mdx` page in `../myverein-docs/content/de` (skipped when that checkout is absent).
+
 ### Shared helpers (Wave 7)
 
 - `src/lib/memberCsv.ts` (W6) — import report/mapping helpers, export column logic and query, blob download (`fetchCsvBlob`/`saveBlob`); `src/lib/keyHistory.ts` (W11) — key-history types, query, Berlin date-time; `src/lib/wifiQr.ts` — WLAN security helpers and `wifiQrValue`. Tested in `memberCsv.test.ts`, `keyHistory.test.ts`, `wifiQr.test.ts`.
@@ -332,6 +351,7 @@ All variables live in `.env.example`. The ones worth calling out specifically:
 |---|---|---|
 | `NEXT_PUBLIC_BACKEND_URL` | yes | Base URL of `_template_better-auth-backend`. Inlined into the JS bundle at build time — change it and restart `next dev`/rebuild, a running bundle won't pick it up live |
 | `NEXT_PUBLIC_SITE_URL` | no | This site's own public origin, sent to the backend as the `callbackURL` for verification/reset e-mails so their link lands on `/verify-email`/`/reset-password` here instead of the bare backend origin. Also used as the logo link/Imprint link in the contact-form confirmation e-mail (`src/lib/contactEmailTemplate.ts`). Defaults to `http://localhost:3001` |
+| `NEXT_PUBLIC_DOCS_URL` | no | Origin of the docs portal (Nextra, German pages under `/de/...`). `docsUrl(path)` in `src/lib/docs.ts` builds all help links from it. Inlined at build time. Defaults to `https://docs.myverein.de` |
 | `ALLOWED_HOSTS` | yes | Comma-separated allowlist of hosts this server may be reached as. Enforced in `src/proxy.ts` — unset rejects every request |
 | `CONTACT_SMTP_HOST` / `CONTACT_SMTP_PORT` / `CONTACT_SMTP_SECURE` / `CONTACT_SMTP_USER` / `CONTACT_SMTP_PASSWORD` | no | SMTP config for `/contact`'s `POST /api/contact` route (`src/app/api/contact/route.ts`) — its own transport, independent of the backend's `email.ts`. Unset means the route responds 503, not a silent failure |
 | `CONTACT_TO_EMAIL` | no (required for `/contact` to work) | Inbox the internal notification mail goes to |

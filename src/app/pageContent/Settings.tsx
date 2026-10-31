@@ -151,7 +151,7 @@ export default function SettingsPageContent() {
 			return
 		}
 
-		setTotpUri(data?.totpURI ?? null)
+		setTotpUri(data && "totpURI" in data ? data.totpURI : null)
 		setTwoFactorPassword("")
 		setTwoFactorStep("verify")
 	}

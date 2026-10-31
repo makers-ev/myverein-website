@@ -6,6 +6,7 @@ import { Users } from 'lucide-react';
 import { apiFetch } from '@/lib/api-client';
 import { type WardClub, flattenWards, wardKey } from '@/lib/familie';
 import { useLanguage } from '@/contexts/LanguageContext';
+import HelpLink from '@/components/HelpLink';
 import { EmptyState } from '@/components/standorte/ui';
 import WardView from '@/components/familie/WardView';
 import LoadingText from '@/components/LoadingText';
@@ -39,7 +40,10 @@ export default function FamiliePageContent() {
 
     return (
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-            <h1 className="text-2xl font-bold text-foreground">{t('familie.page.title')}</h1>
+            <div className="flex items-center gap-1">
+                <h1 className="text-2xl font-bold text-foreground">{t('familie.page.title')}</h1>
+                <HelpLink topic="family" />
+            </div>
             <p className="mt-1 text-sm text-muted-foreground">{t('familie.page.subtitle')}</p>
 
             {failed ? (
