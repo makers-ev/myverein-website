@@ -6,7 +6,7 @@ import LegalTranslation from './LegalTranslation';
 const DOCS = [
     { prefix: 'legal.privacy', sections: 11 },
     { prefix: 'legal.tos', sections: 11 },
-    { prefix: 'legal.imprint', sections: 5 },
+    { prefix: 'legal.imprint', sections: 4 },
 ] as const;
 
 describe('LegalTranslation', () => {
@@ -23,11 +23,26 @@ describe('LegalTranslation', () => {
         expect(Object.keys(LegalTranslation.en).sort()).toEqual(Object.keys(LegalTranslation.de).sort());
     });
 
-    it('cites § 5 DDG, not the outdated TMG, and never calls the project private or non-commercial', () => {
-        const imprint = [LegalTranslation.de, LegalTranslation.en].flatMap((l) => Object.entries(l).filter(([k]) => k.startsWith('legal.imprint')));
-        const text = imprint.map(([, v]) => v).join('\n');
-        expect(text).toContain('§ 5 DDG');
-        expect(text).not.toMatch(/TMG|privat|non-commercial|nicht-gewerblich|private/i);
+    it('names the natural person as operator and cites § 5 DDG, not the outdated TMG', () => {
+        for (const lang of ['de', 'en'] as const) {
+            const imprint = Object.entries(LegalTranslation[lang]).filter(([k]) => k.startsWith('legal.imprint')).map(([, v]) => v).join('\n');
+            expect(imprint).toContain('Luca-Pascal Junge');
+            expect(imprint).toContain('Siedlung 15');
+            expect(imprint).not.toMatch(/\[[^\]]*\]/);
+        }
+        expect(LegalTranslation.de['legal.imprint.section1.title']).toContain('§ 5 DDG');
+        expect(LegalTranslation.de['legal.imprint.section3.title']).toContain('§ 18 Abs. 2 MStV');
+    });
+
+    it('never names a company as provider and never calls the project private or non-commercial', () => {
+        const all = [...Object.values(LegalTranslation.de), ...Object.values(LegalTranslation.en)].join('\n');
+        expect(all).not.toMatch(/LPJ\s*IT[\s-]*Solutions/i);
+        expect(all).not.toMatch(/TMG|nicht[- ]kommerziell|nicht-gewerblich|privates Projekt|private project|non-commercial|Rechtsform|USt-?IdNr|Handelsregister/i);
+    });
+
+    it('mentions the test phase and a possible transfer to a company', () => {
+        expect(LegalTranslation.de['legal.tos.section4.text']).toMatch(/Testphase|Test- bzw\. Pilotphase/);
+        expect(LegalTranslation.de['legal.tos.section10.text']).toMatch(/Unternehmen übertragen/);
     });
 
     it('does not show draft wording to end users and names the stamp', () => {

@@ -15,5 +15,5 @@ export default async function ImprintPage() {
     // Forces dynamic rendering so the proxy's per-request CSP nonce applies -- see login-signup/page.tsx.
     await connection();
 
-    return <LegalDocument keyPrefix="legal.imprint" sectionCount={5} />;
+    return <LegalDocument keyPrefix="legal.imprint" sectionCount={4} />;
 }
