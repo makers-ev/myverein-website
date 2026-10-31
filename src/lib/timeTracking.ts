@@ -39,12 +39,81 @@ export interface ReportPerson {
     rateMissing: boolean;
 }
 
+export type ReportGroupBy = 'person' | 'event' | 'person_event';
+
+/** One report row; event fields are set for `event` and `person_event`, person fields for `person` and `person_event`. */
+export interface ReportRow extends Partial<ReportPerson> {
+    eventId?: string | null;
+    eventTitle?: string | null;
+    eventDate?: string | null;
+    roleTypes?: string[];
+}
+
 export interface TimeReport {
     range: { from: string; to: string };
     includesRates: boolean;
     note: string;
-    people: ReportPerson[];
-    totals: { minutes: number; hours: number; amountCents: number | null };
+    groupBy?: ReportGroupBy;
+    /** Older backends only send `people`. */
+    people?: ReportPerson[];
+    rows?: ReportRow[];
+    totals: { minutes: number; hours?: number; amountCents: number | null };
+}
+
+export interface ReportPeopleOptions {
+    people: Array<{ clubMemberId: string; displayName: string; roleTypes?: string[] }>;
+    roleTypes: string[];
+    /** Events with confirmed hours in the period, newest first. */
+    events?: Array<{ eventId: string; title: string; startsAt: string }>;
+}
+
+export interface ReportFilters {
+    clubId: string;
+    from: string;
+    to: string;
+    departmentId?: string;
+    clubMemberIds?: readonly string[];
+    roleTypes?: readonly string[];
+    eventId?: string;
+    groupBy?: ReportGroupBy;
+    format?: 'json' | 'csv' | 'xlsx';
+}
+
+/** Server limit of `clubMemberIds`. */
+export const MAX_REPORT_PEOPLE = 100;
+
+/** Query string of `GET /time-report`: empty filters are left out, the person list is capped at the server limit. */
+export function reportQuery(f: ReportFilters): string {
+    const qs = new URLSearchParams({ clubId: f.clubId, from: f.from, to: f.to });
+    if (f.departmentId) qs.set('departmentId', f.departmentId);
+    if (f.clubMemberIds?.length) qs.set('clubMemberIds', f.clubMemberIds.slice(0, MAX_REPORT_PEOPLE).join(','));
+    if (f.roleTypes?.length) qs.set('roleTypes', f.roleTypes.join(','));
+    if (f.eventId) qs.set('eventId', f.eventId);
+    if (f.groupBy) qs.set('groupBy', f.groupBy);
+    if (f.format && f.format !== 'json') qs.set('format', f.format);
+    return qs.toString();
+}
+
+/** Rows of a report regardless of backend version; totals hours derived from minutes when missing. */
+export function reportRows(r: TimeReport): ReportRow[] {
+    return r.rows ?? r.people ?? [];
+}
+
+export function totalHours(r: TimeReport): number {
+    return r.totals.hours ?? Math.round((r.totals.minutes / 60) * 100) / 100;
+}
+
+export const REPORT_MIME = {
+    csv: 'text/csv',
+    xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+} as const;
+
+export const REPORT_FILENAME = { csv: 'stundenbericht.csv', xlsx: 'stundenbericht.xlsx' } as const;
+
+/** Toggles an id in a selection, refusing to grow beyond `max`. */
+export function toggleId(selected: readonly string[], id: string, max = MAX_REPORT_PEOPLE): string[] {
+    if (selected.includes(id)) return selected.filter((x) => x !== id);
+    return selected.length >= max ? [...selected] : [...selected, id];
 }
 
 export interface RateCard {

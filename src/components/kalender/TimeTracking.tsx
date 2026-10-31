@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Download, Play, Square } from 'lucide-react';
+import { Play, Square } from 'lucide-react';
 
 import LoadError from '@/components/LoadError';
 import LoadingText from '@/components/LoadingText';
@@ -10,11 +10,11 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api-client';
 import { eventErrorKey } from '@/lib/eventErrors';
 import { parseEuroInput, formatCost } from '@/lib/eventRegistration';
-import { fetchFileBlob, saveBlob } from '@/lib/memberCsv';
-import { type RateCard, type TimeEntry, type TimeReport, type TimeSuggestion, RATE_ROLES, defaultRange, manualProblem, rateBody, splitMinutes } from '@/lib/timeTracking';
+import { type RateCard, type TimeEntry, type TimeSuggestion, RATE_ROLES, defaultRange, manualProblem, rateBody, splitMinutes } from '@/lib/timeTracking';
 
-import { type CalendarEvent, inputClass, labelClass, primaryBtn, secondaryBtn } from './calendarTypes';
+import { type CalendarEvent, type Department, inputClass, labelClass, primaryBtn, secondaryBtn } from './calendarTypes';
 import MemberPicker from './MemberPicker';
+import StundenBericht from './StundenBericht';
 
 interface Props {
     clubId: string;
@@ -26,6 +26,7 @@ interface Props {
     canRates: boolean;
     ownClubMemberId: string | null;
     events: CalendarEvent[];
+    departments: Department[];
 }
 
 function Duration({ minutes }: { minutes: number | null }) {
@@ -38,7 +39,7 @@ function Duration({ minutes }: { minutes: number | null }) {
 const STATUS_TONE = { offen: 'bg-warning/15 text-warning', bestaetigt: 'bg-success/15 text-success', abgelehnt: 'bg-destructive/10 text-destructive' } as const;
 
 /** Trainer time tracking (W10): clock in/out, suggestions from attendance, manual entries, confirmation, hours report. Report only, no payout. */
-export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, ownClubMemberId, events }: Props) {
+export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, ownClubMemberId, events, departments }: Props) {
     const { t, language } = useLanguage();
     const { confirm, dialog } = useConfirm();
     const q = `clubId=${clubId}`;
@@ -307,99 +308,10 @@ export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, o
 
                 </>
             )}
-            {(canConfirm || canRates) && <HoursReport clubId={clubId} range={range} />}
+            {(canConfirm || canRates) && <StundenBericht clubId={clubId} range={range} departments={departments} />}
             {dialog}
             {canRates && <RateCards clubId={clubId} />}
         </div>
-    );
-}
-
-function HoursReport({ clubId, range }: { clubId: string; range: { from: string; to: string } }) {
-    const { t, language } = useLanguage();
-    const [report, setReport] = useState<TimeReport | null>(null);
-    const [failed, setFailed] = useState(false);
-    const [exporting, setExporting] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const qs = `clubId=${clubId}&from=${range.from}&to=${range.to}`;
-
-    const load = useCallback(() => {
-        setFailed(false);
-        apiFetch<{ data: TimeReport }>(`/time-report?${qs}`)
-            .then((res) => setReport(res.data))
-            .catch(() => setFailed(true));
-    }, [qs]);
-    useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        load();
-    }, [load]);
-
-    async function exportCsv() {
-        setExporting(true);
-        setError(null);
-        try {
-            const { blob, filename } = await fetchFileBlob(`/time-report?${qs}&format=csv`, 'stundenbericht.csv', { accept: 'text/csv' });
-            saveBlob(blob, filename);
-        } catch (err) {
-            setError(t(eventErrorKey(err)));
-        } finally {
-            setExporting(false);
-        }
-    }
-
-    return (
-        <section className="space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-                <h3 className="font-semibold text-foreground">{t('time.report.title')}</h3>
-                <button type="button" onClick={() => void exportCsv()} disabled={exporting} className={`${secondaryBtn} inline-flex items-center gap-1.5`}>
-                    <Download className="h-4 w-4" aria-hidden />
-                    {t('time.report.export')}
-                </button>
-            </div>
-            <p className="text-xs text-muted-foreground">{t('time.report.hint')}</p>
-            {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
-            {failed ? (
-                <LoadError onRetry={load} />
-            ) : !report ? (
-                <LoadingText />
-            ) : report.people.length === 0 ? (
-                <p className="rounded-lg border border-dashed border-border p-4 text-center text-muted-foreground">{t('time.report.empty')}</p>
-            ) : (
-                <div className="relative overflow-x-auto rounded-lg border border-border">
-                    <table className="w-full text-left">
-                        <caption className="sr-only">{t('time.report.title')}</caption>
-                        <thead className="bg-muted/50 text-xs text-muted-foreground">
-                            <tr>
-                                <th scope="col" className="px-3 py-2">{t('time.col.person')}</th>
-                                <th scope="col" className="px-3 py-2">{t('time.report.entries')}</th>
-                                <th scope="col" className="px-3 py-2">{t('time.report.hours')}</th>
-                                {report.includesRates && <th scope="col" className="px-3 py-2">{t('time.report.rate')}</th>}
-                                {report.includesRates && <th scope="col" className="px-3 py-2">{t('time.report.amount')}</th>}
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border">
-                            {report.people.map((p) => (
-                                <tr key={p.clubMemberId} className="text-foreground">
-                                    <th scope="row" className="px-3 py-2 font-medium">{p.displayName}</th>
-                                    <td className="px-3 py-2 tabular-nums">{p.entries}</td>
-                                    <td className="px-3 py-2 tabular-nums">{p.hours.toLocaleString(language, { maximumFractionDigits: 2 })}</td>
-                                    {report.includesRates && <td className="px-3 py-2 tabular-nums">{p.rateMissing ? <span className="text-warning">{t('time.report.rateMissing')}</span> : formatCost(p.rateCents, language)}</td>}
-                                    {report.includesRates && <td className="px-3 py-2 tabular-nums">{formatCost(p.amountCents, language) ?? '–'}</td>}
-                                </tr>
-                            ))}
-                        </tbody>
-                        <tfoot>
-                            <tr className="border-t border-border font-semibold text-foreground">
-                                <th scope="row" className="px-3 py-2">{t('time.report.total')}</th>
-                                <td />
-                                <td className="px-3 py-2 tabular-nums">{report.totals.hours.toLocaleString(language, { maximumFractionDigits: 2 })}</td>
-                                {report.includesRates && <td />}
-                                {report.includesRates && <td className="px-3 py-2 tabular-nums">{formatCost(report.totals.amountCents, language) ?? '–'}</td>}
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            )}
-        </section>
     );
 }
 

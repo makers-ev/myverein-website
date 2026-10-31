@@ -69,6 +69,7 @@ const EventsCommonTranslation: Translation = {
         'events.err.unknown_entry': 'Dieser Gast steht nicht (mehr) auf der Liste. Bitte lade die Liste neu.',
         'events.err.answers_too_large': 'Die Antworten sind zu lang.',
         'events.err.unknown_column': 'Eine der gewählten Spalten gibt es nicht.',
+        'events.err.no_rate': 'Für dich ist kein Stundensatz hinterlegt. Frag den Vorstand.',
     },
     en: {
         'events.picker.placeholder': 'Type a name (at least 2 letters)',
@@ -135,6 +136,7 @@ const EventsCommonTranslation: Translation = {
         'events.err.unknown_entry': 'This guest is no longer on the list. Please reload the list.',
         'events.err.answers_too_large': 'The answers are too long.',
         'events.err.unknown_column': 'One of the chosen columns does not exist.',
+        'events.err.no_rate': 'No hourly rate is set for you. Ask the board.',
     },
 };
 

@@ -68,3 +68,13 @@ describe('event access gating', () => {
         expect(visibleEventTabs(board, { departmentId: null }, off)).toEqual(['details', 'participants', 'attendance', 'helpers', 'rides']);
     });
 });
+
+describe('canTrackTime server flag', () => {
+    const base = { clubMemberId: 'm', permissions: [] as string[], roles: [] as Array<{ roleType: string }> };
+    it('lets the server decision win over the role guess', () => {
+        expect(canTrackTime({ ...base, canTrack: true })).toBe(true);
+        expect(canTrackTime({ ...base, roles: [{ roleType: 'trainer' }], canTrack: false })).toBe(false);
+        expect(canTrackTime({ ...base, roles: [{ roleType: 'trainer' }] })).toBe(true);
+        expect(canTrackTime(base)).toBe(false);
+    });
+});
