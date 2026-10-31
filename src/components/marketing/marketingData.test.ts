@@ -82,12 +82,14 @@ describe('marketingData', () => {
             for (const l of clubListKeys) for (const n of [1, 2, 3]) keys.push(`mk.clubs.${c}.${l}${n}`);
         }
         for (const l of clubListKeys) keys.push(`mk.clubs.list.${l}`);
-        for (const id of ['rights-deny-default', 'profile-photo-minors', 'signed-links', 'sensitive-audit']) keys.push(`mk.trust.check.${id}`);
+        for (const id of ['rights-deny-default', 'profile-photo-minors', 'signed-links', 'sensitive-audit', 'consents', 'privacy-tools']) keys.push(`mk.trust.check.${id}`);
         for (const id of quizToolIds) keys.push(`mk.quiz.tool.${id}`);
         for (const n of Array.from({ length: heroWordCount }, (_, i) => i)) keys.push(`mk.hero.word.${n}`);
         for (const id of heroToolIds) keys.push(`mk.hero.obj.${id}`);
         for (const n of range(heroCardLineCount)) keys.push(`mk.hero.card.l${n}`);
         for (const g of roadmapGroups) keys.push(`mk.road.group.${g}`);
+        for (const id of ['setup', 'handbook', 'guides']) keys.push(`mk.help.${id}.title`, `mk.help.${id}.body`, `mk.help.${id}.cta`, `mk.help.${id}.label`);
+        keys.push('mk.help.title.pre', 'mk.help.title.mark', 'mk.help.intro', 'mk.help.note', 'mk.help.hero');
         keys.push('mk.hero.cta', 'mk.finale.cta', 'mk.finale.title.pre', 'mk.finale.title.mark', 'mk.finale.body', 'mk.finale.honest', 'mk.quiz.none');
         const missing = keys.filter((k) => !MarketingTranslation[lang][k] && !allKeys(lang)[k]);
         expect(missing).toEqual([]);
@@ -96,5 +98,15 @@ describe('marketingData', () => {
     it('lists every planned group in the roadmap', () => {
         const groups = new Set(marketingItems.filter((i) => i.status === 'soon').map((i) => i.group));
         for (const g of groups) expect(roadmapGroups).toContain(g);
+    });
+
+    it('keeps only the outreach block (Wave 15) planned', () => {
+        const planned = marketingItems.filter((i) => i.status === 'soon');
+        expect(planned.length).toBeGreaterThan(0);
+        expect(planned.every((i) => i.wave === 15 && i.group === 'public')).toBe(true);
+    });
+
+    it('treats the parent role as available once parent access is live', () => {
+        expect(roleStatus('eltern')).toBe('live');
     });
 });

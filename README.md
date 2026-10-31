@@ -20,11 +20,11 @@ has no local `/api/auth` route and no session store of its own.
 
 | Route | Access | Content |
 |---|---|---|
-| `/` | public | Marketing homepage "Der Verein als Gemeinschaft": 9 chapters (hero with club network and "Aufräumen" tool chaos, five tools -> one app, a week in the club, role picker on a collage group photo, club types, trust, planned-feature sketches, tool quiz, finale). Built from `src/components/marketing/`, see [Marketing homepage](#marketing-homepage) |
-| `/features` | public | Marketing feature overview: what's already built today (`builtFeaturesData.ts`), grouped by feature area, each capability tagged Website / App / Website & App via `PlatformBadge` |
+| `/` | public | Marketing homepage "Der Verein als Gemeinschaft": 10 chapters (hero with club network and "Aufräumen" tool chaos, five tools -> one app, a week in the club, role picker on a collage group photo, club types, "Hilfe & Anleitungen" links into the docs portal via `docsUrl()`, trust, planned-feature sketches (only the outreach block is still planned), tool quiz, finale). Built from `src/components/marketing/`, see [Marketing homepage](#marketing-homepage) |
+| `/features` | public | Marketing feature overview: what's already built today (`builtFeaturesData.ts`), grouped by feature area (members, calendar, events/attendance/helpers, time tracking, announcements, votes/assembly, documents/PDF/member card, data protection, family, forms, today/search, material, places), each capability tagged Website / App / Website & App via `PlatformBadge` |
 | `/about` | public | "Über uns": what MyVerein is, the Makers e.V. project context (link to the-makers.space) and the two developers as cards with GitHub links (avatars are static files in `public/about/`, no external requests); texts in `AboutTranslation.ts` (DE/EN) |
-| `/changelog` | public | Release notes page (`ChangelogPageContent.tsx`) |
-| `/roadmap` | public | Public roadmap page (`RoadmapPageContent.tsx`) |
+| `/changelog` | public | Release notes page (`ChangelogPageContent.tsx`), dated entries 2026-09-18 to 2026-10-31 in plain language, grouped Neu / Verbessert / Behoben (`changelogData.ts`; no internal wave names) |
+| `/roadmap` | public | Public roadmap page (`RoadmapPageContent.tsx`): only what is still open and undated (outreach: sponsors, public club page, enquiries, club search, federation report; plus honest leftovers); billing is deliberately not listed |
 | `/imprint` | public | Imprint (`LegalDocument`) |
 | `/privacy` | public | Privacy policy (`LegalDocument`) |
 | `/terms` | public | Terms of service (`LegalDocument`) |
@@ -213,7 +213,8 @@ The homepage (`pageContent/Homepage.tsx`) only composes chapters from `src/compo
 - **Copy:** `MarketingTranslation.ts`, `MarketingHeroTranslation.ts`, `MarketingStoryTranslation.ts`, `MarketingTrustTranslation.ts` (DE/EN only, other languages fall back to English like the other marketing pages; key prefix `mk.`).
 - **Building blocks:** `Person`, `GroupPhoto`, `Network`, `Sketch` (`PaperCard`, `StatusSketch`, `StatusBadge`, `Marker`, `Draw`), `useInView`; chapters `HeroScene`, `MediaBreaks`, `WeekStage` (`#woche`), `RolePicker` (`#fuer-wen`), `ClubTypes` (`#vielfalt`), `TrustSection` (`#vertrauen`), `RoadmapSketches` (`#roadmap-teaser`), `ToolQuiz` (`#werkzeuge`), `Finale` (`#finale`).
 - **Constraints:** pure SVG + CSS (`mk-` classes in `globals.css`), no new dependency, no `style=` props (nonce-only CSP), `prefers-reduced-motion` shows the finished state, SSR renders readable end state without JS, colours only via theme tokens (works in dark mode and with every palette). Quiz state is local only, nothing is tracked.
-- **Honesty rule:** billing (SEPA, dunning, cash book, receipts) is shown as deliberately out of scope; consents, parent access, communication, voting, member card etc. appear only as `soon`.
+- **Honesty rule:** billing (SEPA, dunning, cash book, receipts) is shown as deliberately out of scope; an item is `live` only with a ✅ Feature List reference (consents, parent access, communication, voting, attendance, member card, time tracking ... since 2026-10-31); only the Wave 15 outreach items (sponsors, public page, enquiries, federation export) stay `soon`. `HelpSection` (`#hilfe`) and a hero link point to the docs portal (`NEXT_PUBLIC_DOCS_URL`, default `https://docs.myverein.de`; docs are German only).
+- **Data tests:** `src/app/publicContentData.test.ts` checks changelog, features and roadmap data (ids, DE/EN text, no internal names, nothing shipped on the roadmap).
 - The old `home.*` strings in `HomeTranslation.ts` (icon cards, stats, persona cards) are no longer used by the homepage except `home.cta-primary`; they can be removed in a cleanup.
 
 ### Adding a protected page

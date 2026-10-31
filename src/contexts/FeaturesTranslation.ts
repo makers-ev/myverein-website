@@ -10,7 +10,7 @@ type Translation = {
 const FeaturesTranslation: Translation = {
     de: {
         'features.title': 'Funktionen',
-        'features.intro': 'Das sind die Funktionen, die heute schon nutzbar sind, aufgeteilt nach Website und App.',
+        'features.intro': 'Das sind die Funktionen, die heute schon nutzbar sind, aufgeteilt nach Website und App. Verwalten und Einrichten geht oft nur am Computer, den Alltag erledigst du auch in der App. Die Abrechnung von Beiträgen gehört bewusst nicht dazu.',
         'features.filter-all': 'Alle',
         'features.platform.web': 'Website',
         'features.platform.app': 'App',
@@ -20,7 +20,7 @@ const FeaturesTranslation: Translation = {
     },
     en: {
         'features.title': 'Features',
-        'features.intro': 'These are the features you can use today, broken down by Website and App.',
+        'features.intro': 'These are the features you can use today, broken down by Website and App. Managing and setting up often works only on a computer, everyday tasks also work in the app. Billing of dues is deliberately not part of MyVerein.',
         'features.filter-all': 'All',
         'features.platform.web': 'Website',
         'features.platform.app': 'App',

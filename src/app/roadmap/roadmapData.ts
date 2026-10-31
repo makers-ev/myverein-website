@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { Clock, IdCard, ShieldCheck, Megaphone, Vote, ClipboardList, Handshake, BarChart3 } from 'lucide-react';
+import { Boxes, FileSpreadsheet, FileText, Globe, Handshake, IdCard, ScanLine, Search, Smartphone, Timer, UserPlus } from 'lucide-react';
 
 export type RoadmapStatus = 'planned' | 'in-progress' | 'done';
 
@@ -27,140 +27,193 @@ export interface RoadmapItem {
 }
 
 /**
- * The MyVerein roadmap, shown at /roadmap. None of these ideas (see Concept
- * §7 Future Ideas) have a scheduled target date yet -- everything here is an
- * undated backlog, grouped under a single "Später" period.
+ * The MyVerein roadmap, shown at /roadmap. Updated 2026-10-31: everything that
+ * shipped (time tracking, member card, consent management, notice board and
+ * broadcasts, votes, helper planning, reporting) moved to /features and
+ * /changelog. What remains is the planned outreach block (sponsors, public club
+ * page, enquiries, club search, federation report) and the honest leftovers
+ * from the Feature List's "Weiterhin offen" sections. Nothing here has a target
+ * date, so everything lives in the single undated "Später" bucket. Billing
+ * (dues, dunning, cash book) is deliberately not on the roadmap.
  *
  * To add an entry: append it below. No other file needs to change -- the
  * page groups and sorts entries by `sortKey` automatically.
  */
 export const ROADMAP_ITEMS: RoadmapItem[] = [
     {
-        id: 'zeiterfassung-verguetung',
-        icon: Clock,
+        id: 'sponsoren-profile',
+        icon: Handshake,
         type: 'feature',
         title: {
-            de: 'Zeiterfassung & Vergütungsabrechnung',
-            en: 'Time tracking & compensation payroll',
+            de: 'Sponsoren-/Partnerprofile',
+            en: 'Sponsor and partner profiles',
         },
         description: {
-            de: 'Übungsleiter:innen stempeln sich pro Einsatz ein und aus; ein Report multipliziert Stunden × Stundensatz und summiert den Auszahlungsbetrag pro Person automatisch.',
-            en: 'Coaches clock in and out per session; a report multiplies hours × hourly rate and automatically totals the payout amount per person.',
+            de: 'Eigene Profile für Sponsoren und Partner mit Laufzeit und Gegenleistung, sichtbar für eine eingeschränkte externe Rolle, ohne Zugriff auf Mitgliederdaten.',
+            en: 'Dedicated profiles for sponsors and partners with term and consideration, visible to a restricted external role, without access to member data.',
+        },
+        status: 'planned',
+        period: 'Später',
+        sortKey: 999001,
+    },
+    {
+        id: 'oeffentliche-vereinsseite',
+        icon: Globe,
+        type: 'feature',
+        title: {
+            de: 'Öffentliche Vereinsseite',
+            en: 'Public club page',
+        },
+        description: {
+            de: 'Eine freiwillige Seite, die zeigt, wer ihr seid und wie man mitmacht. Der Verein entscheidet, was darauf steht; Mitgliederdaten gehören nicht dazu.',
+            en: 'An optional page that shows who you are and how to join. The club decides what is on it; member data is not part of it.',
         },
         status: 'planned',
         period: 'Später',
         sortKey: 999002,
     },
     {
-        id: 'mitgliedsausweis',
-        icon: IdCard,
+        id: 'interessenten-probetraining',
+        icon: UserPlus,
         type: 'feature',
         title: {
-            de: 'Digitaler Mitgliedsausweis',
-            en: 'Digital membership card',
+            de: 'Anfragen und Probetraining',
+            en: 'Enquiries and trial sessions',
         },
         description: {
-            de: 'Ein Mitgliedsausweis mit QR-Code direkt auf dem Smartphone, für Zutritt und Vergünstigungen bei Partnern, ganz ohne Plastikkarte.',
-            en: 'A membership card with a QR code, right on your phone, for access and partner discounts, no plastic card needed.',
+            de: 'Interessierte melden sich über die Vereinsseite, der Vorstand sieht die Anfragen in einer Liste und macht daraus einen Aufnahmeantrag. Dazu eine Warteliste je Abteilung.',
+            en: 'Interested people get in touch through the club page; the board sees the enquiries in a list and turns them into a membership application. Plus a waiting list per department.',
         },
         status: 'planned',
         period: 'Später',
         sortKey: 999003,
     },
     {
-        id: 'dsgvo-einwilligungen',
-        icon: ShieldCheck,
+        id: 'vereinssuche',
+        icon: Search,
         type: 'feature',
         title: {
-            de: 'DSGVO-Einwilligungsverwaltung',
-            en: 'GDPR consent management',
+            de: 'Verein finden',
+            en: 'Find a club',
         },
         description: {
-            de: 'Verwaltung von Einwilligungen, insbesondere Foto- und Videoeinwilligung bei Minderjährigen, nachvollziehbar dokumentiert statt auf Zuruf.',
-            en: 'Manage consent, especially photo/video consent for minors, documented and traceable instead of handled informally.',
+            de: 'Vereine, die das ausdrücklich wollen, lassen sich per Suche finden. Der Beitritt läuft weiter über einen Aufnahmeantrag.',
+            en: 'Clubs that explicitly opt in can be found by search. Joining still goes through a membership application.',
         },
         status: 'planned',
         period: 'Später',
         sortKey: 999004,
     },
     {
-        id: 'kommunikation-broadcast',
-        icon: Megaphone,
+        id: 'verbandsmeldung',
+        icon: FileSpreadsheet,
         type: 'feature',
         title: {
-            de: 'Schwarzes Brett & Rundmails',
-            en: 'Notice board & broadcast messages',
+            de: 'Verbandsmeldung als Export',
+            en: 'Federation report as export',
         },
         description: {
-            de: 'Ein digitales schwarzes Brett plus Rundmail-/Push-Broadcast an eine Zielgruppe: ganzer Verein, einzelne Abteilung oder nur der Vorstand.',
-            en: 'A digital notice board plus broadcast emails/push notifications to a target group: the whole club, a single department, or just the board.',
+            de: 'Bestandsmeldung für Sportbund & Co. als CSV mit Stichtag und wählbaren Spalten, aus den Mitgliedsdaten, die ohnehin da sind.',
+            en: 'A membership return for sports federations and the like as CSV with a cut-off date and selectable columns, from the member data that is already there.',
         },
         status: 'planned',
         period: 'Später',
         sortKey: 999005,
     },
     {
-        id: 'abstimmungen-umlaufbeschluesse',
-        icon: Vote,
+        id: 'selbst-check-in',
+        icon: ScanLine,
         type: 'feature',
         title: {
-            de: 'Abstimmungen & Umlaufbeschlüsse',
-            en: 'Votes & circular resolutions',
+            de: 'Selbst-Check-in per Code',
+            en: 'Self check-in by code',
         },
         description: {
-            de: 'Digitale Abstimmungen und Umlaufbeschlüsse außerhalb regulärer Sitzungen, inklusive Stimmrecht-Prüfung für die Mitgliederversammlung.',
-            en: 'Digital votes and circular resolutions outside of regular meetings, including voting-rights verification for the general assembly.',
+            de: 'Teilnehmende checken am Platz selbst ein, statt dass die Trainerin sie antippt. Heute erfasst die Trainerin die Anwesenheit.',
+            en: 'Participants check in themselves on site instead of the coach tapping them. Today the coach records attendance.',
         },
         status: 'planned',
         period: 'Später',
         sortKey: 999006,
     },
     {
-        id: 'helferplanung',
-        icon: ClipboardList,
+        id: 'vereinsvorlagen',
+        icon: FileText,
         type: 'feature',
         title: {
-            de: 'Helfer- & Schichtplanung',
-            en: 'Volunteer & shift scheduling',
+            de: 'Eigene Vorlagen mit Platzhaltern',
+            en: 'Your own templates with placeholders',
         },
         description: {
-            de: 'Schichtplanung für Veranstaltungen wie Feste oder Turniere, aufbauend auf den bereits hinterlegten Verfügbarkeiten.',
-            en: 'Shift scheduling for events like fêtes or tournaments, built on the availability data members already provide.',
+            de: 'Eigene Briefe und Bescheinigungen aus Vereinsvorlagen. Heute sind die PDF-Vorlagen vorgegeben und nur das Branding (Logo, Farben, Briefkopf) lässt sich anpassen.',
+            en: 'Your own letters and confirmations from club templates. Today the PDF templates are fixed and only the branding (logo, colours, letterhead) can be adapted.',
         },
         status: 'planned',
         period: 'Später',
         sortKey: 999007,
     },
     {
-        id: 'sponsoren-profile',
-        icon: Handshake,
+        id: 'ausweis-offline-pruefung',
+        icon: IdCard,
         type: 'feature',
         title: {
-            de: 'Sponsoren-/Partnerprofile',
-            en: 'Sponsor & partner profiles',
+            de: 'Ausweis auch ohne Netz prüfen',
+            en: 'Check the card without a network',
         },
         description: {
-            de: 'Eigene Profile für Sponsoren und Partner mit Laufzeit und Gegenleistung, sichtbar für die externe Rolle, ohne Zugriff auf Mitgliederdaten.',
-            en: 'Dedicated profiles for sponsors and partners with term and consideration, visible to the external role, without access to member data.',
+            de: 'Heute prüft man den Mitgliedsausweis nur online. Eine Prüfung ohne Netz ist noch nicht gebaut.',
+            en: 'Today the membership card can only be checked online. Checking without a network is not built yet.',
         },
         status: 'planned',
         period: 'Später',
         sortKey: 999008,
     },
     {
-        id: 'reporting-statistik',
-        icon: BarChart3,
+        id: 'app-verwaltung',
+        icon: Smartphone,
         type: 'feature',
         title: {
-            de: 'Reporting & Statistik',
-            en: 'Reporting & statistics',
+            de: 'Mehr Verwaltung in der App',
+            en: 'More management in the app',
         },
         description: {
-            de: 'Auswertungen zu Mitgliederentwicklung und Altersstruktur für Jahresbericht und Fördermittelanträge, statt händisch aus Excel zusammengetragen.',
-            en: 'Reports on membership growth and age structure for the annual report and grant applications, instead of compiling them by hand from spreadsheets.',
+            de: 'Einiges geht heute nur auf der Website, etwa Teilnehmerlisten, Helferplan verwalten, Dokumente hochladen und Stundensätze. Ob und was davon in die App kommt, ist noch offen.',
+            en: 'Some things only work on the website today, such as participant lists, managing the helper plan, uploading documents and hourly rates. Whether and what of it comes to the app is still open.',
         },
         status: 'planned',
         period: 'Später',
         sortKey: 999009,
+    },
+    {
+        id: 'website-ausleihe',
+        icon: Boxes,
+        type: 'feature',
+        title: {
+            de: 'Ausleihe und Schadensmeldung auf der Website',
+            en: 'Lending and damage reports on the website',
+        },
+        description: {
+            de: 'Material ausleihen und Schäden melden geht heute in der App. Die Website soll das später auch können.',
+            en: 'Borrowing equipment and reporting damage works in the app today. The website is meant to follow later.',
+        },
+        status: 'planned',
+        period: 'Später',
+        sortKey: 999010,
+    },
+    {
+        id: 'stundensaetze-ausbau',
+        icon: Timer,
+        type: 'feature',
+        title: {
+            de: 'Stundensätze und Stundenbericht ausbauen',
+            en: 'Extend hourly rates and the hours report',
+        },
+        description: {
+            de: 'Stundensätze für weitere Vereinsrollen und zum Bearbeiten, dazu der Stundenbericht-Export in der App. Eine Auszahlung oder Lohnabrechnung ist ausdrücklich nicht geplant.',
+            en: 'Hourly rates for more club roles and editing, plus the hours report export in the app. A payout or payroll is explicitly not planned.',
+        },
+        status: 'planned',
+        period: 'Später',
+        sortKey: 999011,
     },
 ];

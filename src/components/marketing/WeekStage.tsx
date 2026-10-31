@@ -65,12 +65,12 @@ type Day = { id: (typeof weekDayIds)[number]; item: string; extras: string[] };
 // Each day shows one live feature from marketingData (never a copy of its own) plus related ones as small extras.
 const DAYS: Day[] = [
     { id: 'mo', item: 'application', extras: ['member-number', 'account-invite'] },
-    { id: 'di', item: 'calendar', extras: ['ical'] },
-    { id: 'mi', item: 'meetings', extras: ['scheduling-poll'] },
+    { id: 'di', item: 'recurring-events', extras: ['training-attendance', 'calendar', 'ical'] },
+    { id: 'mi', item: 'meetings', extras: ['scheduling-poll', 'voting', 'minutes'] },
     { id: 'do', item: 'material-lending', extras: ['damage-report', 'keys'] },
-    { id: 'fr', item: 'wifi-qr', extras: ['places'] },
+    { id: 'fr', item: 'wifi-qr', extras: ['places', 'shift-planning', 'rides'] },
     { id: 'sa', item: 'members-no-account', extras: ['csv-import-export', 'member-search'] },
-    { id: 'so', item: 'club-stats', extras: ['exit-checklist', 'status-lifecycle'] },
+    { id: 'so', item: 'club-stats', extras: ['hours-report', 'exit-checklist', 'status-lifecycle'] },
 ];
 
 function DayScene({ id }: { id: string }) {

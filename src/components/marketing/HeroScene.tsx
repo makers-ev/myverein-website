@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 
 import { useLanguage } from '@/contexts/LanguageContext';
+import { docsUrl } from '@/lib/docs';
 
 import { heroCardLineCount, heroToolIds, heroWordCount } from './marketingData';
 import Network from './Network';
@@ -191,6 +192,15 @@ export default function HeroScene() {
                     {touched ? t(tidy ? 'mk.hero.tidy.on' : 'mk.hero.tidy.off') : ''}
                 </p>
                 <p className="mk-note max-w-xl text-sm text-muted-foreground">{t('mk.hero.honest')}</p>
+                <a
+                    href={docsUrl()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={t('help.nav.label')}
+                    className="inline-flex min-h-11 items-center font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                >
+                    {t('mk.help.hero')}
+                </a>
             </div>
         </section>
     );
