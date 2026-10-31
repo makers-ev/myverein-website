@@ -35,7 +35,7 @@ export function LegalDocument({ keyPrefix, sectionCount }: { keyPrefix: keyof ty
         </p>
       )}
 
-      <p className="mb-6 text-xs italic text-muted-foreground">{t(`${keyPrefix}.placeholder-notice`)}</p>
+      <p className="mb-6 text-xs text-muted-foreground">{t(`${keyPrefix}.updated`)}</p>
 
       {Array.from({ length: sectionCount }, (_, i) => i + 1).map((num) => (
         <div key={num} className="mb-5">

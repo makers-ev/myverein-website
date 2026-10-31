@@ -10,6 +10,8 @@ const POINTS: { id: string; tilt: Tilt }[] = [
     { id: 'profile-photo-minors', tilt: 'r' },
     { id: 'signed-links', tilt: 'r' },
     { id: 'sensitive-audit', tilt: 'l' },
+    { id: 'consents', tilt: 'r' },
+    { id: 'privacy-tools', tilt: 'l' },
 ];
 
 /** Paper-cut padlock with a keyhole; the accent ring around it is drawn once scrolled into view. */

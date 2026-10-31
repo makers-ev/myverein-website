@@ -7,6 +7,7 @@ import { ChevronDown, Menu, X, Globe } from 'lucide-react';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supportedLanguages, type Language } from '@/contexts/supportedLanguages';
+import { docsUrl } from '@/lib/docs';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 export interface NavItem {
@@ -45,9 +46,15 @@ export function Navbar({
                 setIsLangOpen(false);
             }
         }
+        function handleEscape(event: KeyboardEvent) {
+            if (event.key === 'Escape') setIsLangOpen(false);
+        }
         document.addEventListener('mousedown', handleClickOutside);
-        return () =>
+        document.addEventListener('keydown', handleEscape);
+        return () => {
             document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleEscape);
+        };
     }, []);
 
     // Close menus on route change
@@ -94,6 +101,15 @@ export function Navbar({
                                 </Link>
                             );
                         })}
+                        <a
+                            href={docsUrl()}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={t('help.nav.label')}
+                            className="text-sm font-medium text-muted-foreground transition-colors duration-200 hover:text-foreground"
+                        >
+                            {t('help.nav')}
+                        </a>
                     </div>
                 </div>
 
@@ -106,7 +122,9 @@ export function Navbar({
                     <div className="relative hidden md:block" ref={langRef}>
                         <button
                             onClick={() => setIsLangOpen(!isLangOpen)}
-                            className="flex items-center gap-1 rounded-md px-2 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                            aria-expanded={isLangOpen}
+                            aria-label={t('nav.language_label')}
+                            className="flex min-h-11 items-center gap-1 rounded-md px-2 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                         >
                             <Globe size={18} />
                             <span>{supportedLanguages.find((l) => l.id === language)?.flag}</span>
@@ -145,7 +163,9 @@ export function Navbar({
 
                     {/* Mobile Toggle Button */}
                     <button
-                        className="flex md:hidden items-center justify-center rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+                        className="flex min-h-11 min-w-11 md:hidden items-center justify-center rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+                        aria-expanded={isMobileMenuOpen}
+                        aria-label={t(isMobileMenuOpen ? 'shell.menu.close' : 'shell.menu.open')}
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                     >
                         {isMobileMenuOpen ? (
@@ -174,6 +194,15 @@ export function Navbar({
                                 {t(link.name)}
                             </Link>
                         ))}
+                        <a
+                            href={docsUrl()}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={t('help.nav.label')}
+                            className="block rounded-md px-3 py-2 text-base font-medium text-muted-foreground transition-colors hover:bg-muted"
+                        >
+                            {t('help.nav')}
+                        </a>
 
                         {/* Mobile Language Selector */}
                         <div className="flex flex-col gap-2 px-3 py-2 border-t border-border mt-2 pt-3">

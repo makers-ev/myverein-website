@@ -1,22 +1,45 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import HelpLink from '@/components/HelpLink';
+import { useCallback, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import { apiFetch } from '@/lib/api-client';
+import { chooseClub } from '@/lib/activeClub';
 import { useThrottledCallback } from '@/lib/useThrottledCallback';
 import { memberErrorKey } from '@/lib/clubMembers';
+import { type ClubTab, canSeeCredentialOverview, formsGate, isGuardianOnly, visibleTabs } from '@/lib/clubPermissions';
+import { documentsGate } from '@/lib/documentAccess';
 import { useLanguage } from '@/contexts/LanguageContext';
-import ApplicationsPanel, { type ClubApplication } from '@/components/verein/ApplicationsPanel';
+import ApplicationsPanel from '@/components/verein/ApplicationsPanel';
 import NoClubSection from '@/components/verein/NoClubSection';
 import CategoriesPanel from '@/components/verein/CategoriesPanel';
+import AssemblyRulesPanel from '@/components/assembly/AssemblyRulesPanel';
+import { ExpiringRolesCard, TermBadge } from '@/components/assembly/TermsOfOffice';
+import BrandingPanel from '@/components/documents/BrandingPanel';
+import StoragePanel from '@/components/documents/StoragePanel';
+import ClubInfoDialog from '@/components/documents/ClubInfoDialog';
 import ClubSettingsPanel from '@/components/verein/ClubSettingsPanel';
+import ClubRemindersPanel from '@/components/verein/ClubRemindersPanel';
+import ClubMailTemplatePanel from '@/components/verein/ClubMailTemplatePanel';
+import CredentialsPanel from '@/components/verein/CredentialsPanel';
 import ClubStatsPanel from '@/components/verein/ClubStatsPanel';
+import CustomFieldsPanel from '@/components/verein/CustomFieldsPanel';
+import FormsPanel from '@/components/verein/FormsPanel';
 import ExitQueuePanel from '@/components/verein/ExitQueuePanel';
+import AbsencesBoardPanel from '@/components/verein/AbsencesBoardPanel';
+import PrivacyPanel, { type PrivacyView } from '@/components/privacy/PrivacyPanel';
+import DpaBanner from '@/components/privacy/DpaBanner';
+import { useDpaCurrent } from '@/components/privacy/useDpaCurrent';
+import OwnAbsencesPanel from '@/components/absences/OwnAbsencesPanel';
+import MyDocumentsPanel from '@/components/documents/MyDocumentsPanel';
+import MyPrivacyPanel from '@/components/privacy/MyPrivacyPanel';
 import MemberList from '@/components/verein/MemberList';
 import MemberAvatar from '@/components/verein/MemberAvatar';
 import RoleBadge from '@/components/verein/RoleBadge';
 import ProfilTab, { type OwnMembership } from '@/components/verein/ProfilTab';
 import LoadingText from '@/components/LoadingText';
+import { useConfirm } from '@/components/useConfirm';
 import LoadError from '@/components/LoadError';
 
 interface MyClub {
@@ -42,11 +65,18 @@ interface Department {
     leadMemberId: string | null;
 }
 
+/** Metadata only (Wave 13): the text is fetched per slug by `ClubInfoDialog`. */
 interface ClubInfoPage {
     id: string;
     clubId: string;
     slug: string;
     title: string;
+    externalUrl: string | null;
+    hasContent: boolean;
+    hasAttachment: boolean;
+    validFrom: string | null;
+    currentVersion: number;
+    updatedAt: string;
 }
 
 interface ClubInfo {
@@ -55,7 +85,7 @@ interface ClubInfo {
     pages: ClubInfoPage[];
 }
 
-type Tab = 'info' | 'profil' | 'mitglieder' | 'austritte' | 'abteilungen' | 'kennzahlen' | 'einstellungen';
+type Tab = ClubTab;
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
     return (
@@ -66,9 +96,16 @@ function SectionCard({ title, children }: { title: string; children: React.React
     );
 }
 
-function VereinsinfoTab({ info, t, onPhotoExpired }: { info: ClubInfo; t: (key: string) => string; onPhotoExpired: () => void }) {
+function VereinsinfoTab({ info, t, onPhotoExpired, termsClubId, clubId, canWriteInfo, onInfoChanged }: { info: ClubInfo; t: (key: string) => string; onPhotoExpired: () => void; termsClubId: string | null; clubId: string; canWriteInfo: boolean; onInfoChanged: () => void }) {
+    // Slug of the open club document; '' = the editor for a new one.
+    const [openSlug, setOpenSlug] = useState<string | null>(null);
     return (
         <div className="grid gap-4 sm:grid-cols-2">
+            {termsClubId && (
+                <div className="sm:col-span-2">
+                    <ExpiringRolesCard clubId={termsClubId} />
+                </div>
+            )}
             <SectionCard title={t('verein.info.board')}>
                 {info.board.length === 0 ? (
                     <p className="text-sm text-muted-foreground">{t('verein.info.board.empty')}</p>
@@ -80,7 +117,10 @@ function VereinsinfoTab({ info, t, onPhotoExpired }: { info: ClubInfo; t: (key: 
                                     <MemberAvatar name={m.name} photoUrl={m.photoUrl} onExpired={onPhotoExpired} />
                                     <span className="truncate">{m.name ?? '—'}</span>
                                 </span>
-                                <RoleBadge roleType={m.roleType} />
+                                <span className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+                                    <TermBadge termEndsAt={m.termEndsAt} />
+                                    <RoleBadge roleType={m.roleType} />
+                                </span>
                             </li>
                         ))}
                     </ul>
@@ -94,12 +134,21 @@ function VereinsinfoTab({ info, t, onPhotoExpired }: { info: ClubInfo; t: (key: 
                     <ul className="space-y-2">
                         {info.pages.map((p) => (
                             <li key={p.id} className="text-sm text-foreground">
-                                {p.title}
+                                <button type="button" onClick={() => setOpenSlug(p.slug)} className="text-left font-medium text-primary underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
+                                    {p.title}
+                                </button>
+                                {p.hasAttachment && <span className="ml-2 text-xs text-muted-foreground">PDF</span>}
                             </li>
                         ))}
                     </ul>
                 )}
+                {canWriteInfo && (
+                    <button type="button" onClick={() => setOpenSlug('')} className="mt-3 rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted">
+                        {t('docs.info.new')}
+                    </button>
+                )}
             </SectionCard>
+            {openSlug !== null && <ClubInfoDialog clubId={clubId} slug={openSlug || null} canWrite={canWriteInfo} existingSlugs={info.pages.map((p) => p.slug)} onClose={() => setOpenSlug(null)} onChanged={onInfoChanged} />}
         </div>
     );
 }
@@ -183,15 +232,27 @@ export default function VereinPageContent() {
     const [clubsError, setClubsError] = useState(false);
     const [info, setInfo] = useState<ClubInfo | null>(null);
     const [me, setMe] = useState<OwnMembership | null>(null);
-    const [tab, setTab] = useState<Tab>('info');
-    const [applications, setApplications] = useState<ClubApplication[] | null>(null);
-    const [applicationsError, setApplicationsError] = useState(false);
-    // Open exit requests (badge on the "Austritte" tab); null = unknown / no permission.
-    const [exitPending, setExitPending] = useState<number | null>(null);
+    // The tab lives in the URL (`/verein?tab=austritte`), so the sidebar, breadcrumbs, reload and links share it.
+    const router = useRouter();
+    const tab = (useSearchParams().get('tab') ?? 'info') as Tab;
+    const setTab = (next: Tab) => router.replace(next === 'info' ? '/verein' : `/verein?tab=${next}`, { scroll: false });
     // Bumped whenever the member list must reload (an application was decided, ...).
     const [membersReload, setMembersReload] = useState(0);
+    // The form editor holds unsaved changes (guards the tab switch).
+    const [formsDirty, setFormsDirty] = useState(false);
+    const onFormsDirty = useCallback((dirty: boolean) => setFormsDirty(dirty), []);
+    // Own custom field edits in "Mein Profil" (separate save button).
+    const [profilDirty, setProfilDirty] = useState(false);
+    const onProfilDirty = useCallback((dirty: boolean) => setProfilDirty(dirty), []);
+    // "Qualifikationen" next to the member list: offered by role, hidden once the endpoint says 403/404.
+    const [credentialsDenied, setCredentialsDenied] = useState(false);
+    const [memberView, setMemberView] = useState<'list' | 'credentials'>('list');
+    const { confirm, dialog: confirmDialog } = useConfirm();
+    // Processor agreement (AV-Vertrag): banner for the people who work on privacy, and a way to open the signing page from it.
+    const [dpaReload, setDpaReload] = useState(0);
+    const [privacyStart, setPrivacyStart] = useState<{ view: PrivacyView; n: number }>({ view: 'consents', n: 0 });
 
-    const activeClub = clubs?.[0] ?? null;
+    const activeClub = chooseClub(clubs) ?? null;
 
     // Signed photo URLs expire: a failed image load refetches only the resource that carried the URL, throttled.
     const refetchBoardPhotos = useThrottledCallback(async () => {
@@ -225,26 +286,6 @@ export default function VereinPageContent() {
         setInfo(infoRes.data);
         setMe(meRes.data);
         setMembersReload((n) => n + 1);
-        // Open applications are only readable with members:write.
-        if (meRes.data.permissions.includes('members:write')) {
-            try {
-                const appsRes = await apiFetch<{ data: ClubApplication[] }>(`/club-applications?clubId=${clubId}`);
-                setApplications(appsRes.data);
-                setApplicationsError(false);
-            } catch {
-                setApplicationsError(true);
-            }
-            try {
-                const exitRes = await apiFetch<{ total: number }>(`/club-exit-requests?clubId=${clubId}&status=pending&pageSize=1`);
-                setExitPending(exitRes.total);
-            } catch {
-                setExitPending(null);
-            }
-        } else {
-            setApplications(null);
-            setApplicationsError(false);
-            setExitPending(null);
-        }
     }
 
     useEffect(() => {
@@ -255,20 +296,34 @@ export default function VereinPageContent() {
     }, [activeClub?.clubId]);
 
     const permissions = me?.permissions ?? [];
+    const dpa = useDpaCurrent(activeClub?.clubId ?? null, permissions.includes('privacy:read') || permissions.includes('privacy:manage'), dpaReload);
+    const gate = formsGate(permissions);
+    const docsGate = documentsGate(permissions);
     // Every tab beyond the basics hangs on a permission from GET /club-members/me (the backend enforces them too).
     // Guardians (external role) have no right to the member list; hide the tab instead of showing a 403.
-    const guardianOnly = !!me && permissions.length === 0 && me.roles.length > 0 && me.roles.every((r) => r.roleType === 'erziehungsberechtigt');
-    const tabs: Tab[] = guardianOnly ? ['info', 'profil', 'abteilungen'] : ['info', 'profil', 'mitglieder', 'abteilungen'];
-    if (permissions.includes('members:write')) tabs.push('austritte');
-    if (permissions.includes('club_stats:read')) tabs.push('kennzahlen');
-    if (permissions.includes('members:write')) tabs.push('einstellungen');
+    const tabs: Tab[] = visibleTabs(permissions, me?.roles ?? []);
     const currentTab: Tab = tabs.includes(tab) ? tab : 'info';
+
+    // The switch comes from permissions/roles alone (no request on opening the tab); the view itself asks the endpoint and reports
+    // 403/404 as "not for you", which hides the switch again.
+    const credentialsAvailable = !credentialsDenied && canSeeCredentialOverview(permissions, me?.roles ?? []);
+    const view: 'list' | 'credentials' = credentialsAvailable ? memberView : 'list';
+
+    async function selectTab(next: Tab) {
+        // Unsaved edits (form editor, own custom fields) survive only inside their tab: leaving it needs a confirmation.
+        const unsaved = next !== currentTab && ((currentTab === 'formulare' && formsDirty) || (currentTab === 'profil' && profilDirty));
+        if (unsaved && !(await confirm({ title: t('forms.editor.leave.title'), body: t(currentTab === 'formulare' ? 'forms.editor.leaveConfirm' : 'verein.profil.leaveConfirm'), confirmLabel: t('forms.editor.leave.confirm'), danger: true }))) return;
+        setTab(next);
+    }
 
     return (
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-            <h1 className="text-2xl font-bold text-foreground">
-                {activeClub?.clubName ?? t('verein.page.title')}
-            </h1>
+            <div className="flex items-center gap-1">
+                <h1 className="text-2xl font-bold text-foreground">
+                    {activeClub?.clubName ?? t('verein.page.title')}
+                </h1>
+                <HelpLink topic={currentTab === 'datenschutz' ? 'privacy' : 'members'} />
+            </div>
 
             {clubsError ? (
                 <LoadError className="mt-6" onRetry={loadClubs} />
@@ -278,47 +333,52 @@ export default function VereinPageContent() {
                 <NoClubSection onRefreshClubs={loadClubs} />
             ) : (
                 <>
-                    <div className="mt-6 flex gap-2 overflow-x-auto border-b border-border">
-                        {tabs.map((value) => (
-                            <button
-                                key={value}
-                                onClick={() => setTab(value)}
-                                className={`whitespace-nowrap px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
-                                    currentTab === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
-                                }`}
-                            >
-                                {t(`verein.tab.${value}`)}
-                                {value === 'austritte' && exitPending !== null && exitPending > 0 && (
-                                    <span className="ml-1.5 rounded-full bg-primary px-1.5 py-0.5 text-xs font-semibold text-primary-foreground">
-                                        {exitPending}
-                                    </span>
-                                )}
-                                {value === 'mitglieder' && applications && applications.length > 0 && (
-                                    <span className="ml-1.5 rounded-full bg-primary px-1.5 py-0.5 text-xs font-semibold text-primary-foreground">
-                                        {applications.length}
-                                    </span>
-                                )}
-                            </button>
-                        ))}
-                    </div>
+                    <DpaBanner
+                        current={dpa}
+                        onOpen={() => {
+                            setPrivacyStart((s) => ({ view: 'dpa', n: s.n + 1 }));
+                            void selectTab('datenschutz');
+                        }}
+                    />
 
                     <div className="mt-4">
-                        {currentTab === 'info' && (info ? <VereinsinfoTab info={info} t={t} onPhotoExpired={refetchBoardPhotos} /> : <LoadingText />)}
+                        {currentTab === 'info' && (info ? <VereinsinfoTab info={info} t={t} onPhotoExpired={refetchBoardPhotos} termsClubId={permissions.includes('assembly:manage') || permissions.includes('roles:write') ? activeClub.clubId : null} clubId={activeClub.clubId} canWriteInfo={docsGate.editClubInfo} onInfoChanged={() => void refreshClubData(activeClub.clubId)} /> : <LoadingText />)}
                         {currentTab === 'profil' &&
                             (me ? (
-                                <ProfilTab me={me} clubId={activeClub.clubId} onSaved={() => void refreshClubData(activeClub.clubId)} onPhotoExpired={refetchOwnPhoto} />
+                                <div className="space-y-6">
+                                    <ProfilTab me={me} clubId={activeClub.clubId} onDirtyChange={onProfilDirty} onSaved={() => void refreshClubData(activeClub.clubId)} onPhotoExpired={refetchOwnPhoto} onOpenCustomFields={() => void selectTab('zusatzfelder')} />
+                                    {!isGuardianOnly(permissions, me.roles) && <OwnAbsencesPanel clubId={activeClub.clubId} />}
+                                    {!isGuardianOnly(permissions, me.roles) && me.clubMemberId && <MyDocumentsPanel clubId={activeClub.clubId} />}
+                                    {!isGuardianOnly(permissions, me.roles) && me.clubMemberId && <MyPrivacyPanel clubId={activeClub.clubId} clubMemberId={me.clubMemberId} />}
+                                </div>
                             ) : (
                                 <LoadingText />
                             ))}
-                        {currentTab === 'mitglieder' && permissions.includes('members:write') && (
+                        {currentTab === 'mitglieder' && credentialsAvailable && (
+                            <div role="group" aria-label={t('verein.members.view.label')} className="mb-4 inline-flex rounded-lg border border-border p-0.5">
+                                {(['list', 'credentials'] as const).map((value) => (
+                                    <button
+                                        key={value}
+                                        type="button"
+                                        aria-pressed={view === value}
+                                        onClick={() => setMemberView(value)}
+                                        className={`rounded-md px-3 py-1.5 text-sm font-medium ${view === value ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                    >
+                                        {t(`verein.members.view.${value}`)}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                        {currentTab === 'mitglieder' && view === 'credentials' && (
+                            <CredentialsPanel clubId={activeClub.clubId} onUnavailable={() => setCredentialsDenied(true)} canIncludeFormer={permissions.includes('members:write') || permissions.includes('members:read_sensitive')} />
+                        )}
+                        {currentTab === 'mitglieder' && view === 'list' && permissions.includes('members:write') && (
                             <ApplicationsPanel
-                                applications={applications}
-                                loadError={applicationsError}
                                 clubId={activeClub.clubId}
                                 onDecided={() => refreshClubData(activeClub.clubId)}
                             />
                         )}
-                        {currentTab === 'mitglieder' &&
+                        {currentTab === 'mitglieder' && view === 'list' &&
                             (me && info ? (
                                 <MemberList
                                     clubId={activeClub.clubId}
@@ -351,15 +411,27 @@ export default function VereinPageContent() {
                                 <LoadingText />
                             ))}
                         {currentTab === 'kennzahlen' && <ClubStatsPanel clubId={activeClub.clubId} />}
+                        {currentTab === 'formulare' && gate.manage && <FormsPanel clubId={activeClub.clubId} permissions={permissions} onDirtyChange={onFormsDirty} onOpenCategorySettings={tabs.includes('einstellungen') ? () => void selectTab('einstellungen') : undefined} />}
+                        {currentTab === 'zusatzfelder' && gate.manage && <CustomFieldsPanel clubId={activeClub.clubId} permissions={permissions} />}
+                        {currentTab === 'fehlt' && permissions.includes('absences:read') && (
+                            <AbsencesBoardPanel clubId={activeClub.clubId} departments={(info?.departments ?? []).map((d) => ({ id: d.id, name: d.name }))} />
+                        )}
+                        {currentTab === 'datenschutz' && <PrivacyPanel key={privacyStart.n} clubId={activeClub.clubId} permissions={permissions} startView={privacyStart.view} onDpaAccepted={() => setDpaReload((n) => n + 1)} />}
                         {currentTab === 'einstellungen' && (
                             <div className="space-y-6">
-                                <ClubSettingsPanel clubId={activeClub.clubId} />
-                                <CategoriesPanel clubId={activeClub.clubId} onChanged={() => setMembersReload((n) => n + 1)} />
+                                {permissions.includes('assembly:manage') && <AssemblyRulesPanel clubId={activeClub.clubId} canReadHistory={permissions.includes('privacy:read')} />}
+                                {permissions.includes('members:write') && <ClubSettingsPanel clubId={activeClub.clubId} />}
+                                {permissions.includes('members:write') && <ClubRemindersPanel clubId={activeClub.clubId} />}
+                                {permissions.includes('announcements:write') && <ClubMailTemplatePanel clubId={activeClub.clubId} />}
+                                {docsGate.branding && <BrandingPanel clubId={activeClub.clubId} />}
+                                {docsGate.storage && <StoragePanel clubId={activeClub.clubId} canEmptyTrash={docsGate.manage} />}
+                                {permissions.includes('members:write') && <CategoriesPanel clubId={activeClub.clubId} onChanged={() => setMembersReload((n) => n + 1)} />}
                             </div>
                         )}
                     </div>
                 </>
             )}
+            {confirmDialog}
         </div>
     );
 }

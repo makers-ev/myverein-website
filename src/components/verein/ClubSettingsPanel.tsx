@@ -8,6 +8,7 @@ import { apiFetch } from '@/lib/api-client';
 import { inputClass, primaryButtonClass } from '@/lib/clubMembers';
 import {
     type ClubSettings,
+    FEDERAL_STATES,
     isNoticeMode,
     isValidPrefix,
     normalizePrefix,
@@ -31,6 +32,7 @@ export default function ClubSettingsPanel({ clubId }: { clubId: string }) {
     const [prefix, setPrefix] = useState('');
     const [prefixTouched, setPrefixTouched] = useState(false);
     const [selfLoans, setSelfLoans] = useState(true);
+    const [state, setState] = useState('');
     const [busy, setBusy] = useState(false);
     const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
 
@@ -43,12 +45,13 @@ export default function ClubSettingsPanel({ clubId }: { clubId: string }) {
             setPrefixTouched(false);
         }
         setSelfLoans(s.allowSelfLoans);
+        setState(s.state ?? '');
     }, []);
 
     const load = useCallback(async () => {
         setLoadError(null);
         try {
-            const res = await apiFetch<{ data: ClubSettings }>(`/club-settings?clubId=${clubId}`);
+            const res = await apiFetch<{ data: ClubSettings }>(`/club-settings?clubId=${encodeURIComponent(clubId)}`);
             apply(res.data);
         } catch (err) {
             setLoadError(errorMessage(err, t));
@@ -93,6 +96,7 @@ export default function ClubSettingsPanel({ clubId }: { clubId: string }) {
     if ((mode || null) !== saved.noticeMode) changes.noticeMode = mode || null;
     if (prefixTouched && !prefixInvalid) changes.memberNumberPrefix = normalizedPrefix;
     if (selfLoans !== saved.allowSelfLoans) changes.allowSelfLoans = selfLoans;
+    if ((state || null) !== (saved.state ?? null)) changes.state = state || null;
     const dirty = Object.keys(changes).length > 0;
 
     async function save(e: React.FormEvent) {
@@ -101,7 +105,7 @@ export default function ClubSettingsPanel({ clubId }: { clubId: string }) {
         setBusy(true);
         setStatus(null);
         try {
-            const res = await apiFetch<{ data: ClubSettings }>(`/club-settings?clubId=${clubId}`, { method: 'PATCH', body: changes });
+            const res = await apiFetch<{ data: ClubSettings }>(`/club-settings?clubId=${encodeURIComponent(clubId)}`, { method: 'PATCH', body: changes });
             apply(res.data);
             setStatus({ ok: true, text: t('verein.settings.saved') });
         } catch (err) {
@@ -188,6 +192,22 @@ export default function ClubSettingsPanel({ clubId }: { clubId: string }) {
                     <legend className="text-sm font-semibold text-foreground">{t('verein.settings.loans.title')}</legend>
                     <Toggle checked={selfLoans} onChange={setSelfLoans} label={t('verein.settings.loans.label')} />
                     <p className="text-xs text-muted-foreground">{t('verein.settings.loans.hint')}</p>
+                </fieldset>
+
+                <fieldset className="space-y-2">
+                    <legend className="text-sm font-semibold text-foreground">{t('verein.settings.state.title')}</legend>
+                    <label className="block text-xs font-semibold text-muted-foreground">
+                        {t('verein.settings.state.label')}
+                        <select id="club-state" value={state} onChange={(e) => setState(e.target.value)} className={`mt-1 sm:max-w-xs ${inputClass}`}>
+                            <option value="">{t('verein.settings.state.none')}</option>
+                            {FEDERAL_STATES.map((code) => (
+                                <option key={code} value={code}>
+                                    {t(`verein.settings.state.${code}`)}
+                                </option>
+                            ))}
+                        </select>
+                    </label>
+                    <p className="text-xs text-muted-foreground">{t('verein.settings.state.hint')}</p>
                 </fieldset>
 
                 <div className="flex items-center gap-3">

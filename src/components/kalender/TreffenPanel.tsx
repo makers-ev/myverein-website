@@ -27,6 +27,9 @@ import { Modal } from '@/components/Modal';
 import { inputClass, labelClass, primaryBtn, secondaryBtn } from '@/components/kalender/calendarTypes';
 import LoadingText from '@/components/LoadingText';
 import LoadError from '@/components/LoadError';
+import { Toggle } from '@/components/standorte/ui';
+import AssemblyMeetingSections from '@/components/assembly/AssemblyMeetingSections';
+import type { ParticipationMode } from '@/lib/assembly';
 
 interface Meeting {
     id: string;
@@ -36,7 +39,10 @@ interface Meeting {
     scheduledAt: string | null;
     agenda: string | null;
     minutes: string | null;
-    status: 'terminfindung' | 'geplant' | 'abgehalten' | 'protokolliert';
+    status: 'terminfindung' | 'geplant' | 'abgehalten' | 'protokolliert' | 'abgesagt';
+    /** Wave 11: presence, hybrid or online (default presence) and the join link (only for invited people). */
+    participationMode?: ParticipationMode;
+    onlineUrl?: string | null;
 }
 
 interface MeetingInvitee {
@@ -66,13 +72,14 @@ interface OverlapCandidate {
 
 type TFn = (key: string, p?: Record<string, string | number>) => string;
 
-const MEETING_STATUSES = ['terminfindung', 'geplant', 'abgehalten', 'protokolliert'] as const;
+const MEETING_STATUSES = ['terminfindung', 'geplant', 'abgehalten', 'protokolliert', 'abgesagt'] as const;
 
 const STATUS_STYLES: Record<Meeting['status'], string> = {
     terminfindung: 'bg-warning/15 text-warning',
     geplant: 'bg-primary/10 text-primary',
     abgehalten: 'bg-success/15 text-success',
     protokolliert: 'bg-muted text-muted-foreground',
+    abgesagt: 'bg-destructive/15 text-destructive',
 };
 
 const RESPONSE_STYLES: Record<string, string> = {
@@ -106,6 +113,16 @@ function ErrorText({ children }: { children: React.ReactNode }) {
         <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {children}
         </p>
+    );
+}
+
+/** "Eingeladene benachrichtigen" (on by default); the off state is described so nobody switches it off by accident. */
+function NotifySwitch({ checked, onChange, hintKey, t }: { checked: boolean; onChange: (v: boolean) => void; hintKey: string; t: TFn }) {
+    return (
+        <div className="space-y-1">
+            <Toggle checked={checked} onChange={onChange} label={t('treffen.notify.label')} />
+            <p className="text-xs text-muted-foreground">{checked ? t(hintKey) : t('treffen.notify.off')}</p>
+        </div>
     );
 }
 
@@ -267,7 +284,7 @@ function MeetingList({ clubId, t, canWrite, onSelect }: { clubId: string; t: TFn
     );
 }
 
-function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: string; meetingId: string; t: TFn; canWrite: boolean; onBack: () => void }) {
+function MeetingDetail({ clubId, meetingId, t, canWrite, canManageAssembly, canReadSensitive, onOpenRules, onBack }: { clubId: string; meetingId: string; t: TFn; canWrite: boolean; canManageAssembly: boolean; canReadSensitive: boolean; onOpenRules?: () => void; onBack: () => void }) {
     const { language } = useLanguage();
     const [meeting, setMeeting] = useState<Meeting | null>(null);
     const [invitees, setInvitees] = useState<MeetingInvitee[]>([]);
@@ -276,6 +293,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
     // Stored attendance (pre-fill) and the caller's own Better Auth member id (to find their invitation).
     const [storedAttendance, setStoredAttendance] = useState<AttendanceRow[]>([]);
     const [ownMemberId, setOwnMemberId] = useState<string | null>(null);
+    const [ownClubMemberId, setOwnClubMemberId] = useState<string | null>(null);
 
     // Only the newest load may write state, and never after unmount / meeting switch.
     const loadSeq = useRef(0);
@@ -320,9 +338,11 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
 
     useEffect(() => {
         let cancelled = false;
-        apiFetch<{ data?: { memberId?: string | null } }>(`/club-members/me?clubId=${clubId}`)
+        apiFetch<{ data?: { memberId?: string | null; clubMemberId?: string | null } }>(`/club-members/me?clubId=${clubId}`)
             .then((res) => {
-                if (!cancelled) setOwnMemberId(res.data?.memberId ?? null);
+                if (cancelled) return;
+                setOwnMemberId(res.data?.memberId ?? null);
+                setOwnClubMemberId(res.data?.clubMemberId ?? null);
             })
             .catch(() => undefined);
         return () => {
@@ -347,6 +367,11 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
     const [metaSaving, setMetaSaving] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState<string | null>(null);
+    const [deleteOpen, setDeleteOpen] = useState(false);
+    const [notifyDelete, setNotifyDelete] = useState(true);
+    const [notifyMeta, setNotifyMeta] = useState(true);
+    const [notifyStatus, setNotifyStatus] = useState(true);
+    const [notifyInvite, setNotifyInvite] = useState(true);
 
     function openEditMeeting() {
         if (!meeting) return;
@@ -354,6 +379,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
         setMetaType(meeting.type);
         setMetaScheduled(toDatetimeLocal(meeting.scheduledAt));
         setMetaError(null);
+        setNotifyMeta(true);
         setMetaOpen(true);
     }
 
@@ -367,6 +393,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
         if (metaScheduled !== toDatetimeLocal(meeting.scheduledAt)) {
             const scheduled = fromDatetimeLocal(metaScheduled);
             body.scheduledAt = scheduled;
+            if (!notifyMeta) body.notify = false;
             // A meeting that gets a date is no longer in Terminfindung (and vice versa when the date is removed).
             const nextStatus = statusForSchedule(meeting.status, scheduled);
             if (nextStatus) body.status = nextStatus;
@@ -389,13 +416,14 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
     }
 
     async function handleDeleteMeeting() {
-        if (!meeting || !window.confirm(t('treffen.delete.confirm', { title: meeting.title }))) return;
+        if (!meeting) return;
         setDeleting(true);
         setDeleteError(null);
         try {
-            await apiFetch(`/meetings/${meetingId}?clubId=${clubId}`, { method: 'DELETE' });
+            await apiFetch(`/meetings/${meetingId}?clubId=${clubId}${notifyDelete ? '' : '&notify=false'}`, { method: 'DELETE' });
             onBack();
         } catch (err) {
+            setDeleteOpen(false);
             setDeleteError(t(memberErrorKey(err)));
             setDeleting(false);
         }
@@ -441,7 +469,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
         try {
             await apiFetch(`/meetings/${meetingId}?clubId=${clubId}`, {
                 method: 'PATCH',
-                body: { agenda, minutes, status },
+                body: { agenda, ...(meeting?.type === 'mitgliederversammlung' ? {} : { minutes }), status, ...(status === 'abgesagt' && meeting?.status !== 'abgesagt' && !notifyStatus ? { notify: false } : {}) },
             });
             setSaved(true);
             setEditing(false);
@@ -461,7 +489,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
         try {
             await apiFetch(`/meetings/${meetingId}/invitees?clubId=${clubId}`, {
                 method: 'POST',
-                body: { memberId: newInviteeId.trim() },
+                body: { memberId: newInviteeId.trim(), ...(notifyInvite ? {} : { notify: false }) },
             });
             setNewInviteeId('');
             await load();
@@ -520,6 +548,8 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
     }
 
     const attendancePatch = buildAttendancePatch(storedAttendance, attendanceEdits);
+    // Rows of erased members (`memberId: null`) stay for quorum and votes; they are shown read-only as "Gelöschtes Mitglied".
+    const erasedAttendance = storedAttendance.filter((r) => r.memberId === null);
 
     async function handleSaveAttendance() {
         setAttendanceError(null);
@@ -629,6 +659,9 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
 
     if (!meeting) return detailLoadFailed ? <LoadError onRetry={() => void load()} /> : <LoadingText />;
 
+    // Wave 11: the minutes of a general assembly have their own versioned workflow (see AssemblyMeetingSections).
+    const isAssembly = meeting.type === 'mitgliederversammlung';
+
     const corVoteFields = [
         ['cor-for', 'treffen.resolutions.votes-for', corFor, setCorFor],
         ['cor-against', 'treffen.resolutions.votes-against', corAgainst, setCorAgainst],
@@ -664,7 +697,10 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                             </button>
                             <button
                                 type="button"
-                                onClick={() => void handleDeleteMeeting()}
+                                onClick={() => {
+                                    setNotifyDelete(true);
+                                    setDeleteOpen(true);
+                                }}
                                 disabled={deleting}
                                 className={`${secondaryBtn} inline-flex items-center gap-1.5 !px-3 !py-1.5 !text-destructive`}
                             >
@@ -682,6 +718,19 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                 <StatusBadge status={meeting.status} t={t} />
             </div>
 
+            {isAssembly && (
+                <AssemblyMeetingSections
+                    clubId={clubId}
+                    meeting={meeting}
+                    canManage={canManageAssembly}
+                    canWriteMeetings={canWrite}
+                    canSensitive={canReadSensitive}
+                    ownClubMemberId={ownClubMemberId}
+                    onChanged={() => void load()}
+                    onOpenRules={onOpenRules}
+                />
+            )}
+
             <SectionCard title={t('treffen.agenda')}>
                 {canWrite && editing ? (
                     <div className="space-y-3">
@@ -691,12 +740,14 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                             </label>
                             <textarea id="mt-agenda" value={agenda} onChange={(e) => setAgenda(e.target.value)} rows={4} className={inputClass} />
                         </div>
-                        <div>
-                            <label htmlFor="mt-minutes" className={labelClass}>
-                                {t('treffen.minutes')}
-                            </label>
-                            <textarea id="mt-minutes" value={minutes} onChange={(e) => setMinutes(e.target.value)} rows={4} className={inputClass} />
-                        </div>
+                        {!isAssembly && (
+                            <div>
+                                <label htmlFor="mt-minutes" className={labelClass}>
+                                    {t('treffen.minutes')}
+                                </label>
+                                <textarea id="mt-minutes" value={minutes} onChange={(e) => setMinutes(e.target.value)} rows={4} className={inputClass} />
+                            </div>
+                        )}
                         <div>
                             <label htmlFor="mt-status" className={labelClass}>
                                 {t('treffen.status.edit')}
@@ -704,7 +755,10 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                             <select
                                 id="mt-status"
                                 value={status}
-                                onChange={(e) => setStatus(e.target.value as Meeting['status'])}
+                                onChange={(e) => {
+                                    setStatus(e.target.value as Meeting['status']);
+                                    setNotifyStatus(true);
+                                }}
                                 className={`${inputClass} sm:w-auto`}
                             >
                                 {MEETING_STATUSES.map((s) => (
@@ -714,6 +768,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                                 ))}
                             </select>
                         </div>
+                        {status === 'abgesagt' && meeting.status !== 'abgesagt' && <NotifySwitch checked={notifyStatus} onChange={setNotifyStatus} hintKey="treffen.notify.hint.cancel" t={t} />}
                         <div className="flex flex-wrap gap-2">
                             <button type="button" onClick={() => void handleSaveAgenda()} className={primaryBtn}>
                                 {t('treffen.agenda-minutes.save')}
@@ -738,12 +793,14 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                         <p className="whitespace-pre-line text-sm text-foreground">
                             {meeting.agenda || <span className="text-muted-foreground">{t('treffen.agenda.empty')}</span>}
                         </p>
-                        <div>
-                            <p className={labelClass}>{t('treffen.minutes')}</p>
-                            <p className="whitespace-pre-line text-sm text-foreground">
-                                {meeting.minutes || <span className="text-muted-foreground">{t('treffen.minutes.empty')}</span>}
-                            </p>
-                        </div>
+                        {!isAssembly && (
+                            <div>
+                                <p className={labelClass}>{t('treffen.minutes')}</p>
+                                <p className="whitespace-pre-line text-sm text-foreground">
+                                    {meeting.minutes || <span className="text-muted-foreground">{t('treffen.minutes.empty')}</span>}
+                                </p>
+                            </div>
+                        )}
                         {saved && <p className="text-xs text-success">{t('treffen.agenda-minutes.saved')}</p>}
                         {canWrite && (
                             <button type="button" onClick={() => setEditing(true)} className={`${secondaryBtn} !px-3 !py-1.5`}>
@@ -828,7 +885,12 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                             <label htmlFor="mt-invitee" className={labelClass}>
                                 {t('treffen.invitees.add')}
                             </label>
-                            <select id="mt-invitee" value={newInviteeId} onChange={(e) => setNewInviteeId(e.target.value)} className={inputClass}>
+                            <select id="mt-invitee" value={newInviteeId} onChange={(e) => {
+                                    setNewInviteeId(e.target.value);
+                                    setNotifyInvite(true);
+                                }}
+                                className={inputClass}
+                            >
                                 <option value="">—</option>
                                 {members
                                     .filter((m) => !m.left && !invitees.some((inv) => inv.memberId === m.id))
@@ -840,6 +902,11 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                             </select>
                         </div>
                         {directoryError && <p className="w-full text-xs text-destructive">{t('verein.directory.error')}</p>}
+                        {newInviteeId && (
+                            <div className="w-full">
+                                <NotifySwitch checked={notifyInvite} onChange={setNotifyInvite} hintKey="treffen.notify.hint.invite" t={t} />
+                            </div>
+                        )}
                         <button type="button" onClick={() => void handleAddInvitee()} disabled={!newInviteeId} className={primaryBtn}>
                             {t('treffen.invitees.invite')}
                         </button>
@@ -928,7 +995,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
             <SectionCard title={t('treffen.attendance.title')}>
                 {attendanceLoadFailed ? (
                     <ErrorText>{t('treffen.attendance.loadError')}</ErrorText>
-                ) : invitees.length === 0 ? (
+                ) : invitees.length === 0 && erasedAttendance.length === 0 ? (
                     <p className="text-sm text-muted-foreground">{t('treffen.attendance.empty')}</p>
                 ) : (
                     <div className="overflow-x-auto rounded-lg border border-border">
@@ -991,6 +1058,14 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                                         </tr>
                                     );
                                 })}
+                                {erasedAttendance.map((row, index) => (
+                                    <tr key={`erased-${index}`} className="border-b border-border text-muted-foreground last:border-b-0">
+                                        <td className="px-3 py-2 italic">{t('privacy.erased.member')}</td>
+                                        <td className="px-3 py-2 text-center">{row.present ? '✓' : '✕'}</td>
+                                        <td className="px-3 py-2 text-center">{row.hasVotingRight ? '✓' : '✕'}</td>
+                                        <td className="px-3 py-2">—</td>
+                                    </tr>
+                                ))}
                             </tbody>
                         </table>
                     </div>
@@ -1230,20 +1305,44 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, onBack }: { clubId: str
                             <input id="me-scheduled" type="datetime-local" value={metaScheduled} onChange={(e) => setMetaScheduled(e.target.value)} className={inputClass} />
                             <p className="mt-1 text-xs text-muted-foreground">{t('treffen.scheduled-at.hint')}</p>
                         </div>
+                        {metaScheduled !== toDatetimeLocal(meeting.scheduledAt) && <NotifySwitch checked={notifyMeta} onChange={setNotifyMeta} hintKey="treffen.notify.hint.reschedule" t={t} />}
                         {metaError && <ErrorText>{metaError}</ErrorText>}
                     </form>
+                </Modal>
+            )}
+
+            {canWrite && (
+                <Modal
+                    open={deleteOpen}
+                    onClose={deleting ? () => {} : () => setDeleteOpen(false)}
+                    title={t('treffen.delete')}
+                    footer={
+                        <div className="flex justify-end gap-2">
+                            <button type="button" onClick={() => setDeleteOpen(false)} disabled={deleting} className={secondaryBtn}>
+                                {t('treffen.cancel')}
+                            </button>
+                            <button type="button" onClick={() => void handleDeleteMeeting()} disabled={deleting} className="rounded-lg bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground disabled:opacity-60">
+                                {t('treffen.delete')}
+                            </button>
+                        </div>
+                    }
+                >
+                    <div className="space-y-4">
+                        <p className="text-sm text-foreground">{t('treffen.delete.confirm', { title: meeting.title })}</p>
+                        <NotifySwitch checked={notifyDelete} onChange={setNotifyDelete} hintKey="treffen.notify.hint.delete" t={t} />
+                    </div>
                 </Modal>
             )}
         </div>
     );
 }
 
-export default function TreffenPanel({ clubId, canWrite }: { clubId: string; canWrite: boolean }) {
+export default function TreffenPanel({ clubId, canWrite, canManageAssembly = false, canReadSensitive = false, onOpenRules }: { clubId: string; canWrite: boolean; canManageAssembly?: boolean; canReadSensitive?: boolean; onOpenRules?: () => void }) {
     const { t } = useLanguage();
     const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null);
 
     return selectedMeetingId ? (
-        <MeetingDetail clubId={clubId} meetingId={selectedMeetingId} t={t} canWrite={canWrite} onBack={() => setSelectedMeetingId(null)} />
+        <MeetingDetail clubId={clubId} meetingId={selectedMeetingId} t={t} canWrite={canWrite} canManageAssembly={canManageAssembly} canReadSensitive={canReadSensitive} onOpenRules={onOpenRules} onBack={() => setSelectedMeetingId(null)} />
     ) : (
         <MeetingList clubId={clubId} t={t} canWrite={canWrite} onSelect={setSelectedMeetingId} />
     );

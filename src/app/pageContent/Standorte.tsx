@@ -3,10 +3,13 @@
 import { useEffect, useState } from 'react';
 
 import { apiFetch } from '@/lib/api-client';
+import { chooseClub } from '@/lib/activeClub';
 import { isGuestRole } from '@/lib/loans';
 import { useLanguage } from '@/contexts/LanguageContext';
+import HelpLink from '@/components/HelpLink';
 import StandorteTab, { type Location } from '@/components/standorte/StandorteTab';
 import MaterialTab from '@/components/standorte/MaterialTab';
+import OccupancyTab from '@/components/standorte/OccupancyTab';
 import LoadingText from '@/components/LoadingText';
 import LoadError from '@/components/LoadError';
 
@@ -17,7 +20,7 @@ interface MyClub {
     orgRole: string;
 }
 
-type Tab = 'standorte' | 'material';
+type Tab = 'standorte' | 'material' | 'belegung';
 
 export default function StandortePageContent() {
     const { t } = useLanguage();
@@ -30,7 +33,7 @@ export default function StandortePageContent() {
     const [ownMemberId, setOwnMemberId] = useState<string | null>(null);
     const [isGuest, setIsGuest] = useState(false);
 
-    const activeClub = clubs?.[0] ?? null;
+    const activeClub = chooseClub(clubs) ?? null;
 
     function loadClubs() {
         apiFetch<{ data: MyClub[] }>('/my-clubs')
@@ -76,7 +79,10 @@ export default function StandortePageContent() {
 
     return (
         <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
-            <h1 className="text-2xl font-bold text-foreground">{t('standorte.page.title')}</h1>
+            <div className="flex items-center gap-1">
+                <h1 className="text-2xl font-bold text-foreground">{t('standorte.page.title')}</h1>
+                <HelpLink topic="places" />
+            </div>
 
             {loadError ? (
                 <LoadError className="mt-6" onRetry={() => (activeClub ? void refreshLocations(activeClub.clubId) : loadClubs())} />
@@ -90,7 +96,7 @@ export default function StandortePageContent() {
             ) : (
                 <>
                     <div className="mt-6 flex gap-2 border-b border-border">
-                        {(['standorte', 'material'] as const).map((value) => (
+                        {(['standorte', 'material', 'belegung'] as const).map((value) => (
                             <button
                                 key={value}
                                 type="button"
@@ -118,6 +124,8 @@ export default function StandortePageContent() {
                                         onLocationsChanged={() => void refreshLocations(activeClub.clubId)}
                                     />
                                 )}
+                                {tab === 'belegung' && isGuest && <p className="rounded-lg bg-muted px-3 py-3 text-sm text-muted-foreground">{t('occupancy.guest')}</p>}
+                                {tab === 'belegung' && !isGuest && <OccupancyTab clubId={activeClub.clubId} locations={locations} canWrite={permissions.includes('locations:write')} />}
                                 {tab === 'material' && (
                                     <MaterialTab clubId={activeClub.clubId} locations={locations} canWrite={permissions.includes('inventory:write')} ownMemberId={ownMemberId} isGuest={isGuest} />
                                 )}

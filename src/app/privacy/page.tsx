@@ -15,5 +15,5 @@ export default async function PrivacyPolicyPage() {
     // Forces dynamic rendering so the proxy's per-request CSP nonce applies -- see login-signup/page.tsx.
     await connection();
 
-    return <LegalDocument keyPrefix="legal.privacy" sectionCount={7} />;
+    return <LegalDocument keyPrefix="legal.privacy" sectionCount={11} />;
 }

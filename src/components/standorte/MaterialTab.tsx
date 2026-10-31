@@ -1,11 +1,12 @@
 'use client';
 
+import { dateLocale } from '@/lib/clubMembers';
 import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, ArrowLeft, MapPin, Package, Pencil, Plus, Search, Trash2, Wrench } from 'lucide-react';
 
 import { useAccountMembers } from '@/lib/useAccountMembers';
 import { ApiError, apiFetch } from '@/lib/api-client';
-import { canBorrow, canReturn } from '@/lib/loans';
+import { buildExtension, canBorrow, canExtend, canReturn } from '@/lib/loans';
 import type { ClubSettings } from '@/lib/memberLifecycle';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { Location } from '@/components/standorte/StandorteTab';
@@ -83,9 +84,9 @@ function conditionTone(condition: string): Tone {
     return 'muted';
 }
 
-function formatEuros(cents: number | null): string {
+function formatEuros(cents: number | null, language: string): string {
     if (cents === null) return '—';
-    return `${(cents / 100).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+    return `${(cents / 100).toLocaleString(dateLocale(language), { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
 }
 
 function ItemChips({ item, t }: { item: InventoryItem; t: T }) {
@@ -268,6 +269,7 @@ function ItemList({
     onChange: () => void;
     onSelect: (id: string) => void;
 }) {
+    const { language } = useLanguage();
     const [showCreate, setShowCreate] = useState(false);
     const [query, setQuery] = useState('');
     const [category, setCategory] = useState<string | null>(null);
@@ -345,7 +347,7 @@ function ItemList({
                                         </>
                                     )}
                                 </span>
-                                {item.acquisitionValueCents !== null && <span className="shrink-0">{formatEuros(item.acquisitionValueCents)}</span>}
+                                {item.acquisitionValueCents !== null && <span className="shrink-0">{formatEuros(item.acquisitionValueCents, language)}</span>}
                             </div>
                         </button>
                     ))}
@@ -385,6 +387,22 @@ function LoansSection({
     const [actionError, setActionError] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
     const { members, error: directoryError } = useAccountMembers(clubId);
+    const [extending, setExtending] = useState<InventoryLoan | null>(null);
+    const [extendDate, setExtendDate] = useState('');
+
+    /** Resolves to an error message or null (FormModal shows it and closes on success). */
+    async function submitExtension(): Promise<string | null> {
+        if (!extending) return null;
+        const built = buildExtension(extendDate, extending.dueAt);
+        if ('problem' in built) return t(`standorte.loans.extend.err.${built.problem}`);
+        try {
+            await apiFetch(`/inventory-items/${itemId}/loans/${extending.id}?clubId=${encodeURIComponent(clubId)}`, { method: 'PATCH', body: { dueAt: built.dueAt } });
+            await loadLoans();
+            return null;
+        } catch (err) {
+            return err instanceof ApiError && err.status === 403 ? t('standorte.loans.extend.err.forbidden') : errorMessage(err, t);
+        }
+    }
 
     async function loadLoans() {
         const loansRes = await apiFetch<{ data: InventoryLoan[] }>(`/inventory-items/${itemId}/loans?clubId=${clubId}`);
@@ -468,6 +486,19 @@ function LoansSection({
                                         <Chip tone={loanTone[loan.status] ?? 'muted'}>{t(`standorte.loans.status.${loan.status}`)}</Chip>
                                     </td>
                                     <td className="whitespace-nowrap px-3 py-2 text-right">
+                                        {canExtend(loan, canManage) && (
+                                            <button
+                                                type="button"
+                                                disabled={busy}
+                                                onClick={() => {
+                                                    setExtending(loan);
+                                                    setExtendDate('');
+                                                }}
+                                                className={`${secondaryButtonClass} mr-2`}
+                                            >
+                                                {t('standorte.loans.extend')}
+                                            </button>
+                                        )}
                                         {canReturn(loan, ownMemberId, canManage) && (
                                             <button
                                                 type="button"
@@ -484,6 +515,26 @@ function LoansSection({
                         </tbody>
                     </table>
                 </div>
+            )}
+            {extending && (
+                <FormModal
+                    open
+                    title={t('standorte.loans.extend')}
+                    submitLabel={t('standorte.loans.extend.submit')}
+                    cancelLabel={t('standorte.items.new.cancel')}
+                    canSubmit={extendDate !== ''}
+                    onClose={() => setExtending(null)}
+                    onSubmit={submitExtension}
+                >
+                    <p className="text-sm text-muted-foreground">{t('standorte.loans.extend.current', { date: formatDate(extending.dueAt, language) })}</p>
+                    <div>
+                        <label htmlFor="loan-extend-date" className="mb-1 block text-xs font-semibold text-muted-foreground">
+                            {t('standorte.loans.extend.newDate')}
+                        </label>
+                        <input id="loan-extend-date" type="date" required value={extendDate} onChange={(e) => setExtendDate(e.target.value)} className={inputClass} />
+                        <p className="mt-1 text-xs text-muted-foreground">{t('standorte.loans.extend.hint')}</p>
+                    </div>
+                </FormModal>
             )}
         </SectionCard>
     );
@@ -618,7 +669,7 @@ function ItemDetail({
     const facts: [string, string][] = [
         [t('standorte.items.table.category'), item.category ?? '—'],
         [t('standorte.items.table.location'), locations.find((l) => l.id === item.locationId)?.name ?? '—'],
-        [t('standorte.items.table.value'), formatEuros(item.acquisitionValueCents)],
+        [t('standorte.items.table.value'), formatEuros(item.acquisitionValueCents, language)],
         [t('standorte.items.new.acquiredAt'), formatDate(item.acquiredAt, language)],
         [t('standorte.items.new.maintenanceInterval'), item.maintenanceIntervalDays !== null ? String(item.maintenanceIntervalDays) : '—'],
         [t('standorte.items.new.lastMaintenance'), formatDate(item.lastMaintenanceAt, language)],
@@ -706,7 +757,7 @@ export default function MaterialTab({ clubId, locations, canWrite, ownMemberId, 
 
     useEffect(() => {
         let cancelled = false;
-        apiFetch<{ data: ClubSettings }>(`/club-settings?clubId=${clubId}`)
+        apiFetch<{ data: ClubSettings }>(`/club-settings?clubId=${encodeURIComponent(clubId)}`)
             .then((res) => {
                 if (!cancelled) setAllowSelfLoans(res.data.allowSelfLoans);
             })

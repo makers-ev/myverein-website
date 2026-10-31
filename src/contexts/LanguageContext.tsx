@@ -13,9 +13,23 @@ import AuthTranslation from './AuthTranslation';
 import LegalTranslation from './LegalTranslation';
 import NotificationTranslation from './NotificationTranslation';
 import VereinTranslation from './VereinTranslation';
+import DocumentsTranslation from './DocumentsTranslation';
+import FormsTranslation from './FormsTranslation';
+import FormBuilderTranslation from './FormBuilderTranslation';
+import CustomFieldsTranslation from './CustomFieldsTranslation';
+import ProfileModulesTranslation from './ProfileModulesTranslation';
+import CommunicationTranslation from './CommunicationTranslation';
+import PrivacyTranslation from './PrivacyTranslation';
 import KalenderTranslation from './KalenderTranslation';
+import EventsCommonTranslation from './EventsCommonTranslation';
+import EventAttendanceTranslation from './EventAttendanceTranslation';
+import EventRegistrationTranslation from './EventRegistrationTranslation';
+import EventHelpersTranslation from './EventHelpersTranslation';
+import EventRidesTranslation from './EventRidesTranslation';
 import TreffenTranslation from './TreffenTranslation';
+import AssemblyTranslation from './AssemblyTranslation';
 import VerfuegbarkeitTranslation from './VerfuegbarkeitTranslation';
+import UxTranslation from './UxTranslation';
 import StandorteTranslation from './StandorteTranslation';
 import RoadmapTranslation from './RoadmapTranslation';
 import ChangelogTranslation from './ChangelogTranslation';
@@ -48,8 +62,21 @@ export const translations: Record<Language, Record<string, string>> = supportedL
             ...NotificationTranslation[id],
             ...(id === 'de' || id === 'en' ? LegalTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? VereinTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? DocumentsTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? FormsTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? FormBuilderTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? CustomFieldsTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? ProfileModulesTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? CommunicationTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? PrivacyTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? KalenderTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? EventsCommonTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? EventAttendanceTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? EventRegistrationTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? EventHelpersTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? EventRidesTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? TreffenTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? AssemblyTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? VerfuegbarkeitTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? StandorteTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? RoadmapTranslation[id] : {}),
@@ -60,6 +87,7 @@ export const translations: Record<Language, Record<string, string>> = supportedL
             ...(id === 'de' || id === 'en' ? MarketingHeroTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? MarketingStoryTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? MarketingTrustTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? UxTranslation[id] : {}),
         };
         return acc;
     },

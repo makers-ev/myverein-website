@@ -4,9 +4,11 @@ import { useEffect, useState } from 'react';
 import { History, Info } from 'lucide-react';
 
 import MemberAccountSection from '@/components/verein/MemberAccountSection';
+import MemberCustomFields from '@/components/verein/MemberCustomFields';
 import MemberPhotoSection from '@/components/verein/MemberPhotoSection';
 import MemberStatusDialog from '@/components/verein/MemberStatusDialog';
 import { Modal } from '@/components/Modal';
+import MemberDocuments from '@/components/documents/MemberDocuments';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api-client';
 import { useThrottledCallback } from '@/lib/useThrottledCallback';
@@ -161,6 +163,9 @@ export default function MemberFormModal({
     departments,
     canReadSensitive,
     canManageAccount,
+    canDocuments = false,
+    canAcknowledge = false,
+    canManageCard = false,
     onClose,
     onChanged,
 }: {
@@ -173,6 +178,12 @@ export default function MemberFormModal({
     canReadSensitive: boolean;
     /** `members:write`: invite / unlink the account (Wave 7 W3). */
     canManageAccount: boolean;
+    /** `documents:read_personal`: tab "Dokumente" of the member file (Wave 13 W4). */
+    canDocuments?: boolean;
+    /** Documents tab: may ask the person for a confirmation (`documents:write` / `documents:manage`, Wave 13 W4). */
+    canAcknowledge?: boolean;
+    /** Documents tab: issue / re-issue / revoke the membership card (`member_cards:manage`, Wave 13 W8). */
+    canManageCard?: boolean;
     onClose: () => void;
     /** Something was saved on the server (list should reload). */
     onChanged: () => void;
@@ -189,6 +200,9 @@ export default function MemberFormModal({
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [statusOpen, setStatusOpen] = useState(false);
+    // Unsaved edits of the custom fields section (it saves with its own button).
+    const [customDirty, setCustomDirty] = useState(false);
+    const [panel, setPanel] = useState<'data' | 'docs'>('data');
 
     // Which sensitive fields the backend delivered for this member (edit); in create everything the caller may write.
     const has = (key: SensitiveKey | 'memberNumber') => (isCreate ? key !== 'memberNumber' || canReadSensitive : member?.[key] !== undefined);
@@ -345,7 +359,7 @@ export default function MemberFormModal({
     }
 
     const dirty = isCreate || JSON.stringify(values) !== JSON.stringify(original);
-    const touched = JSON.stringify(values) !== JSON.stringify(original) || (isCreate && (status !== 'aktiv' || joinedAt !== ''));
+    const touched = JSON.stringify(values) !== JSON.stringify(original) || (isCreate && (status !== 'aktiv' || joinedAt !== '')) || customDirty;
 
     // Esc, the X and a click on the backdrop all end up here: never drop typed input without asking.
     function requestClose() {
@@ -378,12 +392,31 @@ export default function MemberFormModal({
                     </div>
                 }
             >
+                {!isCreate && member && canDocuments && (
+                    <div role="tablist" aria-label={title} className="mb-4 flex gap-2 border-b border-border">
+                        {(['data', 'docs'] as const).map((value) => (
+                            <button
+                                key={value}
+                                type="button"
+                                role="tab"
+                                aria-selected={panel === value}
+                                onClick={() => setPanel(value)}
+                                className={`whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium ${panel === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                            >
+                                {t(value === 'data' ? 'docs.member.tab.data' : 'docs.member.tab.docs')}
+                            </button>
+                        ))}
+                    </div>
+                )}
+                {!isCreate && member && canDocuments && panel === 'docs' && <MemberDocuments clubId={clubId} memberId={member.id} canAcknowledge={canAcknowledge} canManageCard={canManageCard} />}
+                <div hidden={!isCreate && !!member && canDocuments && panel === 'docs'}>
                 {isCreate && (
                     <div className="mb-4 flex gap-2 rounded-lg border border-border bg-muted/50 p-3 text-xs text-foreground">
                         <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
                         <div className="space-y-1">
                             <p>{t('verein.form.create.noAccountHint')}</p>
                             <p>{t('verein.form.create.minorsHint')}</p>
+                            <p>{t('privacy.create.art14')}</p>
                         </div>
                     </div>
                 )}
@@ -557,6 +590,12 @@ export default function MemberFormModal({
 
                 {!isCreate && member && (
                     <div className="mt-5">
+                        <MemberCustomFields clubId={clubId} target={member.id} showSensitiveNote={!canReadSensitive} onDirtyChange={setCustomDirty} />
+                    </div>
+                )}
+
+                {!isCreate && member && (
+                    <div className="mt-5">
                         <h3 className="text-sm font-bold text-foreground">{t('verein.form.departments.title')}</h3>
                         <p className="text-xs text-muted-foreground">{t('verein.form.departments.hint')}</p>
                         {current.length === 0 ? (
@@ -625,6 +664,7 @@ export default function MemberFormModal({
                         {error}
                     </p>
                 )}
+                </div>
             </Modal>
 
             {statusOpen && member && (

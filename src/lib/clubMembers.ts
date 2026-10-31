@@ -76,6 +76,9 @@ export interface ClubMember {
     roles: MemberRole[];
     departments: MemberDepartment[];
     email?: string | null;
+    /** Separate name parts; absent on older backends (read as empty). */
+    firstName?: string | null;
+    lastName?: string | null;
     contactEmail?: string | null;
     memberNumber?: string | null;
     birthDate?: string | null;
@@ -102,6 +105,8 @@ export interface MemberCategory {
     key: string;
     name: string;
     votingRight: boolean;
+    /** Applicants may choose it in the application form (`false` = only the board assigns it). Absent in old responses. */
+    applicantSelectable?: boolean;
     minAge: number | null;
     maxAge: number | null;
     autoTransitionToKey: string | null;
@@ -157,6 +162,13 @@ export function historyStatusKey(status: string | null | undefined): string | nu
 /** Today as `YYYY-MM-DD` in the club's time zone (Europe/Berlin), not the browser's -- matches the backend's "today". */
 export function todayIso(): string {
     return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+}
+
+/** `YYYY-MM-DD` plus whole days (calendar arithmetic in UTC, so no DST surprises). */
+export function addDaysIso(iso: string, days: number): string {
+    const d = new Date(`${iso}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + days);
+    return d.toISOString().slice(0, 10);
 }
 
 /** True when an exit is booked for a future key date (stored status still live, `leftAt` in the future). */
@@ -232,6 +244,8 @@ export function currentDepartments(m: Pick<ClubMember, 'departments'>): MemberDe
  */
 export function memberErrorKey(err: unknown): string {
     if (!(err instanceof ApiError)) return 'verein.err.network';
+    // Wave 10: the processor agreement is not accepted yet and the grace period is over -- every write says so in plain words.
+    if (err.status === 403 && (err.code === 'DPA_REQUIRED' || (err.details as { code?: unknown } | undefined)?.code === 'dpa_required')) return 'privacy.err.dpaRequired';
     const m = err.message;
     // Wave 7 B4/B6 conflicts carry a machine-readable `details.code`; it wins over the message text.
     const detailsCode = (err.details as { code?: unknown } | undefined)?.code;
@@ -246,10 +260,16 @@ export function memberErrorKey(err: unknown): string {
             return 'verein.err.exitPending';
         case 'exit_already_scheduled':
             return 'verein.err.exitScheduled';
-        case 'merge_not_supported':
-            return 'verein.err.mergeNotSupported';
+        case 'merge_conflict':
+            return 'verein.err.mergeConflict';
+        case 'merge_busy':
+            return 'verein.err.mergeBusy';
+        case 'already_member':
+            return 'verein.err.alreadyMember';
         case 'account_has_open_items':
             return 'verein.err.accountOpenItems';
+        case 'default_calendar_required':
+            return 'kalender.err.defaultCalendarRequired';
         case 'export_too_large':
             return 'verein.err.exportTooLarge';
         case 'unknown_column':

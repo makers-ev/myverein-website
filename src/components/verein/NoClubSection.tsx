@@ -7,6 +7,7 @@ import { apiFetch } from '@/lib/api-client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ClubRegistrationWizard from '@/components/verein/ClubRegistrationWizard';
 import JoinClubCard from '@/components/verein/JoinClubCard';
+import RejectedApplicationNotice from '@/components/verein/RejectedApplicationNotice';
 import RegistrationStatusCard from '@/components/verein/RegistrationStatusCard';
 import type { ClubRegistration, RegistrationNotice } from '@/components/verein/clubRegistration';
 import LoadingText from '@/components/LoadingText';
@@ -94,6 +95,8 @@ export default function NoClubSection({ onRefreshClubs }: { onRefreshClubs: () =
 
     return (
         <>
+            <RejectedApplicationNotice />
+
             {loadError && (
                 <div className="mt-6 flex flex-wrap items-center gap-3 rounded-lg border border-destructive/40 px-3 py-2" role="alert">
                     <p className="text-sm text-destructive">{t('verein.create.loadError')}</p>

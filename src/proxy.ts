@@ -70,10 +70,17 @@ export function proxy(request: NextRequest) {
     // `<backend>/media/...` URLs (media security layer), loaded by plain <img>.
     const backendOrigin = process.env.NEXT_PUBLIC_BACKEND_URL ?? "'self'";
 
+    // /verein hosts the sandboxed club-mail preview iframe. A srcdoc iframe inherits this page's CSP (a <meta> CSP inside
+    // it can only tighten, never relax), and the e-mail HTML styles itself with inline `style="..."` attributes, which a
+    // nonce cannot cover. So only that page allows inline style ATTRIBUTES (no <style> blocks, no scripts).
+    const path = request.nextUrl.pathname;
+    const allowInlineStyleAttr = path === '/verein' || path.startsWith('/verein/');
+
     const cspHeader = `
         default-src 'self';
         script-src 'self' ${isDev ? "'unsafe-inline' 'unsafe-eval'" : `'nonce-${nonce}' 'strict-dynamic'`};
         style-src 'self' ${isDev ? "'unsafe-inline'" : `'nonce-${nonce}'`};
+        ${allowInlineStyleAttr && !isDev ? "style-src-attr 'unsafe-inline';" : ''}
         img-src 'self' blob: data: ${backendOrigin};
         font-src 'self';
         connect-src 'self' ${backendOrigin};
@@ -99,8 +106,9 @@ export function proxy(request: NextRequest) {
     response.headers.set('Content-Security-Policy', contentSecurityPolicyHeaderValue);
     response.headers.set('X-Frame-Options', 'DENY');
     response.headers.set('X-Content-Type-Options', 'nosniff');
-    // The invitation landing page carries a secret token in its URL: never send that URL on as Referer.
-    const invitationPage = request.nextUrl.pathname === '/einladung' || request.nextUrl.pathname.startsWith('/einladung/');
+    // The invitation and unsubscribe landing pages carry a secret token in their URL: never send that URL on as Referer.
+    const tokenPaths = ['/einladung', '/abmelden', '/anmeldung'];
+    const invitationPage = tokenPaths.some((p) => request.nextUrl.pathname === p || request.nextUrl.pathname.startsWith(`${p}/`));
     response.headers.set('Referrer-Policy', invitationPage ? 'no-referrer' : 'strict-origin-when-cross-origin');
 
     return response;

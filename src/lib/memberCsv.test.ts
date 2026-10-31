@@ -18,7 +18,9 @@ vi.mock('./auth-client', () => ({ backendUrl: 'http://backend.test' }));
 import { ApiError } from './api-client';
 import {
     buildExportQuery,
+    customExportColumn,
     decodeCsvBytes,
+    exportableCustomFields,
     headerConflicts,
     importVoidCode,
     isRateLimited,
@@ -168,6 +170,25 @@ describe('export columns', () => {
         expect(q.get('category')).toBe('jugend');
         expect(q.has('departmentId')).toBe(false);
         expect(q.get('includeFormer')).toBe('true');
+    });
+
+    it('appends custom fields as cf:<key> columns after the standard ones', () => {
+        const filters = { status: '', category: '', departmentId: '', includeFormer: false };
+        const q = new URLSearchParams(buildExportQuery('club1', ['displayName'], filters, false, ['trikot', 'Bad Key', 'trikot', 'groesse']));
+        expect(q.get('columns')).toBe('displayName,cf:trikot,cf:groesse');
+        expect(new URLSearchParams(buildExportQuery('club1', ['displayName'], filters, false)).get('columns')).toBe('displayName');
+    });
+
+    it('offers only live custom fields the exporter may read', () => {
+        expect(customExportColumn('trikot')).toBe('cf:trikot');
+        expect(customExportColumn('Trikot')).toBeNull();
+        const defs = [
+            { key: 'trikot', archived: false, sensitive: false },
+            { key: 'allergie', archived: false, sensitive: true },
+            { key: 'alt', archived: true, sensitive: false },
+        ];
+        expect(exportableCustomFields(defs, false).map((d) => d.key)).toEqual(['trikot']);
+        expect(exportableCustomFields(defs, true).map((d) => d.key)).toEqual(['trikot', 'allergie']);
     });
 });
 

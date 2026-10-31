@@ -45,6 +45,8 @@ export interface Location {
     accessNote: string | null;
     /** `true` when the caller lacks `locations:write`/`locations:read_access`: access note and key holders are withheld. */
     accessRestricted?: boolean;
+    /** Wave 12 B19: shown in the occupancy plan and bookable. */
+    bookable?: boolean;
     createdAt: string;
     updatedAt: string;
 }
@@ -174,7 +176,9 @@ function LocationFormModal({ clubId, location, t, onClose, onSaved }: { clubId: 
 
     // Create omits empty fields, edit clears them with null.
     const empty = location ? null : undefined;
+    const [bookable, setBookable] = useState(Boolean(location?.bookable));
     const body = {
+        bookable,
         name: draft.name.trim(),
         address: draft.address.trim() || empty,
         openingHours: draft.openingHours.trim() || empty,
@@ -260,6 +264,13 @@ function LocationFormModal({ clubId, location, t, onClose, onSaved }: { clubId: 
             <Field label={t('standorte.locations.detail.accessNote')}>
                 <textarea value={draft.accessNote} onChange={set('accessNote')} rows={3} className={inputClass} />
             </Field>
+            <label className="flex items-start gap-2 text-sm text-foreground">
+                <input type="checkbox" checked={bookable} onChange={(e) => setBookable(e.target.checked)} className="mt-1" />
+                <span>
+                    {t('occupancy.bookable')}
+                    <span className="block text-xs text-muted-foreground">{t('occupancy.bookable.hint')}</span>
+                </span>
+            </label>
         </FormModal>
     );
 }

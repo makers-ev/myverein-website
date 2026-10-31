@@ -3,12 +3,15 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { CalendarDays, ChevronDown, Clock, LogOut, MapPin, Settings as SettingsIcon, Users } from 'lucide-react';
+import { CalendarDays, FileText, Vote, ChevronDown, Clock, HeartHandshake, LogOut, MapPin, Megaphone, Settings as SettingsIcon, Users } from 'lucide-react';
 
 import { authClient } from '@/lib/auth-client';
+import { clearReminder } from '@/lib/consents';
 import { clearAllStoredInviteTokens } from '@/lib/memberLifecycle';
+import { type AccountScope, loadAccountScope, visibleAppLinks } from '@/lib/familie';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { NotificationBell } from '@/components/NotificationBell';
+import { InboxLink } from '@/components/InboxLink';
 
 export interface AuthNavAppLink {
     name: string;
@@ -20,10 +23,19 @@ export interface AuthNavAppLink {
 // slug/name -> icon map rather than guessing an icon from the href.
 const APP_LINK_ICONS: Record<string, typeof Users> = {
     'nav.verein': Users,
+    'nav.mitteilungen': Megaphone,
     'nav.kalender': CalendarDays,
+    'nav.abstimmungen': Vote,
     'nav.standorte': MapPin,
     'nav.verfuegbarkeit': Clock,
+    'nav.familie': HeartHandshake,
+    'nav.dokumente': FileText,
 };
+
+// Guardian area (Wave 10 W3): offered to accounts with wards; a guardian-only account sees nothing else of the club.
+const FAMILY_LINK: AuthNavAppLink = { name: 'nav.familie', href: '/familie' };
+// Document archive (Wave 13 W2): one page for every club member: archive (folder rights), confirmations, membership card.
+const DOCUMENTS_LINK: AuthNavAppLink = { name: 'nav.dokumente', href: '/dokumente' };
 
 /**
  * Client-side, optimistic auth slot for the Navbar's `guestNav`/`mobileGuestNav`
@@ -37,6 +49,10 @@ export function AuthNav({ appLinks = [] }: { appLinks?: AuthNavAppLink[] }) {
     const router = useRouter();
     const { t } = useLanguage();
     const [isOpen, setIsOpen] = useState(false);
+    // Club / wards of the signed-in account (null = unknown yet: no app links; `scopeFailed` falls back to the full menu, the pages enforce access anyway).
+    const [scope, setScope] = useState<AccountScope | null>(null);
+    const [scopeFailed, setScopeFailed] = useState(false);
+    const signedIn = !!session;
     const ref = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -45,36 +61,56 @@ export function AuthNav({ appLinks = [] }: { appLinks?: AuthNavAppLink[] }) {
                 setIsOpen(false);
             }
         }
+        function handleEscape(event: KeyboardEvent) {
+            if (event.key === 'Escape') setIsOpen(false);
+        }
         document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleEscape);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleEscape);
+        };
     }, []);
+
+    useEffect(() => {
+        if (!signedIn) return;
+        let cancelled = false;
+        loadAccountScope()
+            .then((s) => !cancelled && setScope(s))
+            .catch(() => !cancelled && setScopeFailed(true));
+        return () => {
+            cancelled = true;
+        };
+    }, [signedIn]);
 
     if (isPending) {
         return <div className="h-9 w-20" />;
     }
 
     if (!session) {
-        // Sign-in button hidden on the public-only site.
-        return null;
-        // return (
-        //     <Link
-        //         href="/login-signup"
-        //         className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:brightness-110 transition-colors"
-        //     >
-        //         {t('auth.nav.signin')}
-        //     </Link>
-        // );
+        return (
+            <Link
+                href="/login-signup"
+                className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:brightness-110 transition-colors"
+            >
+                {t('auth.nav.signin')}
+            </Link>
+        );
     }
 
     const displayName = session.user.name ?? session.user.email;
+    const links = visibleAppLinks(appLinks, scope, FAMILY_LINK, scopeFailed, DOCUMENTS_LINK);
 
     return (
         <div className="flex items-center gap-1">
+            <InboxLink />
             <NotificationBell />
             <div className="relative" ref={ref}>
                 <button
                     onClick={() => setIsOpen((v) => !v)}
-                    className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                    aria-expanded={isOpen}
+                    aria-haspopup="true"
+                    className="flex min-h-11 items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors"
                 >
                     <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
                         {displayName.slice(0, 1).toUpperCase()}
@@ -85,9 +121,9 @@ export function AuthNav({ appLinks = [] }: { appLinks?: AuthNavAppLink[] }) {
 
                 {isOpen && (
                     <div className="absolute right-0 mt-2 w-48 origin-top-right rounded-xl border border-border bg-card p-2 shadow-lg ring-1 ring-black/5">
-                        {appLinks.length > 0 && (
+                        {links.length > 0 && (
                             <>
-                                {appLinks.map((link) => {
+                                {links.map((link) => {
                                     const Icon = APP_LINK_ICONS[link.name];
                                     return (
                                         <Link
@@ -116,6 +152,7 @@ export function AuthNav({ appLinks = [] }: { appLinks?: AuthNavAppLink[] }) {
                             onClick={async () => {
                                 setIsOpen(false);
                                 clearAllStoredInviteTokens();
+                                clearReminder();
                                 await authClient.signOut();
                                 router.push('/');
                                 router.refresh();

@@ -7,29 +7,29 @@ describe('resolveCallbackUrl', () => {
     });
 
     it('falls back to the default when there is no callbackUrl', () => {
-        expect(resolveCallbackUrl(null)).toBe('/settings');
+        expect(resolveCallbackUrl(null)).toBe('/heute');
     });
 
     it('rejects a protocol-relative URL (open-redirect attempt)', () => {
-        expect(resolveCallbackUrl('//evil.com')).toBe('/settings');
+        expect(resolveCallbackUrl('//evil.com')).toBe('/heute');
     });
 
     it('rejects an absolute URL', () => {
-        expect(resolveCallbackUrl('https://evil.com')).toBe('/settings');
+        expect(resolveCallbackUrl('https://evil.com')).toBe('/heute');
     });
 
     it('rejects a path with no leading slash', () => {
-        expect(resolveCallbackUrl('evil.com')).toBe('/settings');
+        expect(resolveCallbackUrl('evil.com')).toBe('/heute');
     });
 
     it('rejects a backslash after the leading slash (browsers treat it as //)', () => {
-        expect(resolveCallbackUrl('/\\evil.com')).toBe('/settings');
+        expect(resolveCallbackUrl('/\\evil.com')).toBe('/heute');
     });
 });
 
 describe('verify-email round trip', () => {
     it('adds a non-default target to the verification callback', () => {
-        expect(verifyEmailCallback('https://a.test', '/settings')).toBe('https://a.test/verify-email');
+        expect(verifyEmailCallback('https://a.test', '/heute')).toBe('https://a.test/verify-email');
         expect(verifyEmailCallback('https://a.test', '/einladung')).toBe('https://a.test/verify-email?callbackUrl=%2Feinladung');
     });
 

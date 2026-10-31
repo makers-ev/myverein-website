@@ -33,6 +33,23 @@ export interface CalendarEvent {
     endsAt: string | null;
     category: string | null;
     capacity: number | null;
+    /** Wave 9: an event is cancelled instead of deleted (`POST /events/:id/cancel`); older backends omit these. */
+    cancelled?: boolean;
+    cancelledAt?: string | null;
+    cancelReason?: string | null;
+    /** Wave 12 B3: all-day events show no time of day; `endsAt` is 23:59:59 local of the LAST day. Older backends omit the fields below. */
+    allDay?: boolean;
+    myRsvp?: RsvpStatus | null;
+    attendeeCount?: number;
+    waitlistCount?: number;
+    seriesId?: string | null;
+    originalStartsAt?: string | null;
+    isOverride?: boolean;
+    /** Wave 12 B13: display-only cost hint and the attendance switch. */
+    costNote?: string | null;
+    costCents?: number | null;
+    attendanceTracking?: boolean;
+    locationId?: string | null;
 }
 
 export type RsvpStatus = 'angemeldet' | 'warteliste';
@@ -63,10 +80,72 @@ export function formatTime(iso: string, language: string): string {
 }
 
 export function formatTimeRange(ev: CalendarEvent, language: string): string {
+    if (ev.allDay) return '';
     return ev.endsAt ? `${formatTime(ev.startsAt, language)} – ${formatTime(ev.endsAt, language)}` : formatTime(ev.startsAt, language);
 }
 
 /** Plain-language (translated) text for a failed API call; never the raw English server message. */
 export function errorMessage(err: unknown, t: (key: string) => string): string {
     return t(memberErrorKey(err));
+}
+
+/** The default calendar is the only one: backend forbids deleting it or un-defaulting/department-scoping it. */
+export function isLockedDefaultCalendar(calendar: Calendar, calendars: Calendar[]): boolean {
+    return calendar.isDefault && calendars.length <= 1;
+}
+
+/** Calendar preselected for new events: the club default, else the first one, else none. */
+export function defaultCalendarId(calendars: Calendar[]): string {
+    return (calendars.find((c) => c.isDefault) ?? calendars[0])?.id ?? '';
+}
+
+/** Whether the edit changed when the event takes place (drives the "members will be notified" hint). */
+export function timeChanged(event: Pick<CalendarEvent, 'startsAt' | 'endsAt'>, startsAtIso: string, endsAtIso: string | null): boolean {
+    const same = (a: string | null, b: string | null) => (a === null || b === null ? a === b : new Date(a).getTime() === new Date(b).getTime());
+    return !same(event.startsAt, startsAtIso) || !same(event.endsAt, endsAtIso);
+}
+
+/** Local midnight of the last day an event covers (all-day: local date of the inclusive `endsAt`). */
+export function eventLastDay(ev: Pick<CalendarEvent, 'startsAt' | 'endsAt'>): Date {
+    const start = new Date(ev.startsAt);
+    if (!ev.endsAt) return new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    let end = new Date(ev.endsAt);
+    // An end exactly at midnight belongs to the previous day.
+    if (end.getTime() > start.getTime() && end.getHours() === 0 && end.getMinutes() === 0 && end.getSeconds() === 0 && end.getMilliseconds() === 0) {
+        end = new Date(end.getTime() - 1);
+    }
+    if (end.getTime() < start.getTime()) end = start;
+    return new Date(end.getFullYear(), end.getMonth(), end.getDate());
+}
+
+/** Every local day (YYYY-MM-DD) from the start day to the last day; capped so a broken event cannot freeze the UI. */
+export function eventDayKeys(ev: Pick<CalendarEvent, 'startsAt' | 'endsAt'>): string[] {
+    const start = new Date(ev.startsAt);
+    const last = eventLastDay(ev);
+    const keys: string[] = [];
+    for (let d = new Date(start.getFullYear(), start.getMonth(), start.getDate()); d <= last && keys.length < 366; d = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1)) {
+        keys.push(dayKey(d));
+    }
+    return keys;
+}
+
+export function isMultiDay(ev: Pick<CalendarEvent, 'startsAt' | 'endsAt'>): boolean {
+    return eventDayKeys(ev).length > 1;
+}
+
+/** Whether `key` is a day after the first day of the event ("läuft noch"). */
+export function isContinuation(ev: Pick<CalendarEvent, 'startsAt'>, key: string): boolean {
+    return key !== dayKey(new Date(ev.startsAt));
+}
+
+/** Seats text: "12/15" (or "12" without capacity), the waitlist is added by the caller. */
+export function seatsLabel(ev: Pick<CalendarEvent, 'attendeeCount' | 'capacity'>): string {
+    const count = ev.attendeeCount ?? 0;
+    return ev.capacity != null ? `${count}/${ev.capacity}` : String(count);
+}
+
+/** Local `YYYY-MM-DD` value of an `<input type="date">` as local midnight. */
+export function parseDateInput(value: string, endOfDay = false): Date {
+    const [y, m, d] = value.split('-').map(Number);
+    return endOfDay ? new Date(y, m - 1, d, 23, 59, 59) : new Date(y, m - 1, d);
 }

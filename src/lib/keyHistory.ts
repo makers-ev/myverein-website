@@ -1,4 +1,6 @@
 /** Key history (Wave 7 W11, backend `GET /locations/:id/key-history`). */
+import { dateLocale } from './clubMembers';
+
 
 export const KEY_HISTORY_PAGE_SIZE = 20;
 
@@ -43,5 +45,5 @@ export function pageCount(total: number, pageSize: number): number {
 export function formatBerlinDateTime(iso: string | Date, language: string): string {
     const instant = new Date(iso);
     if (Number.isNaN(instant.getTime())) return '—';
-    return instant.toLocaleString(language === 'de' ? 'de-DE' : 'en-GB', { timeZone: 'Europe/Berlin', dateStyle: 'medium', timeStyle: 'short' });
+    return instant.toLocaleString(dateLocale(language), { timeZone: 'Europe/Berlin', dateStyle: 'medium', timeStyle: 'short' });
 }

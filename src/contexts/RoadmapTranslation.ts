@@ -10,7 +10,7 @@ type Translation = {
 const RoadmapTranslation: Translation = {
     de: {
         'roadmap.title': 'Roadmap',
-        'roadmap.intro': 'So sieht der aktuelle Ausblick aus: alles hier ist geplant, aber noch nicht terminiert.',
+        'roadmap.intro': 'So sieht der aktuelle Ausblick aus: alles hier ist geplant, aber noch nicht terminiert. Was schon fertig ist, steht unter Funktionen und im Änderungsprotokoll. Die Abrechnung von Beiträgen steht bewusst nicht auf der Roadmap.',
         'roadmap.empty': 'Aktuell steht nichts auf der Roadmap.',
         'roadmap.status.planned': 'Geplant',
         'roadmap.status.in-progress': 'In Arbeit',
@@ -27,7 +27,7 @@ const RoadmapTranslation: Translation = {
     },
     en: {
         'roadmap.title': 'Roadmap',
-        'roadmap.intro': "Here's the current outlook: everything here is planned, but not yet scheduled.",
+        'roadmap.intro': 'Here\'s the current outlook: everything here is planned, but not yet scheduled. What is already done is listed under Features and in the changelog. Billing of dues is deliberately not on the roadmap.',
         'roadmap.empty': 'Nothing is on the roadmap right now.',
         'roadmap.status.planned': 'Planned',
         'roadmap.status.in-progress': 'In progress',

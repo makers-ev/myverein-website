@@ -10,6 +10,7 @@ import { PaletteProvider } from "@/components/PaletteProvider";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import CookieConsent from "@/components/CookieConsent";
+import { SkipLink } from "@/components/SkipLink";
 import { AuthNav } from "@/components/AuthNav";
 import Logo from "@/components/Logo";
 import { url, defaultLanguage } from "../../project.config.json";
@@ -58,14 +59,16 @@ export default async function RootLayout({
     { name: "nav.features", href: "/features" },
     { name: "nav.roadmap", href: "/roadmap" },
     { name: "nav.changelog", href: "/changelog" },
-    // { name: "nav.contact", href: "/contact" },
+    { name: "nav.contact", href: "/contact" },
   ];
 
   // Member-only function links, shown inside AuthNav's account dropdown
   // (only rendered once a session exists) rather than in the public navbar.
   const appLinks = [
     { name: "nav.verein", href: "/verein" },
+    { name: "nav.mitteilungen", href: "/mitteilungen" },
     { name: "nav.kalender", href: "/kalender" },
+    { name: "nav.abstimmungen", href: "/abstimmungen" },
     { name: "nav.standorte", href: "/standorte" },
     { name: "nav.verfuegbarkeit", href: "/verfuegbarkeit" },
   ];
@@ -108,13 +111,14 @@ export default async function RootLayout({
         <ThemeProvider nonce={nonce}>
           <PaletteProvider>
             <LanguageProvider initialLanguage={initialLanguage}>
+              <SkipLink />
               <Navbar
                 mainLinks={mainLinks}
                 logo={<Logo />}
                 guestNav={<AuthNav appLinks={appLinks} />}
                 mobileGuestNav={<AuthNav appLinks={appLinks} />}
               />
-              <main className="flex-1">{children}</main>
+              <main id="main-content" tabIndex={-1} className="flex-1 focus:outline-none">{children}</main>
               <Footer />
               <CookieConsent />
             </LanguageProvider>
