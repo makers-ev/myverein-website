@@ -55,7 +55,8 @@ const EventsCommonTranslation: Translation = {
         'events.err.none_running': 'Es läuft gerade keine Zeiterfassung.',
         'events.err.invalid_time': 'Ende muss nach dem Beginn liegen.',
         'events.err.in_future': 'Die Zeit liegt in der Zukunft.',
-        'events.err.too_long': 'Der Eintrag ist zu lang.',
+        'events.err.too_long': 'Der Eintrag ist länger als 16 Stunden. Lösche ihn und trage die Zeit von Hand nach.',
+        'events.err.report_too_large': 'Zu viele Einträge für einen Bericht. Wähle einen kürzeren Zeitraum oder weniger Personen.',
         'events.err.too_old': 'Der Eintrag liegt zu weit zurück.',
         'events.err.entry_overlap': 'Der Eintrag überschneidet sich mit einem anderen.',
         'events.err.entry_decided': 'Der Eintrag ist schon bestätigt oder abgelehnt und kann nicht mehr geändert werden.',
@@ -69,6 +70,8 @@ const EventsCommonTranslation: Translation = {
         'events.err.unknown_entry': 'Dieser Gast steht nicht (mehr) auf der Liste. Bitte lade die Liste neu.',
         'events.err.answers_too_large': 'Die Antworten sind zu lang.',
         'events.err.unknown_column': 'Eine der gewählten Spalten gibt es nicht.',
+        'events.err.rate_overlap': 'Für diese Rolle/Person gibt es schon einen Satz in diesem Zeitraum.',
+        'events.err.no_rate': 'Für dich ist kein Stundensatz hinterlegt. Frag den Vorstand.',
     },
     en: {
         'events.picker.placeholder': 'Type a name (at least 2 letters)',
@@ -121,7 +124,8 @@ const EventsCommonTranslation: Translation = {
         'events.err.none_running': 'No time tracking is running.',
         'events.err.invalid_time': 'The end must be after the start.',
         'events.err.in_future': 'The time is in the future.',
-        'events.err.too_long': 'The entry is too long.',
+        'events.err.too_long': 'The entry is longer than 16 hours. Delete it and enter the time by hand.',
+        'events.err.report_too_large': 'Too many entries for one report. Choose a shorter period or fewer people.',
         'events.err.too_old': 'The entry is too far in the past.',
         'events.err.entry_overlap': 'The entry overlaps with another one.',
         'events.err.entry_decided': 'The entry is already confirmed or rejected and cannot be changed.',
@@ -135,6 +139,8 @@ const EventsCommonTranslation: Translation = {
         'events.err.unknown_entry': 'This guest is no longer on the list. Please reload the list.',
         'events.err.answers_too_large': 'The answers are too long.',
         'events.err.unknown_column': 'One of the chosen columns does not exist.',
+        'events.err.rate_overlap': 'There is already a rate for this role/person in this period.',
+        'events.err.no_rate': 'No hourly rate is set for you. Ask the board.',
     },
 };
 

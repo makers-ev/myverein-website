@@ -101,10 +101,10 @@ export default function KalenderPageContent() {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         void refreshData(activeClub.clubId);
         // Missing permissions only hide write UI; the backend enforces them anyway.
-        apiFetch<{ data: { clubMemberId?: string | null; permissions?: string[]; roles?: EventMe['roles'] } }>(`/club-members/me?clubId=${activeClub.clubId}`)
+        apiFetch<{ data: { clubMemberId?: string | null; permissions?: string[]; roles?: EventMe['roles']; canTrack?: boolean; hasRate?: boolean } }>(`/club-members/me?clubId=${activeClub.clubId}`)
             .then(({ data }) => {
                 setPermissions(data.permissions ?? []);
-                setMe({ clubMemberId: data.clubMemberId ?? null, permissions: data.permissions ?? [], roles: data.roles ?? [] });
+                setMe({ clubMemberId: data.clubMemberId ?? null, permissions: data.permissions ?? [], roles: data.roles ?? [], canTrack: typeof data.canTrack === 'boolean' ? data.canTrack : undefined, hasRate: typeof data.hasRate === 'boolean' ? data.hasRate : undefined });
             })
             .catch(() => {
                 setPermissions([]);
@@ -406,7 +406,7 @@ export default function KalenderPageContent() {
                             </div>
                         )}
                         {tab === 'zeiterfassung' && canUseTimeTracking(me) && (
-                            <TimeTracking clubId={activeClub.clubId} canTrack={canTrackTime(me)} canConfirm={permissions.includes('time:write')} canRates={permissions.includes('time:read_rates')} ownClubMemberId={me?.clubMemberId ?? null} events={events ?? []} />
+                            <TimeTracking clubId={activeClub.clubId} canTrack={canTrackTime(me)} canConfirm={permissions.includes('time:write')} canRates={permissions.includes('time:read_rates')} ownClubMemberId={me?.clubMemberId ?? null} events={events ?? []} departments={departments} />
                         )}
                         {tab === 'treffen' && <TreffenPanel clubId={activeClub.clubId} canWrite={permissions.includes('meetings:write')} canManageAssembly={permissions.includes('assembly:manage')} canReadSensitive={permissions.includes('members:read_sensitive')} />}
                     </div>

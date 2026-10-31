@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Download, Play, Square } from 'lucide-react';
+import { Play, Square } from 'lucide-react';
 
 import LoadError from '@/components/LoadError';
 import LoadingText from '@/components/LoadingText';
@@ -10,11 +10,11 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api-client';
 import { eventErrorKey } from '@/lib/eventErrors';
 import { parseEuroInput, formatCost } from '@/lib/eventRegistration';
-import { fetchFileBlob, saveBlob } from '@/lib/memberCsv';
-import { type RateCard, type TimeEntry, type TimeReport, type TimeSuggestion, RATE_ROLES, defaultRange, manualProblem, rateBody, splitMinutes } from '@/lib/timeTracking';
+import { type RateCard, type TimeEntry, type TimeSuggestion, RATE_ROLES, defaultRange, groupRateCards, manualProblem, rateBody, rateErrorKey, ratePatchBody, rateRangeProblem, rateRoleKey, splitMinutes } from '@/lib/timeTracking';
 
-import { type CalendarEvent, inputClass, labelClass, primaryBtn, secondaryBtn } from './calendarTypes';
+import { type CalendarEvent, type Department, inputClass, labelClass, primaryBtn, secondaryBtn } from './calendarTypes';
 import MemberPicker from './MemberPicker';
+import StundenBericht from './StundenBericht';
 
 interface Props {
     clubId: string;
@@ -26,6 +26,7 @@ interface Props {
     canRates: boolean;
     ownClubMemberId: string | null;
     events: CalendarEvent[];
+    departments: Department[];
 }
 
 function Duration({ minutes }: { minutes: number | null }) {
@@ -38,7 +39,7 @@ function Duration({ minutes }: { minutes: number | null }) {
 const STATUS_TONE = { offen: 'bg-warning/15 text-warning', bestaetigt: 'bg-success/15 text-success', abgelehnt: 'bg-destructive/10 text-destructive' } as const;
 
 /** Trainer time tracking (W10): clock in/out, suggestions from attendance, manual entries, confirmation, hours report. Report only, no payout. */
-export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, ownClubMemberId, events }: Props) {
+export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, ownClubMemberId, events, departments }: Props) {
     const { t, language } = useLanguage();
     const { confirm, dialog } = useConfirm();
     const q = `clubId=${clubId}`;
@@ -307,112 +308,27 @@ export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, o
 
                 </>
             )}
-            {(canConfirm || canRates) && <HoursReport clubId={clubId} range={range} />}
+            {(canConfirm || canRates) && <StundenBericht clubId={clubId} range={range} departments={departments} />}
             {dialog}
             {canRates && <RateCards clubId={clubId} />}
         </div>
     );
 }
 
-function HoursReport({ clubId, range }: { clubId: string; range: { from: string; to: string } }) {
-    const { t, language } = useLanguage();
-    const [report, setReport] = useState<TimeReport | null>(null);
-    const [failed, setFailed] = useState(false);
-    const [exporting, setExporting] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const qs = `clubId=${clubId}&from=${range.from}&to=${range.to}`;
-
-    const load = useCallback(() => {
-        setFailed(false);
-        apiFetch<{ data: TimeReport }>(`/time-report?${qs}`)
-            .then((res) => setReport(res.data))
-            .catch(() => setFailed(true));
-    }, [qs]);
-    useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        load();
-    }, [load]);
-
-    async function exportCsv() {
-        setExporting(true);
-        setError(null);
-        try {
-            const { blob, filename } = await fetchFileBlob(`/time-report?${qs}&format=csv`, 'stundenbericht.csv', { accept: 'text/csv' });
-            saveBlob(blob, filename);
-        } catch (err) {
-            setError(t(eventErrorKey(err)));
-        } finally {
-            setExporting(false);
-        }
-    }
-
-    return (
-        <section className="space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-                <h3 className="font-semibold text-foreground">{t('time.report.title')}</h3>
-                <button type="button" onClick={() => void exportCsv()} disabled={exporting} className={`${secondaryBtn} inline-flex items-center gap-1.5`}>
-                    <Download className="h-4 w-4" aria-hidden />
-                    {t('time.report.export')}
-                </button>
-            </div>
-            <p className="text-xs text-muted-foreground">{t('time.report.hint')}</p>
-            {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
-            {failed ? (
-                <LoadError onRetry={load} />
-            ) : !report ? (
-                <LoadingText />
-            ) : report.people.length === 0 ? (
-                <p className="rounded-lg border border-dashed border-border p-4 text-center text-muted-foreground">{t('time.report.empty')}</p>
-            ) : (
-                <div className="relative overflow-x-auto rounded-lg border border-border">
-                    <table className="w-full text-left">
-                        <caption className="sr-only">{t('time.report.title')}</caption>
-                        <thead className="bg-muted/50 text-xs text-muted-foreground">
-                            <tr>
-                                <th scope="col" className="px-3 py-2">{t('time.col.person')}</th>
-                                <th scope="col" className="px-3 py-2">{t('time.report.entries')}</th>
-                                <th scope="col" className="px-3 py-2">{t('time.report.hours')}</th>
-                                {report.includesRates && <th scope="col" className="px-3 py-2">{t('time.report.rate')}</th>}
-                                {report.includesRates && <th scope="col" className="px-3 py-2">{t('time.report.amount')}</th>}
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border">
-                            {report.people.map((p) => (
-                                <tr key={p.clubMemberId} className="text-foreground">
-                                    <th scope="row" className="px-3 py-2 font-medium">{p.displayName}</th>
-                                    <td className="px-3 py-2 tabular-nums">{p.entries}</td>
-                                    <td className="px-3 py-2 tabular-nums">{p.hours.toLocaleString(language, { maximumFractionDigits: 2 })}</td>
-                                    {report.includesRates && <td className="px-3 py-2 tabular-nums">{p.rateMissing ? <span className="text-warning">{t('time.report.rateMissing')}</span> : formatCost(p.rateCents, language)}</td>}
-                                    {report.includesRates && <td className="px-3 py-2 tabular-nums">{formatCost(p.amountCents, language) ?? '–'}</td>}
-                                </tr>
-                            ))}
-                        </tbody>
-                        <tfoot>
-                            <tr className="border-t border-border font-semibold text-foreground">
-                                <th scope="row" className="px-3 py-2">{t('time.report.total')}</th>
-                                <td />
-                                <td className="px-3 py-2 tabular-nums">{report.totals.hours.toLocaleString(language, { maximumFractionDigits: 2 })}</td>
-                                {report.includesRates && <td />}
-                                {report.includesRates && <td className="px-3 py-2 tabular-nums">{formatCost(report.totals.amountCents, language) ?? '–'}</td>}
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            )}
-        </section>
-    );
-}
-
 function RateCards({ clubId }: { clubId: string }) {
     const { t, language } = useLanguage();
+    const { confirm, dialog } = useConfirm();
     const [cards, setCards] = useState<RateCard[] | null>(null);
     const [failed, setFailed] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [busy, setBusy] = useState(false);
+    const [editing, setEditing] = useState<RateCard | null>(null);
     const [target, setTarget] = useState<{ clubMemberId: string | null; roleType: string | null; name: string }>({ clubMemberId: null, roleType: 'trainer', name: '' });
     const [rate, setRate] = useState('');
     const [from, setFrom] = useState(() => defaultRange().from);
     const [until, setUntil] = useState('');
     const cents = parseEuroInput(rate);
+    const order = rateRangeProblem(from, until);
 
     const load = useCallback(() => {
         setFailed(false);
@@ -425,28 +341,78 @@ function RateCards({ clubId }: { clubId: string }) {
         load();
     }, [load]);
 
-    async function add(e: React.FormEvent) {
-        e.preventDefault();
-        if (cents === null || cents === undefined || !from) return;
+    const groups = groupRateCards(cards ?? []);
+    const cardTarget = (c: RateCard) => c.displayName ?? (c.roleType ? t(rateRoleKey(c.roleType)) : '—');
+    const fmt = (iso: string) => new Date(`${iso}T00:00:00`).toLocaleDateString(language, { dateStyle: 'medium' });
+
+    function reset() {
+        setEditing(null);
+        setRate('');
+        setUntil('');
+        setFrom(defaultRange().from);
+    }
+
+    function startEdit(c: RateCard) {
+        setEditing(c);
         setError(null);
+        setRate((c.hourlyRateCents / 100).toLocaleString(language, { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false }));
+        setFrom(c.validFrom);
+        setUntil(c.validUntil ?? '');
+    }
+
+    async function submit(e: React.FormEvent) {
+        e.preventDefault();
+        if (cents === null || cents === undefined || !from || order) return;
+        setError(null);
+        setBusy(true);
         try {
-            await apiFetch(`/rate-cards?clubId=${clubId}`, { method: 'POST', body: rateBody(target, cents, from, until) });
-            setRate('');
+            if (editing) await apiFetch(`/rate-cards/${editing.id}?clubId=${clubId}`, { method: 'PATCH', body: ratePatchBody(cents, from, until) });
+            else await apiFetch(`/rate-cards?clubId=${clubId}`, { method: 'POST', body: rateBody(target, cents, from, until) });
+            reset();
             load();
         } catch (err) {
-            setError(t(eventErrorKey(err)));
+            setError(t(rateErrorKey(err)));
+        } finally {
+            setBusy(false);
         }
     }
 
-    async function remove(id: string) {
+    async function remove(c: RateCard) {
+        if (!(await confirm({ title: t('time.delete'), body: t('time.rates.deleteBody'), confirmLabel: t('time.delete'), danger: true }))) return;
         setError(null);
         try {
-            await apiFetch(`/rate-cards/${id}?clubId=${clubId}`, { method: 'DELETE' });
+            await apiFetch(`/rate-cards/${c.id}?clubId=${clubId}`, { method: 'DELETE' });
+            if (editing?.id === c.id) reset();
             load();
         } catch (err) {
-            setError(t(eventErrorKey(err)));
+            setError(t(rateErrorKey(err)));
         }
     }
+
+    const list = (title: string, items: RateCard[]) =>
+        items.length > 0 && (
+            <div>
+                <h4 className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</h4>
+                <ul className="divide-y divide-border">
+                    {items.map((c) => (
+                        <li key={c.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                            <span className="text-foreground">
+                                {cardTarget(c)} · {formatCost(c.hourlyRateCents, language)}
+                                <span className="block text-xs text-muted-foreground">{c.validUntil ? t('time.rates.period', { from: fmt(c.validFrom), until: fmt(c.validUntil) }) : t('time.rates.periodOpen', { from: fmt(c.validFrom) })}</span>
+                            </span>
+                            <span className="flex gap-1.5">
+                                <button type="button" disabled={busy} aria-label={`${t('time.rates.edit')}: ${cardTarget(c)}`} onClick={() => startEdit(c)} className={`${secondaryBtn} !px-3 !py-1 text-xs`}>
+                                    {t('time.rates.edit')}
+                                </button>
+                                <button type="button" disabled={busy} aria-label={`${t('time.delete')}: ${cardTarget(c)}`} onClick={() => void remove(c)} className={`${secondaryBtn} !px-3 !py-1 text-xs`}>
+                                    {t('time.delete')}
+                                </button>
+                            </span>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        );
 
     return (
         <section className="space-y-3 rounded-xl border border-border bg-card p-4">
@@ -460,48 +426,39 @@ function RateCards({ clubId }: { clubId: string }) {
             ) : cards.length === 0 ? (
                 <p className="text-muted-foreground">{t('time.rates.empty')}</p>
             ) : (
-                <ul className="divide-y divide-border">
-                    {cards.map((c) => (
-                        <li key={c.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-                            <span className="text-foreground">
-                                {c.displayName ?? (c.roleType ? t(`time.role.${c.roleType}`) : '—')} · {formatCost(c.hourlyRateCents, language)}
-                                <span className="block text-xs text-muted-foreground">
-                                    {c.validFrom}
-                                    {c.validUntil ? ` – ${c.validUntil}` : ''}
-                                </span>
-                            </span>
-                            <button type="button" onClick={() => void remove(c.id)} className={`${secondaryBtn} !px-3 !py-1 text-xs`}>
-                                {t('time.delete')}
-                            </button>
-                        </li>
-                    ))}
-                </ul>
+                <div className="space-y-3">
+                    {list(t('time.rates.group.roles'), groups.roles)}
+                    {list(t('time.rates.group.people'), groups.people)}
+                </div>
             )}
-            <form onSubmit={(e) => void add(e)} className="space-y-3 border-t border-border pt-3">
+            <form onSubmit={(e) => void submit(e)} className="space-y-3 border-t border-border pt-3">
+                {editing && <p className="font-medium text-foreground">{t('time.rates.editing', { target: cardTarget(editing) })}</p>}
                 <div className="grid gap-3 sm:grid-cols-2">
-                    <div>
-                        <label htmlFor="rate-role" className={labelClass}>
-                            {t('time.rates.for')}
-                        </label>
-                        <select
-                            id="rate-role"
-                            value={target.roleType === null ? 'person' : target.roleType}
-                            onChange={(e) => setTarget(e.target.value === 'person' ? { clubMemberId: target.clubMemberId ?? '', roleType: null, name: target.name } : { clubMemberId: null, roleType: e.target.value, name: '' })}
-                            className={inputClass}
-                        >
-                            {RATE_ROLES.map((r) => (
-                                <option key={r} value={r}>
-                                    {t(`time.role.${r}`)}
-                                </option>
-                            ))}
-                            <option value="person">{t('time.rates.person')}</option>
-                        </select>
-                    </div>
+                    {!editing && (
+                        <div>
+                            <label htmlFor="rate-role" className={labelClass}>
+                                {t('time.rates.for')}
+                            </label>
+                            <select
+                                id="rate-role"
+                                value={target.roleType === null ? 'person' : target.roleType}
+                                onChange={(e) => setTarget(e.target.value === 'person' ? { clubMemberId: target.clubMemberId ?? '', roleType: null, name: target.name } : { clubMemberId: null, roleType: e.target.value, name: '' })}
+                                className={inputClass}
+                            >
+                                {RATE_ROLES.map((r) => (
+                                    <option key={r} value={r}>
+                                        {t(rateRoleKey(r))}
+                                    </option>
+                                ))}
+                                <option value="person">{t('time.rates.person')}</option>
+                            </select>
+                        </div>
+                    )}
                     <div>
                         <label htmlFor="rate-value" className={labelClass}>
                             {t('time.rates.rate')}
                         </label>
-                        <input id="rate-value" type="text" inputMode="decimal" required value={rate} onChange={(e) => setRate(e.target.value)} aria-invalid={cents === undefined} className={inputClass} />
+                        <input id="rate-value" type="text" inputMode="decimal" required value={rate} onChange={(e) => setRate(e.target.value)} aria-invalid={cents === undefined} aria-describedby={cents === undefined ? 'rate-invalid' : undefined} className={inputClass} />
                     </div>
                     <div>
                         <label htmlFor="rate-from" className={labelClass}>
@@ -513,20 +470,29 @@ function RateCards({ clubId }: { clubId: string }) {
                         <label htmlFor="rate-until" className={labelClass}>
                             {t('time.rates.until')}
                         </label>
-                        <input id="rate-until" type="date" value={until} onChange={(e) => setUntil(e.target.value)} className={inputClass} />
+                        <input id="rate-until" type="date" value={until} onChange={(e) => setUntil(e.target.value)} aria-invalid={order !== null} aria-describedby={order ? 'rate-order' : undefined} className={inputClass} />
                     </div>
                 </div>
-                {target.roleType === null && (
+                {!editing && target.roleType === null && (
                     <div>
                         {target.clubMemberId ? <p className="text-sm text-foreground">{target.name}</p> : null}
                         <MemberPicker clubId={clubId} label={t('time.rates.person')} onPick={(m) => setTarget({ clubMemberId: m.id, roleType: null, name: m.name })} />
                     </div>
                 )}
-                {cents === undefined && <p role="alert" className="text-xs text-destructive">{t('time.rates.invalid')}</p>}
-                <button type="submit" disabled={cents === null || cents === undefined || !from || (target.roleType === null && !target.clubMemberId)} className={primaryBtn}>
-                    {t('time.rates.add')}
-                </button>
+                {cents === undefined && <p id="rate-invalid" role="alert" className="text-xs text-destructive">{t('time.rates.invalid')}</p>}
+                {order && <p id="rate-order" role="alert" className="text-xs text-destructive">{t('time.rates.order')}</p>}
+                <div className="flex flex-wrap gap-2">
+                    <button type="submit" disabled={busy || cents === null || cents === undefined || !from || order !== null || (!editing && target.roleType === null && !target.clubMemberId)} className={primaryBtn}>
+                        {editing ? t('time.rates.save') : t('time.rates.add')}
+                    </button>
+                    {editing && (
+                        <button type="button" onClick={reset} className={secondaryBtn}>
+                            {t('time.rates.cancel')}
+                        </button>
+                    )}
+                </div>
             </form>
+            {dialog}
         </section>
     );
 }

@@ -10,6 +10,9 @@ export interface EventMe {
     clubMemberId: string | null;
     permissions: string[];
     roles: Array<{ roleType: string; departmentId?: string | null }>;
+    /** Server decision (`GET /club-members/me`): the member has an applicable hourly rate or a tracking right. Wins over the role guess. */
+    canTrack?: boolean;
+    hasRate?: boolean;
 }
 
 export type EventPermission = 'attendance:write' | 'attendance:read' | 'registrations:read' | 'helpers:write' | 'time:write' | 'time:read_rates' | 'calendars:write';
@@ -48,12 +51,13 @@ export function canForCalendar(me: EventMe | null | undefined, permission: Event
 /** Time tracking area: trainers, department leads, everybody who confirms (`time:write`) and rate readers (`time:read_rates`: report and rates only). */
 export function canUseTimeTracking(me: EventMe | null | undefined): boolean {
     if (!me) return false;
-    return can(me.permissions, 'time:write') || can(me.permissions, 'time:read_rates') || me.roles.some((r) => r.roleType === 'trainer' || r.roleType === 'abteilungsleitung');
+    return can(me.permissions, 'time:write') || can(me.permissions, 'time:read_rates') || me.canTrack === true || me.roles.some((r) => r.roleType === 'trainer' || r.roleType === 'abteilungsleitung');
 }
 
 /** May record own hours (clock, entries): trainers, department leads and confirmers; rate readers alone only get the report. */
 export function canTrackTime(me: EventMe | null | undefined): boolean {
     if (!me) return false;
+    if (typeof me.canTrack === 'boolean') return me.canTrack;
     return can(me.permissions, 'time:write') || me.roles.some((r) => r.roleType === 'trainer' || r.roleType === 'abteilungsleitung');
 }
 

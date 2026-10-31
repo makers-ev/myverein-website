@@ -1,3 +1,6 @@
+import { ApiError } from './api-client';
+import { eventErrorKey } from './eventErrors';
+
 /**
  * Time tracking for trainers (Wave 12 W10, backend `/time-entries`, `/rate-cards`, `/time-report`). REPORT ONLY: hours and,
  * with `time:read_rates`, hours x rate as a calculation basis. There is no payout, no booking and no payment status anywhere.
@@ -39,12 +42,83 @@ export interface ReportPerson {
     rateMissing: boolean;
 }
 
+export type ReportGroupBy = 'person' | 'event' | 'person_event';
+
+/** One report row; event fields are set for `event` and `person_event`, person fields for `person` and `person_event`. */
+export interface ReportRow extends Partial<ReportPerson> {
+    eventId?: string | null;
+    eventTitle?: string | null;
+    eventDate?: string | null;
+    roleTypes?: string[];
+}
+
 export interface TimeReport {
     range: { from: string; to: string };
     includesRates: boolean;
     note: string;
-    people: ReportPerson[];
-    totals: { minutes: number; hours: number; amountCents: number | null };
+    groupBy?: ReportGroupBy;
+    /** Older backends only send `people`. */
+    people?: ReportPerson[];
+    rows?: ReportRow[];
+    totals: { minutes: number; hours?: number; amountCents: number | null };
+}
+
+export interface ReportPeopleOptions {
+    people: Array<{ clubMemberId: string; displayName: string; roleTypes?: string[] }>;
+    roleTypes: string[];
+    /** Events with confirmed hours in the period, newest first. */
+    events?: Array<{ eventId: string; title: string; startsAt: string }>;
+    /** The server cut the people (1000) or events (300) list. */
+    truncated?: boolean;
+}
+
+export interface ReportFilters {
+    clubId: string;
+    from: string;
+    to: string;
+    departmentId?: string;
+    clubMemberIds?: readonly string[];
+    roleTypes?: readonly string[];
+    eventId?: string;
+    groupBy?: ReportGroupBy;
+    format?: 'json' | 'csv' | 'xlsx';
+}
+
+/** Server limit of `clubMemberIds`. */
+export const MAX_REPORT_PEOPLE = 100;
+
+/** Query string of `GET /time-report`: empty filters are left out, the person list is capped at the server limit. */
+export function reportQuery(f: ReportFilters): string {
+    const qs = new URLSearchParams({ clubId: f.clubId, from: f.from, to: f.to });
+    if (f.departmentId) qs.set('departmentId', f.departmentId);
+    if (f.clubMemberIds?.length) qs.set('clubMemberIds', f.clubMemberIds.slice(0, MAX_REPORT_PEOPLE).join(','));
+    if (f.roleTypes?.length) qs.set('roleTypes', f.roleTypes.join(','));
+    if (f.eventId) qs.set('eventId', f.eventId);
+    if (f.groupBy) qs.set('groupBy', f.groupBy);
+    if (f.format && f.format !== 'json') qs.set('format', f.format);
+    return qs.toString();
+}
+
+/** Rows of a report regardless of backend version; totals hours derived from minutes when missing. */
+export function reportRows(r: TimeReport): ReportRow[] {
+    return r.rows ?? r.people ?? [];
+}
+
+export function totalHours(r: TimeReport): number {
+    return r.totals.hours ?? Math.round((r.totals.minutes / 60) * 100) / 100;
+}
+
+export const REPORT_MIME = {
+    csv: 'text/csv',
+    xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+} as const;
+
+export const REPORT_FILENAME = { csv: 'stundenbericht.csv', xlsx: 'stundenbericht.xlsx' } as const;
+
+/** Toggles an id in a selection, refusing to grow beyond `max`. */
+export function toggleId(selected: readonly string[], id: string, max = MAX_REPORT_PEOPLE): string[] {
+    if (selected.includes(id)) return selected.filter((x) => x !== id);
+    return selected.length >= max ? [...selected] : [...selected, id];
 }
 
 export interface RateCard {
@@ -57,7 +131,48 @@ export interface RateCard {
     validUntil: string | null;
 }
 
-export const RATE_ROLES = ['trainer', 'abteilungsleitung'] as const;
+/** Every club role type the backend accepts for a rate card (`CLUB_ROLE_TYPES`), implicit base role first. */
+export const RATE_ROLES = ['mitglied', 'vorsitz', 'stellv_vorsitz', 'kassenwart', 'schriftfuehrer', 'beisitzer', 'abteilungsleitung', 'trainer', 'erziehungsberechtigt'] as const;
+
+/** Text key of a role in the rate UI: the implicit `mitglied` role reads "Alle Mitglieder", the rest reuses the role names. */
+export function rateRoleKey(role: string): string {
+    return role === 'mitglied' ? 'time.role.mitglied' : `verein.role.${role}`;
+}
+
+/** `order` = "Gültig bis" before "Gültig ab" (the backend rejects it too). */
+export function rateRangeProblem(validFrom: string, validUntil: string): 'order' | null {
+    return validFrom && validUntil && validUntil < validFrom ? 'order' : null;
+}
+
+/** Body of `PATCH /rate-cards/:id`: a cleared end date is sent as `null`. */
+export function ratePatchBody(cents: number, validFrom: string, validUntil: string): Record<string, unknown> {
+    return { hourlyRateCents: cents, validFrom, validUntil: validUntil || null };
+}
+
+export interface RateCardGroups {
+    roles: RateCard[];
+    people: RateCard[];
+}
+
+/** Role cards (in `RATE_ROLES` order) and personal cards (by name), each newest "Gültig ab" first. */
+export function groupRateCards(cards: readonly RateCard[]): RateCardGroups {
+    const newest = (a: RateCard, b: RateCard) => b.validFrom.localeCompare(a.validFrom);
+    const roleIdx = (c: RateCard) => {
+        const i = (RATE_ROLES as readonly string[]).indexOf(c.roleType ?? '');
+        return i === -1 ? RATE_ROLES.length : i;
+    };
+    const personal = cards.filter((c) => c.clubMemberId);
+    return {
+        roles: cards.filter((c) => !c.clubMemberId).sort((a, b) => roleIdx(a) - roleIdx(b) || newest(a, b)),
+        people: personal.sort((a, b) => (a.displayName ?? '').localeCompare(b.displayName ?? '') || newest(a, b)),
+    };
+}
+
+/** Text key for a failed rate-card request; 409 = an overlapping card of the same target. */
+export function rateErrorKey(err: unknown): string {
+    if (err instanceof ApiError && err.status === 409) return 'events.err.rate_overlap';
+    return eventErrorKey(err);
+}
 
 export function splitMinutes(minutes: number): { hours: number; minutes: number } {
     const m = Math.max(0, Math.round(minutes));
