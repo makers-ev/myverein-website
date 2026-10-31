@@ -129,7 +129,7 @@ Everything under `(protected)/` is wrapped by `src/components/shell/AppShell.tsx
 
 ### Docs links (Wave 14 D9)
 
-Help for the docs portal (`docs.myverein.<domain>`, Nextra, German pages under `/de/...`; origin from `NEXT_PUBLIC_DOCS_URL`, see Configuration). All links open in a new tab with `rel="noopener noreferrer"`. `src/lib/docs.ts` holds `docsUrl(path)` and the topic map `DOCS_TOPICS`; `src/components/HelpLink.tsx` is the "?" button next to page titles (`aria-label` `help.page.label`).
+Help for the docs portal (`docs.myverein.lpj.app`, Nextra, German pages under `/de/...`; origin from `NEXT_PUBLIC_DOCS_URL`, see Configuration). All links open in a new tab with `rel="noopener noreferrer"`. `src/lib/docs.ts` holds `docsUrl(path)` and the topic map `DOCS_TOPICS`; `src/components/HelpLink.tsx` is the "?" button next to page titles (`aria-label` `help.page.label`).
 
 | Where | Link | Label key |
 |---|---|---|
@@ -213,7 +213,7 @@ The homepage (`pageContent/Homepage.tsx`) only composes chapters from `src/compo
 - **Copy:** `MarketingTranslation.ts`, `MarketingHeroTranslation.ts`, `MarketingStoryTranslation.ts`, `MarketingTrustTranslation.ts` (DE/EN only, other languages fall back to English like the other marketing pages; key prefix `mk.`).
 - **Building blocks:** `Person`, `GroupPhoto`, `Network`, `Sketch` (`PaperCard`, `StatusSketch`, `StatusBadge`, `Marker`, `Draw`), `useInView`; chapters `HeroScene`, `MediaBreaks`, `WeekStage` (`#woche`), `RolePicker` (`#fuer-wen`), `ClubTypes` (`#vielfalt`), `TrustSection` (`#vertrauen`), `RoadmapSketches` (`#roadmap-teaser`), `ToolQuiz` (`#werkzeuge`), `Finale` (`#finale`).
 - **Constraints:** pure SVG + CSS (`mk-` classes in `globals.css`), no new dependency, no `style=` props (nonce-only CSP), `prefers-reduced-motion` shows the finished state, SSR renders readable end state without JS, colours only via theme tokens (works in dark mode and with every palette). Quiz state is local only, nothing is tracked.
-- **Honesty rule:** billing (SEPA, dunning, cash book, receipts) is shown as deliberately out of scope; an item is `live` only with a ✅ Feature List reference (consents, parent access, communication, voting, attendance, member card, time tracking ... since 2026-10-31); only the Wave 15 outreach items (sponsors, public page, enquiries, federation export) stay `soon`. `HelpSection` (`#hilfe`) and a hero link point to the docs portal (`NEXT_PUBLIC_DOCS_URL`, default `https://docs.myverein.de`; docs are German only).
+- **Honesty rule:** billing (SEPA, dunning, cash book, receipts) is shown as deliberately out of scope; an item is `live` only with a ✅ Feature List reference (consents, parent access, communication, voting, attendance, member card, time tracking ... since 2026-10-31); only the Wave 15 outreach items (sponsors, public page, enquiries, federation export) stay `soon`. `HelpSection` (`#hilfe`) and a hero link point to the docs portal (`NEXT_PUBLIC_DOCS_URL`, default `https://docs.myverein.lpj.app`; docs are German only).
 - **Data tests:** `src/app/publicContentData.test.ts` checks changelog, features and roadmap data (ids, DE/EN text, no internal names, nothing shipped on the roadmap).
 - The old `home.*` strings in `HomeTranslation.ts` (icon cards, stats, persona cards) are no longer used by the homepage except `home.cta-primary`; they can be removed in a cleanup.
 
@@ -352,7 +352,7 @@ All variables live in `.env.example`. The ones worth calling out specifically:
 |---|---|---|
 | `NEXT_PUBLIC_BACKEND_URL` | yes | Base URL of `_template_better-auth-backend`. Inlined into the JS bundle at build time — change it and restart `next dev`/rebuild, a running bundle won't pick it up live |
 | `NEXT_PUBLIC_SITE_URL` | no | This site's own public origin, sent to the backend as the `callbackURL` for verification/reset e-mails so their link lands on `/verify-email`/`/reset-password` here instead of the bare backend origin. Also used as the logo link/Imprint link in the contact-form confirmation e-mail (`src/lib/contactEmailTemplate.ts`). Defaults to `http://localhost:3001` |
-| `NEXT_PUBLIC_DOCS_URL` | no | Origin of the docs portal (Nextra, German pages under `/de/...`). `docsUrl(path)` in `src/lib/docs.ts` builds all help links from it. Inlined at build time. Defaults to `https://docs.myverein.de` |
+| `NEXT_PUBLIC_DOCS_URL` | no | Origin of the docs portal (Nextra, German pages under `/de/...`). `docsUrl(path)` in `src/lib/docs.ts` builds all help links from it. Inlined at build time. Defaults to `https://docs.myverein.lpj.app` |
 | `ALLOWED_HOSTS` | yes | Comma-separated allowlist of hosts this server may be reached as. Enforced in `src/proxy.ts` — unset rejects every request |
 | `CONTACT_SMTP_HOST` / `CONTACT_SMTP_PORT` / `CONTACT_SMTP_SECURE` / `CONTACT_SMTP_USER` / `CONTACT_SMTP_PASSWORD` | no | SMTP config for `/contact`'s `POST /api/contact` route (`src/app/api/contact/route.ts`) — its own transport, independent of the backend's `email.ts`. Unset means the route responds 503, not a silent failure |
 | `CONTACT_TO_EMAIL` | no (required for `/contact` to work) | Inbox the internal notification mail goes to |

@@ -10,8 +10,8 @@ afterEach(() => vi.unstubAllEnvs());
 describe('docsUrl', () => {
     it('defaults to the production portal', () => {
         vi.stubEnv('NEXT_PUBLIC_DOCS_URL', '');
-        expect(docsUrl('handbuch/mitglieder')).toBe('https://docs.myverein.de/de/handbuch/mitglieder');
-        expect(docsUrl()).toBe('https://docs.myverein.de/de');
+        expect(docsUrl('handbuch/mitglieder')).toBe('https://docs.myverein.lpj.app/de/handbuch/mitglieder');
+        expect(docsUrl()).toBe('https://docs.myverein.lpj.app/de');
     });
     it('uses the configured origin and normalises slashes', () => {
         vi.stubEnv('NEXT_PUBLIC_DOCS_URL', 'https://docs.example.org/');
