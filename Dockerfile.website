@@ -1,4 +1,4 @@
-FROM web-auth-base-image AS base
+FROM website-base AS base
 
 # Install dependencies only when needed
 FROM base AS deps
