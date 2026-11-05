@@ -149,7 +149,7 @@ export default function DocumentArchive({ clubId, gate, departments, initial }: 
         <div className="grid gap-4 lg:grid-cols-[16rem_1fr]">
             <aside aria-label={t('docs.archive.folders')} className="rounded-xl border border-border bg-card p-3">
                 <div className="mb-2 flex items-center justify-between">
-                    <h2 className="text-sm font-bold text-foreground">{t('docs.archive.folders')}</h2>
+                    <h2 className="text-base font-medium text-foreground">{t('docs.archive.folders')}</h2>
                 </div>
                 <ul>
                     {rootLevel && (

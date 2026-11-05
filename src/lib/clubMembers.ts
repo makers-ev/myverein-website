@@ -1,4 +1,5 @@
 import { ApiError, apiFetch } from './api-client';
+import { UI_BTN_PRIMARY, UI_BTN_SECONDARY, UI_INPUT } from './uiClasses';
 
 /** Stored/effective member statuses (backend `MEMBER_STATUSES`, Wave 7 B5). */
 export const MEMBER_STATUSES = ['interessent', 'probe', 'aktiv', 'ruhend', 'ausgetreten', 'ausgeschlossen', 'verstorben'] as const;
@@ -374,14 +375,11 @@ export function memberCountFromError(err: unknown): number | null {
     return typeof details?.memberCount === 'number' ? details.memberCount : null;
 }
 
-export const inputClass =
-    'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none';
+export const inputClass = UI_INPUT;
 
-export const primaryButtonClass =
-    'rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50';
+export const primaryButtonClass = UI_BTN_PRIMARY;
 
-export const secondaryButtonClass =
-    'rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-muted disabled:opacity-50';
+export const secondaryButtonClass = UI_BTN_SECONDARY;
 
 /** A club member who has a login account, keyed by the Better Auth `member.id` (what loans, key holders, invitees use). */
 export interface AccountMember {

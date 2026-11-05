@@ -79,7 +79,7 @@ export default function OccupancyTab({ clubId, locations, canWrite }: { clubId: 
                     )}
                 </div>
             </div>
-            <h2 className="text-sm font-bold text-foreground" aria-live="polite">
+            <h2 className="text-base font-medium text-foreground" aria-live="polite">
                 {days[0]!.toLocaleDateString(language, { day: 'numeric', month: 'short' })} – {days[6]!.toLocaleDateString(language, { day: 'numeric', month: 'short', year: 'numeric' })}
             </h2>
             {data && !data.bookable && <p className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">{t('occupancy.notBookable')}</p>}

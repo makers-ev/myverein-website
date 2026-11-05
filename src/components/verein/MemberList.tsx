@@ -316,7 +316,7 @@ export default function MemberList({
     function sortHeader(label: string, sortKey: SortKey) {
         const active = sort === sortKey;
         return (
-            <th key={sortKey} className="px-3 py-2" aria-sort={active ? (order === 'asc' ? 'ascending' : 'descending') : 'none'}>
+            <th key={sortKey} className="px-3 py-2.5 font-medium" aria-sort={active ? (order === 'asc' ? 'ascending' : 'descending') : 'none'}>
                 <button type="button" onClick={() => toggleSort(sortKey)} className="inline-flex items-center gap-1 hover:text-foreground">
                     {label}
                     {active && (order === 'asc' ? <ArrowUp className="h-3 w-3" aria-hidden="true" /> : <ArrowDown className="h-3 w-3" aria-hidden="true" />)}
@@ -504,11 +504,11 @@ export default function MemberList({
                             <thead>
                                 <tr className="sticky top-0 z-10 border-b border-border bg-muted text-left text-xs text-muted-foreground">
                                     {sortHeader(t('verein.members.table.name'), 'name')}
-                                    {show('category') && <th className="px-3 py-2 ">{t('verein.members.table.category')}</th>}
-                                    <th className="px-3 py-2 ">{t('verein.members.table.status')}</th>
-                                    {show('account') && <th className="px-3 py-2 ">{t('verein.members.table.account')}</th>}
-                                    {show('departments') && <th className="px-3 py-2 ">{t('verein.members.table.departments')}</th>}
-                                    {show('roles') && <th className="px-3 py-2 ">{t('verein.members.table.roles')}</th>}
+                                    {show('category') && <th className="px-3 py-2.5 font-medium">{t('verein.members.table.category')}</th>}
+                                    <th className="px-3 py-2.5 font-medium">{t('verein.members.table.status')}</th>
+                                    {show('account') && <th className="px-3 py-2.5 font-medium">{t('verein.members.table.account')}</th>}
+                                    {show('departments') && <th className="px-3 py-2.5 font-medium">{t('verein.members.table.departments')}</th>}
+                                    {show('roles') && <th className="px-3 py-2.5 font-medium">{t('verein.members.table.roles')}</th>}
                                     {show('joined') && sortHeader(t('verein.members.table.joined'), 'joinedAt')}
                                     {canSensitive && sortHeader(t('verein.members.table.number'), 'memberNumber')}
                                     {canPrivacy && (
@@ -524,25 +524,25 @@ export default function MemberList({
                                     const left = m.effectiveStatus === 'ausgetreten' || m.effectiveStatus === 'ausgeschlossen' || m.effectiveStatus === 'verstorben';
                                     const depts = currentDepartments(m);
                                     return (
-                                        <tr key={m.id} className={`border-b border-border align-top last:border-b-0 ${left ? 'opacity-70' : ''}`}>
-                                            <td className="px-3 py-2 text-foreground">
+                                        <tr key={m.id} className={`border-b border-border align-middle transition-colors last:border-b-0 hover:bg-muted/40 ${left ? 'opacity-70' : ''}`}>
+                                            <td className="px-3 py-3 text-foreground">
                                                 <span className="flex items-center gap-2">
                                                     <MemberAvatar name={m.name} photoUrl={m.photoUrl} onExpired={onPhotoExpired} />
                                                     <span>{m.name ?? '—'}</span>
                                                 </span>
                                             </td>
-                                            {show('category') && <td className="px-3 py-2 text-muted-foreground">{categoryLabel(m, t)}</td>}
-                                            <td className="px-3 py-2">
-                                                <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusChipClass(m.effectiveStatus)}`}>
+                                            {show('category') && <td className="px-3 py-3 text-muted-foreground">{categoryLabel(m, t)}</td>}
+                                            <td className="px-3 py-3">
+                                                <span className={`inline-block rounded-md px-2 py-0.5 text-xs font-medium ${statusChipClass(m.effectiveStatus)}`}>
                                                     {t(`verein.status.${m.effectiveStatus}`)}
                                                 </span>
                                                 {hasPendingExit(m) && (
                                                     <span className="mt-0.5 block text-xs text-muted-foreground">{t('verein.status.pendingExit.short', { date: formatDate(m.leftAt, language) })}</span>
                                                 )}
                                             </td>
-                                            {show('account') && <td className="px-3 py-2 text-muted-foreground">{m.hasAccount ? t('verein.members.account.yes') : t('verein.members.account.no')}</td>}
-                                            {show('departments') && <td className="px-3 py-2 text-muted-foreground">{depts.length > 0 ? depts.map((d) => d.name).join(', ') : '—'}</td>}
-                                            {show('roles') && <td className="px-3 py-2">
+                                            {show('account') && <td className="px-3 py-3 text-muted-foreground">{m.hasAccount ? t('verein.members.account.yes') : t('verein.members.account.no')}</td>}
+                                            {show('departments') && <td className="px-3 py-3 text-muted-foreground">{depts.length > 0 ? depts.map((d) => d.name).join(', ') : '—'}</td>}
+                                            {show('roles') && <td className="px-3 py-3">
                                                 {m.hasAccount ? (
                                                     <MemberRoleCell memberId={m.id} roles={m.roles} clubId={clubId} canEdit={canRoles && !left} onChange={reload} />
                                                 ) : (
@@ -551,10 +551,10 @@ export default function MemberList({
                                                     </span>
                                                 )}
                                             </td>}
-                                            {show('joined') && <td className="px-3 py-2 text-muted-foreground">{formatDate(m.joinedAt, language)}</td>}
-                                            {canSensitive && <td className="px-3 py-2 text-muted-foreground">{m.memberNumber ?? '—'}</td>}
+                                            {show('joined') && <td className="px-3 py-3 text-muted-foreground">{formatDate(m.joinedAt, language)}</td>}
+                                            {canSensitive && <td className="px-3 py-3 tabular-nums text-muted-foreground">{m.memberNumber ?? '—'}</td>}
                                             {canPrivacy && (
-                                                <td className="px-3 py-2 text-right">
+                                                <td className="px-3 py-3 text-right">
                                                     <button
                                                         type="button"
                                                         onClick={() => setPrivacyFor(m)}
@@ -566,7 +566,7 @@ export default function MemberList({
                                                 </td>
                                             )}
                                             {!canWrite && hasCustomFields && (
-                                                <td className="px-3 py-2 text-right">
+                                                <td className="px-3 py-3 text-right">
                                                     <button
                                                         type="button"
                                                         onClick={() => setDetail(m)}
@@ -578,7 +578,7 @@ export default function MemberList({
                                                 </td>
                                             )}
                                             {canWrite && (
-                                                <td className="px-3 py-2 text-right">
+                                                <td className="px-3 py-3 text-right">
                                                     <button
                                                         type="button"
                                                         onClick={() => setEditing(m)}

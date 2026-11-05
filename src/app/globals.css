@@ -146,7 +146,7 @@ body {
   /* Numbers line up in every table and figure. */
   table, .tabular { font-variant-numeric: tabular-nums; }
   /* One visible focus ring for keyboard users, in the palette's primary; component-level rings still win. */
-  :where(a, button, input, select, textarea, summary, [role="button"], [tabindex]):focus-visible {
+  :where(a, button, input, select, textarea, summary, [role="button"], [tabindex]:not([tabindex="-1"])):focus-visible {
     outline: 2px solid var(--primary);
     outline-offset: 2px;
   }

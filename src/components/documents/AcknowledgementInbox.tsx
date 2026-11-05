@@ -102,7 +102,7 @@ export default function AcknowledgementInbox({ clubId, onlyMemberId, onCount }: 
                 <EmptyState icon={<CheckCircle2 className="h-6 w-6" aria-hidden="true" />} text={t(rows.length === 0 ? 'docs.ack.empty' : 'docs.ack.allDone')} />
             ) : (
                 <section aria-label={t('docs.ack.open')}>
-                    <h3 className="mb-2 text-sm font-bold text-foreground">{t('docs.ack.openCount', { count: open.length })}</h3>
+                    <h3 className="mb-2 text-base font-medium text-foreground">{t('docs.ack.openCount', { count: open.length })}</h3>
                     <ul className="divide-y divide-border rounded-xl border border-border bg-card">{open.map(renderRow)}</ul>
                 </section>
             )}

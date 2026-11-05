@@ -357,7 +357,7 @@ export default function AssemblyRulesPanel({ clubId, canReadHistory }: { clubId:
             </form>
 
             <div className="mt-6 border-t border-border pt-4">
-                <h3 className="text-sm font-bold text-foreground">{t('assembly.rules.history.title')}</h3>
+                <h3 className="text-base font-medium text-foreground">{t('assembly.rules.history.title')}</h3>
                 {!canReadHistory ? (
                     <p className="mt-1 text-xs text-muted-foreground">{t('assembly.rules.history.noAccess')}</p>
                 ) : history.length === 0 ? (

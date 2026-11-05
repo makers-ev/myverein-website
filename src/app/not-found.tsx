@@ -23,7 +23,7 @@ export default function NotFound() {
                         <MagnifyingGlassIcon className="h-12 w-12 text-muted-foreground" />
                     </div>
 
-                    <h1 className="mb-2 text-3xl font-bold text-card-foreground">{t('notFound.title')}</h1>
+                    <h1 className="mb-2 text-3xl font-medium text-card-foreground">{t('notFound.title')}</h1>
 
                     <p className="mb-8 text-lg text-muted-foreground">{t('notFound.subtitle')}</p>
 

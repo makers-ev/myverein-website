@@ -152,7 +152,7 @@ export default function MyCardPanel({ clubId }: { clubId: string }) {
     return (
         <section aria-label={t('docs.card.title')} className="space-y-3">
             <div>
-                <h2 className="text-lg font-bold text-foreground">{t('docs.card.title')}</h2>
+                <h2 className="text-lg font-medium text-foreground">{t('docs.card.title')}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{t('docs.card.intro')}</p>
             </div>
             {wards.length > 0 && (

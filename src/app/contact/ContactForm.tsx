@@ -97,7 +97,7 @@ export default function ContactForm() {
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-border bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+            className="mt-1 block w-full min-h-11 rounded-lg border border-border bg-background px-3 py-2 text-foreground transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25"
           />
         </div>
         <div>
@@ -107,7 +107,7 @@ export default function ContactForm() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-border bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+            className="mt-1 block w-full min-h-11 rounded-lg border border-border bg-background px-3 py-2 text-foreground transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25"
           />
         </div>
       </div>
@@ -139,7 +139,7 @@ export default function ContactForm() {
               value={referral}
               onChange={(e) => setReferral(e.target.value)}
               placeholder={t('contact.beta-referral-placeholder')}
-              className="mt-1 block w-full rounded-lg border border-border bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+              className="mt-1 block w-full min-h-11 rounded-lg border border-border bg-background px-3 py-2 text-foreground transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25"
             />
           </div>
         </div>
@@ -151,7 +151,7 @@ export default function ContactForm() {
             rows={5}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-border bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+            className="mt-1 block w-full min-h-11 rounded-lg border border-border bg-background px-3 py-2 text-foreground transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25"
           />
         </div>
       )}
@@ -161,7 +161,7 @@ export default function ContactForm() {
           <p className="text-sm text-destructive">{t('contact.error')}</p>
           <a
             href={mailtoFallback(name, email, category, isBeta ? (referral.trim() ? `Referred by: ${referral.trim()}` : '') : message)}
-            className="mt-1 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:brightness-110"
+            className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-primary underline-offset-4 hover:underline"
           >
             <Mail className="h-4 w-4" />
             {t('contact.mailto-fallback')}

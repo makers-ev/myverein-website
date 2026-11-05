@@ -37,7 +37,7 @@ function inviteStores(): TokenStore[] {
 }
 
 const buttonClass =
-    'block w-full rounded-lg bg-primary px-5 py-3 text-center text-sm font-semibold text-primary-foreground transition-transform duration-200 hover:brightness-110 active:scale-[0.98] disabled:opacity-50';
+    'block min-h-11 w-full rounded-lg bg-primary px-5 py-3 text-center text-sm font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98] disabled:opacity-50';
 const secondaryClass = 'block w-full rounded-lg border border-border px-5 py-3 text-center text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50';
 
 type View =
@@ -216,7 +216,7 @@ export default function InvitationContent() {
         case 'loading':
             return (
                 <Shell>
-                    <h1 className="mb-2 text-2xl font-bold text-card-foreground">{t('verein.invite.title')}</h1>
+                    <h1 className="mb-2 text-2xl font-medium text-card-foreground">{t('verein.invite.title')}</h1>
                     <p role="status" className="text-sm text-muted-foreground">
                         {view.kind === 'redirecting' ? t('verein.invite.redirecting') : t('verein.invite.loading')}
                     </p>
@@ -225,7 +225,7 @@ export default function InvitationContent() {
         case 'loginNeeded':
             return (
                 <Shell>
-                    <h1 className="mb-2 text-2xl font-bold text-card-foreground">{t('verein.invite.title')}</h1>
+                    <h1 className="mb-2 text-2xl font-medium text-card-foreground">{t('verein.invite.title')}</h1>
                     <p className="mb-6 text-sm text-muted-foreground">{t('verein.invite.loginNeeded')}</p>
                     <Link href={LOGIN_PATH} className={buttonClass}>
                         {t('verein.invite.login')}
@@ -235,7 +235,7 @@ export default function InvitationContent() {
         case 'noToken':
             return (
                 <Shell status="warn">
-                    <h1 className="mb-2 text-2xl font-bold text-card-foreground">{t('verein.invite.noToken.title')}</h1>
+                    <h1 className="mb-2 text-2xl font-medium text-card-foreground">{t('verein.invite.noToken.title')}</h1>
                     <p className="mb-6 text-sm text-muted-foreground">{t('verein.invite.noToken.body')}</p>
                     <Link href="/" className={secondaryClass}>
                         {t('verein.invite.home')}
@@ -245,7 +245,7 @@ export default function InvitationContent() {
         case 'invalid':
             return (
                 <Shell status="warn">
-                    <h1 className="mb-2 text-2xl font-bold text-card-foreground">{t('verein.invite.invalid.title')}</h1>
+                    <h1 className="mb-2 text-2xl font-medium text-card-foreground">{t('verein.invite.invalid.title')}</h1>
                     <p className="mb-6 text-sm text-muted-foreground">{t('verein.invite.invalid.body')}</p>
                     <Link href="/verein" className={secondaryClass}>
                         {t('verein.invite.toClub')}
@@ -255,7 +255,7 @@ export default function InvitationContent() {
         case 'error':
             return (
                 <Shell status="warn">
-                    <h1 className="mb-2 text-2xl font-bold text-card-foreground">{t('verein.invite.error.title')}</h1>
+                    <h1 className="mb-2 text-2xl font-medium text-card-foreground">{t('verein.invite.error.title')}</h1>
                     <p role="alert" className="mb-6 text-sm text-muted-foreground">
                         {t(view.textKey)}
                     </p>
@@ -270,7 +270,7 @@ export default function InvitationContent() {
         case 'done':
             return (
                 <Shell status="ok">
-                    <h1 className="mb-2 text-2xl font-bold text-card-foreground">{t('verein.invite.done.title')}</h1>
+                    <h1 className="mb-2 text-2xl font-medium text-card-foreground">{t('verein.invite.done.title')}</h1>
                     <p className="mb-6 text-sm text-muted-foreground">{t(view.textKey, { club: view.club })}</p>
                     <Link href="/verein" className={buttonClass}>
                         {t('verein.invite.toClub')}
@@ -281,7 +281,7 @@ export default function InvitationContent() {
             const { preview } = view;
             return (
                 <Shell>
-                    <h1 className="mb-2 text-2xl font-bold text-card-foreground">{t('verein.invite.title')}</h1>
+                    <h1 className="mb-2 text-2xl font-medium text-card-foreground">{t('verein.invite.title')}</h1>
                     <p className="mb-5 text-sm text-muted-foreground">{t('verein.invite.intro', { club: preview.clubName ?? '—' })}</p>
                     <dl className="mb-5 w-full space-y-2 rounded-lg border border-border p-4 text-left text-sm">
                         <div className="flex justify-between gap-3">

@@ -51,7 +51,7 @@ export default function GuestRegistration({ token }: { token: string }) {
         return (
             <PublicShell status="ok">
                 <div className="text-center" role="status">
-                    <h1 className="text-xl font-bold text-foreground">{t('guest.pending.title')}</h1>
+                    <h1 className="text-2xl font-medium leading-8 text-foreground">{t('guest.pending.title')}</h1>
                     <p className="mt-2 text-sm text-muted-foreground">{t('guest.pending.body', { email: email.trim() })}</p>
                     <p className="mt-3 text-xs text-muted-foreground">{t('guest.pending.hint')}</p>
                 </div>

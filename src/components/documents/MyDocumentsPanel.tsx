@@ -34,7 +34,7 @@ export default function MyDocumentsPanel({ clubId, extra }: { clubId: string; ex
     return (
         <section aria-label={t('docs.person.title')} className="space-y-3">
             <div>
-                <h2 className="text-lg font-bold text-foreground">{t('docs.person.title')}</h2>
+                <h2 className="text-lg font-medium text-foreground">{t('docs.person.title')}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{t('docs.person.intro')}</p>
             </div>
             {wards.length > 0 && (

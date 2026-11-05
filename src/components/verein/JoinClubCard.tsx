@@ -296,7 +296,7 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
                     )}
                     {openApps !== null && openApps.length > 0 && (
                         <section className="mt-5" aria-label={t('forms.apply.mine.title')}>
-                            <h3 className="text-sm font-bold text-foreground">{t('forms.apply.mine.title')}</h3>
+                            <h3 className="text-base font-medium text-foreground">{t('forms.apply.mine.title')}</h3>
                             <ul className="mt-2 space-y-2">
                                 {openApps.map((a) => (
                                     <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border px-3 py-2">
@@ -357,7 +357,7 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
 
                     {(club.submitted.length > 0 || club.decided.length > 0) && (
                         <section className="mt-4" aria-label={t('forms.apply.open.title')}>
-                            <h3 className="text-sm font-bold text-foreground">{t('forms.apply.open.title')}</h3>
+                            <h3 className="text-base font-medium text-foreground">{t('forms.apply.open.title')}</h3>
                             <ul className="mt-2 space-y-2">
                                 {club.submitted.map((s) => (
                                     <li key={s.id} className="rounded-lg border border-border px-3 py-2">

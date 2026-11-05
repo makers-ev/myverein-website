@@ -161,7 +161,7 @@ function ElectionDetail({ clubId, id, canManage, onBack }: { clubId: string; id:
                     </p>
                     {error && <ErrorText>{error}</ErrorText>}
 
-                    <h3 className="text-sm font-bold text-foreground">{t('assembly.elections.candidates')}</h3>
+                    <h3 className="text-base font-medium text-foreground">{t('assembly.elections.candidates')}</h3>
                     {election.candidates.length === 0 ? (
                         <p className="text-sm text-muted-foreground">{t('assembly.elections.candidates.empty')}</p>
                     ) : (

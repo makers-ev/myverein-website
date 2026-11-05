@@ -117,7 +117,7 @@ export default function CredentialsPanel({ clubId, canIncludeFormer, onUnavailab
     return (
         <section aria-label={t('forms.cred.overview.title')} className="space-y-4">
             <div>
-                <h2 className="text-sm font-bold text-foreground">{t('forms.cred.overview.title')}</h2>
+                <h2 className="text-base font-medium text-foreground">{t('forms.cred.overview.title')}</h2>
                 <p className="mt-1 max-w-2xl text-xs text-muted-foreground">{t('forms.cred.overview.hint')}</p>
                 <p className="mt-1 max-w-2xl text-xs text-muted-foreground">{t('forms.cred.overview.noReminders')}</p>
             </div>

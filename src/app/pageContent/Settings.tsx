@@ -225,7 +225,7 @@ export default function SettingsPageContent() {
 			<header className="flex items-center gap-4 mb-8">
 				<Avatar name={name || email} />
 				<div>
-					<h1 className="text-3xl font-bold">Settings</h1>
+					<h1 className="text-[1.75rem] font-medium leading-9">Settings</h1>
 					<p className="text-sm text-muted-foreground">{email}</p>
 				</div>
 			</header>

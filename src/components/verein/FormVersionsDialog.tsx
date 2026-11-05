@@ -59,7 +59,7 @@ function VersionView({ clubId, formId, version, categories, onBack }: { clubId: 
             ) : (
                 <div className="space-y-4">
                     <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-sm font-bold text-foreground">{t('forms.editor.versions.version', { version: data.version })}</h3>
+                        <h3 className="text-base font-medium text-foreground">{t('forms.editor.versions.version', { version: data.version })}</h3>
                         <StatusChip status={data.status} />
                         {data.publishedAt && <span className="text-xs text-muted-foreground">{t('forms.editor.versions.publishedOn', { date: formatDate(data.publishedAt, language) })}</span>}
                     </div>

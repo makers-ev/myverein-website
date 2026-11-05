@@ -57,7 +57,7 @@ function ResetPasswordPageInner() {
                         <div className="mb-6 rounded-full bg-destructive/10 p-4">
                             <ExclamationTriangleIcon className="h-12 w-12 text-destructive" />
                         </div>
-                        <h1 className="mb-2 text-3xl font-bold text-card-foreground">
+                        <h1 className="mb-2 text-3xl font-medium text-card-foreground">
                             {t('auth.resetPassword.invalidLink.title')}
                         </h1>
                         <p className="mb-8 text-lg text-muted-foreground">
@@ -83,7 +83,7 @@ function ResetPasswordPageInner() {
                         <div className="mb-6 rounded-full bg-success/10 p-4">
                             <CheckCircleIcon className="h-12 w-12 text-success" />
                         </div>
-                        <h1 className="mb-2 text-3xl font-bold text-card-foreground">
+                        <h1 className="mb-2 text-3xl font-medium text-card-foreground">
                             {t('auth.resetPassword.success.title')}
                         </h1>
                         <p className="mb-8 text-lg text-muted-foreground">
@@ -125,7 +125,7 @@ function ResetPasswordPageInner() {
                             minLength={8}
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
-                            className="mt-1 block w-full rounded-lg border border-border bg-background px-3 py-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                            className="mt-1 block w-full min-h-11 rounded-lg border border-border bg-background px-3 py-2 text-foreground transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25"
                         />
                     </div>
 
@@ -142,7 +142,7 @@ function ResetPasswordPageInner() {
                             minLength={8}
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
-                            className="mt-1 block w-full rounded-lg border border-border bg-background px-3 py-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                            className="mt-1 block w-full min-h-11 rounded-lg border border-border bg-background px-3 py-2 text-foreground transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25"
                         />
                     </div>
 
@@ -151,7 +151,7 @@ function ResetPasswordPageInner() {
                     <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:brightness-110 disabled:opacity-50 transition-colors"
+                        className="w-full min-h-11 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
                     >
                         {isSubmitting ? t('auth.submit.pending') : t('auth.resetPassword.submit')}
                     </button>

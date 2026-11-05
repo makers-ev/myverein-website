@@ -91,7 +91,7 @@ function DeliveryStatus({ clubId, announcement, gate, onResent }: { clubId: stri
 
     return (
         <div className="space-y-3">
-            <h3 className="text-sm font-bold text-foreground">{t('mitteilungen.delivery.title')}</h3>
+            <h3 className="text-base font-medium text-foreground">{t('mitteilungen.delivery.title')}</h3>
             {summary.recipients === 0 ? (
                 <p className="text-sm text-muted-foreground">{t('mitteilungen.delivery.empty')}</p>
             ) : (

@@ -117,7 +117,7 @@ export default function DocumentDetailDialog({ clubId, docId, folders, departmen
                         )}
 
                         <section aria-label={t('docs.archive.versions')}>
-                            <h3 className="mb-2 text-sm font-bold text-foreground">{t('docs.archive.versions')}</h3>
+                            <h3 className="mb-2 text-base font-medium text-foreground">{t('docs.archive.versions')}</h3>
                             <ul className="divide-y divide-border rounded-lg border border-border">
                                 {[...doc.versions].sort((a, b) => b.versionNo - a.versionNo).map((v) => (
                                     <li key={v.versionNo} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm">
@@ -144,7 +144,7 @@ export default function DocumentDetailDialog({ clubId, docId, folders, departmen
 
                         {writable && !trashed && doc.kind === 'hochgeladen' && (
                             <section aria-label={t('docs.archive.newVersion')}>
-                                <h3 className="mb-2 text-sm font-bold text-foreground">{t('docs.archive.newVersion')}</h3>
+                                <h3 className="mb-2 text-base font-medium text-foreground">{t('docs.archive.newVersion')}</h3>
                                 <UploadControl
                                     label={t('docs.archive.newVersion.choose')}
                                     onUpload={async (file, onProgress) => {

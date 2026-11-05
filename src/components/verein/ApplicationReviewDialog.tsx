@@ -43,7 +43,7 @@ export interface DecisionOutcome {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
     return (
         <section className="mt-5">
-            <h3 className="text-sm font-bold text-foreground">{title}</h3>
+            <h3 className="text-base font-medium text-foreground">{title}</h3>
             <div className="mt-2">{children}</div>
         </section>
     );

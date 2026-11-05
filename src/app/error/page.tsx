@@ -27,7 +27,7 @@ export default async function ErrorPage(props: ErrorPageProps) {
                         <ExclamationTriangleIcon className="h-12 w-12 text-destructive" />
                     </div>
 
-                    <h1 className="mb-2 text-3xl font-bold text-card-foreground">
+                    <h1 className="mb-2 text-3xl font-medium text-card-foreground">
                         Oops!
                     </h1>
 

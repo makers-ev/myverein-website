@@ -41,7 +41,7 @@ export default function FamiliePageContent() {
     return (
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
             <div className="flex items-center gap-1">
-                <h1 className="text-2xl font-bold text-foreground">{t('familie.page.title')}</h1>
+                <h1 className="text-[1.75rem] font-medium leading-9 text-foreground">{t('familie.page.title')}</h1>
                 <HelpLink topic="family" />
             </div>
             <p className="mt-1 text-sm text-muted-foreground">{t('familie.page.subtitle')}</p>
@@ -77,7 +77,7 @@ export default function FamiliePageContent() {
                             })}
                         </div>
                     )}
-                    <h2 className="mt-6 text-lg font-bold text-foreground">
+                    <h2 className="mt-6 text-lg font-medium text-foreground">
                         {current.name}
                         <span className="ml-2 text-sm font-normal text-muted-foreground">{current.clubName}</span>
                     </h2>

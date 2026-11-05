@@ -47,7 +47,7 @@ export function EmailVerificationPrompt({ email, callbackUrl = '/heute', onBackT
     return (
         <div className="space-y-5">
             <div className="text-center">
-                <h3 className="text-lg font-bold text-foreground">{t('auth.verifyEmail.title')}</h3>
+                <h3 className="text-lg font-medium text-foreground">{t('auth.verifyEmail.title')}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
                     {t('auth.verifyEmail.subtitle')} <span className="font-medium text-foreground">{email}</span>
                 </p>
@@ -70,7 +70,7 @@ export function EmailVerificationPrompt({ email, callbackUrl = '/heute', onBackT
                     type="button"
                     onClick={handleResend}
                     disabled={isSubmitting}
-                    className="flex-1 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:brightness-110 disabled:opacity-50 transition-colors"
+                    className="flex-1 min-h-11 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
                 >
                     {isSubmitting ? t('auth.verifyEmail.resending') : t('auth.verifyEmail.resend')}
                 </button>

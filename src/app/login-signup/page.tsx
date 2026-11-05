@@ -1,9 +1,10 @@
 import { connection } from 'next/server';
-import Link from 'next/link';
+
 
 import { createSiteMetadata } from '@/seo/createSiteMetadata';
 import { title, description, url, keywords } from '../../../project.config.json';
 
+import BackHomeLink from './BackHomeLink';
 import { LoginSignupForm } from './LoginSignupForm';
 
 export const metadata = createSiteMetadata({
@@ -28,13 +29,11 @@ export default async function LoginSignupPage() {
     return (
         <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center bg-background px-4 py-16">
             <div className="w-full max-w-md">
-                <div className="rounded-2xl border border-border bg-card p-8 shadow-xl sm:p-10">
+                <div className="rounded-2xl border border-border bg-card p-8 shadow-md sm:p-10">
                     <LoginSignupForm />
                 </div>
-                <p className="mt-6 text-center text-sm text-muted-foreground">
-                    <Link href="/" className="font-semibold text-primary hover:brightness-110">
-                        ← Back to home
-                    </Link>
+                <p className="mt-4 text-center">
+                    <BackHomeLink />
                 </p>
             </div>
         </div>

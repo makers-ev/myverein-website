@@ -18,7 +18,7 @@ type View =
     | { kind: 'error' };
 
 const buttonClass =
-    'block w-full rounded-lg bg-primary px-5 py-3 text-center text-sm font-semibold text-primary-foreground transition-transform duration-200 hover:brightness-110 active:scale-[0.98] disabled:opacity-50';
+    'block min-h-11 w-full rounded-lg bg-primary px-5 py-3 text-center text-sm font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98] disabled:opacity-50';
 
 function Shell({ children, status }: { children: React.ReactNode; status?: 'ok' | 'warn' }) {
     return (
@@ -96,7 +96,7 @@ export default function UnsubscribeContent() {
     if (view.kind === 'invalid' || view.kind === 'rateLimited' || view.kind === 'error') {
         return (
             <Shell status="warn">
-                <h1 className="text-xl font-bold text-foreground">{t(`unsubscribe.${view.kind}.title`)}</h1>
+                <h1 className="text-2xl font-medium leading-8 text-foreground">{t(`unsubscribe.${view.kind}.title`)}</h1>
                 <p className="mt-2 text-sm text-muted-foreground">{t(`unsubscribe.${view.kind}.body`)}</p>
                 <Link href="/" className="mt-6 text-sm font-medium text-primary hover:underline">
                     {t('unsubscribe.home')}
@@ -111,7 +111,7 @@ export default function UnsubscribeContent() {
     if (view.kind === 'done') {
         return (
             <Shell status="ok">
-                <h1 className="text-xl font-bold text-foreground">{t('unsubscribe.done.title')}</h1>
+                <h1 className="text-2xl font-medium leading-8 text-foreground">{t('unsubscribe.done.title')}</h1>
                 <p className="mt-2 text-sm text-muted-foreground">{t('unsubscribe.done.body', { club, category })}</p>
                 <p className="mt-3 text-xs text-muted-foreground">{t('unsubscribe.done.hint')}</p>
                 <Link href="/settings" className="mt-6 text-sm font-medium text-primary hover:underline">
@@ -123,7 +123,7 @@ export default function UnsubscribeContent() {
 
     return (
         <Shell>
-            <h1 className="text-xl font-bold text-foreground">{t('unsubscribe.title')}</h1>
+            <h1 className="text-2xl font-medium leading-8 text-foreground">{t('unsubscribe.title')}</h1>
             <p className="mt-2 text-sm text-muted-foreground">{t(view.preview.unsubscribed ? 'unsubscribe.already' : 'unsubscribe.body', { club, category })}</p>
             <p className="mt-2 text-xs text-muted-foreground">{t('unsubscribe.mandatory')}</p>
             <button type="button" disabled={view.kind === 'busy'} onClick={() => void unsubscribe(view.preview)} className={`${buttonClass} mt-6`}>

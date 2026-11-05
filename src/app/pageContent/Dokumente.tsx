@@ -74,7 +74,7 @@ export default function DokumentePageContent() {
     return (
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
             <div className="flex items-center gap-1">
-                <h1 className="text-2xl font-bold text-foreground">{t('docs.archive.title')}</h1>
+                <h1 className="text-[1.75rem] font-medium leading-9 text-foreground">{t('docs.archive.title')}</h1>
                 <HelpLink topic="documents" />
             </div>
             <p className="mt-1 text-sm text-muted-foreground">{t('docs.archive.intro')}</p>

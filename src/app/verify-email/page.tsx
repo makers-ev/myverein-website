@@ -33,7 +33,7 @@ function VerifyEmailPageInner() {
                         </div>
                     )}
 
-                    <h1 className="mb-2 text-3xl font-bold text-card-foreground">
+                    <h1 className="mb-2 text-3xl font-medium text-card-foreground">
                         {hasError
                             ? t('auth.verifyEmail.page.errorTitle')
                             : t('auth.verifyEmail.page.successTitle')}

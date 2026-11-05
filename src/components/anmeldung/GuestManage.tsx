@@ -54,7 +54,7 @@ export default function GuestManage({ token }: { token: string }) {
         return (
             <PublicShell status="ok">
                 <div role="status" className="text-center">
-                    <h1 className="text-xl font-bold text-foreground">{t('guest.deleted.title')}</h1>
+                    <h1 className="text-2xl font-medium leading-8 text-foreground">{t('guest.deleted.title')}</h1>
                     <p className="mt-2 text-sm text-muted-foreground">{t('guest.deleted.body')}</p>
                 </div>
             </PublicShell>

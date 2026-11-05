@@ -124,7 +124,7 @@ export default function MemberCustomFields({ clubId, target, title, showSensitiv
     if (fields && fields.length === 0 && !showSensitiveNote && emptyHint) {
         return (
             <section className="rounded-lg border border-border p-3" aria-label={title ?? t('forms.cf.values.title')}>
-                <h3 className="text-sm font-bold text-foreground">{title ?? t('forms.cf.values.title')}</h3>
+                <h3 className="text-base font-medium text-foreground">{title ?? t('forms.cf.values.title')}</h3>
                 {emptyHint}
             </section>
         );
@@ -171,7 +171,7 @@ export default function MemberCustomFields({ clubId, target, title, showSensitiv
 
     return (
         <section className="rounded-lg border border-border p-3" aria-label={title ?? t('forms.cf.values.title')}>
-            <h3 className="text-sm font-bold text-foreground">{title ?? t('forms.cf.values.title')}</h3>
+            <h3 className="text-base font-medium text-foreground">{title ?? t('forms.cf.values.title')}</h3>
             <p className="mt-0.5 text-xs text-muted-foreground">{own ? t('forms.cf.values.hintOwn') : t('forms.cf.values.hint')}</p>
 
             {fields.length === 0 && <p className="mt-2 text-sm text-muted-foreground">{t('forms.cf.values.none')}</p>}

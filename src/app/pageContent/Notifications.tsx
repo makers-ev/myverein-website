@@ -111,37 +111,39 @@ export default function NotificationsPageContent() {
     }, [tab]);
 
     return (
-        <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6 lg:px-8">
-            <h1 className="text-2xl font-bold text-foreground">{t('notifications.page.title')}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-                {t('notifications.page.scope')}{' '}
-                <Link href="/mitteilungen" className="font-medium text-primary hover:underline">
-                    {t('notifications.page.toClub')}
-                </Link>
-            </p>
+        <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+            <div className="max-w-2xl">
+                <h1 className="text-[1.75rem] font-medium leading-9 text-foreground">{t('notifications.page.title')}</h1>
+                <p className="mt-1 text-sm text-muted-foreground">
+                    {t('notifications.page.scope')}{' '}
+                    <Link href="/mitteilungen" className="font-medium text-primary hover:underline">
+                        {t('notifications.page.toClub')}
+                    </Link>
+                </p>
 
-            <div className="mt-6 flex gap-2 border-b border-border">
-                {(['unread', 'read'] as const).map((value) => (
-                    <button
-                        key={value}
-                        onClick={() => setTab(value)}
-                        className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
-                            tab === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
-                        }`}
-                    >
-                        {t(`notifications.tab.${value}`)}
-                    </button>
-                ))}
-            </div>
+                <div className="mt-6 flex gap-2 border-b border-border">
+                    {(['unread', 'read'] as const).map((value) => (
+                        <button
+                            key={value}
+                            onClick={() => setTab(value)}
+                            className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
+                                tab === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
+                            }`}
+                        >
+                            {t(`notifications.tab.${value}`)}
+                        </button>
+                    ))}
+                </div>
 
-            <div className="mt-4 space-y-3">
-                {items === null ? (
-                    <LoadingText />
-                ) : items.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">{t(`notifications.empty.${tab}`)}</p>
-                ) : (
-                    items.map((n) => <NotificationCard key={n.id} n={n} onChange={() => void refresh()} />)
-                )}
+                <div className="mt-4 space-y-3">
+                    {items === null ? (
+                        <LoadingText />
+                    ) : items.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">{t(`notifications.empty.${tab}`)}</p>
+                    ) : (
+                        items.map((n) => <NotificationCard key={n.id} n={n} onChange={() => void refresh()} />)
+                    )}
+                </div>
             </div>
         </div>
     );

@@ -499,7 +499,7 @@ export default function ApplicationForm({ slug, mode, current, resume, registerF
             }}
             className="mt-4"
         >
-            <h3 className="text-sm font-bold text-foreground">{definition.name}</h3>
+            <h3 className="text-base font-medium text-foreground">{definition.name}</h3>
             <p className="mt-1 text-xs text-muted-foreground">{t('forms.apply.requiredLegend')}</p>
 
             {notice && (

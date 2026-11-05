@@ -6,16 +6,14 @@ import { useState } from 'react';
 import { Modal } from '@/components/Modal';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { formatDate as formatClubDate, memberErrorKey } from '@/lib/clubMembers';
+import { UI_BTN_ICON, UI_BTN_PRIMARY, UI_BTN_SECONDARY, UI_INPUT } from '@/lib/uiClasses';
 
 export type T = (key: string, params?: Record<string, string | number>) => string;
 
-export const inputClass =
-    'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none';
-export const primaryButtonClass =
-    'inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50';
-export const secondaryButtonClass =
-    'inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50';
-export const iconButtonClass = 'rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground';
+export const inputClass = UI_INPUT;
+export const primaryButtonClass = UI_BTN_PRIMARY;
+export const secondaryButtonClass = UI_BTN_SECONDARY;
+export const iconButtonClass = UI_BTN_ICON;
 
 /** Plain-language (translated) text for a failed API call; never the raw English server message. */
 export function errorMessage(err: unknown, t: T): string {
@@ -31,7 +29,7 @@ export function SectionCard({ title, action, children }: { title: string; action
     return (
         <section className="rounded-xl border border-border bg-card p-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-sm font-bold text-foreground">{title}</h2>
+                <h2 className="text-base font-medium text-foreground">{title}</h2>
                 {action}
             </div>
             {children}

@@ -8,7 +8,7 @@ import { type PublicEvent } from '@/lib/publicEvents';
 import { formatCost } from '@/lib/eventRegistration';
 
 export const publicButton =
-    'block w-full rounded-lg bg-primary px-5 py-3 text-center text-sm font-semibold text-primary-foreground transition-transform duration-200 hover:brightness-110 active:scale-[0.98] disabled:opacity-50';
+    'block min-h-11 w-full rounded-lg bg-primary px-5 py-3 text-center text-sm font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98] disabled:opacity-50';
 export const publicSecondaryButton =
     'block w-full rounded-lg border border-border bg-background px-5 py-3 text-center text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50';
 
@@ -39,7 +39,7 @@ export function PublicMessage({ title, body }: { title: string; body: string }) 
     return (
         <PublicShell status="warn">
             <div className="text-center">
-                <h1 className="text-xl font-bold text-foreground">{title}</h1>
+                <h1 className="text-2xl font-medium leading-8 text-foreground">{title}</h1>
                 <p className="mt-2 text-sm text-muted-foreground">{body}</p>
                 <Link href="/" className="mt-6 inline-block text-sm font-medium text-primary hover:underline">
                     {t('guest.home')}
@@ -72,7 +72,7 @@ export function PublicEventSummary({ event }: { event: PublicEvent }) {
     return (
         <div className="space-y-1 text-sm">
             <p className="text-xs font-semibold text-muted-foreground">{event.clubName}</p>
-            <h1 className="text-xl font-bold text-foreground">{event.title}</h1>
+            <h1 className="text-2xl font-medium leading-8 text-foreground">{event.title}</h1>
             {event.cancelled && <p className="rounded-lg bg-destructive/10 px-3 py-2 font-semibold text-destructive">{t('guest.cancelled')}</p>}
             <p className="text-foreground">
                 {start.toLocaleDateString(language, dateOpts)}

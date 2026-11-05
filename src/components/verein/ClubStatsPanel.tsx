@@ -24,7 +24,7 @@ interface ClubStats {
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
     return (
         <section className="rounded-xl border border-border bg-card p-4">
-            <h2 className="mb-3 text-sm font-bold text-foreground">{title}</h2>
+            <h2 className="mb-3 text-base font-medium text-foreground">{title}</h2>
             {children}
         </section>
     );

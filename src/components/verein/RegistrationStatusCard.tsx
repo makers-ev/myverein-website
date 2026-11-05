@@ -6,7 +6,7 @@ import { formatDate } from '@/lib/clubMembers';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { ClubRegistration } from '@/components/verein/clubRegistration';
 
-const primaryButton = 'rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50';
+const primaryButton = 'min-h-11 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98] disabled:opacity-50';
 const secondaryButton = 'rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-muted disabled:opacity-50';
 
 /**
