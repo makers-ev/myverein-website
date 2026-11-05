@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 import { clubIds, clubListKeys, getItem } from './marketingData';
-import { Draw, Marker, PaperCard, StatusSketch } from './Sketch';
+import { Draw, MK_SECTION, PaperCard, SectionHead, StatusSketch } from './Sketch';
 
 const CLUBS: { id: (typeof clubIds)[number]; prop: string[] }[] = [
     { id: 'sport', prop: ['M6 20 a14 14 0 1 0 28 0 a14 14 0 1 0 -28 0', 'M6 20 h28 M20 6 v28'] },
@@ -31,59 +31,54 @@ export default function ClubTypes() {
     const forms = getItem('custom-forms');
 
     return (
-        <section id="vielfalt" aria-labelledby="vielfalt-title" className="scroll-mt-20 px-4 py-16 sm:px-6">
-            <div className="mx-auto max-w-5xl">
-                <h2 id="vielfalt-title" className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-                    {t('mk.clubs.title.before')} <Marker>{t('mk.clubs.title.marked')}</Marker>
-                </h2>
-                <p className="mt-3 max-w-2xl text-lg text-muted-foreground">{t('mk.clubs.intro')}</p>
+        <section id="vielfalt" aria-labelledby="vielfalt-title" className={`scroll-mt-20 ${MK_SECTION}`}>
+            <SectionHead id="vielfalt-title" title={`${t('mk.clubs.title.before')} ${t('mk.clubs.title.marked')}`} intro={t('mk.clubs.intro')} />
 
-                <div role="group" aria-label={t('mk.clubs.pick')} className="mt-8 flex flex-wrap gap-2">
-                    {CLUBS.map((c) => (
-                        <button
-                            key={c.id}
-                            type="button"
-                            aria-pressed={clubId === c.id}
-                            onClick={() => setClubId(c.id)}
-                            className={`min-h-11 rounded-full border-2 px-4 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
-                                clubId === c.id ? 'border-foreground/70 bg-accent text-accent-foreground' : 'border-border bg-card text-foreground hover:bg-muted'
-                            }`}
-                        >
-                            {t(`mk.clubs.${c.id}.name`)}
-                        </button>
-                    ))}
-                </div>
-
-                <div aria-live="polite" className="mt-6">
-                    <PaperCard tape className="pt-8">
-                        <div className="flex items-center gap-4">
-                            <Draw key={club.id} paths={club.prop} viewBox="0 0 40 40" className="size-14 shrink-0" pathClassName="stroke-accent stroke-[2.5]" />
-                            <div>
-                                <h3 className="text-xl font-bold text-foreground">{t(`mk.clubs.${club.id}.name`)}</h3>
-                                <p className="text-muted-foreground">{t(`mk.clubs.${club.id}.scene`)}</p>
-                            </div>
-                        </div>
-                        <div className="mt-5 grid gap-4 md:grid-cols-3">
-                            {LISTS.map(({ key, item }) => (
-                                <div key={key} className="rounded-md border border-border bg-background p-4">
-                                    <h4 className="font-semibold text-foreground">{t(`mk.clubs.list.${key}`)}</h4>
-                                    <ul className="mt-2 list-inside list-disc space-y-1 text-foreground">
-                                        {[1, 2, 3].map((n) => (
-                                            <li key={n}>{t(`mk.clubs.${club.id}.${key}${n}`)}</li>
-                                        ))}
-                                    </ul>
-                                    <p className="mt-3 text-sm text-muted-foreground">{t(`${getItem(item).i18nKey}.title`)}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </PaperCard>
-                </div>
-
-                <StatusSketch status={forms.status} className="mt-6">
-                    <p className="font-semibold text-foreground">{t(`${forms.i18nKey}.title`)}</p>
-                    <p className="text-muted-foreground">{t('mk.clubs.forms')}</p>
-                </StatusSketch>
+            <div role="group" aria-label={t('mk.clubs.pick')} className="mt-10 flex flex-wrap gap-2">
+                {CLUBS.map((c) => (
+                    <button
+                        key={c.id}
+                        type="button"
+                        aria-pressed={clubId === c.id}
+                        onClick={() => setClubId(c.id)}
+                        className={`min-h-11 rounded-lg border px-4 text-sm font-medium transition-colors active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+                            clubId === c.id ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card text-foreground hover:bg-muted'
+                        }`}
+                    >
+                        {t(`mk.clubs.${c.id}.name`)}
+                    </button>
+                ))}
             </div>
+
+            <div aria-live="polite" className="mt-4">
+                <PaperCard className="p-6 sm:p-8">
+                    <div className="flex items-center gap-4">
+                        <Draw key={club.id} paths={club.prop} viewBox="0 0 40 40" className="size-14 shrink-0" pathClassName="stroke-accent stroke-[2]" />
+                        <div>
+                            <h3 className="text-xl font-semibold text-foreground">{t(`mk.clubs.${club.id}.name`)}</h3>
+                            <p className="text-muted-foreground">{t(`mk.clubs.${club.id}.scene`)}</p>
+                        </div>
+                    </div>
+                    <div className="mt-6 grid gap-4 md:grid-cols-3">
+                        {LISTS.map(({ key, item }) => (
+                            <div key={key} className="rounded-xl border border-border bg-background p-5">
+                                <h4 className="font-medium text-foreground">{t(`mk.clubs.list.${key}`)}</h4>
+                                <ul className="mt-3 list-inside list-disc space-y-1.5 text-foreground marker:text-muted-foreground">
+                                    {[1, 2, 3].map((n) => (
+                                        <li key={n}>{t(`mk.clubs.${club.id}.${key}${n}`)}</li>
+                                    ))}
+                                </ul>
+                                <p className="mt-4 text-sm text-muted-foreground">{t(`${getItem(item).i18nKey}.title`)}</p>
+                            </div>
+                        ))}
+                    </div>
+                </PaperCard>
+            </div>
+
+            <StatusSketch status={forms.status} className="mt-4">
+                <p className="font-medium text-foreground">{t(`${forms.i18nKey}.title`)}</p>
+                <p className="text-muted-foreground">{t('mk.clubs.forms')}</p>
+            </StatusSketch>
         </section>
     );
 }

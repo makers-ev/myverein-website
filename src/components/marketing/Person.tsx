@@ -1,13 +1,13 @@
 export type PersonPose = 'stand' | 'wave' | 'carry' | 'sit' | 'shrug' | 'child' | 'elder' | 'lead';
 export type PersonTone = 1 | 2 | 3 | 4 | 5 | 6;
 
-// Token-based tones only, so the figures follow every palette and both themes.
+// Token-based tones only (ink, gold and neutrals; never the status colours), so the figures follow every palette and both themes.
 const TONES: Record<PersonTone, { fill: string; stroke: string }> = {
     1: { fill: 'fill-primary', stroke: 'stroke-primary' },
     2: { fill: 'fill-accent', stroke: 'stroke-accent' },
-    3: { fill: 'fill-success', stroke: 'stroke-success' },
-    4: { fill: 'fill-warning', stroke: 'stroke-warning' },
-    5: { fill: 'fill-destructive', stroke: 'stroke-destructive' },
+    3: { fill: 'fill-primary/60', stroke: 'stroke-primary/60' },
+    4: { fill: 'fill-accent/60', stroke: 'stroke-accent/60' },
+    5: { fill: 'fill-foreground/70', stroke: 'stroke-foreground/70' },
     6: { fill: 'fill-muted-foreground', stroke: 'stroke-muted-foreground' },
 };
 
