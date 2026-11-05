@@ -21,10 +21,10 @@ export default async function ErrorPage(props: ErrorPageProps) {
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-            <div className="w-full max-w-md transform overflow-hidden rounded-2xl bg-card p-8 shadow-xl transition-all duration-500 hover:shadow-2xl">
+            <div className="w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card p-8 shadow-md">
                 <div className="flex flex-col items-center text-center">
-                    <div className="mb-6 rounded-full bg-red-100 dark:bg-red-950 p-4">
-                        <ExclamationTriangleIcon className="h-12 w-12 text-red-600 dark:text-red-400" />
+                    <div className="mb-6 rounded-full bg-destructive/10 p-4">
+                        <ExclamationTriangleIcon className="h-12 w-12 text-destructive" />
                     </div>
 
                     <h1 className="mb-2 text-3xl font-bold text-card-foreground">
@@ -38,7 +38,7 @@ export default async function ErrorPage(props: ErrorPageProps) {
                     <div className="space-y-4 w-full">
                         <Link
                             href="/login-signup"
-                            className="block w-full rounded-lg bg-primary px-5 py-3 text-center text-sm font-semibold text-primary-foreground transition-transform duration-200 hover:-translate-y-1 hover:brightness-110 active:scale-95"
+                            className="block w-full rounded-lg bg-primary px-5 py-3 text-center text-sm font-semibold text-primary-foreground transition-transform duration-200  hover:brightness-110 active:scale-[0.98]"
                         >
                             Try Signing In Again
                         </Link>

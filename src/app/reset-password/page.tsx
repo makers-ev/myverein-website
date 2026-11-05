@@ -52,10 +52,10 @@ function ResetPasswordPageInner() {
     if (hasError) {
         return (
             <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-                <div className="w-full max-w-md transform overflow-hidden rounded-2xl bg-card p-8 shadow-xl transition-all duration-500 hover:shadow-2xl">
+                <div className="w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card p-8 shadow-md">
                     <div className="flex flex-col items-center text-center">
-                        <div className="mb-6 rounded-full bg-red-100 dark:bg-red-950 p-4">
-                            <ExclamationTriangleIcon className="h-12 w-12 text-red-600 dark:text-red-400" />
+                        <div className="mb-6 rounded-full bg-destructive/10 p-4">
+                            <ExclamationTriangleIcon className="h-12 w-12 text-destructive" />
                         </div>
                         <h1 className="mb-2 text-3xl font-bold text-card-foreground">
                             {t('auth.resetPassword.invalidLink.title')}
@@ -65,7 +65,7 @@ function ResetPasswordPageInner() {
                         </p>
                         <Link
                             href="/login-signup"
-                            className="block w-full rounded-lg bg-primary px-5 py-3 text-center text-sm font-semibold text-primary-foreground transition-transform duration-200 hover:-translate-y-1 hover:brightness-110 active:scale-95"
+                            className="block w-full rounded-lg bg-primary px-5 py-3 text-center text-sm font-semibold text-primary-foreground transition-transform duration-200  hover:brightness-110 active:scale-[0.98]"
                         >
                             {t('auth.resetPassword.invalidLink.cta')}
                         </Link>
@@ -78,10 +78,10 @@ function ResetPasswordPageInner() {
     if (success) {
         return (
             <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-                <div className="w-full max-w-md transform overflow-hidden rounded-2xl bg-card p-8 shadow-xl transition-all duration-500 hover:shadow-2xl">
+                <div className="w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card p-8 shadow-md">
                     <div className="flex flex-col items-center text-center">
-                        <div className="mb-6 rounded-full bg-green-100 dark:bg-green-950 p-4">
-                            <CheckCircleIcon className="h-12 w-12 text-green-600 dark:text-green-400" />
+                        <div className="mb-6 rounded-full bg-success/10 p-4">
+                            <CheckCircleIcon className="h-12 w-12 text-success" />
                         </div>
                         <h1 className="mb-2 text-3xl font-bold text-card-foreground">
                             {t('auth.resetPassword.success.title')}
@@ -91,7 +91,7 @@ function ResetPasswordPageInner() {
                         </p>
                         <Link
                             href="/login-signup"
-                            className="block w-full rounded-lg bg-primary px-5 py-3 text-center text-sm font-semibold text-primary-foreground transition-transform duration-200 hover:-translate-y-1 hover:brightness-110 active:scale-95"
+                            className="block w-full rounded-lg bg-primary px-5 py-3 text-center text-sm font-semibold text-primary-foreground transition-transform duration-200  hover:brightness-110 active:scale-[0.98]"
                         >
                             {t('auth.resetPassword.success.cta')}
                         </Link>
@@ -105,7 +105,7 @@ function ResetPasswordPageInner() {
         <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
             <div className="w-full max-w-md rounded-2xl bg-card p-8 shadow-xl">
                 <div className="mb-8 text-center">
-                    <h1 className="text-3xl font-black tracking-tight text-foreground">
+                    <h1 className="text-3xl font-semibold text-foreground">
                         {t('auth.resetPassword.page.title')}
                     </h1>
                     <p className="mt-2 text-sm text-muted-foreground">{t('auth.resetPassword.page.subtitle')}</p>
@@ -125,7 +125,7 @@ function ResetPasswordPageInner() {
                             minLength={8}
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
-                            className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                            className="mt-1 block w-full rounded-lg border border-border bg-background px-3 py-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                         />
                     </div>
 
@@ -142,11 +142,11 @@ function ResetPasswordPageInner() {
                             minLength={8}
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
-                            className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                            className="mt-1 block w-full rounded-lg border border-border bg-background px-3 py-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                         />
                     </div>
 
-                    {error && <p className="text-sm text-red-600">{error}</p>}
+                    {error && <p className="text-sm text-destructive">{error}</p>}
 
                     <button
                         type="submit"

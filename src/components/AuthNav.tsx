@@ -84,14 +84,14 @@ export function AuthNav({ appLinks = [] }: { appLinks?: AuthNavAppLink[] }) {
     }, [signedIn]);
 
     if (isPending) {
-        return <div className="h-9 w-20" />;
+        return <div className="h-9 w-20" aria-hidden="true" />;
     }
 
     if (!session) {
         return (
             <Link
                 href="/login-signup"
-                className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:brightness-110 transition-colors"
+                className="inline-flex min-h-9 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98]"
             >
                 {t('auth.nav.signin')}
             </Link>
@@ -110,9 +110,9 @@ export function AuthNav({ appLinks = [] }: { appLinks?: AuthNavAppLink[] }) {
                     onClick={() => setIsOpen((v) => !v)}
                     aria-expanded={isOpen}
                     aria-haspopup="true"
-                    className="flex min-h-11 items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                    className="flex min-h-11 items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
                 >
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-sm font-medium text-foreground">
                         {displayName.slice(0, 1).toUpperCase()}
                     </span>
                     <span className="hidden sm:inline">{displayName}</span>
@@ -120,7 +120,7 @@ export function AuthNav({ appLinks = [] }: { appLinks?: AuthNavAppLink[] }) {
                 </button>
 
                 {isOpen && (
-                    <div className="absolute right-0 mt-2 w-48 origin-top-right rounded-xl border border-border bg-card p-2 shadow-lg ring-1 ring-black/5">
+                    <div className="animate-menu absolute right-0 mt-2 w-52 origin-top-right rounded-xl border border-border bg-card p-1.5 shadow-lg">
                         {links.length > 0 && (
                             <>
                                 {links.map((link) => {
@@ -130,9 +130,9 @@ export function AuthNav({ appLinks = [] }: { appLinks?: AuthNavAppLink[] }) {
                                             key={link.href}
                                             href={link.href}
                                             onClick={() => setIsOpen(false)}
-                                            className="flex items-center gap-2 rounded px-3 py-2 text-sm text-foreground hover:bg-muted"
+                                            className="flex min-h-9 items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
                                         >
-                                            {Icon && <Icon size={16} />}
+                                            {Icon && <Icon size={16} strokeWidth={1.5} className="text-muted-foreground" />}
                                             {t(link.name)}
                                         </Link>
                                     );
@@ -143,9 +143,9 @@ export function AuthNav({ appLinks = [] }: { appLinks?: AuthNavAppLink[] }) {
                         <Link
                             href="/settings"
                             onClick={() => setIsOpen(false)}
-                            className="flex items-center gap-2 rounded px-3 py-2 text-sm text-foreground hover:bg-muted"
+                            className="flex min-h-9 items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
                         >
-                            <SettingsIcon size={16} />
+                            <SettingsIcon size={16} strokeWidth={1.5} className="text-muted-foreground" />
                             {t('auth.nav.settings')}
                         </Link>
                         <button
@@ -157,9 +157,9 @@ export function AuthNav({ appLinks = [] }: { appLinks?: AuthNavAppLink[] }) {
                                 router.push('/');
                                 router.refresh();
                             }}
-                            className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm text-foreground hover:bg-muted"
+                            className="flex min-h-9 w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-muted"
                         >
-                            <LogOut size={16} />
+                            <LogOut size={16} strokeWidth={1.5} className="text-muted-foreground" />
                             {t('auth.nav.signout')}
                         </button>
                     </div>

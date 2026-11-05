@@ -117,7 +117,7 @@ function SearchBox({ clubId }: { clubId: string }) {
                     if (items.length === 0) return null;
                     return (
                         <div key={g} role="group" aria-label={t(`search.group.${g}`)}>
-                            <div aria-hidden="true" className="px-3 pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t(`search.group.${g}`)}</div>
+                            <div aria-hidden="true" className="px-3 pt-2 text-xs font-semibold text-muted-foreground">{t(`search.group.${g}`)}</div>
                             {items.map(({ h, index }) => (
                                 <div
                                     key={`${g}:${h.id}`}

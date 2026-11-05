@@ -83,7 +83,7 @@ export function Modal({ open, onClose, title, children, footer, size = 'md' }: M
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 sm:p-6"
       onClick={onClose}
     >
       <div
@@ -92,17 +92,17 @@ export function Modal({ open, onClose, title, children, footer, size = 'md' }: M
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className={`flex max-h-[90vh] w-full flex-col rounded-2xl bg-card shadow-xl ${size === 'lg' ? 'max-w-2xl' : 'max-w-lg'}`}
+        className={`animate-menu flex max-h-[90vh] w-full flex-col rounded-2xl border border-border bg-card shadow-xl ${size === 'lg' ? 'max-w-2xl' : 'max-w-lg'}`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-border px-5 py-4">
-          <h2 id={titleId} className="truncate pr-3 text-lg font-bold text-foreground">{title}</h2>
-          <button type="button" onClick={onClose} className="rounded p-1 hover:bg-muted" aria-label={t('common.close')}>
-            <X className="h-5 w-5 text-muted-foreground" />
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+          <h2 id={titleId} className="truncate pr-3 text-lg font-semibold text-foreground">{title}</h2>
+          <button type="button" onClick={onClose} className="-mr-2 flex h-11 w-11 items-center justify-center rounded-lg transition-colors hover:bg-muted" aria-label={t('common.close')}>
+            <X className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
           </button>
         </div>
-        <div className="overflow-y-auto p-5">{children}</div>
-        {footer ? <div className="border-t border-border px-5 py-4">{footer}</div> : null}
+        <div className="overflow-y-auto p-6">{children}</div>
+        {footer ? <div className="border-t border-border px-6 py-4">{footer}</div> : null}
       </div>
     </div>
   );

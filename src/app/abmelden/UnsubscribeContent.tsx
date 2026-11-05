@@ -18,7 +18,7 @@ type View =
     | { kind: 'error' };
 
 const buttonClass =
-    'block w-full rounded-lg bg-primary px-5 py-3 text-center text-sm font-semibold text-primary-foreground transition-transform duration-200 hover:brightness-110 active:scale-95 disabled:opacity-50';
+    'block w-full rounded-lg bg-primary px-5 py-3 text-center text-sm font-semibold text-primary-foreground transition-transform duration-200 hover:brightness-110 active:scale-[0.98] disabled:opacity-50';
 
 function Shell({ children, status }: { children: React.ReactNode; status?: 'ok' | 'warn' }) {
     return (
@@ -26,13 +26,13 @@ function Shell({ children, status }: { children: React.ReactNode; status?: 'ok' 
             <div className="w-full max-w-md overflow-hidden rounded-2xl bg-card p-8 shadow-xl">
                 <div className="flex flex-col items-center text-center">
                     {status === 'ok' && (
-                        <div className="mb-6 rounded-full bg-green-100 p-4 dark:bg-green-950">
-                            <CheckCircleIcon className="h-10 w-10 text-green-600 dark:text-green-400" aria-hidden />
+                        <div className="mb-6 rounded-full bg-success/10 p-4 dark:bg-green-950">
+                            <CheckCircleIcon className="h-10 w-10 text-success" aria-hidden />
                         </div>
                     )}
                     {status === 'warn' && (
-                        <div className="mb-6 rounded-full bg-amber-100 p-4 dark:bg-amber-950">
-                            <ExclamationTriangleIcon className="h-10 w-10 text-amber-600 dark:text-amber-400" aria-hidden />
+                        <div className="mb-6 rounded-full bg-warning/10 p-4 dark:bg-amber-950">
+                            <ExclamationTriangleIcon className="h-10 w-10 text-warning" aria-hidden />
                         </div>
                     )}
                     {children}

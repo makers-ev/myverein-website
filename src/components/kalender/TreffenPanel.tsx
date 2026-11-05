@@ -1001,7 +1001,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, canManageAssembly, canR
                     <div className="overflow-x-auto rounded-lg border border-border">
                         <table className="w-full text-sm">
                             <thead>
-                                <tr className="border-b border-border bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
+                                <tr className="border-b border-border bg-muted/50 text-left text-xs text-muted-foreground">
                                     <th className="px-3 py-2">{t('treffen.attendance.name')}</th>
                                     <th className="px-3 py-2 text-center">{t('treffen.attendance.present')}</th>
                                     <th className="px-3 py-2 text-center">{t('treffen.attendance.voting-right')}</th>

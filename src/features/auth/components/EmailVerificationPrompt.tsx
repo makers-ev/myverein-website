@@ -53,9 +53,9 @@ export function EmailVerificationPrompt({ email, callbackUrl = '/heute', onBackT
                 </p>
             </div>
 
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && <p className="text-sm text-destructive">{error}</p>}
             {resent && !error && (
-                <p className="text-sm text-green-600">{t('auth.verifyEmail.resent')}</p>
+                <p className="text-sm text-success">{t('auth.verifyEmail.resent')}</p>
             )}
 
             <div className="flex gap-3">

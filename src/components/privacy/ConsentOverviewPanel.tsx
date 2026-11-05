@@ -170,7 +170,7 @@ export default function ConsentOverviewPanel({ clubId, permissions, onOpenAudit 
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-sm">
-                                <thead className="text-xs uppercase text-muted-foreground">
+                                <thead className="text-xs text-muted-foreground">
                                     <tr>
                                         <th className="px-3 py-2">{t('privacy.overview.member')}</th>
                                         {purposes.map((p) => (

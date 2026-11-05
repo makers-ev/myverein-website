@@ -65,12 +65,12 @@ export function TwoFactorPrompt({ onVerified, onCancel }: TwoFactorPromptProps) 
                     maxLength={6}
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
-                    className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-center text-lg tracking-[0.5em] shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="mt-1 block w-full rounded-lg border border-border bg-background px-3 py-2 text-center text-lg tracking-[0.5em] focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                     placeholder="000000"
                 />
             </div>
 
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && <p className="text-sm text-destructive">{error}</p>}
 
             <div className="flex gap-3">
                 <button

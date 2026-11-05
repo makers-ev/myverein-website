@@ -120,7 +120,7 @@ function TriField({ label, hint, value, onChange }: { label: string; hint?: stri
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
     return (
         <fieldset className="space-y-3 rounded-lg border border-border p-3">
-            <legend className="px-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">{title}</legend>
+            <legend className="px-1 text-xs font-bold text-muted-foreground">{title}</legend>
             {children}
         </fieldset>
     );

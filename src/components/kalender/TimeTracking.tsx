@@ -392,7 +392,7 @@ function RateCards({ clubId }: { clubId: string }) {
     const list = (title: string, items: RateCard[]) =>
         items.length > 0 && (
             <div>
-                <h4 className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</h4>
+                <h4 className="mb-1 text-xs font-semibold text-muted-foreground">{title}</h4>
                 <ul className="divide-y divide-border">
                     {items.map((c) => (
                         <li key={c.id} className="flex flex-wrap items-center justify-between gap-2 py-2">

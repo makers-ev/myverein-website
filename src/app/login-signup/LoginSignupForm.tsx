@@ -119,7 +119,7 @@ function LoginSignupFormInner() {
     return (
         <>
             <div className="text-center mb-8">
-                <h2 className="text-3xl font-black tracking-tight text-foreground">
+                <h2 className="text-3xl font-semibold text-foreground">
                     {mode === 'sign-in' ? t('auth.signin.title') : t('auth.signup.title')}
                 </h2>
                 <p className="mt-2 text-sm text-muted-foreground">
@@ -141,7 +141,7 @@ function LoginSignupFormInner() {
                             required
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                            className="mt-1 block w-full rounded-lg border border-border bg-background px-3 py-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                         />
                     </div>
                 )}
@@ -158,7 +158,7 @@ function LoginSignupFormInner() {
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                        className="mt-1 block w-full rounded-lg border border-border bg-background px-3 py-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                     />
                 </div>
 
@@ -175,11 +175,11 @@ function LoginSignupFormInner() {
                         minLength={8}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                        className="mt-1 block w-full rounded-lg border border-border bg-background px-3 py-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                     />
                 </div>
 
-                {error && <p className="text-sm text-red-600">{error}</p>}
+                {error && <p className="text-sm text-destructive">{error}</p>}
 
                 <button
                     type="submit"

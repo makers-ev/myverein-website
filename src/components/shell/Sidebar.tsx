@@ -40,7 +40,7 @@ export default function Sidebar({ groups, collapsed, onToggleCollapsed, onNaviga
         <nav aria-label={t('shell.sidebar.label')} className="flex h-full flex-col gap-4 overflow-y-auto p-3">
             {groups.map((g) => (
                 <div key={g.id}>
-                    <h2 className={`px-2 pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground ${collapsed ? 'sr-only' : ''}`}>{t(g.labelKey)}</h2>
+                    <h2 className={`px-2 pb-1 text-xs font-semibold text-muted-foreground ${collapsed ? 'sr-only' : ''}`}>{t(g.labelKey)}</h2>
                     <ul className="space-y-0.5">
                         {g.entries.map((e) => {
                             const Icon = ICONS[e.icon];

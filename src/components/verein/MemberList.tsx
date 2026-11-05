@@ -317,7 +317,7 @@ export default function MemberList({
         const active = sort === sortKey;
         return (
             <th key={sortKey} className="px-3 py-2" aria-sort={active ? (order === 'asc' ? 'ascending' : 'descending') : 'none'}>
-                <button type="button" onClick={() => toggleSort(sortKey)} className="inline-flex items-center gap-1 uppercase tracking-wide hover:text-foreground">
+                <button type="button" onClick={() => toggleSort(sortKey)} className="inline-flex items-center gap-1 hover:text-foreground">
                     {label}
                     {active && (order === 'asc' ? <ArrowUp className="h-3 w-3" aria-hidden="true" /> : <ArrowDown className="h-3 w-3" aria-hidden="true" />)}
                 </button>
@@ -504,11 +504,11 @@ export default function MemberList({
                             <thead>
                                 <tr className="sticky top-0 z-10 border-b border-border bg-muted text-left text-xs text-muted-foreground">
                                     {sortHeader(t('verein.members.table.name'), 'name')}
-                                    {show('category') && <th className="px-3 py-2 uppercase tracking-wide">{t('verein.members.table.category')}</th>}
-                                    <th className="px-3 py-2 uppercase tracking-wide">{t('verein.members.table.status')}</th>
-                                    {show('account') && <th className="px-3 py-2 uppercase tracking-wide">{t('verein.members.table.account')}</th>}
-                                    {show('departments') && <th className="px-3 py-2 uppercase tracking-wide">{t('verein.members.table.departments')}</th>}
-                                    {show('roles') && <th className="px-3 py-2 uppercase tracking-wide">{t('verein.members.table.roles')}</th>}
+                                    {show('category') && <th className="px-3 py-2 ">{t('verein.members.table.category')}</th>}
+                                    <th className="px-3 py-2 ">{t('verein.members.table.status')}</th>
+                                    {show('account') && <th className="px-3 py-2 ">{t('verein.members.table.account')}</th>}
+                                    {show('departments') && <th className="px-3 py-2 ">{t('verein.members.table.departments')}</th>}
+                                    {show('roles') && <th className="px-3 py-2 ">{t('verein.members.table.roles')}</th>}
                                     {show('joined') && sortHeader(t('verein.members.table.joined'), 'joinedAt')}
                                     {canSensitive && sortHeader(t('verein.members.table.number'), 'memberNumber')}
                                     {canPrivacy && (

@@ -444,7 +444,7 @@ export default function MemberImportDialog({
                                 <div className={`relative overflow-x-auto rounded-lg border border-border ${stale ? 'opacity-60' : ''}`}>
                                     <table className="w-full text-left text-sm">
                                         <caption className="sr-only">{t('verein.import.rows.title')}</caption>
-                                        <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
+                                        <thead className="bg-muted/50 text-xs text-muted-foreground">
                                             <tr>
                                                 <th scope="col" className="px-3 py-2">{t('verein.import.rows.line')}</th>
                                                 <th scope="col" className="px-3 py-2">{t('verein.import.rows.status')}</th>

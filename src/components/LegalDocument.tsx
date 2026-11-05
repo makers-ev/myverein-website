@@ -21,27 +21,24 @@ export function LegalDocument({ keyPrefix, sectionCount }: { keyPrefix: keyof ty
   const showLanguageFallback = language !== 'de' && language !== 'en';
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:px-8">
-      <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
-          <Icon className="h-5 w-5 text-primary" strokeWidth={2.25} />
-        </div>
-        <h1 className="text-2xl font-extrabold text-foreground">{t(`${keyPrefix}.title`)}</h1>
-      </div>
+    <div className="mx-auto max-w-[44rem] px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
+      <header className="mb-10 border-b border-border pb-8">
+        <Icon className="mb-5 h-6 w-6 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
+        <h1 className="font-display text-4xl leading-[1.1] text-foreground sm:text-5xl">{t(`${keyPrefix}.title`)}</h1>
+        <p className="mt-4 text-sm text-muted-foreground">{t(`${keyPrefix}.updated`)}</p>
+      </header>
 
       {showLanguageFallback && (
-        <p className="mb-6 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
+        <p className="mb-8 rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-foreground">
           {t('legal.fallback-notice')}
         </p>
       )}
 
-      <p className="mb-6 text-xs text-muted-foreground">{t(`${keyPrefix}.updated`)}</p>
-
       {Array.from({ length: sectionCount }, (_, i) => i + 1).map((num) => (
-        <div key={num} className="mb-5">
-          <h2 className="mb-1 text-base font-bold text-foreground">{t(`${keyPrefix}.section${num}.title`)}</h2>
-          <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{t(`${keyPrefix}.section${num}.text`)}</p>
-        </div>
+        <section key={num} className="mb-8">
+          <h2 className="mb-2 text-lg font-semibold leading-snug text-foreground">{t(`${keyPrefix}.section${num}.title`)}</h2>
+          <p className="whitespace-pre-line text-[0.9375rem] leading-7 text-foreground">{t(`${keyPrefix}.section${num}.text`)}</p>
+        </section>
       ))}
     </div>
   );

@@ -86,7 +86,7 @@ export default function AbsencesBoardPanel({ clubId, departments }: { clubId: st
             ) : (
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                        <thead className="text-xs uppercase text-muted-foreground">
+                        <thead className="text-xs text-muted-foreground">
                             <tr>
                                 <th className="px-3 py-2">{t('absence.board.name')}</th>
                                 <th className="px-3 py-2">{t('absence.board.kind')}</th>

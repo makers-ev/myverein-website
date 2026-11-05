@@ -131,7 +131,7 @@ export default function DpaPanel({ clubId, onAccepted }: { clubId: string; onAcc
                             ) : (
                                 <div className="mt-2 overflow-x-auto">
                                     <table className="w-full text-left text-sm">
-                                        <thead className="text-xs uppercase text-muted-foreground">
+                                        <thead className="text-xs text-muted-foreground">
                                             <tr>
                                                 <th className="px-3 py-2">{t('privacy.dpa.sub.name')}</th>
                                                 <th className="px-3 py-2">{t('privacy.dpa.sub.purpose')}</th>

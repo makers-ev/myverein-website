@@ -244,7 +244,7 @@ export default function SettingsPageContent() {
 							<input
 								value={name}
 								onChange={(e) => setName(e.target.value)}
-								className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary transition"
+								className="mt-1 block w-full rounded-lg border border-border bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary transition"
 							/>
 						</div>
 
@@ -259,7 +259,7 @@ export default function SettingsPageContent() {
 						</div>
 					</div>
 
-					{profileError && <p className="mt-3 text-sm text-red-600">{profileError}</p>}
+					{profileError && <p className="mt-3 text-sm text-destructive">{profileError}</p>}
 
 					<button
 						type="submit"
@@ -296,7 +296,7 @@ export default function SettingsPageContent() {
 										autoComplete="current-password"
 										value={currentPassword}
 										onChange={(e) => setCurrentPassword(e.target.value)}
-										className="block w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
+										className="block w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
 									/>
 									<input
 										type="password"
@@ -306,9 +306,9 @@ export default function SettingsPageContent() {
 										autoComplete="new-password"
 										value={newPassword}
 										onChange={(e) => setNewPassword(e.target.value)}
-										className="block w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
+										className="block w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
 									/>
-									{passwordError && <p className="text-sm text-red-600">{passwordError}</p>}
+									{passwordError && <p className="text-sm text-destructive">{passwordError}</p>}
 									<div className="flex gap-2">
 										<button
 											type="submit"
@@ -362,9 +362,9 @@ export default function SettingsPageContent() {
 										autoComplete="current-password"
 										value={twoFactorPassword}
 										onChange={(e) => setTwoFactorPassword(e.target.value)}
-										className="block w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
+										className="block w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
 									/>
-									{twoFactorError && <p className="text-sm text-red-600">{twoFactorError}</p>}
+									{twoFactorError && <p className="text-sm text-destructive">{twoFactorError}</p>}
 									<div className="flex gap-2">
 										<button
 											type="submit"
@@ -402,9 +402,9 @@ export default function SettingsPageContent() {
 										maxLength={6}
 										value={totpCode}
 										onChange={(e) => setTotpCode(e.target.value)}
-										className="block w-full rounded-md border border-border bg-background px-3 py-2 text-center text-sm tracking-[0.3em] shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
+										className="block w-full rounded-lg border border-border bg-background px-3 py-2 text-center text-sm tracking-[0.3em] focus:outline-none focus:ring-2 focus:ring-primary"
 									/>
-									{twoFactorError && <p className="text-sm text-red-600">{twoFactorError}</p>}
+									{twoFactorError && <p className="text-sm text-destructive">{twoFactorError}</p>}
 									<div className="flex gap-2">
 										<button
 											type="submit"
@@ -434,14 +434,14 @@ export default function SettingsPageContent() {
 										autoComplete="current-password"
 										value={twoFactorPassword}
 										onChange={(e) => setTwoFactorPassword(e.target.value)}
-										className="block w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
+										className="block w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
 									/>
-									{twoFactorError && <p className="text-sm text-red-600">{twoFactorError}</p>}
+									{twoFactorError && <p className="text-sm text-destructive">{twoFactorError}</p>}
 									<div className="flex gap-2">
 										<button
 											type="submit"
 											disabled={twoFactorSubmitting}
-											className="px-3 py-2 rounded bg-red-600 text-white text-sm hover:bg-red-500 transition disabled:opacity-60"
+											className="px-3 py-2 rounded bg-destructive text-destructive-foreground text-sm hover:brightness-110 transition disabled:opacity-60"
 										>
 											{twoFactorSubmitting ? "Please wait..." : "Disable"}
 										</button>
@@ -471,8 +471,8 @@ export default function SettingsPageContent() {
 				</button>
 			</div>
 
-			<div className="bg-card border border-red-200 dark:border-red-900 rounded-lg p-6 shadow-sm mt-6">
-				<h2 className="text-lg font-semibold text-red-600">Danger zone</h2>
+			<div className="bg-card border border-destructive/30 rounded-lg p-6 shadow-sm mt-6">
+				<h2 className="text-lg font-semibold text-destructive">Danger zone</h2>
 				<p className="text-sm text-muted-foreground">
 					Permanently delete your account and all associated data. This cannot be undone.
 				</p>
@@ -486,7 +486,7 @@ export default function SettingsPageContent() {
 				{!showDeleteForm ? (
 					<button
 						onClick={() => setShowDeleteForm(true)}
-						className="mt-3 px-3 py-2 rounded bg-red-600 text-white text-sm hover:bg-red-500 transition"
+						className="mt-3 px-3 py-2 rounded bg-destructive text-destructive-foreground text-sm hover:brightness-110 transition"
 					>
 						Delete account
 					</button>
@@ -500,14 +500,14 @@ export default function SettingsPageContent() {
 							autoComplete="current-password"
 							value={deletePassword}
 							onChange={(e) => setDeletePassword(e.target.value)}
-							className="block w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
+							className="block w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
 						/>
-						{deleteError && <p className="text-sm text-red-600">{deleteError}</p>}
+						{deleteError && <p className="text-sm text-destructive">{deleteError}</p>}
 						<div className="flex gap-2">
 							<button
 								type="submit"
 								disabled={deleteSubmitting}
-								className="px-3 py-2 rounded bg-red-600 text-white text-sm hover:bg-red-500 transition disabled:opacity-60"
+								className="px-3 py-2 rounded bg-destructive text-destructive-foreground text-sm hover:brightness-110 transition disabled:opacity-60"
 							>
 								{deleteSubmitting ? "Deleting..." : "Permanently delete"}
 							</button>

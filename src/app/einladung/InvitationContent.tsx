@@ -37,7 +37,7 @@ function inviteStores(): TokenStore[] {
 }
 
 const buttonClass =
-    'block w-full rounded-lg bg-primary px-5 py-3 text-center text-sm font-semibold text-primary-foreground transition-transform duration-200 hover:brightness-110 active:scale-95 disabled:opacity-50';
+    'block w-full rounded-lg bg-primary px-5 py-3 text-center text-sm font-semibold text-primary-foreground transition-transform duration-200 hover:brightness-110 active:scale-[0.98] disabled:opacity-50';
 const secondaryClass = 'block w-full rounded-lg border border-border px-5 py-3 text-center text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50';
 
 type View =
@@ -57,13 +57,13 @@ function Shell({ children, status }: { children: React.ReactNode; status?: 'ok' 
             <div className="w-full max-w-md overflow-hidden rounded-2xl bg-card p-8 shadow-xl">
                 <div className="flex flex-col items-center text-center">
                     {status === 'ok' && (
-                        <div className="mb-6 rounded-full bg-green-100 p-4 dark:bg-green-950">
-                            <CheckCircleIcon className="h-12 w-12 text-green-600 dark:text-green-400" aria-hidden="true" />
+                        <div className="mb-6 rounded-full bg-success/10 p-4 dark:bg-green-950">
+                            <CheckCircleIcon className="h-12 w-12 text-success" aria-hidden="true" />
                         </div>
                     )}
                     {status === 'warn' && (
-                        <div className="mb-6 rounded-full bg-red-100 p-4 dark:bg-red-950">
-                            <ExclamationTriangleIcon className="h-12 w-12 text-red-600 dark:text-red-400" aria-hidden="true" />
+                        <div className="mb-6 rounded-full bg-destructive/10 p-4 dark:bg-red-950">
+                            <ExclamationTriangleIcon className="h-12 w-12 text-destructive" aria-hidden="true" />
                         </div>
                     )}
                     {children}

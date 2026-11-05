@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronDown, Menu, X, Globe } from 'lucide-react';
+import { Check, ChevronDown, Menu, X, Globe } from 'lucide-react';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supportedLanguages, type Language } from '@/contexts/supportedLanguages';
@@ -73,10 +73,10 @@ export function Navbar({
     };
 
     return (
-        <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md transition-all">
+        <nav className="sticky top-0 z-50 w-full border-b border-border bg-background">
             <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
                 {/* --- LEFT: LOGO & NAV --- */}
-                <div className="flex items-center gap-8">
+                <div className="flex items-center gap-10">
                     <Link
                         href="/"
                         className="flex items-center gap-2 transition-opacity hover:opacity-80"
@@ -91,7 +91,7 @@ export function Navbar({
                                 <Link
                                     key={link.href}
                                     href={link.href}
-                                    className={`text-sm font-medium transition-colors duration-200 ${
+                                    className={`text-sm font-medium transition-colors ${
                                         isActive
                                             ? 'text-primary'
                                             : 'text-muted-foreground hover:text-foreground'
@@ -106,7 +106,7 @@ export function Navbar({
                             target="_blank"
                             rel="noopener noreferrer"
                             aria-label={t('help.nav.label')}
-                            className="text-sm font-medium text-muted-foreground transition-colors duration-200 hover:text-foreground"
+                            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                         >
                             {t('help.nav')}
                         </a>
@@ -114,7 +114,7 @@ export function Navbar({
                 </div>
 
                 {/* --- RIGHT: THEME, LANGUAGE & GUEST NAV --- */}
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
                     {/* 0. THEME TOGGLE (always visible; color palette lives in Settings) */}
                     <ThemeToggle />
 
@@ -124,33 +124,39 @@ export function Navbar({
                             onClick={() => setIsLangOpen(!isLangOpen)}
                             aria-expanded={isLangOpen}
                             aria-label={t('nav.language_label')}
-                            className="flex min-h-11 items-center gap-1 rounded-md px-2 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                            className="flex min-h-11 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                         >
-                            <Globe size={18} />
-                            <span>{supportedLanguages.find((l) => l.id === language)?.flag}</span>
+                            <Globe size={18} strokeWidth={1.5} aria-hidden="true" />
+                            <span className="font-mono text-xs">{language.toUpperCase()}</span>
                             <ChevronDown
                                 size={14}
-                                className={`transition-transform duration-200 ${
+                                strokeWidth={1.5}
+                                className={`transition-transform ${
                                     isLangOpen ? 'rotate-180' : ''
                                 }`}
                             />
                         </button>
 
                         {isLangOpen && (
-                            <div className="absolute right-0 mt-2 max-h-80 w-44 origin-top-right animate-in fade-in zoom-in-95 duration-100 overflow-y-auto rounded-xl border border-border bg-card p-2 shadow-lg ring-1 ring-black/5 focus:outline-none">
-                                <div className="flex flex-col gap-1">
+                            <div className="animate-menu absolute right-0 mt-2 max-h-80 w-48 origin-top-right overflow-y-auto rounded-xl border border-border bg-card p-1.5 shadow-lg focus:outline-none">
+                                <div className="flex flex-col gap-0.5">
                                     {supportedLanguages.map((lang) => (
                                         <button
                                             key={lang.id}
                                             onClick={() => handleLanguageChange(lang.id)}
-                                            className={`flex items-center justify-between gap-2 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+                                            aria-pressed={language === lang.id}
+                                            className={`flex min-h-9 items-center justify-between gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors ${
                                                 language === lang.id
-                                                    ? 'bg-green-600 text-white'
-                                                    : 'bg-muted text-muted-foreground hover:bg-border'
+                                                    ? 'bg-muted font-medium text-foreground'
+                                                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                                             }`}
                                         >
                                             <span>{lang.nativeLabel}</span>
-                                            <span className="text-base">{lang.flag}</span>
+                                            {language === lang.id ? (
+                                                <Check size={16} strokeWidth={1.5} aria-hidden="true" />
+                                            ) : (
+                                                <span className="font-mono text-xs text-muted-foreground">{lang.id.toUpperCase()}</span>
+                                            )}
                                         </button>
                                     ))}
                                 </div>
@@ -163,15 +169,15 @@ export function Navbar({
 
                     {/* Mobile Toggle Button */}
                     <button
-                        className="flex min-h-11 min-w-11 md:hidden items-center justify-center rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+                        className="flex min-h-11 min-w-11 items-center justify-center rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:hidden"
                         aria-expanded={isMobileMenuOpen}
                         aria-label={t(isMobileMenuOpen ? 'shell.menu.close' : 'shell.menu.open')}
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                     >
                         {isMobileMenuOpen ? (
-                            <X size={24} />
+                            <X size={22} strokeWidth={1.5} />
                         ) : (
-                            <Menu size={24} />
+                            <Menu size={22} strokeWidth={1.5} />
                         )}
                     </button>
                 </div>
@@ -179,13 +185,13 @@ export function Navbar({
 
             {/* --- MOBILE NAVIGATION MENU --- */}
             {isMobileMenuOpen && (
-                <div className="md:hidden border-t border-border bg-background px-4 py-4 shadow-lg animate-in slide-in-from-top-2">
+                <div className="animate-menu border-t border-border bg-background px-4 py-4 shadow-lg md:hidden">
                     <div className="flex flex-col space-y-3">
                         {mainLinks.map((link) => (
                             <Link
                                 key={link.href}
                                 href={link.href}
-                                className={`block rounded-md px-3 py-2 text-base font-medium transition-colors ${
+                                className={`block rounded-lg px-3 py-2.5 text-base font-medium transition-colors ${
                                     pathname === link.href
                                         ? 'bg-primary/10 text-primary'
                                         : 'text-muted-foreground hover:bg-muted'
@@ -199,7 +205,7 @@ export function Navbar({
                             target="_blank"
                             rel="noopener noreferrer"
                             aria-label={t('help.nav.label')}
-                            className="block rounded-md px-3 py-2 text-base font-medium text-muted-foreground transition-colors hover:bg-muted"
+                            className="block rounded-lg px-3 py-2.5 text-base font-medium text-muted-foreground transition-colors hover:bg-muted"
                         >
                             {t('help.nav')}
                         </a>
@@ -214,13 +220,14 @@ export function Navbar({
                                     <button
                                         key={lang.id}
                                         onClick={() => handleLanguageChange(lang.id)}
-                                        className={`px-3 py-1 rounded text-sm font-medium transition-colors flex items-center gap-2 ${
+                                        aria-pressed={language === lang.id}
+                                        className={`flex min-h-11 items-center gap-2 rounded-lg border px-3 py-1 text-sm transition-colors ${
                                             language === lang.id
-                                                ? 'bg-green-600 text-white'
-                                                : 'bg-muted text-muted-foreground'
+                                                ? 'border-foreground/30 bg-muted font-medium text-foreground'
+                                                : 'border-border text-muted-foreground'
                                         }`}
                                     >
-                                        {lang.nativeLabel} {lang.flag}
+                                        {lang.nativeLabel}
                                     </button>
                                 ))}
                             </div>

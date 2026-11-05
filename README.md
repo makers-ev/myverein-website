@@ -102,12 +102,25 @@ The shared building blocks, named identically in myverein-mobile (`src/component
 | `Badge` | `src/components/ui.tsx` | `tone?` (`neutral`/`primary`/`danger`), `children` | Counts and short statuses; always with text, never color alone |
 | `LoadError` | `src/components/LoadError.tsx` | `onRetry`, `error?`, `className?` | Thin wrapper around `ErrorState` kept for the existing pages |
 | `LoadingText` | `src/components/LoadingText.tsx` | `className?` | Inline "…" loading placeholder |
+| `PageHeader` | `src/components/PageHeader.tsx` | `title`, `intro?`, `children?`, `className?` | Header of public content pages (features, changelog, roadmap, about, contact): display-serif title, one intro paragraph, left aligned |
 | `Modal` | `src/components/Modal.tsx` | `open`, `onClose`, `title`, `footer?`, `size?` | Every dialog: focus trap, Escape (topmost only), focus restore, `aria-modal` |
 | `useConfirm` | `src/components/useConfirm.tsx` | `confirm({title, body, confirmLabel, danger?})` -> `Promise<boolean>`, `dialog` | Every confirmation; never `window.confirm` |
 
 Error texts: `mapApiError(err, t, overrides?)` in `src/lib/mapApiError.ts` is the one place that turns a failed request into a localized plain-language text (keys `err.*` in `UxTranslation.ts`): `overrides[code]`, then the shared code table (`DPA_REQUIRED`, `QUOTA_EXCEEDED`, `query_too_short`, ...; case-insensitive), then the HTTP status (401/403/404/409/429/4xx/5xx), then a generic text; a thrown non-`ApiError` is a network problem. `apiFetch` reads both the nested `{ error: { code, message } }` and the flat `{ error, code }` body. Older per-domain mappers (`memberErrorKey`, `eventErrorKey`, ...) stay for their screens and fall back to the same plain texts.
 
 Dates and numbers: `dateLocale(language)` (`src/lib/clubMembers.ts`) is the only source of the formatting locale (`de-DE` / `en-GB` from the UI language, which defaults to the browser's `Accept-Language`); no page hardcodes a locale.
+
+### Visual design system
+
+One look across the public pages and the signed-in app. All colours stay on the palette tokens (no value changed, see [Color palettes & theming](#color-palettes--theming)); the design work sits in type, space, radius, elevation, icons and motion.
+
+- **Type:** Geist for the whole interface (applied on `body` via `--font-sans`; it used to fall back to Arial), Geist Mono for figures and meta, Instrument Serif only for large public headlines (`.font-display`, loaded in `layout.tsx`). Weights: 400 and 500 for text, 560 (`font-semibold`) and 600 (`font-bold`/`font-extrabold`) are the only emphasis steps; they are mapped in `globals.css` `@theme` so no heading renders at 700-900. Sentence case everywhere (no uppercase tracked labels), tabular figures in tables (`table`, `.tabular`), balanced headings.
+- **Space:** 4px grid. Marketing chapters share `MK_SECTION` (`max-w-7xl`, 56/72 vertical padding); public content pages use `max-w-5xl` / `max-w-7xl` with `PageHeader`.
+- **Shape:** controls 8px (`rounded-lg`), cards 12-16px (`rounded-xl`/`rounded-2xl`), tags 6px (`rounded-md`); pills only for avatars and switches.
+- **Elevation:** neutral tokens `shadow-xs` to `shadow-2xl` (tinted by `--foreground`, defined in `globals.css`); borders are the palette's `--border` hairline. No coloured shadows, glows, gradients or blurred blobs.
+- **Icons:** lucide at 16 or 18px, stroke 1.5, in the muted or foreground colour; no emoji in the interface (the language switcher shows `DE`/`EN` codes, not flags).
+- **Motion:** one easing curve (`--ease-out`), 150ms for feedback, 180ms for menus (`.animate-menu`), 400-900ms for marketing entrances; only colour, background, opacity and transform are transitioned (no `transition-all`, nothing bounces, nothing loops except the loading skeleton). A global `prefers-reduced-motion` rule shows the finished state.
+- **Focus:** a global 2px primary outline on `:focus-visible` (base layer); component rings still win. Touch targets are at least 44px (`min-h-11`), compact menu rows 36px.
 
 ### Internationalisation (Wave 14 DS3)
 
@@ -207,11 +220,11 @@ Club documents, archive, personal storage, branding and storage quota. Permissio
 
 ### Marketing homepage
 
-The homepage (`pageContent/Homepage.tsx`) only composes chapters from `src/components/marketing/`. Visual language: paper-collage people, a growing club network and a few stick-figure moments; **solid frame = available today, dashed frame = "we are sketching this" (never presented as available)**.
+The homepage (`pageContent/Homepage.tsx`) only composes chapters from `src/components/marketing/`. Visual language: hand-drawn ink on quiet paper (paper-cut people, a growing club network and a few stick-figure moments), display-serif chapter titles, one hairline card style; **solid frame = available today, dashed frame = "we are sketching this" (never presented as available)**.
 
 - **Single source of truth:** `marketingData.ts` lists every feature item with `status: 'live' | 'soon'`, `featureRef` (vault Feature List ids) and, for `soon`, the `wave` (kept internally for the roadmap grouping, never shown on the page). Flipping `soon` -> `live` turns the dashed sketch into ink everywhere (roadmap sketches, media breaks, quiz, role picker). `marketingData.test.ts` checks unique ids, wave/featureRef presence and DE+EN keys.
 - **Copy:** `MarketingTranslation.ts`, `MarketingHeroTranslation.ts`, `MarketingStoryTranslation.ts`, `MarketingTrustTranslation.ts` (DE/EN only, other languages fall back to English like the other marketing pages; key prefix `mk.`).
-- **Building blocks:** `Person`, `GroupPhoto`, `Network`, `Sketch` (`PaperCard`, `StatusSketch`, `StatusBadge`, `Marker`, `Draw`), `useInView`; chapters `HeroScene`, `MediaBreaks`, `WeekStage` (`#woche`), `RolePicker` (`#fuer-wen`), `ClubTypes` (`#vielfalt`), `TrustSection` (`#vertrauen`), `RoadmapSketches` (`#roadmap-teaser`), `ToolQuiz` (`#werkzeuge`), `Finale` (`#finale`).
+- **Building blocks:** `Person`, `GroupPhoto`, `Network`, `Sketch` (`MK_SECTION`, `SectionHead`, `PaperCard`, `StatusSketch` (`bodyClassName` lays out the content below the status line), `StatusBadge`, `Marker` (hero and finale only), `Draw`), `useInView`; chapters `HeroScene`, `MediaBreaks`, `WeekStage` (`#woche`), `RolePicker` (`#fuer-wen`), `ClubTypes` (`#vielfalt`), `TrustSection` (`#vertrauen`), `RoadmapSketches` (`#roadmap-teaser`), `ToolQuiz` (`#werkzeuge`), `Finale` (`#finale`).
 - **Constraints:** pure SVG + CSS (`mk-` classes in `globals.css`), no new dependency, no `style=` props (nonce-only CSP), `prefers-reduced-motion` shows the finished state, SSR renders readable end state without JS, colours only via theme tokens (works in dark mode and with every palette). Quiz state is local only, nothing is tracked.
 - **Honesty rule:** billing (SEPA, dunning, cash book, receipts) is shown as deliberately out of scope; an item is `live` only with a ✅ Feature List reference (consents, parent access, communication, voting, attendance, member card, time tracking ... since 2026-10-31); only the Wave 15 outreach items (sponsors, public page, enquiries, federation export) stay `soon`. `HelpSection` (`#hilfe`) and a hero link point to the docs portal (`NEXT_PUBLIC_DOCS_URL`, default `https://docs.myverein.lpj.app`; docs are German only).
 - **Data tests:** `src/app/publicContentData.test.ts` checks changelog, features and roadmap data (ids, DE/EN text, no internal names, nothing shipped on the roadmap).

@@ -86,11 +86,11 @@ export function ForgotPasswordPrompt({ onBackToLogin }: ForgotPasswordPromptProp
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                        className="mt-1 block w-full rounded-lg border border-border bg-background px-3 py-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                     />
                 </div>
 
-                {error && <p className="text-sm text-red-600">{error}</p>}
+                {error && <p className="text-sm text-destructive">{error}</p>}
 
                 <button
                     type="submit"

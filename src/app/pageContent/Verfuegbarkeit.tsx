@@ -204,7 +204,7 @@ export default function VerfuegbarkeitPageContent() {
                                                 : 'border-border bg-background text-muted-foreground hover:bg-muted'
                                         }`}
                                     >
-                                        <span className="text-xs font-bold uppercase sm:text-sm">{t(`verfuegbarkeit.weekday.${key}`).slice(0, 2)}</span>
+                                        <span className="text-xs font-bold sm:text-sm">{t(`verfuegbarkeit.weekday.${key}`).slice(0, 2)}</span>
                                         <span className="mt-1 hidden text-[10px] tabular-nums sm:block">
                                             {row.available ? `${row.startTime}–${row.endTime}` : '—'}
                                         </span>
