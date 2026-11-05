@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState, FormEvent } from 'react';
-import { Mail, MessageCircle, Send } from 'lucide-react';
+import { Mail, Send } from 'lucide-react';
 
+import { PageHeader } from '@/components/PageHeader';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { appName } from '../../../project.config.json';
 import type { ContactCategory } from '../api/contact/route';
@@ -72,18 +73,12 @@ export default function ContactForm() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
-          <MessageCircle className="h-5 w-5 text-primary" strokeWidth={2.25} />
-        </div>
-        <h1 className="text-2xl font-extrabold text-foreground">{t('contact.title')}</h1>
-      </div>
-      <p className="mb-6 text-sm text-muted-foreground">{t('contact.description')}</p>
+      <PageHeader title={t('contact.title')} intro={t('contact.description')} className="mb-10" />
 
       {status === 'success' ? (
         <p className="rounded-2xl border border-border bg-card p-6 text-center text-foreground shadow-sm">{t('contact.success')}</p>
       ) : (
-    <form onSubmit={(e) => void handleSubmit(e)} className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+    <form onSubmit={(e) => void handleSubmit(e)} className="rounded-2xl border border-border bg-card p-6 sm:p-8">
       {/* Honeypot -- off-screen, not display:none (some bots skip hidden fields but not off-screen ones), real users never see or fill it. */}
       <input
         type="text"
@@ -102,7 +97,7 @@ export default function ContactForm() {
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            className="mt-1 block w-full rounded-lg border border-border bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
         <div>
@@ -112,7 +107,7 @@ export default function ContactForm() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            className="mt-1 block w-full rounded-lg border border-border bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
       </div>
@@ -125,8 +120,8 @@ export default function ContactForm() {
               key={c}
               type="button"
               onClick={() => setCategory(c)}
-              className={`rounded-full border border-primary px-3 py-1.5 text-xs font-semibold transition ${
-                category === c ? 'bg-primary text-primary-foreground' : 'bg-transparent text-primary'
+              className={`min-h-11 rounded-lg border px-4 text-sm font-medium transition-colors active:scale-[0.98] ${
+                category === c ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card text-foreground hover:bg-muted'
               }`}
             >
               {t(`contact.category-${c}`)}
@@ -144,7 +139,7 @@ export default function ContactForm() {
               value={referral}
               onChange={(e) => setReferral(e.target.value)}
               placeholder={t('contact.beta-referral-placeholder')}
-              className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              className="mt-1 block w-full rounded-lg border border-border bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
         </div>
@@ -156,14 +151,14 @@ export default function ContactForm() {
             rows={5}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            className="mt-1 block w-full rounded-lg border border-border bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
       )}
 
       {status === 'error' && (
         <div className="mt-3">
-          <p className="text-sm text-red-600">{t('contact.error')}</p>
+          <p className="text-sm text-destructive">{t('contact.error')}</p>
           <a
             href={mailtoFallback(name, email, category, isBeta ? (referral.trim() ? `Referred by: ${referral.trim()}` : '') : message)}
             className="mt-1 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:brightness-110"
@@ -177,9 +172,9 @@ export default function ContactForm() {
       <button
         type="submit"
         disabled={!canSubmit || submitting}
-        className="mt-4 inline-flex items-center gap-2 rounded bg-primary px-4 py-2 text-primary-foreground shadow transition hover:brightness-110 disabled:opacity-60"
+        className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98] disabled:opacity-60"
       >
-        <Send className="h-4 w-4" />
+        <Send className="h-4 w-4" strokeWidth={1.5} />
         {submitting ? t('contact.submitting') : t('contact.submit')}
       </button>
     </form>
