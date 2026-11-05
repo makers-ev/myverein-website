@@ -41,7 +41,7 @@ export default function Sidebar({ groups, collapsed, onToggleCollapsed, onNaviga
             {groups.map((g) => (
                 <div key={g.id}>
                     <h2 className={`px-2.5 pb-2 text-xs font-medium text-muted-foreground ${collapsed ? 'sr-only' : ''}`}>{t(g.labelKey)}</h2>
-                    <ul className="space-y-1">
+                    <ul className="space-y-0.5">
                         {g.entries.map((e) => {
                             const Icon = ICONS[e.icon];
                             const active = isEntryActive(e, pathname, tab);

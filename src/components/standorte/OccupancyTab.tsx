@@ -101,7 +101,7 @@ export default function OccupancyTab({ clubId, locations, canWrite }: { clubId: 
                             ))}
                             <div aria-hidden>
                                 {HOURS.map((h) => (
-                                    <div key={h} style={{ height: ROW_PX }} className="pr-1 text-right text-[10px] text-muted-foreground">
+                                    <div key={h} style={{ height: ROW_PX }} className="pr-1 text-right text-[11px] text-muted-foreground">
                                         {String(h).padStart(2, '0')}
                                     </div>
                                 ))}
