@@ -6,6 +6,8 @@ import {
     allowedParticipationModes,
     assemblyErrorKey,
     ballotWindowIssue,
+    checkInHref,
+    notQuorateInfo,
     defaultBallotEnd,
     buildRulesPatch,
     canDecide,
@@ -150,5 +152,28 @@ describe('ballotWindowIssue', () => {
     });
     it('default end is 24 hours later', () => {
         expect(Date.parse(defaultBallotEnd(now)) - now).toBe(86_400_000);
+    });
+});
+
+describe('notQuorateInfo', () => {
+    const quorum = { rollFrozen: false, asOf: '2026-11-06', eligibleTotal: 10, presentEligible: 2, proxiesRepresented: 1, represented: 3, quorumMode: 'fraction', quorumValue: 0.5, required: 5, result: 'nicht_beschlussfaehig' };
+
+    it('returns the quorum numbers of a not_quorate conflict', () => {
+        const err = new ApiError(409, 'CONFLICT', 'no quorum', { code: 'not_quorate', quorum });
+        expect(notQuorateInfo(err)?.quorum?.required).toBe(5);
+        expect(notQuorateInfo(err)?.quorum?.represented).toBe(3);
+    });
+
+    it('still reports the rule when the details carry no numbers', () => {
+        expect(notQuorateInfo(new ApiError(409, 'CONFLICT', 'x', { code: 'not_quorate' }))).toEqual({ quorum: null });
+    });
+
+    it('ignores other errors', () => {
+        expect(notQuorateInfo(new ApiError(409, 'CONFLICT', 'x', { code: 'ballot_not_draft' }))).toBeNull();
+        expect(notQuorateInfo(new Error('boom'))).toBeNull();
+    });
+
+    it('links to the check-in list of the meeting', () => {
+        expect(checkInHref('m 1')).toBe('/kalender?tab=treffen&meeting=m%201&section=durchfuehrung');
     });
 });

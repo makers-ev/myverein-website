@@ -155,6 +155,20 @@ export function missingFromError(err: unknown): string[] {
     return Array.isArray(missing) ? missing.filter((m): m is string => typeof m === 'string') : [];
 }
 
+/** `details.quorum` of a 409 `not_quorate` answer (opening a ballot without quorum): `null` if the error is something else. */
+export function notQuorateInfo(err: unknown): { quorum: QuorumStatus | null } | null {
+    if (!(err instanceof ApiError)) return null;
+    const details = err.details as { code?: unknown; quorum?: unknown } | undefined;
+    if (details?.code !== 'not_quorate') return null;
+    const q = details.quorum as Partial<QuorumStatus> | undefined;
+    return { quorum: q && typeof q.represented === 'number' && typeof q.eligibleTotal === 'number' ? (q as QuorumStatus) : null };
+}
+
+/** Deep link to the check-in list ("Durchführung") of an assembly in the calendar's meeting list. */
+export function checkInHref(meetingId: string): string {
+    return `/kalender?tab=treffen&meeting=${encodeURIComponent(meetingId)}&section=durchfuehrung`;
+}
+
 // --- Invitation -----------------------------------------------------------------------------------------------------------
 
 export interface PeriodCheck {

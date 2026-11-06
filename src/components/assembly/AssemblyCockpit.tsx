@@ -161,6 +161,13 @@ export default function AssemblyCockpit({ clubId, meetingId, canManage }: { club
         }
     }
 
+    // The vote dialog's "Anwesenheit erfassen": jump to the check-in list on this very page.
+    function focusCheckIn() {
+        const search = document.getElementById('ck-search');
+        search?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        search?.focus({ preventScroll: true });
+    }
+
     const bigBtn = 'min-h-12 rounded-xl px-5 py-3 text-base font-semibold disabled:opacity-50';
 
     return (
@@ -287,7 +294,7 @@ export default function AssemblyCockpit({ clubId, meetingId, canManage }: { club
                 </div>
             </SectionCard>
 
-            {canManage && <BallotsManager clubId={clubId} mode="in_session" meetingId={meetingId} agendaItems={agenda} />}
+            {canManage && <BallotsManager clubId={clubId} mode="in_session" meetingId={meetingId} agendaItems={agenda} onCheckIn={focusCheckIn} />}
 
             {overrideFor && (
                 <SectionCard title={t('assembly.roll.override')}>

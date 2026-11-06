@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 
 import { apiFetch } from '@/lib/api-client';
 import { fromDatetimeLocal, toDatetimeLocal } from '@/lib/meetings';
@@ -9,9 +10,12 @@ import {
     type AssemblyRules,
     type Ballot,
     type BallotDetail,
+    type QuorumStatus,
     MAJORITY_TOPICS,
     assemblyErrorKey,
     ballotActions,
+    checkInHref,
+    notQuorateInfo,
     ballotWindowIssue,
     defaultBallotEnd,
     missingFromError,
@@ -41,13 +45,44 @@ const STATUS_TONE: Record<string, string> = {
     cancelled: 'bg-destructive/15 text-destructive',
 };
 
-export function BallotCard({ clubId, ballot, onChanged }: { clubId: string; ballot: Ballot; onChanged: () => void }) {
+/** Business rule, not a form error: shown above the action buttons with the quorum numbers and the way to fix it. */
+function NotQuorateNotice({ quorum, meetingId, onCheckIn }: { quorum: QuorumStatus | null; meetingId: string | null; onCheckIn?: () => void }) {
+    const { t } = useLanguage();
+    return (
+        <Notice tone="warning">
+            <div className="space-y-2">
+                <p className="font-semibold">{t('assembly.ballot.notQuorate.title')}</p>
+                {quorum && (
+                    <p>
+                        {t('assembly.quorum.numbers', { present: quorum.presentEligible, proxies: quorum.proxiesRepresented, represented: quorum.represented, eligible: quorum.eligibleTotal })}
+                        {quorum.required !== null && ` · ${t('assembly.quorum.required', { required: quorum.required })}`}
+                    </p>
+                )}
+                <p>{t('assembly.ballot.notQuorate.fix')}</p>
+                {onCheckIn ? (
+                    <button type="button" onClick={onCheckIn} className={`${primaryBtn} !px-3 !py-1.5`}>
+                        {t('assembly.ballot.notQuorate.action')}
+                    </button>
+                ) : (
+                    meetingId && (
+                        <Link href={checkInHref(meetingId)} className={`${primaryBtn} inline-block !px-3 !py-1.5`}>
+                            {t('assembly.ballot.notQuorate.action')}
+                        </Link>
+                    )
+                )}
+            </div>
+        </Notice>
+    );
+}
+
+export function BallotCard({ clubId, ballot, onChanged, onCheckIn }: { clubId: string; ballot: Ballot; onChanged: () => void; onCheckIn?: () => void }) {
     const { t, language } = useLanguage();
     const [detail, setDetail] = useState<BallotDetail | null>(null);
     const [open, setOpen] = useState(false);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [warnings, setWarnings] = useState<string[]>([]);
+    const [noQuorum, setNoQuorum] = useState<{ quorum: QuorumStatus | null } | null>(null);
     const [votes, setVotes] = useState<VotesResponse | null>(null);
     const [openDialog, setOpenDialog] = useState(false);
     const [opensAt, setOpensAt] = useState('');
@@ -57,11 +92,13 @@ export function BallotCard({ clubId, ballot, onChanged }: { clubId: string; ball
     const windowIssue = openDialog ? ballotWindowIssue(fromDatetimeLocal(opensAt), fromDatetimeLocal(closesAt)) : null;
 
     function openOpenDialog() {
-        // Start stays empty (= now). A stored end that already passed would be rejected, so it is not shown; a circular vote gets +24 h.
+        // Start stays empty (= now). In-session votes (incl. election rounds) are decided in the room: no window at all.
+        // Only a circular vote needs an end: a stored one that has not passed yet, otherwise +24 h.
         const stored = ballot.closesAt && Date.parse(ballot.closesAt) > Date.now() ? ballot.closesAt : null;
         setOpensAt('');
-        setClosesAt(toDatetimeLocal(stored ?? (ballot.mode === 'circular' ? defaultBallotEnd() : null)));
+        setClosesAt(ballot.mode === 'circular' ? toDatetimeLocal(stored ?? defaultBallotEnd()) : '');
         setError(null);
+        setNoQuorum(null);
         setOpenDialog(true);
     }
 
@@ -86,6 +123,7 @@ export function BallotCard({ clubId, ballot, onChanged }: { clubId: string; ball
     async function act(path: string, body?: unknown, method: 'POST' | 'DELETE' = 'POST') {
         setBusy(true);
         setError(null);
+        setNoQuorum(null);
         try {
             const res = await apiFetch<{ data?: BallotDetail } | null>(`/ballots/${ballot.id}${path}?clubId=${clubId}`, { method, ...(body !== undefined ? { body } : {}) });
             if (res?.data?.warnings) setWarnings(res.data.warnings);
@@ -94,6 +132,11 @@ export function BallotCard({ clubId, ballot, onChanged }: { clubId: string; ball
             if (method !== 'DELETE') await loadDetail();
             return true;
         } catch (err) {
+            const notQuorate = notQuorateInfo(err);
+            if (notQuorate) {
+                setNoQuorum(notQuorate);
+                return 'no_quorum' as const;
+            }
             const missing = missingFromError(err);
             setError(missing.length > 0 ? `${t(assemblyErrorKey(err))} ${missing.map((m) => t(`assembly.rule.${m}`)).join(', ')}` : t(assemblyErrorKey(err)));
             return false;
@@ -104,11 +147,13 @@ export function BallotCard({ clubId, ballot, onChanged }: { clubId: string; ball
 
     async function doOpen() {
         const body: Record<string, unknown> = {};
-        const o = fromDatetimeLocal(opensAt);
-        const c = fromDatetimeLocal(closesAt);
+        // Neither start nor end for an in-session vote: it opens now and is closed in the room.
+        const o = circular ? fromDatetimeLocal(opensAt) : null;
+        const c = circular ? fromDatetimeLocal(closesAt) : null;
         // A start that is only minutes behind us means "now": omit it so the server does not trip over its stricter 1-minute tolerance.
         if (o && Date.parse(o) > Date.now()) body.opensAt = o;
         if (c) body.closesAt = c;
+        // Also closes the dialog without quorum: the notice with the way to the check-in list sits above the action buttons.
         if (await act('/open', body)) setOpenDialog(false);
     }
 
@@ -168,6 +213,7 @@ export function BallotCard({ clubId, ballot, onChanged }: { clubId: string; ball
                     {view.secret && <p className="text-xs text-muted-foreground">{t('assembly.ballot.secretNote')}</p>}
                     <BallotResult ballot={view} />
                     {error && <ErrorText>{error}</ErrorText>}
+                    {noQuorum && <NotQuorateNotice quorum={noQuorum.quorum} meetingId={view.meetingId} {...(onCheckIn ? { onCheckIn } : {})} />}
 
                     <div className="flex flex-wrap gap-2">
                         {actions.open && (
@@ -241,7 +287,8 @@ export function BallotCard({ clubId, ballot, onChanged }: { clubId: string; ball
             >
                 <div className="space-y-3">
                     <p className="text-sm text-foreground">{t(circular ? 'assembly.ballot.open.circular' : 'assembly.ballot.open.session')}</p>
-                    <p className="text-xs text-muted-foreground">{t('assembly.ballot.window.hint')}</p>
+                    {circular && <p className="text-xs text-muted-foreground">{t('assembly.ballot.window.hint')}</p>}
+                    {circular && (<>
                     <div>
                         <label htmlFor={`op-${ballot.id}`} className={labelClass}>
                             {t('assembly.ballot.opensAt')}
@@ -255,6 +302,7 @@ export function BallotCard({ clubId, ballot, onChanged }: { clubId: string; ball
                         </label>
                         <input id={`cl-${ballot.id}`} type="datetime-local" value={closesAt} onChange={(e) => setClosesAt(e.target.value)} aria-invalid={windowIssue === 'end_past' || windowIssue === 'end_before_start'} className={inputClass} />
                     </div>
+                    </>)}
                     {windowIssue && <ErrorText>{t(`assembly.ballot.window.${windowIssue}`)}</ErrorText>}
                     {error && <ErrorText>{error}</ErrorText>}
                 </div>
@@ -268,7 +316,7 @@ export function BallotCard({ clubId, ballot, onChanged }: { clubId: string; ball
  * Digital ballots of one assembly (`meetingId`) or the circular resolutions of the club (`mode="circular"`): create, open, close,
  * count, finalize (Wave 11 W3/W5). Secret and circular ballots are only offered when the club's statute parameters allow them.
  */
-export default function BallotsManager({ clubId, mode, meetingId, agendaItems = [] }: { clubId: string; mode: 'in_session' | 'circular'; meetingId?: string; agendaItems?: AgendaItem[] }) {
+export default function BallotsManager({ clubId, mode, meetingId, agendaItems = [], onCheckIn }: { clubId: string; mode: 'in_session' | 'circular'; meetingId?: string; agendaItems?: AgendaItem[]; onCheckIn?: () => void }) {
     const { t } = useLanguage();
     const circular = mode === 'circular';
     const [ballots, setBallots] = useState<Ballot[] | null>(null);
@@ -487,7 +535,7 @@ export default function BallotsManager({ clubId, mode, meetingId, agendaItems = 
                 ) : (
                     <ul className="space-y-2">
                         {ballots.map((b) => (
-                            <BallotCard key={b.id} clubId={clubId} ballot={b} onChanged={() => void load()} />
+                            <BallotCard key={b.id} clubId={clubId} ballot={b} onChanged={() => void load()} {...(onCheckIn ? { onCheckIn } : {})} />
                         ))}
                     </ul>
                 )}
