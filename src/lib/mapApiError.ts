@@ -12,6 +12,7 @@ const CODE_KEYS: Record<string, string> = {
     RECIPIENT_CONFIRMATION_REQUIRED: 'err.recipientConfirmation',
     QUERY_TOO_SHORT: 'err.queryTooShort',
     TOO_MANY_REQUESTS: 'err.tooMany',
+    INVALID_WINDOW: 'err.invalidWindow',
 };
 
 /**

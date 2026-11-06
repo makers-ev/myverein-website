@@ -96,6 +96,34 @@ export function parseWarningDays(value: string): number[] | null | undefined {
     return days.sort((a, b) => b - a);
 }
 
+// --- Voting window ----------------------------------------------------------------------------------------------------------
+
+/** Same tolerance as the server (`openBallot`): a start up to one minute (plus the minute-resolution of the input) in the past still counts as "now". */
+export const BALLOT_START_TOLERANCE_MS = 2 * 60_000;
+export const BALLOT_DEFAULT_DURATION_MS = 24 * 60 * 60_000;
+
+export type BallotWindowIssue = 'start_past' | 'end_past' | 'end_before_start';
+
+/**
+ * Mirrors the server rules for opening a ballot: an empty start means "now"; a given start must not lie more than the tolerance in the
+ * past; the end must be after the (effective) start and in the future. Inputs are ISO instants (`null` = empty). Returns `null` when valid.
+ */
+export function ballotWindowIssue(opensAt: string | null, closesAt: string | null, now: number = Date.now()): BallotWindowIssue | null {
+    const start = opensAt ? Date.parse(opensAt) : null;
+    const end = closesAt ? Date.parse(closesAt) : null;
+    if (start !== null && Number.isNaN(start)) return null;
+    if (end !== null && Number.isNaN(end)) return null;
+    if (start !== null && start < now - BALLOT_START_TOLERANCE_MS) return 'start_past';
+    if (end !== null && start !== null && end <= start) return 'end_before_start';
+    if (end !== null && end <= now) return 'end_past';
+    return null;
+}
+
+/** Default end of a window: 24 hours after `now` as an ISO instant. */
+export function defaultBallotEnd(now: number = Date.now()): string {
+    return new Date(now + BALLOT_DEFAULT_DURATION_MS).toISOString();
+}
+
 // --- Errors ---------------------------------------------------------------------------------------------------------------
 
 /** Translation key of a failed assembly call: the machine-readable `details.code` first, then the generic member errors. */

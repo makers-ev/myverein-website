@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { apiFetch } from '@/lib/api-client';
-import { fromDatetimeLocal } from '@/lib/meetings';
+import { fromDatetimeLocal, toDatetimeLocal } from '@/lib/meetings';
 import {
     type AgendaItem,
     type AssemblyRules,
@@ -12,6 +12,8 @@ import {
     MAJORITY_TOPICS,
     assemblyErrorKey,
     ballotActions,
+    ballotWindowIssue,
+    defaultBallotEnd,
     missingFromError,
     optionLabel,
 } from '@/lib/assembly';
@@ -51,6 +53,17 @@ export function BallotCard({ clubId, ballot, onChanged }: { clubId: string; ball
     const [opensAt, setOpensAt] = useState('');
     const [closesAt, setClosesAt] = useState('');
     const { confirm, dialog } = useConfirm();
+    // Re-evaluated on every render of the dialog; the window is only judged against the current time, never against the render time.
+    const windowIssue = openDialog ? ballotWindowIssue(fromDatetimeLocal(opensAt), fromDatetimeLocal(closesAt)) : null;
+
+    function openOpenDialog() {
+        // Start stays empty (= now). A stored end that already passed would be rejected, so it is not shown; a circular vote gets +24 h.
+        const stored = ballot.closesAt && Date.parse(ballot.closesAt) > Date.now() ? ballot.closesAt : null;
+        setOpensAt('');
+        setClosesAt(toDatetimeLocal(stored ?? (ballot.mode === 'circular' ? defaultBallotEnd() : null)));
+        setError(null);
+        setOpenDialog(true);
+    }
 
     const loadDetail = useCallback(async () => {
         try {
@@ -93,7 +106,8 @@ export function BallotCard({ clubId, ballot, onChanged }: { clubId: string; ball
         const body: Record<string, unknown> = {};
         const o = fromDatetimeLocal(opensAt);
         const c = fromDatetimeLocal(closesAt);
-        if (o) body.opensAt = o;
+        // A start that is only minutes behind us means "now": omit it so the server does not trip over its stricter 1-minute tolerance.
+        if (o && Date.parse(o) > Date.now()) body.opensAt = o;
         if (c) body.closesAt = c;
         if (await act('/open', body)) setOpenDialog(false);
     }
@@ -157,7 +171,7 @@ export function BallotCard({ clubId, ballot, onChanged }: { clubId: string; ball
 
                     <div className="flex flex-wrap gap-2">
                         {actions.open && (
-                            <button type="button" disabled={busy} onClick={() => setOpenDialog(true)} className={primaryBtn}>
+                            <button type="button" disabled={busy} onClick={openOpenDialog} className={primaryBtn}>
                                 {t('assembly.ballot.action.open')}
                             </button>
                         )}
@@ -219,7 +233,7 @@ export function BallotCard({ clubId, ballot, onChanged }: { clubId: string; ball
                         <button type="button" onClick={() => setOpenDialog(false)} className={secondaryBtn}>
                             {t('treffen.cancel')}
                         </button>
-                        <button type="button" disabled={busy || (circular && !closesAt && !view.closesAt)} onClick={() => void doOpen()} className={primaryBtn}>
+                        <button type="button" disabled={busy || windowIssue !== null || (circular && !fromDatetimeLocal(closesAt))} onClick={() => void doOpen()} className={primaryBtn}>
                             {t('assembly.ballot.action.open')}
                         </button>
                     </div>
@@ -227,19 +241,21 @@ export function BallotCard({ clubId, ballot, onChanged }: { clubId: string; ball
             >
                 <div className="space-y-3">
                     <p className="text-sm text-foreground">{t(circular ? 'assembly.ballot.open.circular' : 'assembly.ballot.open.session')}</p>
+                    <p className="text-xs text-muted-foreground">{t('assembly.ballot.window.hint')}</p>
                     <div>
                         <label htmlFor={`op-${ballot.id}`} className={labelClass}>
                             {t('assembly.ballot.opensAt')}
                         </label>
-                        <input id={`op-${ballot.id}`} type="datetime-local" value={opensAt} onChange={(e) => setOpensAt(e.target.value)} className={inputClass} />
+                        <input id={`op-${ballot.id}`} type="datetime-local" value={opensAt} onChange={(e) => setOpensAt(e.target.value)} aria-invalid={windowIssue === 'start_past'} className={inputClass} />
                     </div>
                     <div>
                         <label htmlFor={`cl-${ballot.id}`} className={labelClass}>
                             {t('assembly.ballot.closesAtField')}
                             {circular ? ' *' : ''}
                         </label>
-                        <input id={`cl-${ballot.id}`} type="datetime-local" value={closesAt} onChange={(e) => setClosesAt(e.target.value)} className={inputClass} />
+                        <input id={`cl-${ballot.id}`} type="datetime-local" value={closesAt} onChange={(e) => setClosesAt(e.target.value)} aria-invalid={windowIssue === 'end_past' || windowIssue === 'end_before_start'} className={inputClass} />
                     </div>
+                    {windowIssue && <ErrorText>{t(`assembly.ballot.window.${windowIssue}`)}</ErrorText>}
                     {error && <ErrorText>{error}</ErrorText>}
                 </div>
             </Modal>
