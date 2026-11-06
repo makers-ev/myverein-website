@@ -61,6 +61,17 @@ export default function KalenderPageContent() {
     const [permissions, setPermissions] = useState<string[]>([]);
     const [me, setMe] = useState<EventMe | null>(null);
     const [tab, setTab] = useState<Tab>('termine');
+    // Deep link `?tab=treffen&meeting=<id>&section=durchfuehrung` (read once on the client, no Suspense boundary needed).
+    const [deepLink, setDeepLink] = useState<{ meetingId: string; section: 'planen' | 'durchfuehrung' | 'protokoll' } | null>(null);
+    useEffect(() => {
+        const q = new URLSearchParams(window.location.search);
+        const meetingId = q.get('meeting');
+        if (q.get('tab') !== 'treffen' || !meetingId) return;
+        const section = q.get('section');
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setDeepLink({ meetingId, section: section === 'protokoll' ? 'protokoll' : section === 'durchfuehrung' ? 'durchfuehrung' : 'planen' });
+        setTab('treffen');
+    }, []);
     const [view, setView] = useState<View>('month');
     const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
     const [selectedDay, setSelectedDay] = useState(() => dayKey(new Date()));
@@ -408,7 +419,7 @@ export default function KalenderPageContent() {
                         {tab === 'zeiterfassung' && canUseTimeTracking(me) && (
                             <TimeTracking clubId={activeClub.clubId} canTrack={canTrackTime(me)} canConfirm={permissions.includes('time:write')} canRates={permissions.includes('time:read_rates')} ownClubMemberId={me?.clubMemberId ?? null} events={events ?? []} departments={departments} />
                         )}
-                        {tab === 'treffen' && <TreffenPanel clubId={activeClub.clubId} canWrite={permissions.includes('meetings:write')} canManageAssembly={permissions.includes('assembly:manage')} canReadSensitive={permissions.includes('members:read_sensitive')} />}
+                        {tab === 'treffen' && <TreffenPanel deepLink={deepLink} clubId={activeClub.clubId} canWrite={permissions.includes('meetings:write')} canManageAssembly={permissions.includes('assembly:manage')} canReadSensitive={permissions.includes('members:read_sensitive')} />}
                     </div>
 
                     {detailEvent && (

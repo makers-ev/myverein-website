@@ -28,7 +28,7 @@ import { inputClass, labelClass, primaryBtn, secondaryBtn } from '@/components/k
 import LoadingText from '@/components/LoadingText';
 import LoadError from '@/components/LoadError';
 import { Toggle } from '@/components/standorte/ui';
-import AssemblyMeetingSections from '@/components/assembly/AssemblyMeetingSections';
+import AssemblyMeetingSections, { type ManageTab } from '@/components/assembly/AssemblyMeetingSections';
 import type { ParticipationMode } from '@/lib/assembly';
 
 interface Meeting {
@@ -284,7 +284,7 @@ function MeetingList({ clubId, t, canWrite, onSelect }: { clubId: string; t: TFn
     );
 }
 
-function MeetingDetail({ clubId, meetingId, t, canWrite, canManageAssembly, canReadSensitive, onOpenRules, onBack }: { clubId: string; meetingId: string; t: TFn; canWrite: boolean; canManageAssembly: boolean; canReadSensitive: boolean; onOpenRules?: () => void; onBack: () => void }) {
+function MeetingDetail({ clubId, meetingId, t, canWrite, canManageAssembly, canReadSensitive, onOpenRules, onBack, initialSection }: { clubId: string; meetingId: string; initialSection?: ManageTab; t: TFn; canWrite: boolean; canManageAssembly: boolean; canReadSensitive: boolean; onOpenRules?: () => void; onBack: () => void }) {
     const { language } = useLanguage();
     const [meeting, setMeeting] = useState<Meeting | null>(null);
     const [invitees, setInvitees] = useState<MeetingInvitee[]>([]);
@@ -728,6 +728,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, canManageAssembly, canR
                     ownClubMemberId={ownClubMemberId}
                     onChanged={() => void load()}
                     onOpenRules={onOpenRules}
+                    {...(initialSection ? { initialTab: initialSection } : {})}
                 />
             )}
 
@@ -1337,12 +1338,13 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, canManageAssembly, canR
     );
 }
 
-export default function TreffenPanel({ clubId, canWrite, canManageAssembly = false, canReadSensitive = false, onOpenRules }: { clubId: string; canWrite: boolean; canManageAssembly?: boolean; canReadSensitive?: boolean; onOpenRules?: () => void }) {
+export default function TreffenPanel({ clubId, canWrite, canManageAssembly = false, canReadSensitive = false, onOpenRules, deepLink }: { clubId: string; canWrite: boolean; canManageAssembly?: boolean; canReadSensitive?: boolean; onOpenRules?: () => void; deepLink?: { meetingId: string; section: ManageTab } | null }) {
     const { t } = useLanguage();
-    const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null);
+    // `deepLink`: e.g. "Anwesenheit erfassen" from an election round opens the check-in list of that assembly directly.
+    const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(deepLink?.meetingId ?? null);
 
     return selectedMeetingId ? (
-        <MeetingDetail clubId={clubId} meetingId={selectedMeetingId} t={t} canWrite={canWrite} canManageAssembly={canManageAssembly} canReadSensitive={canReadSensitive} onOpenRules={onOpenRules} onBack={() => setSelectedMeetingId(null)} />
+        <MeetingDetail clubId={clubId} meetingId={selectedMeetingId} t={t} canWrite={canWrite} canManageAssembly={canManageAssembly} canReadSensitive={canReadSensitive} onOpenRules={onOpenRules} onBack={() => setSelectedMeetingId(null)} {...(deepLink && deepLink.meetingId === selectedMeetingId ? { initialSection: deepLink.section } : {})} />
     ) : (
         <MeetingList clubId={clubId} t={t} canWrite={canWrite} onSelect={setSelectedMeetingId} />
     );

@@ -589,6 +589,7 @@ export function EventFormModal({ clubId, calendars, colorFor, event, scope, init
         description: description.trim() || null,
         category: category.trim() || null,
         capacity: capacity ? Number(capacity) : null,
+        locationId: locationId || null,
         allDay,
         startDate: startDay,
         startTime,
@@ -641,12 +642,14 @@ export function EventFormModal({ clubId, calendars, colorFor, event, scope, init
             category: category.trim() || empty,
             capacity: capacity ? Number(capacity) : empty,
         };
+        // Series edits (`PATCH /event-series`) take the location too; null clears it.
+        const seriesLocation = { locationId: locationId || null };
         try {
             if (!event && repeat) {
                 const res = await apiFetch<{ data: { occurrencesCreated: number } }>(`/event-series?clubId=${clubId}`, { method: 'POST', body: createSeriesBody(template, rule) });
                 onSaved(t('kalender.series.created', { count: res.data.occurrencesCreated }));
             } else if (event && event.seriesId && scope) {
-                const body: Record<string, unknown> = { scope, eventId: event.id, ...common, allDay, notify };
+                const body: Record<string, unknown> = { scope, eventId: event.id, ...common, ...seriesLocation, allDay, notify };
                 if (reason.trim()) body.reason = reason.trim();
                 if (scope === 'this') {
                     body.startsAt = startIso;
@@ -859,7 +862,7 @@ export function EventFormModal({ clubId, calendars, colorFor, event, scope, init
                     </label>
                     <textarea id="ev-description" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} className={inputClass} />
                 </div>
-                {showSingleOnly && locations.length > 0 && (
+                {locations.length > 0 && (
                     <div>
                         <label htmlFor="ev-location" className={labelClass}>
                             {t('kalender.events.location')}
@@ -872,7 +875,7 @@ export function EventFormModal({ clubId, calendars, colorFor, event, scope, init
                                 </option>
                             ))}
                         </select>
-                        {locationBusy && (
+                        {locationBusy && (showSingleOnly || scope === 'this') && (
                             <p role="status" className="mt-1 rounded-lg bg-warning/10 px-3 py-2 text-xs text-foreground">
                                 {t('occupancy.eventWarning')}
                             </p>

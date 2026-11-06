@@ -5,6 +5,10 @@ import {
     type AssemblyRules,
     allowedParticipationModes,
     assemblyErrorKey,
+    ballotWindowIssue,
+    checkInHref,
+    notQuorateInfo,
+    defaultBallotEnd,
     buildRulesPatch,
     canDecide,
     groupForVoter,
@@ -112,5 +116,64 @@ describe('elections, minutes, terms, online', () => {
     it('maps backend detail codes to assembly messages and falls back to the generic ones', () => {
         expect(assemblyErrorKey(new ApiError(409, 'CONFLICT', 'x', { code: 'already_voted' }))).toBe('assembly.err.already_voted');
         expect(assemblyErrorKey(new ApiError(403, 'FORBIDDEN', 'x'))).toBe('verein.err.forbidden');
+    });
+});
+
+describe('ballotWindowIssue', () => {
+    const now = Date.parse('2026-11-06T11:16:30.000Z');
+    const at = (offsetMs: number) => new Date(now + offsetMs).toISOString();
+    it('accepts an empty start with an empty or future end', () => {
+        expect(ballotWindowIssue(null, null, now)).toBeNull();
+        expect(ballotWindowIssue(null, defaultBallotEnd(now), now)).toBeNull();
+    });
+    it('accepts a start of now (minute resolution, a few seconds behind)', () => {
+        expect(ballotWindowIssue(at(-30_000), at(86_400_000), now)).toBeNull();
+    });
+    it('accepts a start one minute ahead', () => {
+        expect(ballotWindowIssue(at(60_000), at(86_400_000), now)).toBeNull();
+    });
+    it('rejects a start beyond the 2 minute tolerance', () => {
+        expect(ballotWindowIssue(at(-121_000), at(86_400_000), now)).toBe('start_past');
+        expect(ballotWindowIssue(at(-119_000), at(86_400_000), now)).toBeNull();
+    });
+    it('rejects an end before or at the start', () => {
+        expect(ballotWindowIssue(at(3_600_000), at(1_800_000), now)).toBe('end_before_start');
+        expect(ballotWindowIssue(at(3_600_000), at(3_600_000), now)).toBe('end_before_start');
+    });
+    it('rejects an end in the past', () => {
+        expect(ballotWindowIssue(null, at(-1000), now)).toBe('end_past');
+    });
+    it('compares instants, so Berlin wall-clock input in summer and winter time is judged correctly', () => {
+        // 12:16 Berlin (CET, UTC+1) = 11:16 UTC; 24h later is valid, 12:15 the same day is not after a 12:16 start.
+        expect(ballotWindowIssue('2026-11-06T11:16:00.000Z', '2026-11-07T11:16:00.000Z', now)).toBeNull();
+        expect(ballotWindowIssue('2026-11-06T11:16:00.000Z', '2026-11-06T11:15:00.000Z', now)).toBe('end_before_start');
+        // CEST (UTC+2): 12:16 local is 10:16 UTC, i.e. an hour in the past relative to `now` -> past start.
+        expect(ballotWindowIssue('2026-11-06T10:16:00.000Z', null, now)).toBe('start_past');
+    });
+    it('default end is 24 hours later', () => {
+        expect(Date.parse(defaultBallotEnd(now)) - now).toBe(86_400_000);
+    });
+});
+
+describe('notQuorateInfo', () => {
+    const quorum = { rollFrozen: false, asOf: '2026-11-06', eligibleTotal: 10, presentEligible: 2, proxiesRepresented: 1, represented: 3, quorumMode: 'fraction', quorumValue: 0.5, required: 5, result: 'nicht_beschlussfaehig' };
+
+    it('returns the quorum numbers of a not_quorate conflict', () => {
+        const err = new ApiError(409, 'CONFLICT', 'no quorum', { code: 'not_quorate', quorum });
+        expect(notQuorateInfo(err)?.quorum?.required).toBe(5);
+        expect(notQuorateInfo(err)?.quorum?.represented).toBe(3);
+    });
+
+    it('still reports the rule when the details carry no numbers', () => {
+        expect(notQuorateInfo(new ApiError(409, 'CONFLICT', 'x', { code: 'not_quorate' }))).toEqual({ quorum: null });
+    });
+
+    it('ignores other errors', () => {
+        expect(notQuorateInfo(new ApiError(409, 'CONFLICT', 'x', { code: 'ballot_not_draft' }))).toBeNull();
+        expect(notQuorateInfo(new Error('boom'))).toBeNull();
+    });
+
+    it('links to the check-in list of the meeting', () => {
+        expect(checkInHref('m 1')).toBe('/kalender?tab=treffen&meeting=m%201&section=durchfuehrung');
     });
 });

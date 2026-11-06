@@ -138,7 +138,7 @@ function MemberView({ clubId, meetingId, ownClubMemberId, status, mode, onlineUr
     );
 }
 
-type ManageTab = 'planen' | 'durchfuehrung' | 'protokoll';
+export type ManageTab = 'planen' | 'durchfuehrung' | 'protokoll';
 
 /**
  * Everything the general assembly adds to a meeting (Wave 11): planning + invitation, the running assembly (cockpit) and the minutes for
@@ -153,6 +153,7 @@ export default function AssemblyMeetingSections({
     ownClubMemberId,
     onChanged,
     onOpenRules,
+    initialTab = 'planen',
 }: {
     clubId: string;
     meeting: { id: string; status: string; scheduledAt: string | null; participationMode?: ParticipationMode; onlineUrl?: string | null };
@@ -162,9 +163,10 @@ export default function AssemblyMeetingSections({
     ownClubMemberId: string | null;
     onChanged: () => void;
     onOpenRules?: () => void;
+    initialTab?: ManageTab;
 }) {
     const { t } = useLanguage();
-    const [tab, setTab] = useState<ManageTab>('planen');
+    const [tab, setTab] = useState<ManageTab>(initialTab);
     const mode = meeting.participationMode ?? 'praesenz';
 
     if (!canManage) {
