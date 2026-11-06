@@ -131,7 +131,7 @@ export default function FormsPanel({
     return (
         <div>
             <div className="mb-3">
-                <h2 className="text-sm font-bold text-foreground">{t('forms.editor.title')}</h2>
+                <h2 className="text-base font-medium text-foreground">{t('forms.editor.title')}</h2>
                 <p className="mt-1 max-w-2xl text-xs text-muted-foreground">{t('forms.editor.hint')}</p>
             </div>
             <div className="mb-3">

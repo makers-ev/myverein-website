@@ -7,47 +7,48 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import type { Status } from './marketingData';
 import { useInView } from './useInView';
 
-export type Tilt = 'none' | 'l' | 'r' | 'l2' | 'r2';
+/** Shared page rhythm of every marketing chapter: one container width and one vertical padding (56 on phones, 72 from sm). */
+export const MK_SECTION = 'mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-18 lg:px-8';
 
-const TILTS: Record<Tilt, string> = { none: '', l: 'mk-tilt-l', r: 'mk-tilt-r', l2: 'mk-tilt-l2', r2: 'mk-tilt-r2' };
-
-/** Card that looks like a sheet of paper: layered soft shadow, optional slight tilt that straightens on hover. */
-export function PaperCard({
-    children,
-    tilt = 'none',
-    as: Tag = 'div',
-    tape = false,
-    className = '',
-}: {
-    children: ReactNode;
-    tilt?: Tilt;
-    as?: ElementType;
-    /** Adds a strip of tape on top. */
-    tape?: boolean;
-    className?: string;
-}) {
+/** Chapter heading: display serif title, optional intro, left aligned on a calm column. */
+export function SectionHead({ id, title, intro, className = '' }: { id: string; title: ReactNode; intro?: ReactNode; className?: string }) {
     return (
-        <Tag className={`mk-paper relative rounded-sm border border-border bg-card p-5 text-card-foreground ${TILTS[tilt]} ${tape ? 'mk-tape' : ''} ${className}`}>
-            {children}
-        </Tag>
+        <div className={`max-w-2xl ${className}`}>
+            <h2 id={id} className="font-display text-4xl leading-[1.08] text-foreground sm:text-5xl">
+                {title}
+            </h2>
+            {intro && <p className="mt-4 text-lg leading-8 text-muted-foreground">{intro}</p>}
+        </div>
     );
 }
 
-/** Gold highlighter stroke behind key words. The text stays readable without the stroke. */
+/** Raised sheet of paper: hairline, soft neutral shadow. */
+export function PaperCard({
+    children,
+    as: Tag = 'div',
+    className = '',
+}: {
+    children: ReactNode;
+    as?: ElementType;
+    className?: string;
+}) {
+    return <Tag className={`mk-paper relative rounded-2xl border border-border bg-card p-6 text-card-foreground ${className}`}>{children}</Tag>;
+}
+
+/** Highlighter stroke behind the hero's key phrase. The text stays readable without the stroke. */
 export function Marker({ children, className = '' }: { children: ReactNode; className?: string }) {
     return <span className={`mk-marker ${className}`}>{children}</span>;
 }
 
-/** Small label that always states the status in words and shape, so it never relies on colour alone. */
+/**
+ * Quiet status line that always states the status in words and shape (solid dot = built, dashed ring = planned),
+ * so it never relies on colour alone.
+ */
 export function StatusBadge({ status, className = '' }: { status: Status; className?: string }) {
     const { t } = useLanguage();
     const live = status === 'live';
     return (
-        <span
-            className={`inline-flex min-h-6 items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
-                live ? 'border-solid border-success bg-success/15 text-foreground' : 'border-dashed border-muted-foreground text-muted-foreground'
-            } ${className}`}
-        >
+        <span className={`inline-flex items-center gap-2 whitespace-nowrap text-xs font-medium text-muted-foreground ${className}`}>
             <span aria-hidden="true" className={`size-2 rounded-full ${live ? 'bg-success' : 'border border-dashed border-muted-foreground'}`} />
             {live ? t('mk.status.live') : t('mk.status.soon')}
         </span>
@@ -56,7 +57,8 @@ export function StatusBadge({ status, className = '' }: { status: Status; classN
 
 /**
  * Wrapper that renders a feature as solid ink (built) or as a dashed sketch (planned). A planned sketch "inks in" on
- * hover, keyboard focus inside it, and when scrolled into view, but it stays dashed and keeps its "planned" badge.
+ * hover, keyboard focus inside it, and when scrolled into view, but it stays dashed and keeps its "planned" status.
+ * `bodyClassName` lays out the content below the status line, so a row layout never squeezes the badge.
  */
 export function StatusSketch({
     status,
@@ -64,24 +66,26 @@ export function StatusSketch({
     badge = true,
     as: Tag = 'div',
     className = '',
+    bodyClassName = '',
 }: {
     status: Status;
     children: ReactNode;
     badge?: boolean;
     as?: ElementType;
     className?: string;
+    bodyClassName?: string;
 }) {
     const { ref, stateClass } = useInView<HTMLElement>();
     const live = status === 'live';
     return (
         <Tag
             ref={ref}
-            className={`relative rounded-md p-5 ${
-                live ? 'border-2 border-solid border-foreground/70 bg-card text-card-foreground' : `mk-sketch border-2 border-dashed ${stateClass}`
+            className={`relative rounded-2xl border p-5 sm:p-6 ${
+                live ? 'border-solid border-border bg-card text-card-foreground shadow-xs' : `mk-sketch border-dashed ${stateClass}`
             } ${className}`}
         >
             {badge && <StatusBadge status={status} className="mb-3" />}
-            {children}
+            <div className={bodyClassName}>{children}</div>
         </Tag>
     );
 }

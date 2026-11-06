@@ -17,19 +17,19 @@ export default function NotFound() {
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-            <div className="w-full max-w-md transform overflow-hidden rounded-2xl bg-card p-8 shadow-xl transition-all duration-500 hover:shadow-2xl">
+            <div className="w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card p-8 shadow-md">
                 <div className="flex flex-col items-center text-center">
                     <div className="mb-6 rounded-full bg-muted p-4">
                         <MagnifyingGlassIcon className="h-12 w-12 text-muted-foreground" />
                     </div>
 
-                    <h1 className="mb-2 text-3xl font-bold text-card-foreground">{t('notFound.title')}</h1>
+                    <h1 className="mb-2 text-3xl font-medium text-card-foreground">{t('notFound.title')}</h1>
 
                     <p className="mb-8 text-lg text-muted-foreground">{t('notFound.subtitle')}</p>
 
                     <Link
                         href="/"
-                        className="block w-full rounded-lg bg-primary px-5 py-3 text-center text-sm font-semibold text-primary-foreground transition-transform duration-200 hover:-translate-y-1 hover:brightness-110 active:scale-95"
+                        className="block w-full rounded-lg bg-primary px-5 py-3 text-center text-sm font-semibold text-primary-foreground transition-transform duration-200  hover:brightness-110 active:scale-[0.98]"
                     >
                         {t('notFound.cta')}
                     </Link>

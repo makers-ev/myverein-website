@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Rocket, ShieldCheck, ScrollText, type LucideIcon } from 'lucide-react';
+import { Home, ShieldCheck, ScrollText, type LucideIcon } from 'lucide-react';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Modal } from './Modal';
 
 const STEPS: { icon: LucideIcon; key: string }[] = [
-  { icon: Rocket, key: 'step1' },
+  { icon: Home, key: 'step1' },
   { icon: ShieldCheck, key: 'step2' },
   { icon: ScrollText, key: 'step3' },
 ];
@@ -49,20 +49,18 @@ export default function IntroModal() {
       footer={
         <button
           onClick={handleClose}
-          className="w-full rounded-xl bg-primary px-4 py-3 font-bold text-primary-foreground transition hover:brightness-110"
+          className="min-h-11 w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98]"
         >
           {t('intro-modal.button')}
         </button>
       }
     >
-      <p className="mb-4 text-muted-foreground">{t('intro-modal.intro')}</p>
+      <p className="mb-6 text-muted-foreground">{t('intro-modal.intro')}</p>
       {STEPS.map(({ icon: Icon, key }) => (
-        <div key={key} className="mb-4 flex gap-3">
-          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary/10">
-            <Icon className="h-[18px] w-[18px] text-primary" />
-          </div>
+        <div key={key} className="mb-5 flex gap-3 last:mb-0">
+          <Icon className="mt-0.5 h-[18px] w-[18px] shrink-0 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
           <div>
-            <p className="mb-0.5 font-bold text-foreground">{t(`intro-modal.${key}.title`)}</p>
+            <p className="mb-0.5 font-medium text-foreground">{t(`intro-modal.${key}.title`)}</p>
             <p className="text-sm leading-relaxed text-muted-foreground">{t(`intro-modal.${key}.text`)}</p>
           </div>
         </div>

@@ -13,7 +13,7 @@ const NotificationTranslation: Translation = {
     de: {
         'nav.notifications': 'Benachrichtigungen',
 
-        'notification.welcome.title': 'Willkommen bei {{appName}}!',
+        'notification.welcome.title': 'Willkommen bei {{appName}}',
         'notification.welcome.body': 'Schön, dass du da bist. Schau dich in Ruhe um und richte deinen Account in den Einstellungen ein.',
 
         'notifications.page.title': 'Benachrichtigungen',
@@ -29,7 +29,7 @@ const NotificationTranslation: Translation = {
     en: {
         'nav.notifications': 'Notifications',
 
-        'notification.welcome.title': 'Welcome to {{appName}}!',
+        'notification.welcome.title': 'Welcome to {{appName}}',
         'notification.welcome.body': "Glad you're here. Take a look around and set up your account in Settings.",
 
         'notifications.page.title': 'Notifications',
@@ -45,7 +45,7 @@ const NotificationTranslation: Translation = {
     fr: {
         'nav.notifications': 'Notifications',
 
-        'notification.welcome.title': 'Bienvenue sur {{appName}} !',
+        'notification.welcome.title': 'Bienvenue sur {{appName}} ',
         'notification.welcome.body': "Ravi de vous voir ici. Faites le tour et configurez votre compte dans Paramètres.",
 
         'notifications.page.title': 'Notifications',
@@ -61,7 +61,7 @@ const NotificationTranslation: Translation = {
     es: {
         'nav.notifications': 'Notificaciones',
 
-        'notification.welcome.title': '¡Bienvenido/a a {{appName}}!',
+        'notification.welcome.title': '¡Bienvenido/a a {{appName}}',
         'notification.welcome.body': 'Nos alegra tenerte aquí. Échale un vistazo y configura tu cuenta en Ajustes.',
 
         'notifications.page.title': 'Notificaciones',
@@ -77,7 +77,7 @@ const NotificationTranslation: Translation = {
     pt: {
         'nav.notifications': 'Notificações',
 
-        'notification.welcome.title': 'Bem-vindo/a ao {{appName}}!',
+        'notification.welcome.title': 'Bem-vindo/a ao {{appName}}',
         'notification.welcome.body': 'Que bom ter-te por aqui. Dá uma volta e configura a tua conta em Definições.',
 
         'notifications.page.title': 'Notificações',
@@ -93,7 +93,7 @@ const NotificationTranslation: Translation = {
     it: {
         'nav.notifications': 'Notifiche',
 
-        'notification.welcome.title': 'Benvenuto/a su {{appName}}!',
+        'notification.welcome.title': 'Benvenuto/a su {{appName}}',
         'notification.welcome.body': 'Siamo felici di averti qui. Dai un’occhiata in giro e configura il tuo account in Impostazioni.',
 
         'notifications.page.title': 'Notifiche',
@@ -109,7 +109,7 @@ const NotificationTranslation: Translation = {
     nl: {
         'nav.notifications': 'Meldingen',
 
-        'notification.welcome.title': 'Welkom bij {{appName}}!',
+        'notification.welcome.title': 'Welkom bij {{appName}}',
         'notification.welcome.body': 'Fijn dat je er bent. Kijk gerust rond en stel je account in bij Instellingen.',
 
         'notifications.page.title': 'Meldingen',
@@ -125,7 +125,7 @@ const NotificationTranslation: Translation = {
     pl: {
         'nav.notifications': 'Powiadomienia',
 
-        'notification.welcome.title': 'Witamy w {{appName}}!',
+        'notification.welcome.title': 'Witamy w {{appName}}',
         'notification.welcome.body': 'Cieszymy się, że tu jesteś. Rozejrzyj się i skonfiguruj swoje konto w Ustawieniach.',
 
         'notifications.page.title': 'Powiadomienia',
@@ -141,7 +141,7 @@ const NotificationTranslation: Translation = {
     ru: {
         'nav.notifications': 'Уведомления',
 
-        'notification.welcome.title': 'Добро пожаловать в {{appName}}!',
+        'notification.welcome.title': 'Добро пожаловать в {{appName}}',
         'notification.welcome.body': 'Рады видеть вас здесь. Осмотритесь и настройте свой аккаунт в Настройках.',
 
         'notifications.page.title': 'Уведомления',

@@ -131,7 +131,7 @@ export default function MemberStatusDialog({
         >
             <p className="text-sm text-muted-foreground">
                 {t('verein.status.current')}{' '}
-                <span className={`ml-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusChipClass(from)}`}>{t(`verein.status.${from}`)}</span>
+                <span className={`ml-1 rounded-md px-2 py-0.5 text-xs font-medium ${statusChipClass(from)}`}>{t(`verein.status.${from}`)}</span>
             </p>
 
             {pendingExit && (

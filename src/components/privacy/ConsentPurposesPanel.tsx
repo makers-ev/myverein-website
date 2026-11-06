@@ -97,7 +97,7 @@ function PurposeCard({ clubId, purpose, canManage, onChanged }: { clubId: string
         <li className="rounded-xl border border-border bg-card p-4">
             <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0">
-                    <h3 className="text-sm font-bold text-foreground">{purpose.name}</h3>
+                    <h3 className="text-base font-medium text-foreground">{purpose.name}</h3>
                     {purpose.description && <p className="mt-0.5 text-sm text-muted-foreground">{purpose.description}</p>}
                 </div>
                 <div className="flex flex-wrap gap-1.5">

@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { Github, Twitter, Linkedin } from 'lucide-react';
 import Logo from './Logo';
 import { docsUrl } from '@/lib/docs';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -31,139 +30,65 @@ export function Footer() {
         ],
     };
 
+    const linkClass = 'inline-flex min-h-9 items-center text-sm text-muted-foreground transition-colors hover:text-foreground';
+    const groups: { title: string; links: { name: string; href: string }[] }[] = [
+        { title: t('footer.product.title'), links: footerLinks.product },
+        { title: t('footer.company.title'), links: footerLinks.company },
+    ];
+
     return (
-        <footer className="bg-background border-t border-border">
+        <footer className="border-t border-border bg-background">
             <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
-                <div className="xl:grid xl:grid-cols-3 xl:gap-8">
-                    {/* Brand Section */}
-                    <div className="space-y-8 xl:col-span-1 justify-self-center">
-                        <Link
-                            href="/"
-                            className="flex items-center gap-2 transition-opacity hover:opacity-80"
-                        >
+                <div className="grid gap-12 lg:grid-cols-[1fr_2fr]">
+                    <div className="space-y-4">
+                        <Link href="/" className="inline-flex items-center transition-opacity hover:opacity-80">
                             <Logo />
                         </Link>
-                        <p className="max-w-xs text-sm leading-6 text-muted-foreground">
-                            {t('footer.tagline')}
-                        </p>
-                        <div className="flex space-x-5">
-                            <a
-                                href="#"
-                                className="text-muted-foreground hover:text-foreground transition-colors"
-                            >
-                                <span className="sr-only">GitHub</span>
-                                <Github size={20} strokeWidth={1.5} />
-                            </a>
-                            <a
-                                href="#"
-                                className="text-muted-foreground hover:text-foreground transition-colors"
-                            >
-                                <span className="sr-only">Twitter</span>
-                                <Twitter size={20} strokeWidth={1.5} />
-                            </a>
-                            <a
-                                href="#"
-                                className="text-muted-foreground hover:text-foreground transition-colors"
-                            >
-                                <span className="sr-only">LinkedIn</span>
-                                <Linkedin size={20} strokeWidth={1.5} />
-                            </a>
-                        </div>
+                        <p className="max-w-xs text-sm leading-6 text-muted-foreground">{t('footer.tagline')}</p>
                     </div>
 
-                    {/* Links Grid */}
-                    <div className="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
-                        <div className="md:grid md:grid-cols-2 md:gap-8">
-                            <div>
-                                <h3 className="text-sm font-semibold leading-6 text-foreground">
-                                    {t('footer.product.title')}
-                                </h3>
-                                <ul
-                                    role="list"
-                                    className="mt-6 space-y-4"
-                                >
-                                    {footerLinks.product.map((item) => (
-                                        <li key={item.name}>
-                                            <Link
-                                                href={item.href}
-                                                className="text-sm leading-6 text-muted-foreground hover:text-primary transition-colors"
-                                            >
+                    <div className="grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-3">
+                        {groups.map((group) => (
+                            <div key={group.title}>
+                                <h3 className="text-sm font-medium text-foreground">{group.title}</h3>
+                                <ul role="list" className="mt-3 space-y-1">
+                                    {group.links.map((item) => (
+                                        <li key={item.href}>
+                                            <Link href={item.href} className={linkClass}>
                                                 {item.name}
                                             </Link>
                                         </li>
                                     ))}
                                 </ul>
                             </div>
-                            <div className="mt-10 md:mt-0">
-                                <h3 className="text-sm font-semibold leading-6 text-foreground">
-                                    {t('footer.company.title')}
-                                </h3>
-                                <ul
-                                    role="list"
-                                    className="mt-6 space-y-4"
-                                >
-                                    {footerLinks.company.map((item) => (
-                                        <li key={item.name}>
-                                            <Link
-                                                href={item.href}
-                                                className="text-sm leading-6 text-muted-foreground hover:text-primary transition-colors"
-                                            >
-                                                {item.name}
-                                            </Link>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        </div>
-                        <div className="md:grid md:grid-cols-2 md:gap-8">
-                            <div>
-                                <h3 className="text-sm font-semibold leading-6 text-foreground">
-                                    {t('footer.legal.title')}
-                                </h3>
-                                <ul
-                                    role="list"
-                                    className="mt-6 space-y-4"
-                                >
-                                    {footerLinks.legal.map((item) => (
-                                        <li key={item.name}>
-                                            <Link
-                                                href={item.href}
-                                                className="text-sm leading-6 text-muted-foreground hover:text-primary transition-colors"
-                                            >
-                                                {item.name}
-                                            </Link>
-                                        </li>
-                                    ))}
-                                    <li>
-                                        <a
-                                            href={docsUrl()}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            aria-label={t('help.nav.label')}
-                                            className="text-sm leading-6 text-muted-foreground hover:text-primary transition-colors"
-                                        >
-                                            {t('help.nav')}
-                                        </a>
+                        ))}
+                        <div>
+                            <h3 className="text-sm font-medium text-foreground">{t('footer.legal.title')}</h3>
+                            <ul role="list" className="mt-3 space-y-1">
+                                {footerLinks.legal.map((item) => (
+                                    <li key={item.href}>
+                                        <Link href={item.href} className={linkClass}>
+                                            {item.name}
+                                        </Link>
                                     </li>
-                                    <button
-                                        onClick={openCookieSettings}
-                                        className="text-sm leading-6 text-muted-foreground hover:text-primary transition-colors"
-                                    >
+                                ))}
+                                <li>
+                                    <a href={docsUrl()} target="_blank" rel="noopener noreferrer" aria-label={t('help.nav.label')} className={linkClass}>
+                                        {t('help.nav')}
+                                    </a>
+                                </li>
+                                <li>
+                                    <button type="button" onClick={openCookieSettings} className={linkClass}>
                                         {t('footer.cookie_settings')}
                                     </button>
-                                </ul>
-                            </div>
-                            {/* Optional: Newsletter / Status or Empty Column */}
-                            <div className="mt-10 md:mt-0">
-                                {/* You could put a newsletter signup here later */}
-                            </div>
+                                </li>
+                            </ul>
                         </div>
                     </div>
                 </div>
 
-                {/* Bottom Bar */}
-                <div className="mt-16 pt-8 sm:mt-20 lg:mt-24 flex flex-col items-center justify-between">
-                    <p className="text-xs leading-5 text-muted-foreground">
+                <div className="mt-12 border-t border-border pt-6">
+                    <p className="text-xs text-muted-foreground">
                         &copy; {currentYear} MyVerein, {t('footer.rights')}
                     </p>
                 </div>

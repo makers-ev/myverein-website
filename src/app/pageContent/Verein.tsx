@@ -90,7 +90,7 @@ type Tab = ClubTab;
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
     return (
         <div className="rounded-xl border border-border bg-card p-4">
-            <h2 className="mb-3 text-sm font-bold text-foreground">{title}</h2>
+            <h2 className="mb-3 text-base font-medium text-foreground">{title}</h2>
             {children}
         </div>
     );
@@ -203,7 +203,7 @@ function AbteilungenTab({
                     <button
                         type="submit"
                         disabled={submitting || !name.trim()}
-                        className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+                        className="min-h-11 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
                     >
                         {t('verein.departments.new.submit')}
                     </button>
@@ -319,7 +319,7 @@ export default function VereinPageContent() {
     return (
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
             <div className="flex items-center gap-1">
-                <h1 className="text-2xl font-bold text-foreground">
+                <h1 className="text-[1.75rem] font-medium leading-9 text-foreground">
                     {activeClub?.clubName ?? t('verein.page.title')}
                 </h1>
                 <HelpLink topic={currentTab === 'datenschutz' ? 'privacy' : 'members'} />

@@ -8,7 +8,7 @@ type Translation = Record<Language, Record<string, string>>;
 const ComponentTranslation: Translation = {
     de: {
         'cookie.title': 'Cookie-Einstellungen',
-        'cookie.description': 'Wir verwenden Cookies, um Ihre Erfahrung zu verbessern. Wählen Sie Ihre Präferenzen.',
+        'cookie.description': 'Wir verwenden Cookies, um deine Erfahrung zu verbessern. Wähle deine Einstellungen.',
         'cookie.save': 'Auswahl speichern',
         'cookie.acceptAll': 'Alle akzeptieren',
 
@@ -17,15 +17,15 @@ const ComponentTranslation: Translation = {
         'cookie.analytics.label': 'Analytics (Google Analytics)',
         'cookie.analytics.description': 'Hilft uns zu verstehen, wie Besucher mit der Website interagieren.',
 
-        'intro-modal.title': 'Willkommen!',
+        'intro-modal.title': 'Willkommen bei MyVerein',
         'intro-modal.intro': 'MyVerein ist dein digitaler Vereinsmanager: Mitglieder, Termine, Material und Treffen an einem Ort. Ein kurzer Überblick:',
-        'intro-modal.step1.title': 'Konto erstellen',
-        'intro-modal.step1.text': 'Registriere dich oder logge dich von der Startseite aus ein -- E-Mail/Passwort-Login und optionale Zwei-Faktor-Authentifizierung sind bereits eingebaut.',
+        'intro-modal.step1.title': 'Heute: dein Überblick',
+        'intro-modal.step1.text': 'Offene Zusagen, Mitteilungen, Abstimmungen und Rückgaben findest du auf der Seite Heute.',
         'intro-modal.step2.title': 'Dein Konto ist geschützt',
-        'intro-modal.step2.text': 'Sessions, Passwort-Reset und Konto-Löschung sind bereits fertig -- siehe Einstellungen.',
-        'intro-modal.step3.title': 'Rechtstexte im Footer',
-        'intro-modal.step3.text': 'Datenschutzerklärung, Nutzungsbedingungen und Impressum findest du im Footer -- hier findest du alles Rechtliche zu MyVerein.',
-        'intro-modal.button': "Los geht's",
+        'intro-modal.step2.text': 'Zwei-Faktor-Anmeldung, aktive Geräte und Konto-Löschung findest du in den Einstellungen.',
+        'intro-modal.step3.title': 'Rechtstexte',
+        'intro-modal.step3.text': 'Datenschutzerklärung, Nutzungsbedingungen und Impressum stehen im Footer.',
+        'intro-modal.button': 'Verstanden',
 
         'settings.section-help': 'Hilfe',
         'settings.replay-intro': 'Einführung erneut anzeigen',
@@ -63,15 +63,15 @@ const ComponentTranslation: Translation = {
         'cookie.analytics.label': 'Analytics (Google Analytics)',
         'cookie.analytics.description': 'Helps us understand how visitors interact with the website.',
 
-        'intro-modal.title': 'Welcome!',
+        'intro-modal.title': 'Welcome to MyVerein',
         'intro-modal.intro': 'MyVerein is your digital club manager: members, events, equipment and meetings in one place. A quick look:',
-        'intro-modal.step1.title': 'Create your account',
-        'intro-modal.step1.text': 'Sign up or log in from Home -- email/password auth and optional two-factor authentication are already built in.',
+        'intro-modal.step1.title': 'Today: your overview',
+        'intro-modal.step1.text': 'Open RSVPs, announcements, votes and returns are on the Today page.',
         'intro-modal.step2.title': 'Your account is protected',
-        'intro-modal.step2.text': 'Sessions, password resets, and account deletion are handled for you -- see Settings.',
-        'intro-modal.step3.title': 'Legal pages in the footer',
-        'intro-modal.step3.text': 'Privacy Policy, Terms of Service, and Imprint all live in the footer -- you will find everything legal about MyVerein there.',
-        'intro-modal.button': "Let's go",
+        'intro-modal.step2.text': 'Two-factor sign-in, active devices and account deletion are in Settings.',
+        'intro-modal.step3.title': 'Legal pages',
+        'intro-modal.step3.text': 'Privacy policy, terms of service and imprint are in the footer.',
+        'intro-modal.button': 'Got it',
 
         'settings.section-help': 'Help',
         'settings.replay-intro': 'Show introduction again',
@@ -109,7 +109,7 @@ const ComponentTranslation: Translation = {
         'cookie.analytics.label': 'Analytique (Google Analytics)',
         'cookie.analytics.description': 'Nous aide à comprendre comment les visiteurs interagissent avec le site.',
 
-        'intro-modal.title': 'Bienvenue !',
+        'intro-modal.title': 'Bienvenue ',
         'intro-modal.intro': "Ce modèle intègre déjà plusieurs éléments prêts à l'emploi. Un rapide aperçu :",
         'intro-modal.step1.title': 'Créez votre compte',
         'intro-modal.step1.text': "Inscrivez-vous ou connectez-vous depuis l'accueil -- l'authentification par e-mail/mot de passe et la double authentification optionnelle sont déjà intégrées.",
@@ -155,7 +155,7 @@ const ComponentTranslation: Translation = {
         'cookie.analytics.label': 'Analítica (Google Analytics)',
         'cookie.analytics.description': 'Nos ayuda a entender cómo interactúan los visitantes con el sitio web.',
 
-        'intro-modal.title': '¡Bienvenido/a!',
+        'intro-modal.title': '¡Bienvenido/a',
         'intro-modal.intro': 'Esta plantilla ya incluye varias cosas configuradas. Un breve resumen:',
         'intro-modal.step1.title': 'Crea tu cuenta',
         'intro-modal.step1.text': 'Regístrate o inicia sesión desde el inicio -- el login por correo/contraseña y la autenticación de dos factores opcional ya están integrados.',
@@ -201,7 +201,7 @@ const ComponentTranslation: Translation = {
         'cookie.analytics.label': 'Análise (Google Analytics)',
         'cookie.analytics.description': 'Ajuda-nos a perceber como os visitantes interagem com o site.',
 
-        'intro-modal.title': 'Bem-vindo/a!',
+        'intro-modal.title': 'Bem-vindo/a',
         'intro-modal.intro': 'Este modelo já vem com várias funcionalidades prontas. Um breve resumo:',
         'intro-modal.step1.title': 'Crie a sua conta',
         'intro-modal.step1.text': 'Registe-se ou inicie sessão a partir do início -- o login por e-mail/palavra-passe e a autenticação de dois fatores opcional já estão integrados.',
@@ -247,7 +247,7 @@ const ComponentTranslation: Translation = {
         'cookie.analytics.label': 'Analisi (Google Analytics)',
         'cookie.analytics.description': 'Ci aiuta a capire come i visitatori interagiscono con il sito web.',
 
-        'intro-modal.title': 'Benvenuto/a!',
+        'intro-modal.title': 'Benvenuto/a',
         'intro-modal.intro': 'Questo template include già diverse funzionalità pronte all’uso. Una breve panoramica:',
         'intro-modal.step1.title': 'Crea il tuo account',
         'intro-modal.step1.text': "Registrati o accedi dalla home -- il login con email/password e l'autenticazione a due fattori opzionale sono già integrati.",
@@ -293,7 +293,7 @@ const ComponentTranslation: Translation = {
         'cookie.analytics.label': 'Analytics (Google Analytics)',
         'cookie.analytics.description': 'Helpt ons te begrijpen hoe bezoekers omgaan met de website.',
 
-        'intro-modal.title': 'Welkom!',
+        'intro-modal.title': 'Welkom',
         'intro-modal.intro': 'Dit template bevat al een aantal kant-en-klare zaken. Een kort overzicht:',
         'intro-modal.step1.title': 'Maak een account aan',
         'intro-modal.step1.text': 'Registreer je of log in vanaf Home -- e-mail/wachtwoord-login en optionele tweefactorauthenticatie zijn al ingebouwd.',
@@ -339,7 +339,7 @@ const ComponentTranslation: Translation = {
         'cookie.analytics.label': 'Analityka (Google Analytics)',
         'cookie.analytics.description': 'Pomaga nam zrozumieć, jak odwiedzający korzystają z witryny.',
 
-        'intro-modal.title': 'Witamy!',
+        'intro-modal.title': 'Witamy',
         'intro-modal.intro': 'Ten szablon zawiera już kilka gotowych elementów. Krótki przegląd:',
         'intro-modal.step1.title': 'Utwórz konto',
         'intro-modal.step1.text': 'Zarejestruj się lub zaloguj ze strony głównej -- logowanie e-mail/hasło oraz opcjonalne uwierzytelnianie dwuskładnikowe są już wbudowane.',
@@ -385,7 +385,7 @@ const ComponentTranslation: Translation = {
         'cookie.analytics.label': 'Аналитика (Google Analytics)',
         'cookie.analytics.description': 'Помогает нам понять, как посетители взаимодействуют с сайтом.',
 
-        'intro-modal.title': 'Добро пожаловать!',
+        'intro-modal.title': 'Добро пожаловать',
         'intro-modal.intro': 'В этом шаблоне уже настроено несколько вещей. Краткий обзор:',
         'intro-modal.step1.title': 'Создайте аккаунт',
         'intro-modal.step1.text': 'Зарегистрируйтесь или войдите с главной страницы -- вход по email/паролю и опциональная двухфакторная аутентификация уже встроены.',

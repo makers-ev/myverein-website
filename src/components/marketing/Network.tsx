@@ -35,8 +35,9 @@ const EDGES: [number, number][] = [
     [NEW_NODE, 4], [NEW_NODE, 11], [NEW_NODE, 12],
 ];
 
-const FILL = { primary: 'fill-primary', accent: 'fill-accent', success: 'fill-success', warning: 'fill-warning' } as const;
-const STROKE = { primary: 'stroke-primary', accent: 'stroke-accent', success: 'stroke-success', warning: 'stroke-warning' } as const;
+// The net is one ink (the primary); only the newcomer, a membership application, carries the accent. Tones in NODES are layout history, not colours.
+const FILL = { primary: 'fill-primary', accent: 'fill-accent', success: 'fill-primary', warning: 'fill-primary' } as const;
+const STROKE = { primary: 'stroke-primary', accent: 'stroke-accent', success: 'stroke-accent', warning: 'stroke-accent' } as const;
 
 // Nodes 0..14 spread over mk-d1..mk-d11; the newcomer takes the last step.
 const stepFor = (i: number) => (i === NEW_NODE ? 12 : Math.min(i + 1, 11));
@@ -63,7 +64,7 @@ export default function Network({ className = '', label }: { className?: string;
                             key={`${a}-${b}`}
                             d={`M${from.x} ${from.y} L${to.x} ${to.y}`}
                             pathLength={1}
-                            className={`mk-edge mk-d${step} ${isNew ? 'mk-edge-new stroke-accent' : 'stroke-primary/45'} fill-none stroke-[2.5]`}
+                            className={`mk-edge mk-d${step} ${isNew ? 'mk-edge-new stroke-accent' : 'stroke-primary/40'} fill-none stroke-[1.5]`}
                             strokeLinecap="round"
                         />
                     );
@@ -75,7 +76,6 @@ export default function Network({ className = '', label }: { className?: string;
                     return (
                         <g key={i} className={`mk-node mk-d${stepFor(i)} ${isNew ? 'mk-node-new' : ''}`}>
                             {isNew && <circle cx={n.x} cy={n.y} r={n.r + 7} className={`mk-ring fill-none ${STROKE.accent} stroke-[1.5] [stroke-dasharray:4_3]`} />}
-                            <circle cx={n.x + 1.5} cy={n.y + 2.5} r={n.r} className="fill-foreground/15" />
                             <circle cx={n.x} cy={n.y} r={n.r} className={FILL[n.tone]} />
                             <circle cx={n.x} cy={n.y - n.r * 0.25} r={n.r * 0.3} className="fill-card" />
                             <path d={`M${n.x - n.r * 0.55} ${n.y + n.r * 0.6} Q${n.x} ${n.y - n.r * 0.2} ${n.x + n.r * 0.55} ${n.y + n.r * 0.6} Z`} className="fill-card" />

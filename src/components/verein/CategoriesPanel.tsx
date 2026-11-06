@@ -382,7 +382,7 @@ export default function CategoriesPanel({ clubId, onChanged }: { clubId: string;
         <div>
             <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
                 <div>
-                    <h2 className="text-sm font-bold text-foreground">{t('verein.categories.title')}</h2>
+                    <h2 className="text-base font-medium text-foreground">{t('verein.categories.title')}</h2>
                     <p className="mt-1 max-w-xl text-xs text-muted-foreground">{t('verein.categories.hint')}</p>
                 </div>
                 <button type="button" onClick={() => setCreating(true)} className={`${primaryButtonClass} inline-flex items-center gap-1.5`}>

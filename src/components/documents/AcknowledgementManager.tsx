@@ -98,7 +98,7 @@ export default function AcknowledgementManager({ clubId, departments }: { clubId
         <section aria-label={t('docs.ack.mgr.title')} className="space-y-4">
             <div className="flex flex-wrap items-end justify-between gap-2">
                 <div>
-                    <h2 className="text-lg font-bold text-foreground">{t('docs.ack.mgr.title')}</h2>
+                    <h2 className="text-lg font-medium text-foreground">{t('docs.ack.mgr.title')}</h2>
                     <p className="mt-1 text-sm text-muted-foreground">{t('docs.ack.mgr.intro')}</p>
                 </div>
                 <button type="button" className={primaryButtonClass} onClick={() => setRequesting(true)}>

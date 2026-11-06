@@ -58,7 +58,7 @@ function Group({ title, events, busyId, onRespond, onClear }: { title: string; e
     if (events.length === 0) return null;
     return (
         <div>
-            <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">{title}</h3>
+            <h3 className="mb-2 text-xs font-bold text-muted-foreground">{title}</h3>
             <ul className="space-y-2">
                 {events.map((e) => (
                     <EventRow key={e.id} event={e} busy={busyId === e.id} onRespond={(s) => onRespond(e, s)} onClear={() => onClear(e)} />

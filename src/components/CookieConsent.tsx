@@ -123,15 +123,15 @@ const CookieConsent = ({ gaId }: { gaId?: string }) => {
 
             {/* Wenn nicht sichtbar, rendern wir nichts (oder den Re-Open Button) */}
             {!isVisible ? null : (
-                <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card text-card-foreground p-4 shadow-2xl md:p-6">
-                    <div className="max-w-4xl mx-auto">
+                <div className="fixed inset-x-3 bottom-3 z-50 max-h-[calc(100vh-1.5rem)] overflow-y-auto rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-xl sm:left-auto sm:right-4 sm:bottom-4 sm:max-w-md">
+                    <div>
                         {/* Header Section */}
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                        <div className="mb-4 flex items-start justify-between gap-4">
                             <div className="flex items-center gap-3">
-                                <ShieldCheck size={32} className="text-accent" />
+                                <ShieldCheck size={24} strokeWidth={1.5} className="shrink-0 text-muted-foreground" />
                                 <div>
                                     {/* 3. Texte durch t() ersetzen */}
-                                    <h2 className="text-lg font-bold">
+                                    <h2 className="text-base font-semibold">
                                         {t('cookie.title')}
                                     </h2>
                                     <p className="text-sm mt-1 text-muted-foreground">
@@ -145,7 +145,7 @@ const CookieConsent = ({ gaId }: { gaId?: string }) => {
                                     onClick={() =>
                                         setIsExpanded(!isExpanded)
                                     }
-                                    className="md:hidden p-2 rounded hover:bg-muted transition-colors ml-auto"
+                                    className="ml-auto flex h-11 w-11 items-center justify-center rounded-lg transition-colors hover:bg-muted sm:hidden"
                                 >
                                     {isExpanded ? (
                                         <ChevronDown />
@@ -158,19 +158,19 @@ const CookieConsent = ({ gaId }: { gaId?: string }) => {
 
                         {/* Dynamic Switches Section */}
                         <div
-                            className={`space-y-3 mb-6 ${
-                                isExpanded ? 'block' : 'hidden md:block'
+                            className={`mb-5 space-y-2 ${
+                                isExpanded ? 'block' : 'hidden sm:block'
                             }`}
                         >
                             {preferences.map((category) => (
                                 <div
                                     key={category.id}
-                                    className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted"
+                                    className="flex items-center justify-between rounded-lg border border-border bg-muted/50 p-3"
                                 >
                                     <div className="pr-4">
                                         {/* 4. Hier ist der Trick: Wir bauen den Key dynamisch aus der ID */}
                                         {/* Z.B. cookie.technical.label */}
-                                        <span className="font-semibold block">
+                                        <span className="block text-sm font-medium">
                                             {t(
                                                 `cookie.${category.id}.label`
                                             )}
@@ -188,18 +188,18 @@ const CookieConsent = ({ gaId }: { gaId?: string }) => {
                                             handleToggle(category.id)
                                         }
                                         disabled={category.required}
-                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-card ${
+                                        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
                                             category.required
                                                 ? 'opacity-50 cursor-not-allowed'
                                                 : 'cursor-pointer'
-                                        } ${category.enabled ? 'bg-accent' : 'bg-muted-foreground/30'}`}
+                                        } ${category.enabled ? 'bg-primary' : 'bg-muted-foreground/40'}`}
                                     >
                                         <span
                                             className={`${
                                                 category.enabled
                                                     ? 'translate-x-6'
                                                     : 'translate-x-1'
-                                            } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+                                            } inline-block h-4 w-4 transform rounded-full bg-card shadow-sm transition-transform`}
                                         />
                                     </button>
                                 </div>
@@ -207,17 +207,17 @@ const CookieConsent = ({ gaId }: { gaId?: string }) => {
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex flex-col md:flex-row gap-3 justify-end pt-2 border-t border-border">
+                        <div className="flex flex-col gap-2 border-t border-border pt-4 sm:flex-row sm:justify-end">
                             <button
                                 onClick={handleSaveSelection}
-                                className="px-6 py-2 rounded-md font-medium text-sm transition-all border border-accent text-accent hover:bg-accent/10"
+                                className="min-h-11 rounded-lg border border-border bg-card px-5 text-sm font-medium text-foreground transition-colors hover:bg-muted active:scale-[0.98]"
                             >
                                 {t('cookie.save')}
                             </button>
 
                             <button
                                 onClick={handleAcceptAll}
-                                className="px-6 py-2 rounded-md font-medium text-sm bg-accent text-accent-foreground transition-all hover:brightness-110"
+                                className="min-h-11 rounded-lg bg-primary px-5 text-sm font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98]"
                             >
                                 {t('cookie.acceptAll')}
                             </button>

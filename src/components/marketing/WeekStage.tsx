@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 're
 import { useLanguage } from '@/contexts/LanguageContext';
 
 import { getItem, weekDayIds } from './marketingData';
-import { Draw, Marker, StatusSketch } from './Sketch';
+import { Draw, MK_SECTION, SectionHead, StatusSketch } from './Sketch';
 import { useInView } from './useInView';
 
 /** Stick figure as stroke paths: head, body, legs and arms. `base` is the y of the feet. */
@@ -76,9 +76,9 @@ const DAYS: Day[] = [
 function DayScene({ id }: { id: string }) {
     const scene = SCENES[id];
     return (
-        <div aria-hidden="true" className="relative aspect-[8/5] w-40 shrink-0 text-foreground sm:w-48">
-            <Draw paths={scene.people} viewBox="0 0 160 100" className="absolute inset-0 size-full" pathClassName="stroke-foreground stroke-[2.5]" />
-            <Draw paths={scene.props} viewBox="0 0 160 100" className="absolute inset-0 size-full" pathClassName="stroke-accent stroke-[2.5]" delay={4} />
+        <div aria-hidden="true" className="relative aspect-[8/5] w-full max-w-[15rem] text-foreground">
+            <Draw paths={scene.people} viewBox="0 0 160 100" className="absolute inset-0 size-full" pathClassName="stroke-foreground stroke-[2]" />
+            <Draw paths={scene.props} viewBox="0 0 160 100" className="absolute inset-0 size-full" pathClassName="stroke-accent stroke-[2]" delay={4} />
         </div>
     );
 }
@@ -159,15 +159,12 @@ export default function WeekStage() {
     };
 
     return (
-        <section id="woche" aria-labelledby="woche-title" className="scroll-mt-20 px-4 py-16 sm:px-6">
-            <div className="mx-auto max-w-4xl">
-                <h2 id="woche-title" className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-                    {t('mk.week.title.before')} <Marker>{t('mk.week.title.marked')}</Marker>
-                </h2>
-                <p className="mt-3 max-w-2xl text-lg text-muted-foreground">{t('mk.week.intro')}</p>
+        <section id="woche" aria-labelledby="woche-title" className="scroll-mt-20 border-y border-border bg-muted/30">
+            <div className={MK_SECTION}>
+                <SectionHead id="woche-title" title={`${t('mk.week.title.before')} ${t('mk.week.title.marked')}`} intro={t('mk.week.intro')} />
 
-                <nav aria-label={t('mk.week.nav')} className="sticky top-16 z-40 -mx-4 mt-8 bg-background/90 px-4 py-2 backdrop-blur-md sm:mx-0 sm:px-0">
-                    <ul className="grid grid-cols-7 gap-1">
+                <nav aria-label={t('mk.week.nav')} className="sticky top-16 z-40 -mx-4 mt-10 border-b border-border bg-background px-4 py-3 sm:mx-0 sm:rounded-xl sm:border sm:px-3">
+                    <ul className="grid grid-cols-7 gap-1.5">
                         {DAYS.map((day, index) => (
                             <li key={day.id}>
                                 <a
@@ -182,10 +179,8 @@ export default function WeekStage() {
                                         goTo(index);
                                     }}
                                     onKeyDown={(event) => onKeyDown(event, index)}
-                                    className={`flex min-h-11 items-center justify-center rounded-md border-2 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
-                                        active === index
-                                            ? 'border-foreground/70 bg-accent text-accent-foreground'
-                                            : 'border-border bg-card text-muted-foreground hover:text-foreground'
+                                    className={`flex min-h-11 items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+                                        active === index ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                                     }`}
                                 >
                                     {t(`mk.week.${day.id}.short`)}
@@ -195,7 +190,7 @@ export default function WeekStage() {
                     </ul>
                 </nav>
 
-                <ol className={`mt-6 space-y-6 ${ready ? 'mk-week-js' : ''}`}>
+                <ol className={`mt-8 space-y-4 ${ready ? 'mk-week-js' : ''}`}>
                     {DAYS.map((day, index) => {
                         const item = getItem(day.item);
                         return (
@@ -205,24 +200,26 @@ export default function WeekStage() {
                                 ref={(el) => {
                                     dayRefs.current[index] = el;
                                 }}
-                                className={`mk-day scroll-mt-36 ${active === index ? 'is-active' : ''}`}
+                                className={`mk-day scroll-mt-40 ${active === index ? 'is-active' : ''}`}
                             >
-                                <StatusSketch status={item.status} className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
-                                    <DayScene id={day.id} />
+                                <StatusSketch status={item.status} bodyClassName="grid gap-6 lg:grid-cols-[17rem_minmax(0,1fr)] lg:items-center lg:gap-10">
+                                    <div className="flex items-center justify-center rounded-xl bg-muted/60 p-5 lg:self-stretch">
+                                        <DayScene id={day.id} />
+                                    </div>
                                     <div className="min-w-0">
-                                        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{t(`mk.week.${day.id}.name`)}</h3>
-                                        <p className="mt-1 text-xl font-bold text-foreground">{t(`mk.week.${day.id}.story`)}</p>
-                                        <p className="mt-2 font-semibold text-foreground">{t(`${item.i18nKey}.title`)}</p>
-                                        <p className="text-muted-foreground">{t(`${item.i18nKey}.body`)}</p>
-                                        <ul className="mt-3 flex flex-wrap gap-2">
+                                        <h3 className="text-sm font-medium text-muted-foreground">{t(`mk.week.${day.id}.name`)}</h3>
+                                        <p className="mt-1 text-xl font-medium leading-snug text-foreground sm:text-2xl sm:leading-snug">{t(`mk.week.${day.id}.story`)}</p>
+                                        <p className="mt-4 font-medium text-foreground">{t(`${item.i18nKey}.title`)}</p>
+                                        <p className="mt-1 text-muted-foreground">{t(`${item.i18nKey}.body`)}</p>
+                                        <ul className="mt-4 flex flex-wrap gap-2">
                                             {day.extras.map((extraId) => {
                                                 const extra = getItem(extraId);
                                                 return (
                                                     <li
                                                         key={extraId}
-                                                        className={`rounded-full border px-3 py-1 text-sm ${
+                                                        className={`rounded-md border px-2.5 py-1 text-sm ${
                                                             extra.status === 'live'
-                                                                ? 'border-solid border-foreground/40 text-foreground'
+                                                                ? 'border-solid border-border bg-background text-foreground'
                                                                 : 'border-dashed border-muted-foreground text-muted-foreground'
                                                         }`}
                                                     >

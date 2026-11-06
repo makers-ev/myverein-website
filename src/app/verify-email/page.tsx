@@ -21,19 +21,19 @@ function VerifyEmailPageInner() {
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-            <div className="w-full max-w-md transform overflow-hidden rounded-2xl bg-card p-8 shadow-xl transition-all duration-500 hover:shadow-2xl">
+            <div className="w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card p-8 shadow-md">
                 <div className="flex flex-col items-center text-center">
                     {hasError ? (
-                        <div className="mb-6 rounded-full bg-red-100 dark:bg-red-950 p-4">
-                            <ExclamationTriangleIcon className="h-12 w-12 text-red-600 dark:text-red-400" />
+                        <div className="mb-6 rounded-full bg-destructive/10 p-4">
+                            <ExclamationTriangleIcon className="h-12 w-12 text-destructive" />
                         </div>
                     ) : (
-                        <div className="mb-6 rounded-full bg-green-100 dark:bg-green-950 p-4">
-                            <CheckCircleIcon className="h-12 w-12 text-green-600 dark:text-green-400" />
+                        <div className="mb-6 rounded-full bg-success/10 p-4">
+                            <CheckCircleIcon className="h-12 w-12 text-success" />
                         </div>
                     )}
 
-                    <h1 className="mb-2 text-3xl font-bold text-card-foreground">
+                    <h1 className="mb-2 text-3xl font-medium text-card-foreground">
                         {hasError
                             ? t('auth.verifyEmail.page.errorTitle')
                             : t('auth.verifyEmail.page.successTitle')}
@@ -47,7 +47,7 @@ function VerifyEmailPageInner() {
 
                     <Link
                         href={loginHref}
-                        className="block w-full rounded-lg bg-primary px-5 py-3 text-center text-sm font-semibold text-primary-foreground transition-transform duration-200 hover:-translate-y-1 hover:brightness-110 active:scale-95"
+                        className="block w-full rounded-lg bg-primary px-5 py-3 text-center text-sm font-semibold text-primary-foreground transition-transform duration-200  hover:brightness-110 active:scale-[0.98]"
                     >
                         {t('auth.verifyEmail.page.cta')}
                     </Link>

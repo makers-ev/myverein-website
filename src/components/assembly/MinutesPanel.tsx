@@ -286,7 +286,7 @@ export default function MinutesPanel({ clubId, meetingId, canWrite, canAssembly 
 
                 {(view.amendments.length > 0 || (canAssembly && actions.amend)) && (
                     <div className="space-y-2 border-t border-border pt-3">
-                        <h3 className="text-sm font-bold text-foreground">{t('assembly.minutes.amendments')}</h3>
+                        <h3 className="text-base font-medium text-foreground">{t('assembly.minutes.amendments')}</h3>
                         {view.amendments.map((a) => (
                             <p key={a.id} className="rounded-lg bg-muted/50 px-3 py-2 text-sm text-foreground">
                                 <span className="text-xs text-muted-foreground">{formatWhen(a.createdAt, language)} · v{a.version}: </span>

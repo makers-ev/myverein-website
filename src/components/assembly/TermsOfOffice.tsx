@@ -64,7 +64,7 @@ export function ExpiringRolesCard({ clubId }: { clubId: string }) {
     if (!rows || rows.length === 0) return null;
     return (
         <div role="note" className="rounded-xl border border-warning/40 bg-warning/10 p-4">
-            <h2 className="text-sm font-bold text-foreground">{t('assembly.term.card.title')}</h2>
+            <h2 className="text-base font-medium text-foreground">{t('assembly.term.card.title')}</h2>
             <ul className="mt-2 space-y-2">
                 {rows.map((r) => (
                     <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 text-sm text-foreground">

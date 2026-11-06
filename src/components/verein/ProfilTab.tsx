@@ -303,7 +303,7 @@ export default function ProfilTab({ me, clubId, onSaved, onPhotoExpired, onDirty
                 </div>
 
                 <form onSubmit={(e) => void handleSave(e)} noValidate className="min-w-0 rounded-xl border border-border bg-card p-5">
-                    <h2 className="text-sm font-bold text-foreground">{t('verein.profil.title')}</h2>
+                    <h2 className="text-base font-medium text-foreground">{t('verein.profil.title')}</h2>
                     <p className="mt-1 text-xs text-muted-foreground">{t('verein.profil.hint')}</p>
                     {minor ? (
                         <p role="note" className="mt-3 rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
@@ -396,7 +396,7 @@ export default function ProfilTab({ me, clubId, onSaved, onPhotoExpired, onDirty
                         <button
                             type="submit"
                             disabled={saving || !dirty}
-                            className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+                            className="min-h-11 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
                         >
                             {saving ? t('verein.profil.saving') : t('verein.profil.save')}
                         </button>

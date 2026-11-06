@@ -158,7 +158,7 @@ export default function AuditLogPanel({ clubId, focus, onFocusChange }: { clubId
                 <>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
-                            <thead className="text-xs uppercase text-muted-foreground">
+                            <thead className="text-xs text-muted-foreground">
                                 <tr>
                                     <th className="px-3 py-2">{t('audit.col.time')}</th>
                                     <th className="px-3 py-2">{t('audit.col.kind')}</th>

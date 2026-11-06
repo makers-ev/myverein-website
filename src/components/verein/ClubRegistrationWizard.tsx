@@ -36,7 +36,7 @@ interface QueuedFile {
     error?: string;
 }
 
-const primaryButton = 'rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50';
+const primaryButton = 'min-h-11 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98] disabled:opacity-50';
 const secondaryButton = 'rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-muted disabled:opacity-50';
 
 function formatSize(bytes: number): string {
@@ -333,7 +333,7 @@ export default function ClubRegistrationWizard({
     return (
         <div className="mt-6 rounded-xl border border-border bg-card p-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-lg font-bold text-foreground">{t('verein.create.card.title')}</h2>
+                <h2 className="text-lg font-medium text-foreground">{t('verein.create.card.title')}</h2>
                 <button type="button" onClick={onCancel} disabled={busy || uploading} className="text-sm text-muted-foreground hover:text-foreground disabled:opacity-50">
                     {t('verein.create.cancel')}
                 </button>
@@ -450,7 +450,7 @@ export default function ClubRegistrationWizard({
 
             {step === 2 && (
                 <div className="mt-5">
-                    <h3 className="text-sm font-bold text-foreground">{t('verein.create.docs.title')}</h3>
+                    <h3 className="text-base font-medium text-foreground">{t('verein.create.docs.title')}</h3>
                     <p className="mt-1 text-sm text-muted-foreground">{t('verein.create.docs.hint', { max: MAX_DOCUMENTS })}</p>
                     <p className="mt-1 text-sm text-foreground">{t('verein.create.docs.qualifying', { kinds: qualifyingText })}</p>
                     <p className="mt-1 text-xs text-muted-foreground">{t('verein.create.docs.private')}</p>
@@ -574,7 +574,7 @@ export default function ClubRegistrationWizard({
 
             {step === 3 && (
                 <div className="mt-5">
-                    <h3 className="text-sm font-bold text-foreground">{t('verein.create.summary.title')}</h3>
+                    <h3 className="text-base font-medium text-foreground">{t('verein.create.summary.title')}</h3>
                     <dl className="mt-3 grid gap-x-4 gap-y-2 text-sm sm:grid-cols-[auto_1fr]">
                         <dt className="text-muted-foreground">{t('verein.create.field.name')}</dt>
                         <dd className="text-foreground">{clubName.trim()}</dd>

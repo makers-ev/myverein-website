@@ -187,9 +187,9 @@ export default function KalenderPageContent() {
     }
 
     return (
-        <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
             <div className="flex items-center gap-1">
-                <h1 className="text-2xl font-bold text-foreground">{t('kalender.page.title')}</h1>
+                <h1 className="text-[1.75rem] font-medium leading-9 text-foreground">{t('kalender.page.title')}</h1>
                 <HelpLink topic="calendar" />
             </div>
 
@@ -334,7 +334,7 @@ export default function KalenderPageContent() {
                                             />
                                             <section className="rounded-xl border border-border bg-card p-4">
                                                 <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                                                    <h3 className="text-sm font-bold text-foreground">
+                                                    <h3 className="text-base font-medium text-foreground">
                                                         {selectedDate.toLocaleDateString(language, { weekday: 'long', day: 'numeric', month: 'long' })}
                                                     </h3>
                                                     {canWrite && calendars.length > 0 && (

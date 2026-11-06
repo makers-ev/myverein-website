@@ -314,7 +314,7 @@ export default function CalendarManager({
     return (
         <section className="rounded-xl border border-border bg-card p-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-sm font-bold text-foreground">{t('kalender.calendars.title')}</h2>
+                <h2 className="text-base font-medium text-foreground">{t('kalender.calendars.title')}</h2>
                 <button type="button" onClick={() => setModal({ kind: 'create' })} className={`${secondaryBtn} inline-flex items-center gap-1.5 !px-3 !py-1.5`}>
                     <Plus className="h-4 w-4" aria-hidden />
                     {t('kalender.calendars.new')}

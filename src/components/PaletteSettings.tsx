@@ -64,7 +64,7 @@ export function PaletteSettings() {
                         key={id}
                         onClick={() => setPaletteId(id)}
                         className={`flex items-center gap-2 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                            paletteId === id ? 'bg-green-600 text-white' : 'bg-muted text-muted-foreground hover:bg-border'
+                            paletteId === id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-border'
                         }`}
                     >
                         <Swatch color={palettes[id].light.primary} />
@@ -74,7 +74,7 @@ export function PaletteSettings() {
                 <button
                     onClick={() => setPaletteId('custom')}
                     className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                        paletteId === 'custom' ? 'bg-green-600 text-white' : 'bg-muted text-muted-foreground hover:bg-border'
+                        paletteId === 'custom' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-border'
                     }`}
                 >
                     {t('settings.color-palette-custom')}

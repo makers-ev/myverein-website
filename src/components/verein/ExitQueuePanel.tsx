@@ -28,13 +28,14 @@ import {
     type NoticePreview,
     proposedDate,
 } from '@/lib/memberLifecycle';
+import { UI_BTN_DANGER } from '@/lib/uiClasses';
 
 type Bucket = 'pending' | 'decided';
 type Dialog = { type: 'review'; id: string } | { type: 'withdraw'; request: ExitRequest } | { type: 'direct' } | null;
 
 const PAGE_SIZE = 25;
 const statusTone: Record<ExitStatus, Tone> = { pending: 'warning', approved: 'primary', rejected: 'destructive', withdrawn: 'muted' };
-const dangerButtonClass = 'rounded-lg bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground disabled:opacity-50';
+const dangerButtonClass = UI_BTN_DANGER;
 
 /**
  * Board queue of cancellations / exclusions (Wave 7 W4, tab "Austritte", only with `members:write`). Two buckets:

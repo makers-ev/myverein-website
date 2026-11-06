@@ -423,7 +423,7 @@ export default function MemberFormModal({
 
                 {!isCreate && member && (
                     <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-border p-3">
-                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusChipClass(member.effectiveStatus)}`}>
+                        <span className={`rounded-md px-2 py-0.5 text-xs font-medium ${statusChipClass(member.effectiveStatus)}`}>
                             {t(`verein.status.${member.effectiveStatus}`)}
                         </span>
                         {pendingExit && <span className="text-xs text-muted-foreground">{t('verein.status.pendingExit.short', { date: formatDate(member.leftAt, language) })}</span>}
@@ -521,7 +521,7 @@ export default function MemberFormModal({
 
                 {showSensitiveBlock ? (
                     <div className="mt-5">
-                        <h3 className="text-sm font-bold text-foreground">{t('verein.form.contact.title')}</h3>
+                        <h3 className="text-base font-medium text-foreground">{t('verein.form.contact.title')}</h3>
                         <div className="mt-2 grid gap-4 sm:grid-cols-2">
                             {has('birthDate') && (
                                 <Field label={t('verein.profil.birthDate')}>
@@ -559,7 +559,7 @@ export default function MemberFormModal({
                             )}
                         </div>
 
-                        <h3 className="mt-5 text-sm font-bold text-foreground">{t('verein.profil.emergency')}</h3>
+                        <h3 className="mt-5 text-base font-medium text-foreground">{t('verein.profil.emergency')}</h3>
                         <div className="mt-2 grid gap-4 sm:grid-cols-2">
                             {has('emergencyContactName') && (
                                 <Field label={t('verein.profil.emergencyName')}>
@@ -596,7 +596,7 @@ export default function MemberFormModal({
 
                 {!isCreate && member && (
                     <div className="mt-5">
-                        <h3 className="text-sm font-bold text-foreground">{t('verein.form.departments.title')}</h3>
+                        <h3 className="text-base font-medium text-foreground">{t('verein.form.departments.title')}</h3>
                         <p className="text-xs text-muted-foreground">{t('verein.form.departments.hint')}</p>
                         {current.length === 0 ? (
                             <p className="mt-2 text-sm text-muted-foreground">{t('verein.form.departments.empty')}</p>

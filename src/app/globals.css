@@ -106,106 +106,115 @@
   --color-warning-foreground: var(--warning-foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-instrument-serif);
+
+  /*
+   * Two working weights plus one for rare emphasis. Geist is a variable font, so the in-between steps are real:
+   * `font-semibold` reads as a step above medium, and `font-bold`/`font-extrabold` stop at 600 (no 700-900 headings).
+   */
+  --font-weight-medium: 500;
+  --font-weight-semibold: 560;
+  --font-weight-bold: 600;
+  --font-weight-extrabold: 600;
+
+  /* One easing curve for the whole UI; durations are chosen per use (feedback 150ms, menus 200ms, entrances 400ms). */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-default: cubic-bezier(0.22, 1, 0.36, 1);
+  --default-transition-duration: 150ms;
+  --default-transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Neutral elevation, tinted by the text colour so it follows palette and theme. Dark themes lean on surface steps and hairlines. */
+  --shadow-xs: 0 1px 2px color-mix(in srgb, var(--foreground) 6%, transparent);
+  --shadow-sm: 0 1px 2px color-mix(in srgb, var(--foreground) 6%, transparent), 0 1px 1px color-mix(in srgb, var(--foreground) 4%, transparent);
+  --shadow-md: 0 4px 12px -2px color-mix(in srgb, var(--foreground) 8%, transparent), 0 1px 2px color-mix(in srgb, var(--foreground) 6%, transparent);
+  --shadow-lg: 0 12px 32px -8px color-mix(in srgb, var(--foreground) 14%, transparent), 0 2px 4px color-mix(in srgb, var(--foreground) 6%, transparent);
+  --shadow-xl: 0 20px 48px -12px color-mix(in srgb, var(--foreground) 20%, transparent), 0 2px 6px color-mix(in srgb, var(--foreground) 8%, transparent);
+  --shadow-2xl: 0 24px 56px -12px color-mix(in srgb, var(--foreground) 24%, transparent);
 }
 
 body {
   background: var(--color-background);
   color: var(--color-foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+@layer base {
+  h1, h2, h3, h4 { text-wrap: balance; }
+  p, li { text-wrap: pretty; }
+  /* Numbers line up in every table and figure. */
+  table, .tabular { font-variant-numeric: tabular-nums; }
+  /* One visible focus ring for keyboard users, in the palette's primary; component-level rings still win. */
+  :where(a, button, input, select, textarea, summary, [role="button"], [tabindex]:not([tabindex="-1"])):focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+  :where(input, select, textarea):focus-visible { outline-offset: 0; }
+  ::selection { background: color-mix(in srgb, var(--primary) 24%, transparent); }
 }
-@keyframes drift {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(30px, 20px) scale(1.1); }
+
+/* Display face for large public headlines only (hero, section titles, page titles). Never for labels or buttons. */
+.font-display {
+  font-family: var(--font-display), Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
 }
-.animate-float { animation: float 6s ease-in-out infinite; }
-.animate-drift { animation: drift 14s ease-in-out infinite; }
+
+/* Reduced motion: no transitions or animations anywhere, the finished state is simply shown. */
 @media (prefers-reduced-motion: reduce) {
-  .animate-float, .animate-drift { animation: none; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
-@keyframes pop {
-  from { opacity: 0; transform: scale(0.5); }
-  to { opacity: 1; transform: scale(1); }
-}
-@keyframes pulse-ring {
-  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 50%, transparent); }
-  100% { box-shadow: 0 0 0 10px transparent; }
-}
-@keyframes shimmer {
-  to { transform: translateX(100%); }
-}
-.animate-pop { animation: pop 0.4s ease-out both; }
-.animate-pulse-ring { animation: pop 0.4s ease-out both, pulse-ring 2s ease-out 1.2s infinite; }
-.btn-shimmer { position: relative; overflow: hidden; }
-.btn-shimmer::after {
-  content: ""; position: absolute; inset: 0; transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.25), transparent);
-}
-.btn-shimmer:hover::after { animation: shimmer 0.8s; }
-@media (prefers-reduced-motion: reduce) {
-  .animate-pop, .animate-pulse-ring { animation: none; }
-}
+/* Menus and popovers: a short fade and a few pixels of rise from where they open. */
+@keyframes menu-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.animate-menu { animation: menu-in 180ms var(--ease-out) both; }
 
-@keyframes fade { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
-.animate-fade { animation: fade 0.3s ease-out both; }
+/* Loading placeholder: a calm opacity change instead of a pulse; static under reduced motion. */
+@keyframes skeleton { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+.animate-skeleton { animation: skeleton 1.6s ease-in-out infinite; }
 
 /*
- * Marketing homepage ("Papier-Collage + Gemeinschaftsgeflecht"), all classes prefixed mk-.
+ * Marketing pages ("Vereinsakte": hand-drawn ink on quiet paper), all classes prefixed mk-.
  * Rules: no inline styles (CSP), tokens only, and every motion lives inside
  * `prefers-reduced-motion: no-preference` so the reduced-motion/no-JS view is simply the finished static state.
  * Hidden "before" states only apply under `.mk-ready` (added after mount), never on the server render.
+ * Status language: a built feature is solid ink on a card, a planned one stays a dashed sketch.
  */
 
 /* Stagger steps, usable as transition/animation delay via var(--mk-delay). */
-.mk-d1 { --mk-delay: 0.1s; }
-.mk-d2 { --mk-delay: 0.2s; }
-.mk-d3 { --mk-delay: 0.3s; }
-.mk-d4 { --mk-delay: 0.4s; }
-.mk-d5 { --mk-delay: 0.5s; }
-.mk-d6 { --mk-delay: 0.6s; }
-.mk-d7 { --mk-delay: 0.7s; }
-.mk-d8 { --mk-delay: 0.8s; }
-.mk-d9 { --mk-delay: 0.9s; }
-.mk-d10 { --mk-delay: 1s; }
-.mk-d11 { --mk-delay: 1.1s; }
-.mk-d12 { --mk-delay: 1.2s; }
+.mk-d1 { --mk-delay: 0.05s; }
+.mk-d2 { --mk-delay: 0.1s; }
+.mk-d3 { --mk-delay: 0.15s; }
+.mk-d4 { --mk-delay: 0.2s; }
+.mk-d5 { --mk-delay: 0.25s; }
+.mk-d6 { --mk-delay: 0.3s; }
+.mk-d7 { --mk-delay: 0.35s; }
+.mk-d8 { --mk-delay: 0.4s; }
+.mk-d9 { --mk-delay: 0.45s; }
+.mk-d10 { --mk-delay: 0.5s; }
+.mk-d11 { --mk-delay: 0.55s; }
+.mk-d12 { --mk-delay: 0.6s; }
 
-/* Paper sheet: layered soft shadow. */
+/* Raised sheet: hairline plus one soft neutral shadow. */
 .mk-paper {
-  box-shadow:
-    0 1px 1px color-mix(in srgb, var(--foreground) 10%, transparent),
-    0 3px 6px -2px color-mix(in srgb, var(--foreground) 12%, transparent),
-    0 12px 20px -10px color-mix(in srgb, var(--foreground) 18%, transparent);
-}
-.mk-tilt-l { transform: rotate(-1.2deg); }
-.mk-tilt-r { transform: rotate(1.2deg); }
-.mk-tilt-l2 { transform: rotate(-2.4deg); }
-.mk-tilt-r2 { transform: rotate(2.4deg); }
-.mk-tape::before {
-  content: "";
-  position: absolute;
-  top: -0.6rem;
-  left: 50%;
-  width: 4rem;
-  height: 1.2rem;
-  transform: translateX(-50%) rotate(-3deg);
-  background: color-mix(in srgb, var(--accent) 35%, transparent);
-  border-radius: 1px;
+  box-shadow: var(--shadow-md);
 }
 
-/* Gold highlighter. */
+/* Highlighter stroke: used once, behind the hero's key phrase. */
 .mk-marker {
-  padding: 0 0.2em;
+  padding: 0 0.12em;
+  margin: 0 -0.12em;
   background-image: linear-gradient(
-    transparent 58%,
-    color-mix(in srgb, var(--accent) 40%, transparent) 58%,
-    color-mix(in srgb, var(--accent) 40%, transparent) 92%,
-    transparent 92%
+    transparent 62%,
+    color-mix(in srgb, var(--accent) 34%, transparent) 62%,
+    color-mix(in srgb, var(--accent) 34%, transparent) 94%,
+    transparent 94%
   );
   background-repeat: no-repeat;
   background-size: 100% 100%;
@@ -213,42 +222,33 @@ body {
   box-decoration-break: clone;
 }
 
-/* Margin notes: italic sans (no handwriting font is loaded). */
-.mk-note { font-style: italic; }
-
-/* Planned sketch: stays dashed, inks in (colour + fill) on hover, focus inside, or in view. */
+/* Planned sketch: stays dashed, inks in (text colour + surface) on hover, focus inside, or in view. */
 .mk-sketch {
   color: var(--muted-foreground);
-  border-color: color-mix(in srgb, var(--muted-foreground) 70%, transparent);
+  border-color: color-mix(in srgb, var(--muted-foreground) 65%, transparent);
   background-color: transparent;
 }
 .mk-sketch:hover,
 .mk-sketch:focus-within,
 .mk-sketch.is-in {
   color: var(--foreground);
-  border-color: color-mix(in srgb, var(--foreground) 75%, transparent);
-  background-color: color-mix(in srgb, var(--card) 80%, transparent);
+  border-color: color-mix(in srgb, var(--foreground) 55%, transparent);
+  background-color: color-mix(in srgb, var(--card) 70%, transparent);
 }
 
 /* Network and drawn strokes: SSR shows the finished state (dash length 1 = fully drawn). */
 .mk-edge, .mk-draw { stroke-dasharray: 1; stroke-dashoffset: 0; }
 
 @media (prefers-reduced-motion: no-preference) {
-  .mk-marker {
-    animation: mk-mark 0.9s ease-out 0.3s both;
-  }
+  .mk-marker { animation: mk-mark 700ms var(--ease-out) 300ms both; }
   @keyframes mk-mark {
     from { background-size: 0% 100%; }
     to { background-size: 100% 100%; }
   }
 
-  .mk-tilt-l, .mk-tilt-r, .mk-tilt-l2, .mk-tilt-r2 { transition: transform 0.25s ease-out; }
-  .mk-tilt-l:hover, .mk-tilt-r:hover, .mk-tilt-l2:hover, .mk-tilt-r2:hover,
-  .mk-tilt-l:focus-within, .mk-tilt-r:focus-within, .mk-tilt-l2:focus-within, .mk-tilt-r2:focus-within { transform: rotate(0deg); }
+  .mk-sketch { transition: color 400ms var(--ease-out), border-color 400ms var(--ease-out), background-color 400ms var(--ease-out); }
 
-  .mk-sketch { transition: color 0.5s ease, border-color 0.5s ease, background-color 0.5s ease; }
-
-  .mk-edge, .mk-draw { transition: stroke-dashoffset 1.1s ease-out var(--mk-delay, 0s); }
+  .mk-edge, .mk-draw { transition: stroke-dashoffset 900ms var(--ease-out) var(--mk-delay, 0s); }
   .mk-ready:not(.is-in) .mk-edge,
   .mk-ready:not(.is-in) .mk-draw,
   .mk-ready:not(.is-in).mk-draw { stroke-dashoffset: 1; }
@@ -256,17 +256,18 @@ body {
   .mk-node {
     transform-box: fill-box;
     transform-origin: center;
-    transition: opacity 0.5s ease var(--mk-delay, 0s), transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) var(--mk-delay, 0s);
+    transition: opacity 400ms var(--ease-out) var(--mk-delay, 0s), transform 400ms var(--ease-out) var(--mk-delay, 0s);
   }
-  .mk-ready:not(.is-in) .mk-node { opacity: 0; transform: scale(0.3); }
+  .mk-ready:not(.is-in) .mk-node { opacity: 0; transform: scale(0.6); }
 
   /* The newcomer arrives after the net and its links come a beat later. */
-  .mk-edge-new { transition-delay: calc(var(--mk-delay, 0s) + 0.5s); }
-  .mk-node-new { transition-delay: calc(var(--mk-delay, 0s) + 0.3s); }
-  .mk-ring { transform-box: fill-box; transform-origin: center; animation: mk-ring 2.4s ease-out 2.4s infinite; }
+  .mk-edge-new { transition-delay: calc(var(--mk-delay, 0s) + 0.4s); }
+  .mk-node-new { transition-delay: calc(var(--mk-delay, 0s) + 0.25s); }
+  /* One ring around the newcomer as it joins, played once. */
+  .mk-ring { transform-box: fill-box; transform-origin: center; animation: mk-ring 1600ms var(--ease-out) 1800ms 1 both; }
   @keyframes mk-ring {
     0% { transform: scale(1); opacity: 1; }
-    100% { transform: scale(1.5); opacity: 0; }
+    100% { transform: scale(1.4); opacity: 0.35; }
   }
 }
 
@@ -278,63 +279,58 @@ body {
   top: 50%;
   opacity: 0;
   pointer-events: none;
-  transform: translate(-50%, -50%) scale(0.3);
+  transform: translate(-50%, -50%) scale(0.6);
 }
-.mk-b1-o1 { --b1-x: 17%; --b1-y: 11%; --b1-rot: -9deg; }
-.mk-b1-o2 { --b1-x: 83%; --b1-y: 14%; --b1-rot: 7deg; }
-.mk-b1-o3 { --b1-x: 14%; --b1-y: 52%; --b1-rot: 5deg; }
-.mk-b1-o4 { --b1-x: 86%; --b1-y: 55%; --b1-rot: -6deg; }
-.mk-b1-o5 { --b1-x: 50%; --b1-y: 90%; --b1-rot: 3deg; }
+.mk-b1-o1 { --b1-x: 15%; --b1-y: 12%; --b1-rot: -6deg; }
+.mk-b1-o2 { --b1-x: 85%; --b1-y: 14%; --b1-rot: 5deg; }
+.mk-b1-o3 { --b1-x: 12%; --b1-y: 54%; --b1-rot: 4deg; }
+.mk-b1-o4 { --b1-x: 88%; --b1-y: 56%; --b1-rot: -4deg; }
+.mk-b1-o5 { --b1-x: 50%; --b1-y: 90%; --b1-rot: 2deg; }
 .mk-b1-messy .mk-b1-obj {
   left: var(--b1-x);
   top: var(--b1-y);
   opacity: 1;
   transform: translate(-50%, -50%) rotate(var(--b1-rot));
 }
-.mk-b1-messy .mk-b1-card { opacity: 0.5; transform: scale(0.94); }
+.mk-b1-messy .mk-b1-card { opacity: 0.8; transform: scale(0.96); }
 
 /* Fly-in rows (MediaBreaks): SSR and reduced motion show them in place. */
 .mk-b1-fly { transform: none; }
 
 @media (prefers-reduced-motion: no-preference) {
   .mk-b1-obj {
-    transition: left 0.9s cubic-bezier(0.34, 1.4, 0.64, 1) var(--mk-delay, 0s),
-      top 0.9s cubic-bezier(0.34, 1.4, 0.64, 1) var(--mk-delay, 0s),
-      transform 0.9s cubic-bezier(0.34, 1.4, 0.64, 1) var(--mk-delay, 0s),
-      opacity 0.5s ease var(--mk-delay, 0s);
+    transition: left 700ms var(--ease-out) var(--mk-delay, 0s),
+      top 700ms var(--ease-out) var(--mk-delay, 0s),
+      transform 700ms var(--ease-out) var(--mk-delay, 0s),
+      opacity 400ms var(--ease-out) var(--mk-delay, 0s);
   }
-  .mk-b1-card { transition: opacity 0.5s ease, transform 0.5s ease; }
+  .mk-b1-card { transition: opacity 400ms var(--ease-out), transform 400ms var(--ease-out); }
 
-  .mk-b1-word { display: inline-block; animation: mk-b1-word 0.5s ease-out both; }
+  .mk-b1-word { display: inline-block; animation: mk-b1-word 360ms var(--ease-out) both; }
   @keyframes mk-b1-word {
-    from { opacity: 0; transform: translateY(0.4em) rotate(-2deg); }
+    from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: none; }
   }
 
   .mk-b1-fly {
-    transition: transform 0.9s cubic-bezier(0.34, 1.3, 0.64, 1) var(--mk-delay, 0s), opacity 0.6s ease var(--mk-delay, 0s);
+    transition: transform 500ms var(--ease-out) var(--mk-delay, 0s), opacity 400ms var(--ease-out) var(--mk-delay, 0s);
   }
-  .mk-ready:not(.is-in) .mk-b1-fly { opacity: 0; }
-  .mk-ready:not(.is-in) .mk-b1-fly-1 { transform: translate(-55%, -40%) rotate(-10deg); }
-  .mk-ready:not(.is-in) .mk-b1-fly-2 { transform: translate(60%, -30%) rotate(8deg); }
-  .mk-ready:not(.is-in) .mk-b1-fly-3 { transform: translate(-60%, 20%) rotate(6deg); }
-  .mk-ready:not(.is-in) .mk-b1-fly-4 { transform: translate(55%, 30%) rotate(-7deg); }
-  .mk-ready:not(.is-in) .mk-b1-fly-5 { transform: translate(0, 70%) rotate(4deg); }
+  .mk-ready:not(.is-in) .mk-b1-fly { opacity: 0; transform: translateY(12px); }
 }
 /* mk:b1 end */
 
 /* mk:b2 */
 /* Week stage: inactive days only soften frame and illustration; text keeps full contrast (only once JS runs). */
-.mk-week-js .mk-day:not(.is-active):not(:focus-within) > * { border-color: color-mix(in srgb, var(--foreground) 35%, transparent); }
+.mk-week-js .mk-day:not(.is-active):not(:focus-within) > * { border-color: color-mix(in srgb, var(--foreground) 24%, transparent); }
 .mk-week-js .mk-day:not(.is-active):not(:focus-within) svg { opacity: 0.55; }
 @media (prefers-reduced-motion: no-preference) {
-  .mk-week-js .mk-day > *, .mk-week-js .mk-day svg { transition: border-color 0.3s ease, opacity 0.3s ease; }
+  .mk-week-js .mk-day > *, .mk-week-js .mk-day svg { transition: border-color 250ms var(--ease-out), opacity 250ms var(--ease-out); }
 }
 /* mk:b2 end */
 
 /* mk:b3 */
 @media (prefers-reduced-motion: no-preference) {
-  .mk-shackle { transition: transform 0.3s ease-out; }
-  .mk-trust:hover .mk-shackle { transform: translateY(-4px); }
+  .mk-shackle { transition: transform 250ms var(--ease-out); }
+  .mk-trust:hover .mk-shackle { transform: translateY(-3px); }
 }
 /* mk:b3 end */

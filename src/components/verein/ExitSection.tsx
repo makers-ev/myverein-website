@@ -15,10 +15,11 @@ import { exitDialogTouched, exitFormFields, exitRequestBody, plainExitBody, repi
 import { useConfirm } from '@/components/useConfirm';
 import { type Answers, type FieldErrorCode, fieldErrorsFromError, type FormDefinition, formErrorKey, validateAnswers } from '@/lib/formSchema';
 import { selfExitErrorKey, canWithdraw, type ExitRequest, isOwnerOrgRole, type NoticePreview, noticeRuleText } from '@/lib/memberLifecycle';
+import { UI_BTN_DANGER } from '@/lib/uiClasses';
 
 const statusTone: Record<ExitRequest['status'], Tone> = { pending: 'warning', approved: 'primary', rejected: 'destructive', withdrawn: 'muted' };
 
-const dangerButtonClass = 'rounded-lg bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground disabled:opacity-50';
+const dangerButtonClass = UI_BTN_DANGER;
 
 /**
  * "Mitgliedschaft kündigen" in Mein Profil (Wave 7 W4): shows the club's notice rule (`GET /club-exit-requests/preview`),
@@ -396,7 +397,7 @@ function WithdrawDialog({ clubId, request, onClose, onDone }: { clubId: string; 
                     <button type="button" onClick={onClose} disabled={busy} className={secondaryButtonClass}>
                         {t('verein.roles.add.cancel')}
                     </button>
-                    <button type="button" onClick={() => void submit()} disabled={busy} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+                    <button type="button" onClick={() => void submit()} disabled={busy} className="min-h-11 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98] disabled:opacity-50">
                         {t('verein.exit.withdraw.submit')}
                     </button>
                 </div>

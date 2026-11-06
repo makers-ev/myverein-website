@@ -161,7 +161,7 @@ function ElectionDetail({ clubId, id, canManage, onBack }: { clubId: string; id:
                     </p>
                     {error && <ErrorText>{error}</ErrorText>}
 
-                    <h3 className="text-sm font-bold text-foreground">{t('assembly.elections.candidates')}</h3>
+                    <h3 className="text-base font-medium text-foreground">{t('assembly.elections.candidates')}</h3>
                     {election.candidates.length === 0 ? (
                         <p className="text-sm text-muted-foreground">{t('assembly.elections.candidates.empty')}</p>
                     ) : (
@@ -190,7 +190,7 @@ function ElectionDetail({ clubId, id, canManage, onBack }: { clubId: string; id:
 
                     {canManage && editable && !running && (
                         <fieldset className="space-y-2 rounded-lg border border-border p-3">
-                            <legend className="px-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">{t('assembly.elections.round.new')}</legend>
+                            <legend className="px-1 text-xs font-bold text-muted-foreground">{t('assembly.elections.round.new')}</legend>
                             {!election.meetingId && <Notice tone="warning">{t('assembly.elections.needMeeting')}</Notice>}
                             {willing.length === 0 ? (
                                 <p className="text-sm text-muted-foreground">{t('assembly.elections.round.noWilling')}</p>
@@ -226,7 +226,7 @@ function ElectionDetail({ clubId, id, canManage, onBack }: { clubId: string; id:
                         <div className="space-y-2">
                             {lotIds !== null && (
                                 <fieldset className="space-y-2 rounded-lg border border-warning/40 p-3">
-                                    <legend className="px-1 text-xs font-bold uppercase tracking-wide text-warning">{t('assembly.elections.lot.title')}</legend>
+                                    <legend className="px-1 text-xs font-bold text-warning">{t('assembly.elections.lot.title')}</legend>
                                     <p className="text-sm text-foreground">{t('assembly.elections.lot.explain')}</p>
                                     {tiedCandidates.map((c) => (
                                         <label key={c.id} className="flex items-center gap-2 text-sm text-foreground">

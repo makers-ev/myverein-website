@@ -120,7 +120,7 @@ function TriField({ label, hint, value, onChange }: { label: string; hint?: stri
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
     return (
         <fieldset className="space-y-3 rounded-lg border border-border p-3">
-            <legend className="px-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">{title}</legend>
+            <legend className="px-1 text-xs font-bold text-muted-foreground">{title}</legend>
             {children}
         </fieldset>
     );
@@ -357,7 +357,7 @@ export default function AssemblyRulesPanel({ clubId, canReadHistory }: { clubId:
             </form>
 
             <div className="mt-6 border-t border-border pt-4">
-                <h3 className="text-sm font-bold text-foreground">{t('assembly.rules.history.title')}</h3>
+                <h3 className="text-base font-medium text-foreground">{t('assembly.rules.history.title')}</h3>
                 {!canReadHistory ? (
                     <p className="mt-1 text-xs text-muted-foreground">{t('assembly.rules.history.noAccess')}</p>
                 ) : history.length === 0 ? (

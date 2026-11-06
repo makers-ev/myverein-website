@@ -44,7 +44,7 @@ export default function CardVerify({ clubId }: { clubId: string }) {
     return (
         <section aria-label={t('docs.card.verify.title')} className="space-y-4">
             <div>
-                <h2 className="text-lg font-bold text-foreground">{t('docs.card.verify.title')}</h2>
+                <h2 className="text-lg font-medium text-foreground">{t('docs.card.verify.title')}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{t('docs.card.verify.intro')}</p>
             </div>
             <form

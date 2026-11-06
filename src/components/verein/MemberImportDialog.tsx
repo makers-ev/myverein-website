@@ -428,7 +428,7 @@ export default function MemberImportDialog({
 
                         <div>
                             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                                <h3 className="text-sm font-bold text-foreground">{t('verein.import.rows.title')}</h3>
+                                <h3 className="text-base font-medium text-foreground">{t('verein.import.rows.title')}</h3>
                                 <label className="flex items-center gap-2 text-xs text-muted-foreground">
                                     <input type="checkbox" checked={onlyProblems} onChange={(e) => { setOnlyProblems(e.target.checked); setShowAll(false); }} className="h-4 w-4 accent-[var(--primary)]" />
                                     {t('verein.import.rows.onlyProblems')}
@@ -444,7 +444,7 @@ export default function MemberImportDialog({
                                 <div className={`relative overflow-x-auto rounded-lg border border-border ${stale ? 'opacity-60' : ''}`}>
                                     <table className="w-full text-left text-sm">
                                         <caption className="sr-only">{t('verein.import.rows.title')}</caption>
-                                        <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
+                                        <thead className="bg-muted/50 text-xs text-muted-foreground">
                                             <tr>
                                                 <th scope="col" className="px-3 py-2">{t('verein.import.rows.line')}</th>
                                                 <th scope="col" className="px-3 py-2">{t('verein.import.rows.status')}</th>

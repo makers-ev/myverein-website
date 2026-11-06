@@ -131,7 +131,7 @@ export default function MemberErasureSection({ clubId, clubMemberId, displayName
                     <p className="text-sm text-foreground">{t('privacy.erasure.planIntro')}</p>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
-                            <thead className="text-xs uppercase text-muted-foreground">
+                            <thead className="text-xs text-muted-foreground">
                                 <tr>
                                     <th className="px-3 py-2">{t('privacy.erasure.col.area')}</th>
                                     <th className="px-3 py-2">{t('privacy.erasure.col.deleted')}</th>

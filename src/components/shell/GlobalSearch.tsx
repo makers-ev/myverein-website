@@ -117,7 +117,7 @@ function SearchBox({ clubId }: { clubId: string }) {
                     if (items.length === 0) return null;
                     return (
                         <div key={g} role="group" aria-label={t(`search.group.${g}`)}>
-                            <div aria-hidden="true" className="px-3 pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t(`search.group.${g}`)}</div>
+                            <div aria-hidden="true" className="px-3 pb-1 pt-3 text-xs font-medium text-muted-foreground first:pt-2">{t(`search.group.${g}`)}</div>
                             {items.map(({ h, index }) => (
                                 <div
                                     key={`${g}:${h.id}`}
@@ -126,7 +126,7 @@ function SearchBox({ clubId }: { clubId: string }) {
                                     aria-selected={index === activeIndex}
                                     onMouseDown={(e) => e.preventDefault()}
                                     onClick={() => choose(index)}
-                                    className={`flex min-h-11 cursor-pointer flex-col justify-center px-3 py-1.5 text-sm hover:bg-muted ${index === activeIndex ? 'bg-muted' : ''}`}
+                                    className={`flex min-h-11 cursor-pointer flex-col justify-center rounded-lg px-3 py-1.5 text-sm transition-colors hover:bg-muted ${index === activeIndex ? 'bg-muted' : ''}`}
                                 >
                                     <span className="truncate font-medium text-foreground">{h.label}</span>
                                     {(h.startsAt || h.detail) && <span className="truncate text-xs text-muted-foreground">{h.startsAt ? fmt(h.startsAt) : h.detail}</span>}
@@ -152,7 +152,7 @@ function SearchBox({ clubId }: { clubId: string }) {
             <label htmlFor={`${listId}-input`} className="sr-only">
                 {t('search.label')}
             </label>
-            <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search aria-hidden="true" strokeWidth={1.5} className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
                 ref={inputRef}
                 id={`${listId}-input`}
@@ -189,13 +189,18 @@ function SearchBox({ clubId }: { clubId: string }) {
                         choose(activeIndex);
                     }
                 }}
-                className="min-h-11 w-full rounded-lg border border-border bg-background py-1.5 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+                className="min-h-11 w-full rounded-lg border border-border bg-card py-1.5 pl-9 pr-12 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
             />
+            {!open && !q && (
+                <kbd aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-md border border-border bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground sm:block">
+                    Ctrl K
+                </kbd>
+            )}
             {/* Always mounted so assistive tech announces changes (a region that appears together with its content is often missed). */}
             <div role="status" aria-live="polite" className="sr-only">
                 {expanded ? status : ''}
             </div>
-            <div id={`${listId}-panel`} hidden={!expanded} className="absolute left-0 right-0 top-full z-40 mt-1 max-h-96 overflow-y-auto rounded-xl border border-border bg-card py-1 shadow-lg">
+            <div id={`${listId}-panel`} hidden={!expanded} className="animate-menu absolute left-0 right-0 top-full z-40 mt-1 max-h-96 overflow-y-auto rounded-xl border border-border bg-card p-1 shadow-lg">
                 {showList ? (
                     <div role="listbox" aria-label={t('search.label')}>
                         {body}

@@ -185,7 +185,7 @@ export default function RetentionPanel({ clubId, canManage }: { clubId: string; 
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-sm">
-                                <thead className="text-xs uppercase text-muted-foreground">
+                                <thead className="text-xs text-muted-foreground">
                                     <tr>
                                         <th className="px-3 py-2">{t('privacy.retention.col.rule')}</th>
                                         <th className="px-3 py-2">{t('privacy.retention.col.default')}</th>
@@ -225,7 +225,7 @@ export default function RetentionPanel({ clubId, canManage }: { clubId: string; 
                 ) : (
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
-                            <thead className="text-xs uppercase text-muted-foreground">
+                            <thead className="text-xs text-muted-foreground">
                                 <tr>
                                     <th className="px-3 py-2">{t('privacy.retention.runs.date')}</th>
                                     <th className="px-3 py-2">{t('privacy.retention.col.rule')}</th>

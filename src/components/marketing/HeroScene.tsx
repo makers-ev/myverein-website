@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
+import { ArrowUpRight, Check, Pencil } from 'lucide-react';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 import { docsUrl } from '@/lib/docs';
@@ -61,7 +62,7 @@ export function ToolIcon({ tool, className = '' }: { tool: ToolId; className?: s
             aria-hidden="true"
             focusable="false"
             fill="none"
-            strokeWidth="2"
+            strokeWidth="1.5"
             strokeLinecap="round"
             strokeLinejoin="round"
             className={`size-8 shrink-0 stroke-current ${className}`}
@@ -102,105 +103,110 @@ export default function HeroScene() {
 
     return (
         <section
-            className="relative mx-auto max-w-5xl px-4 pb-10 pt-8 text-center sm:px-6 sm:pt-12 lg:px-8"
+            className="relative border-b border-border"
             onMouseEnter={() => setWordPaused(true)}
             onMouseLeave={() => setWordPaused(false)}
             onFocus={() => setWordPaused(true)}
             onBlur={() => setWordPaused(false)}
         >
-            <h1 className="text-4xl font-extrabold leading-[1.05] tracking-tight text-foreground sm:text-6xl">
-                {t('mk.hero.title-1')}
-                <span className="mt-2 block">
-                    <Marker>{t('mk.hero.title-2')}</Marker>
-                </span>
-            </h1>
-            <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-muted-foreground">{t('mk.hero.subtitle')}</p>
-            <p className="mx-auto mt-4 text-xl font-bold text-foreground">
-                <span aria-hidden="true">
-                    <span className="mk-note font-normal text-muted-foreground">{t('mk.hero.eg')}</span>{' '}
-                    <span key={wordIndex} className="mk-b1-word text-primary">
-                        {t(WORD_KEYS[wordIndex])}
-                    </span>
-                </span>
-                <span className="sr-only">{t('mk.hero.words.sr', { words: allWords })}</span>
-            </p>
+            <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 pb-16 pt-12 sm:px-6 sm:pt-16 lg:min-h-[calc(100svh-4rem)] lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-16 lg:px-8 lg:pb-20 lg:pt-16">
+                <div>
+                    <h1 className="font-display text-5xl leading-[1.04] text-foreground sm:text-6xl lg:text-7xl">
+                        {t('mk.hero.title-1')}
+                        <span className="mt-1 block">
+                            <Marker>{t('mk.hero.title-2')}</Marker>
+                        </span>
+                    </h1>
+                    <p className="mt-6 max-w-xl text-lg leading-8 text-muted-foreground sm:text-xl sm:leading-8">{t('mk.hero.subtitle')}</p>
+                    <p className="mt-5 text-lg text-foreground">
+                        <span aria-hidden="true">
+                            <span className="text-muted-foreground">{t('mk.hero.eg')}</span>{' '}
+                            <span key={wordIndex} className="mk-b1-word font-medium text-primary">
+                                {t(WORD_KEYS[wordIndex])}
+                            </span>
+                        </span>
+                        <span className="sr-only">{t('mk.hero.words.sr', { words: allWords })}</span>
+                    </p>
 
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-                <Link
-                    href="/contact#beta"
-                    className="btn-shimmer inline-flex min-h-11 items-center rounded-xl bg-primary px-6 py-3 font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition hover:-translate-y-0.5 hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                >
-                    {t('mk.hero.cta')}
-                </Link>
-                <a
-                    href="#woche"
-                    className="inline-flex min-h-11 items-center rounded-xl border border-border px-6 py-3 font-semibold text-foreground transition hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                >
-                    {t('mk.hero.cta-week')}
-                </a>
-            </div>
-
-            <div
-                ref={ref}
-                role="group"
-                aria-label={t('mk.hero.stage.alt')}
-                className={`relative mx-auto mt-10 h-[26rem] max-w-3xl sm:h-[30rem] ${messy ? 'mk-b1-messy' : ''}`}
-            >
-                <Network className="absolute inset-0 size-full opacity-60" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                    <PaperCard tilt="r" tape className="mk-b1-card w-56 text-left sm:w-64">
-                        <p className="text-lg font-extrabold text-foreground">{t('mk.hero.card.title')}</p>
-                        <ul className="mt-3 space-y-1.5 text-sm text-card-foreground">
-                            {CARD_LINES.map((key) => (
-                                <li key={key} className="flex gap-2">
-                                    <span aria-hidden="true" className="font-bold text-success">
-                                        ✓
-                                    </span>
-                                    {t(key)}
-                                </li>
-                            ))}
-                        </ul>
-                        <p className="mk-note mt-3 text-xs text-muted-foreground">{t('mk.hero.card.note')}</p>
-                    </PaperCard>
-                </div>
-                {TOOLS.map((tool, i) => (
-                    <div key={tool} aria-hidden="true" className={`mk-b1-obj mk-b1-o${i + 1} mk-d${i + 1}`}>
-                        <div className="mk-paper flex w-28 flex-col items-center gap-1 rounded-sm border border-border bg-card px-2 py-3 text-foreground">
-                            <ToolIcon tool={tool} />
-                            <span className="text-xs font-semibold">{t(`mk.hero.obj.${tool}`)}</span>
-                        </div>
+                    <div className="mt-8 flex flex-wrap items-center gap-3">
+                        <Link
+                            href="/contact#beta"
+                            className="inline-flex min-h-12 items-center rounded-lg bg-primary px-6 text-base font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                        >
+                            {t('mk.hero.cta')}
+                        </Link>
+                        <a
+                            href="#woche"
+                            className="inline-flex min-h-12 items-center rounded-lg border border-border bg-card px-6 text-base font-medium text-foreground transition-colors hover:bg-muted active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                        >
+                            {t('mk.hero.cta-week')}
+                        </a>
                     </div>
-                ))}
-            </div>
+                    <a
+                        href={docsUrl()}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={t('help.nav.label')}
+                        className="mt-3 inline-flex min-h-11 items-center gap-1 text-sm font-medium text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    >
+                        {t('mk.help.hero')}
+                        <ArrowUpRight className="size-4" strokeWidth={1.5} aria-hidden="true" />
+                    </a>
+                </div>
 
-            <div className="mt-2 flex flex-col items-center gap-3">
-                <button
-                    type="button"
-                    aria-pressed={tidy}
-                    onClick={() => {
-                        setTouched(true);
-                        setTidy((v) => !v);
-                    }}
-                    className={`inline-flex min-h-11 items-center gap-2 rounded-xl border-2 border-foreground/70 px-6 py-2 font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
-                        tidy ? 'bg-accent text-accent-foreground' : 'bg-card text-foreground hover:bg-muted'
-                    }`}
-                >
-                    <span aria-hidden="true">{tidy ? '✓' : '✎'}</span>
-                    {t('mk.hero.tidy')}
-                </button>
-                <p role="status" className="sr-only">
-                    {touched ? t(tidy ? 'mk.hero.tidy.on' : 'mk.hero.tidy.off') : ''}
-                </p>
-                <p className="mk-note max-w-xl text-sm text-muted-foreground">{t('mk.hero.honest')}</p>
-                <a
-                    href={docsUrl()}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={t('help.nav.label')}
-                    className="inline-flex min-h-11 items-center font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                >
-                    {t('mk.help.hero')}
-                </a>
+                <div>
+                    <div
+                        ref={ref}
+                        role="group"
+                        aria-label={t('mk.hero.stage.alt')}
+                        className={`relative h-[28rem] overflow-hidden rounded-3xl border border-border bg-muted/50 sm:h-[30rem] lg:h-[34rem] ${messy ? 'mk-b1-messy' : ''}`}
+                    >
+                        <Network className="absolute inset-0 size-full opacity-40" />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <PaperCard className="mk-b1-card w-56 p-4 text-left sm:w-72 sm:p-5">
+                                <p className="text-lg font-semibold text-foreground">{t('mk.hero.card.title')}</p>
+                                <ul className="mt-3 space-y-2 text-sm text-card-foreground">
+                                    {CARD_LINES.map((key) => (
+                                        <li key={key} className="flex gap-2.5">
+                                            <Check aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-success" strokeWidth={1.5} />
+                                            {t(key)}
+                                        </li>
+                                    ))}
+                                </ul>
+                                <p className="mt-4 border-t border-border pt-3 text-xs text-muted-foreground">{t('mk.hero.card.note')}</p>
+                            </PaperCard>
+                        </div>
+                        {TOOLS.map((tool, i) => (
+                            <div key={tool} aria-hidden="true" className={`mk-b1-obj mk-b1-o${i + 1} mk-d${i + 1}`}>
+                                <div className="mk-paper flex w-24 flex-col sm:w-28 items-center gap-1.5 rounded-xl border border-border bg-card px-2 py-3 text-foreground">
+                                    <ToolIcon tool={tool} />
+                                    <span className="text-xs font-medium">{t(`mk.hero.obj.${tool}`)}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="mt-4 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-6">
+                        <button
+                            type="button"
+                            aria-pressed={tidy}
+                            onClick={() => {
+                                setTouched(true);
+                                setTidy((v) => !v);
+                            }}
+                            className={`inline-flex min-h-11 items-center gap-2 rounded-lg border px-4 text-sm font-medium transition-colors active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+                                tidy ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card text-foreground hover:bg-muted'
+                            }`}
+                        >
+                            {tidy ? <Check className="size-4" strokeWidth={1.5} aria-hidden="true" /> : <Pencil className="size-4" strokeWidth={1.5} aria-hidden="true" />}
+                            {t('mk.hero.tidy')}
+                        </button>
+                        <p role="status" className="sr-only">
+                            {touched ? t(tidy ? 'mk.hero.tidy.on' : 'mk.hero.tidy.off') : ''}
+                        </p>
+                        <p className="min-w-0 max-w-md flex-1 text-sm text-muted-foreground">{t('mk.hero.honest')}</p>
+                    </div>
+                </div>
             </div>
         </section>
     );

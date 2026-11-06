@@ -358,7 +358,7 @@ function VersionHistory({ clubId, detail, canWrite, onBack, onRestored }: { club
                 <LoadingText className="mt-3" />
             ) : open ? (
                 <div className="mt-3">
-                    <h3 className="text-sm font-bold text-foreground">{t('docs.info.version', { n: open.versionNo })}: {open.title}</h3>
+                    <h3 className="text-base font-medium text-foreground">{t('docs.info.version', { n: open.versionNo })}: {open.title}</h3>
                     <p className="text-xs text-muted-foreground">
                         {formatDate(open.createdAt, language)}
                         {open.note ? ` · ${open.note}` : ''}

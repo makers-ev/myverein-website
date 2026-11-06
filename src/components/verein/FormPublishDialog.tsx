@@ -102,7 +102,7 @@ export default function FormPublishDialog({
                 </div>
 
                 <section>
-                    <h3 className="text-sm font-bold text-foreground">{publishedVersion === null ? t('forms.editor.publish.changesFirst') : t('forms.editor.publish.changes', { version: publishedVersion })}</h3>
+                    <h3 className="text-base font-medium text-foreground">{publishedVersion === null ? t('forms.editor.publish.changesFirst') : t('forms.editor.publish.changes', { version: publishedVersion })}</h3>
                     {nothing ? (
                         <p className="mt-1 text-sm text-muted-foreground">{t('forms.editor.publish.noChanges')}</p>
                     ) : (

@@ -45,7 +45,7 @@ export function TwoFactorPrompt({ onVerified, onCancel }: TwoFactorPromptProps) 
     return (
         <form onSubmit={handleSubmit} className="space-y-5">
             <div className="text-center">
-                <h3 className="text-lg font-bold text-foreground">{t('auth.2fa.title')}</h3>
+                <h3 className="text-lg font-medium text-foreground">{t('auth.2fa.title')}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
                     {t('auth.2fa.subtitle')}
                 </p>
@@ -65,12 +65,12 @@ export function TwoFactorPrompt({ onVerified, onCancel }: TwoFactorPromptProps) 
                     maxLength={6}
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
-                    className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-center text-lg tracking-[0.5em] shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="mt-1 block w-full rounded-lg border border-border bg-background px-3 py-2 text-center text-lg tracking-[0.5em] focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                     placeholder="000000"
                 />
             </div>
 
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && <p className="text-sm text-destructive">{error}</p>}
 
             <div className="flex gap-3">
                 <button
@@ -83,7 +83,7 @@ export function TwoFactorPrompt({ onVerified, onCancel }: TwoFactorPromptProps) 
                 <button
                     type="submit"
                     disabled={isSubmitting || code.length !== 6}
-                    className="flex-1 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:brightness-110 disabled:opacity-50 transition-colors"
+                    className="flex-1 min-h-11 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
                 >
                     {isSubmitting ? t('auth.2fa.verifying') : t('auth.2fa.verify')}
                 </button>

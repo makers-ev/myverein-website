@@ -11,7 +11,7 @@ import OwnErasureRequest from './OwnErasureRequest';
 function Block({ title, children }: { title: string; children: ReactNode }) {
     return (
         <section className="rounded-xl border border-border bg-card p-4">
-            <h3 className="mb-3 text-sm font-bold text-foreground">{title}</h3>
+            <h3 className="mb-3 text-base font-medium text-foreground">{title}</h3>
             {children}
         </section>
     );
@@ -27,7 +27,7 @@ export default function MyPrivacyPanel({ clubId, clubMemberId }: { clubId: strin
     return (
         <section aria-label={t('privacy.own.title')} className="space-y-4">
             <div>
-                <h2 className="text-lg font-bold text-foreground">{t('privacy.own.title')}</h2>
+                <h2 className="text-lg font-medium text-foreground">{t('privacy.own.title')}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{t('privacy.own.intro')}</p>
             </div>
             <Block title={t('privacy.own.consents')}>

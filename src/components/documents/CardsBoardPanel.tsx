@@ -37,7 +37,7 @@ export default function CardsBoardPanel({ clubId }: { clubId: string }) {
     return (
         <section aria-label={t('docs.card.board.title')} className="space-y-4">
             <div>
-                <h2 className="text-lg font-bold text-foreground">{t('docs.card.board.title')}</h2>
+                <h2 className="text-lg font-medium text-foreground">{t('docs.card.board.title')}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{t('docs.card.board.intro')}</p>
             </div>
             <div className="max-w-md">

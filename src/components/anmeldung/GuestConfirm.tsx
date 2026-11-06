@@ -43,7 +43,7 @@ export default function GuestConfirm({ code }: { code: string }) {
         return (
             <PublicShell status="ok" wide>
                 <div role="status" className="text-center">
-                    <h1 className="text-xl font-bold text-foreground">{t(d.status === 'angemeldet' ? 'guest.done.confirmed' : 'guest.done.waitlist')}</h1>
+                    <h1 className="text-2xl font-medium leading-8 text-foreground">{t(d.status === 'angemeldet' ? 'guest.done.confirmed' : 'guest.done.waitlist')}</h1>
                     <p className="mt-2 text-sm text-muted-foreground">{t(d.alreadyConfirmed ? 'guest.done.already' : d.status === 'angemeldet' ? 'guest.done.confirmed.body' : 'guest.done.waitlist.body', { count: d.partySize })}</p>
                 </div>
                 <div className="mt-6 border-t border-border pt-4">
@@ -72,7 +72,7 @@ export default function GuestConfirm({ code }: { code: string }) {
     return (
         <PublicShell>
             <div className="text-center">
-                <h1 className="text-xl font-bold text-foreground">{t('guest.confirm.title')}</h1>
+                <h1 className="text-2xl font-medium leading-8 text-foreground">{t('guest.confirm.title')}</h1>
                 <p className="mt-2 text-sm text-muted-foreground">{t('guest.confirm.body')}</p>
                 <button type="button" disabled={view.kind === 'busy'} onClick={() => void confirm()} className={`${publicButton} mt-6`}>
                     {t(view.kind === 'busy' ? 'guest.confirm.busy' : 'guest.confirm.button')}

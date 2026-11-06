@@ -82,7 +82,7 @@ export default function CustomFieldsPanel({ clubId, permissions }: { clubId: str
         <div>
             <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
                 <div>
-                    <h2 className="text-sm font-bold text-foreground">{t('forms.cf.title')}</h2>
+                    <h2 className="text-base font-medium text-foreground">{t('forms.cf.title')}</h2>
                     <p className="mt-1 max-w-2xl text-xs text-muted-foreground">{t('forms.cf.hint')}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
