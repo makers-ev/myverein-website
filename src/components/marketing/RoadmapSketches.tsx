@@ -38,7 +38,7 @@ export default function RoadmapSketches() {
                         <p className="mt-2 max-w-2xl leading-relaxed text-muted-foreground">{t('mk.road.billing.body')}</p>
                         <ul className="mt-4 flex flex-wrap gap-2">
                             {outOfScopeItems.map((item) => (
-                                <li key={item.id} className="rounded-md border border-control bg-muted px-2.5 py-1 text-sm text-foreground">
+                                <li key={item.id} className="rounded-md border border-border bg-muted px-2.5 py-1 text-sm text-foreground">
                                     {t(`${item.i18nKey}.title`)}
                                 </li>
                             ))}

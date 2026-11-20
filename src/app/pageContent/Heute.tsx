@@ -131,7 +131,7 @@ export default function HeutePageContent() {
                         <Card title={t('today.rsvps.title')} badge={<Count>{data.openRsvps.length}</Count>} href="/kalender" linkLabel={t('today.rsvps.action')}>
                             <ul className="space-y-1">
                                 {data.openRsvps.slice(0, 5).map((e) => (
-                                    <li key={e.eventId}>
+                                    <li key={e.eventId} className="rounded-lg bg-primary-soft/40 px-3 py-2">
                                         <span className="font-medium">{e.title}</span> <span className="text-muted-foreground tabular-nums">{when(e.startsAt)}</span>
                                     </li>
                                 ))}
@@ -188,7 +188,7 @@ export default function HeutePageContent() {
     return (
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
             <div className="flex items-center gap-1">
-                <h1 className="text-[1.75rem] font-medium leading-9 text-foreground">{t('nav.heute')}</h1>
+                <h1 className="text-[1.75rem] font-bold leading-9 text-foreground">{t('nav.heute')}</h1>
                 <HelpLink topic="today" />
             </div>
             {activeClub?.clubName && <p className="mt-1 text-sm text-muted-foreground">{activeClub.clubName}</p>}

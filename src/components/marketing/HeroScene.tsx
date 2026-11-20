@@ -159,7 +159,7 @@ export default function HeroScene() {
                         ref={ref}
                         role="group"
                         aria-label={t('mk.hero.stage.alt')}
-                        className={`relative h-[28rem] overflow-hidden rounded-3xl border border-border bg-muted/50 sm:h-[30rem] lg:h-[34rem] ${messy ? 'mk-b1-messy' : ''}`}
+                        className={`relative h-[28rem] overflow-hidden rounded-2xl bg-muted/50 shadow-hero sm:h-[30rem] lg:h-[34rem] ${messy ? 'mk-b1-messy' : ''}`}
                     >
                         <Network className="absolute inset-0 size-full opacity-40" />
                         <div className="absolute inset-0 flex items-center justify-center">
@@ -178,7 +178,7 @@ export default function HeroScene() {
                         </div>
                         {TOOLS.map((tool, i) => (
                             <div key={tool} aria-hidden="true" className={`mk-b1-obj mk-b1-o${i + 1} mk-d${i + 1}`}>
-                                <div className="mk-paper flex w-24 flex-col sm:w-28 items-center gap-1.5 rounded-xl border border-control bg-card px-2 py-3 text-foreground">
+                                <div className="mk-paper flex w-24 flex-col sm:w-28 items-center gap-1.5 rounded-xl bg-card px-2 py-3 text-foreground">
                                     <ToolIcon tool={tool} />
                                     <span className="text-xs font-medium">{t(`mk.hero.obj.${tool}`)}</span>
                                 </div>

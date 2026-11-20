@@ -225,7 +225,7 @@ export default function SettingsPageContent() {
 			<header className="flex items-center gap-4 mb-8">
 				<Avatar name={name || email} />
 				<div>
-					<h1 className="text-[1.75rem] font-medium leading-9">Settings</h1>
+					<h1 className="text-[1.75rem] font-bold leading-9">{t('nav.settings')}</h1>
 					<p className="text-sm text-muted-foreground">{email}</p>
 				</div>
 			</header>
@@ -235,7 +235,7 @@ export default function SettingsPageContent() {
 
 				<NotificationPreferences />
 
-				<form onSubmit={handleSaveProfile} className="bg-card shadow-card rounded-lg p-6 ">
+				<form onSubmit={handleSaveProfile} className="bg-card shadow-card rounded-xl p-6 ">
 					<h2 className="text-lg font-semibold">Profile</h2>
 
 					<div className="mt-4 space-y-4">
@@ -270,7 +270,7 @@ export default function SettingsPageContent() {
 					</button>
 				</form>
 
-				<div className="bg-card shadow-card rounded-lg p-6 ">
+				<div className="bg-card shadow-card rounded-xl p-6 ">
 					<h2 className="text-lg font-semibold">Security</h2>
 					<p className="text-sm text-muted-foreground">Manage password and two-factor authentication</p>
 
@@ -460,7 +460,7 @@ export default function SettingsPageContent() {
 				</div>
 			</div>
 
-			<div className="bg-card shadow-card rounded-lg p-6 mt-6">
+			<div className="bg-card shadow-card rounded-xl p-6 mt-6">
 				<h2 className="text-lg font-semibold">{t('settings.section-help')}</h2>
 				<button
 					onClick={() => window.dispatchEvent(new Event('open-intro'))}

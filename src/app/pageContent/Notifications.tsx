@@ -113,7 +113,7 @@ export default function NotificationsPageContent() {
     return (
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
             <div className="max-w-2xl">
-                <h1 className="text-[1.75rem] font-medium leading-9 text-foreground">{t('notifications.page.title')}</h1>
+                <h1 className="text-[1.75rem] font-bold leading-9 text-foreground">{t('notifications.page.title')}</h1>
                 <p className="mt-1 text-sm text-muted-foreground">
                     {t('notifications.page.scope')}{' '}
                     <Link href="/mitteilungen" className="font-medium text-primary-text hover:underline">

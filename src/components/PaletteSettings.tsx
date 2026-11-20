@@ -54,7 +54,7 @@ export function PaletteSettings() {
     const { paletteId, setPaletteId } = usePalette();
 
     return (
-        <div className="bg-card shadow-card rounded-lg p-6 ">
+        <div className="bg-card shadow-card rounded-xl p-6 ">
             <h2 className="text-lg font-semibold">{t('settings.section-appearance')}</h2>
             <p className="text-sm text-muted-foreground">{t('settings.color-palette')}</p>
 

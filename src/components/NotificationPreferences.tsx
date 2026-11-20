@@ -55,7 +55,7 @@ export default function NotificationPreferences() {
     }
 
     return (
-        <section className="bg-card shadow-card rounded-lg p-6 " aria-labelledby="prefs-title">
+        <section className="bg-card shadow-card rounded-xl p-6 " aria-labelledby="prefs-title">
             <h2 id="prefs-title" className="text-lg font-semibold">
                 {t('prefs.title')}
             </h2>

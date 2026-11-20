@@ -92,7 +92,7 @@ export function Modal({ open, onClose, title, children, footer, size = 'md' }: M
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className={`animate-menu flex max-h-[90vh] w-full flex-col rounded-2xl bg-card shadow-xl ${size === 'lg' ? 'max-w-2xl' : 'max-w-lg'}`}
+        className={`animate-menu flex max-h-[90vh] focus:outline-none w-full flex-col rounded-2xl bg-card shadow-xl ${size === 'lg' ? 'max-w-2xl' : 'max-w-lg'}`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-hairline px-6 py-4">

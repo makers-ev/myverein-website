@@ -36,8 +36,8 @@ export default function EventAgenda({ events, language, t, colorFor, calendarNam
             {groups.map((group) => (
                 <section key={group.key} aria-label={group.date.toLocaleDateString(language, { dateStyle: 'full' })}>
                     {!hideHeaders && (
-                        <h3 className="mb-2 flex items-baseline gap-2 text-sm font-bold text-foreground">
-                            <span className={`text-2xl leading-none ${group.key === todayKey ? 'text-primary-text' : ''}`}>{group.date.getDate()}</span>
+                        <h3 className="mb-2 flex items-center gap-2 text-sm font-bold text-foreground">
+                            <span className={`flex h-10 min-w-10 items-center justify-center rounded-xl px-2 text-xl leading-none ${group.key === todayKey ? 'bg-primary text-primary-foreground' : 'bg-primary-soft text-primary-soft-foreground'}`}>{group.date.getDate()}</span>
                             <span>
                                 {group.date.toLocaleDateString(language, { weekday: 'long' })}
                                 <span className="ml-1 font-normal text-muted-foreground">
@@ -45,7 +45,7 @@ export default function EventAgenda({ events, language, t, colorFor, calendarNam
                                 </span>
                             </span>
                             {group.key === todayKey && (
-                                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary-text">{t('kalender.today')}</span>
+                                <span className="rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-semibold text-primary-soft-foreground">{t('kalender.today')}</span>
                             )}
                         </h3>
                     )}
@@ -55,7 +55,7 @@ export default function EventAgenda({ events, language, t, colorFor, calendarNam
                                 <button
                                     type="button"
                                     onClick={() => onSelectEvent(ev)}
-                                    className="flex w-full items-stretch gap-3 rounded-lg border border-border bg-background p-3 text-left transition-colors hover:bg-muted/50"
+                                    className="flex w-full items-stretch gap-3 min-h-11 rounded-xl bg-primary-soft/40 p-3 text-left transition-colors hover:bg-primary-soft/70"
                                 >
                                     <span className="w-1 shrink-0 rounded-full" style={{ backgroundColor: colorFor(ev.calendarId) }} />
                                     <span className={`w-24 shrink-0 text-xs font-semibold tabular-nums text-muted-foreground ${ev.cancelled ? 'line-through' : ''}`}>{ev.allDay ? t('kalender.events.allDay') : isContinuation(ev, group.key) ? t('kalender.events.ongoing') : formatTimeRange(ev, language)}</span>

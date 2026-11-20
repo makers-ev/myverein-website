@@ -39,7 +39,7 @@ export function PublicMessage({ title, body }: { title: string; body: string }) 
     return (
         <PublicShell status="warn">
             <div className="text-center">
-                <h1 className="text-2xl font-medium leading-8 text-foreground">{title}</h1>
+                <h1 className="text-2xl font-bold leading-8 text-foreground">{title}</h1>
                 <p className="mt-2 text-sm text-muted-foreground">{body}</p>
                 <Link href="/" className="mt-6 inline-block text-sm font-medium text-primary-text hover:underline">
                     {t('guest.home')}
@@ -72,7 +72,7 @@ export function PublicEventSummary({ event }: { event: PublicEvent }) {
     return (
         <div className="space-y-1 text-sm">
             <p className="text-xs font-semibold text-muted-foreground">{event.clubName}</p>
-            <h1 className="text-2xl font-medium leading-8 text-foreground">{event.title}</h1>
+            <h1 className="text-2xl font-bold leading-8 text-foreground">{event.title}</h1>
             {event.cancelled && <p className="rounded-lg bg-destructive-soft px-3 py-2 font-semibold text-destructive">{t('guest.cancelled')}</p>}
             <p className="text-foreground">
                 {start.toLocaleDateString(language, dateOpts)}

@@ -17,7 +17,7 @@ function EventRow({ event, busy, onRespond, onClear }: { event: WardEvent; busy:
     const start = new Date(event.startsAt);
     const cancelled = event.cancelledAt !== null;
     return (
-        <li className="rounded-lg shadow-card bg-card p-3">
+        <li className="rounded-xl shadow-card bg-card p-3">
             <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0">
                     <p className="text-sm font-semibold text-foreground">{event.title}</p>

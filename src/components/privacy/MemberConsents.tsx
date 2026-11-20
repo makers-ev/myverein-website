@@ -116,7 +116,7 @@ export default function MemberConsents({
             <p className="text-sm text-muted-foreground">{t('privacy.voluntary')}</p>
             <ul className="space-y-3">
                 {consents.map((c) => (
-                    <li key={c.purposeId} className="rounded-lg shadow-card bg-card p-3">
+                    <li key={c.purposeId} className="rounded-xl shadow-card bg-card p-3">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                             <span className="text-sm font-semibold text-foreground">{c.name}</span>
                             <span className="flex flex-wrap items-center gap-1.5">

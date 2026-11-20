@@ -57,7 +57,7 @@ function ResetPasswordPageInner() {
                         <div className="mb-6 rounded-full bg-destructive-soft p-4">
                             <ExclamationTriangleIcon className="h-12 w-12 text-destructive" />
                         </div>
-                        <h1 className="mb-2 text-3xl font-medium text-card-foreground">
+                        <h1 className="mb-2 text-3xl font-bold text-card-foreground">
                             {t('auth.resetPassword.invalidLink.title')}
                         </h1>
                         <p className="mb-8 text-lg text-muted-foreground">
@@ -83,7 +83,7 @@ function ResetPasswordPageInner() {
                         <div className="mb-6 rounded-full bg-success-soft p-4">
                             <CheckCircleIcon className="h-12 w-12 text-success" />
                         </div>
-                        <h1 className="mb-2 text-3xl font-medium text-card-foreground">
+                        <h1 className="mb-2 text-3xl font-bold text-card-foreground">
                             {t('auth.resetPassword.success.title')}
                         </h1>
                         <p className="mb-8 text-lg text-muted-foreground">
@@ -105,7 +105,7 @@ function ResetPasswordPageInner() {
         <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
             <div className="w-full max-w-md rounded-2xl bg-card p-8 shadow-xl">
                 <div className="mb-8 text-center">
-                    <h1 className="text-3xl font-semibold text-foreground">
+                    <h1 className="text-3xl font-bold text-foreground">
                         {t('auth.resetPassword.page.title')}
                     </h1>
                     <p className="mt-2 text-sm text-muted-foreground">{t('auth.resetPassword.page.subtitle')}</p>
