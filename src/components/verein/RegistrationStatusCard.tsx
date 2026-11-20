@@ -7,7 +7,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import type { ClubRegistration } from '@/components/verein/clubRegistration';
 
 const primaryButton = 'min-h-11 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98] disabled:opacity-50';
-const secondaryButton = 'rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-muted disabled:opacity-50';
+const secondaryButton = 'rounded-lg border border-control px-4 py-2 text-sm text-foreground hover:bg-muted disabled:opacity-50';
 
 /**
  * Status view for the user's latest (non-draft) club registration:
@@ -35,11 +35,11 @@ export default function RegistrationStatusCard({
     const status = registration.status;
 
     const Icon = status === 'approved' ? CheckCircle2 : status === 'rejected' ? XCircle : status === 'needs_info' ? AlertCircle : Clock;
-    const iconBg = status === 'rejected' ? 'bg-destructive/15' : 'bg-primary/15';
-    const iconColor = status === 'rejected' ? 'text-destructive' : 'text-primary';
+    const iconBg = status === 'rejected' ? 'bg-destructive-soft' : 'bg-primary/15';
+    const iconColor = status === 'rejected' ? 'text-destructive' : 'text-primary-text';
 
     return (
-        <div className={`${className} rounded-xl border border-border bg-card p-5`} role="status">
+        <div className={`${className} rounded-xl shadow-card bg-card p-5`} role="status">
             <div className="flex items-start gap-3">
                 <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${iconBg}`}>
                     <Icon className={`h-5 w-5 ${iconColor}`} />
@@ -54,7 +54,7 @@ export default function RegistrationStatusCard({
                     )}
 
                     {(status === 'needs_info' || status === 'rejected') && registration.reviewNote && (
-                        <div className="mt-3 rounded-lg border border-border bg-muted/50 px-3 py-2">
+                        <div className="mt-3 rounded-lg border border-control bg-muted/50 px-3 py-2">
                             <p className="text-xs font-semibold text-muted-foreground">
                                 {t(status === 'needs_info' ? 'verein.create.status.note' : 'verein.create.status.reason')}
                             </p>
@@ -67,7 +67,7 @@ export default function RegistrationStatusCard({
                             {registration.clubSlug && (
                                 <>
                                     <p className="text-xs font-semibold text-muted-foreground">{t('verein.create.status.slug')}</p>
-                                    <p className="mt-1 inline-block rounded-lg border border-border bg-background px-3 py-1.5 font-mono text-sm text-foreground">
+                                    <p className="mt-1 inline-block rounded-lg border border-control bg-background px-3 py-1.5 font-mono text-sm text-foreground">
                                         {registration.clubSlug}
                                     </p>
                                 </>

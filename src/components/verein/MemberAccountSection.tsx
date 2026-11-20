@@ -307,7 +307,7 @@ function RevokeDialog({ member, clubId, onClose, onDone }: { member: ClubMember;
                         type="button"
                         onClick={() => void revoke()}
                         disabled={busy}
-                        className="rounded-lg bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground disabled:opacity-50"
+                        className="rounded-lg bg-destructive-fill px-4 py-2 text-sm font-semibold text-destructive-foreground disabled:opacity-50"
                     >
                         {t('verein.account.invite.revoke')}
                     </button>
@@ -379,7 +379,7 @@ function UnlinkDialog({
                         type="button"
                         onClick={() => void unlink()}
                         disabled={busy || (needsForce && !force)}
-                        className="rounded-lg bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground disabled:opacity-50"
+                        className="rounded-lg bg-destructive-fill px-4 py-2 text-sm font-semibold text-destructive-foreground disabled:opacity-50"
                     >
                         {needsForce ? t('verein.account.unlink.force') : t('verein.account.unlink')}
                     </button>
@@ -390,7 +390,7 @@ function UnlinkDialog({
             <p className="mt-2 text-xs text-muted-foreground">{t('verein.account.unlink.note')}</p>
 
             {blockers && (
-                <div role="alert" className="mt-4 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm text-foreground">
+                <div role="alert" className="mt-4 rounded-lg border border-warning/40 bg-warning-soft p-3 text-sm text-foreground">
                     <p className="font-semibold">{t('verein.account.unlink.openItems')}</p>
                     <ul className="mt-2 list-disc space-y-0.5 pl-5">
                         {blockers.map((b) => (

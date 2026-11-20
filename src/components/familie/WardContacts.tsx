@@ -45,13 +45,13 @@ export default function WardContacts({ clubId, wardId }: { clubId: string; wardI
                             </p>
                             <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
                                 {c.phone && (
-                                    <a href={`tel:${c.phone}`} className="inline-flex items-center gap-1 text-primary underline">
+                                    <a href={`tel:${c.phone}`} className="inline-flex items-center gap-1 text-primary-text underline">
                                         <Phone className="h-3.5 w-3.5" aria-hidden />
                                         {c.phone}
                                     </a>
                                 )}
                                 {c.email && (
-                                    <a href={`mailto:${c.email}`} className="inline-flex items-center gap-1 text-primary underline">
+                                    <a href={`mailto:${c.email}`} className="inline-flex items-center gap-1 text-primary-text underline">
                                         <Mail className="h-3.5 w-3.5" aria-hidden />
                                         {c.email}
                                     </a>

@@ -364,9 +364,9 @@ export default function MemberList({
                         {t('verein.members.columns')}
                     </button>
                     {columnsOpen && (
-                        <div className="absolute right-0 z-20 mt-1 w-56 rounded-xl border border-border bg-card p-2 shadow-lg">
+                        <div className="absolute right-0 z-20 mt-1 w-56 rounded-xl shadow-card bg-card p-2 shadow-lg">
                             {OPTIONAL_COLUMNS.map((c) => (
-                                <label key={c} className="flex min-h-11 items-center gap-2 rounded px-2 text-sm text-foreground hover:bg-muted">
+                                <label key={c} className="flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm text-foreground hover:bg-muted">
                                     <input type="checkbox" checked={show(c)} onChange={() => toggleColumn(c)} />
                                     {t(`verein.members.table.${c === 'joined' ? 'joined' : c}`)}
                                 </label>
@@ -456,21 +456,21 @@ export default function MemberList({
             {filtered && (
                 <div className="mb-3 flex flex-wrap items-center gap-2" role="group" aria-label={t('verein.members.chips.label')}>
                     {chips.map((c) => (
-                        <span key={c.id} className="inline-flex items-center gap-1 rounded-full bg-primary/10 py-0.5 pl-2.5 pr-1 text-xs font-semibold text-primary">
+                        <span key={c.id} className="inline-flex items-center gap-1 rounded-full bg-primary/10 py-0.5 pl-2.5 pr-1 text-xs font-semibold text-primary-text">
                             {c.label}
                             <button type="button" onClick={c.clear} aria-label={t('verein.members.chip.remove')} className="rounded-full p-0.5 hover:bg-primary/20">
                                 <X className="h-3 w-3" aria-hidden="true" />
                             </button>
                         </span>
                     ))}
-                    <button type="button" onClick={resetAll} className="text-xs font-medium text-primary hover:underline">
+                    <button type="button" onClick={resetAll} className="text-xs font-medium text-primary-text hover:underline">
                         {t('verein.members.reset')}
                     </button>
                 </div>
             )}
 
             {failed ? (
-                <div role="alert" className="rounded-xl border border-destructive/40 bg-destructive/5 p-4 text-sm">
+                <div role="alert" className="rounded-xl border border-destructive/40 bg-destructive-soft p-4 text-sm">
                     <p className="text-destructive">{forbidden ? t('verein.members.forbidden') : t(memberErrorKey(outcome?.error))}</p>
                     {!forbidden && (
                         <button type="button" onClick={reload} className={`${secondaryButtonClass} mt-3`}>
@@ -502,7 +502,7 @@ export default function MemberList({
                     <div className={`relative overflow-x-auto overflow-y-auto max-h-[70vh] rounded-xl border border-border transition-opacity ${loading ? 'opacity-60' : ''}`} aria-busy={loading}>
                         <table className="w-full text-sm">
                             <thead>
-                                <tr className="sticky top-0 z-10 border-b border-border bg-muted text-left text-xs text-muted-foreground">
+                                <tr className="sticky top-0 z-10 border-b border-hairline bg-muted text-left text-xs text-muted-foreground">
                                     {sortHeader(t('verein.members.table.name'), 'name')}
                                     {show('category') && <th className="px-3 py-2.5 font-medium">{t('verein.members.table.category')}</th>}
                                     <th className="px-3 py-2.5 font-medium">{t('verein.members.table.status')}</th>
@@ -524,7 +524,7 @@ export default function MemberList({
                                     const left = m.effectiveStatus === 'ausgetreten' || m.effectiveStatus === 'ausgeschlossen' || m.effectiveStatus === 'verstorben';
                                     const depts = currentDepartments(m);
                                     return (
-                                        <tr key={m.id} className={`border-b border-border align-middle transition-colors last:border-b-0 hover:bg-muted/40 ${left ? 'opacity-70' : ''}`}>
+                                        <tr key={m.id} className={`border-b border-hairline align-middle transition-colors last:border-b-0 hover:bg-muted/40 ${left ? 'opacity-70' : ''}`}>
                                             <td className="px-3 py-3 text-foreground">
                                                 <span className="flex items-center gap-2">
                                                     <MemberAvatar name={m.name} photoUrl={m.photoUrl} onExpired={onPhotoExpired} />
@@ -533,7 +533,7 @@ export default function MemberList({
                                             </td>
                                             {show('category') && <td className="px-3 py-3 text-muted-foreground">{categoryLabel(m, t)}</td>}
                                             <td className="px-3 py-3">
-                                                <span className={`inline-block rounded-md px-2 py-0.5 text-xs font-medium ${statusChipClass(m.effectiveStatus)}`}>
+                                                <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${statusChipClass(m.effectiveStatus)}`}>
                                                     {t(`verein.status.${m.effectiveStatus}`)}
                                                 </span>
                                                 {hasPendingExit(m) && (
@@ -558,7 +558,7 @@ export default function MemberList({
                                                     <button
                                                         type="button"
                                                         onClick={() => setPrivacyFor(m)}
-                                                        className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                                                        className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
                                                         aria-label={t('privacy.file.open', { name: m.name ?? '—' })}
                                                     >
                                                         <ShieldCheck className="h-4 w-4" aria-hidden="true" />
@@ -570,7 +570,7 @@ export default function MemberList({
                                                     <button
                                                         type="button"
                                                         onClick={() => setDetail(m)}
-                                                        className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                                                        className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
                                                         aria-label={t('forms.cf.detail.open', { name: m.name ?? '—' })}
                                                     >
                                                         <Eye className="h-4 w-4" aria-hidden="true" />
@@ -582,7 +582,7 @@ export default function MemberList({
                                                     <button
                                                         type="button"
                                                         onClick={() => setEditing(m)}
-                                                        className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                                                        className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
                                                         aria-label={t('verein.members.edit')}
                                                     >
                                                         <Pencil className="h-4 w-4" />
@@ -609,7 +609,7 @@ export default function MemberList({
                                         setPageSize(Number(e.target.value));
                                         setPage(1);
                                     }}
-                                    className="rounded-md border border-border bg-background px-1.5 py-1 text-xs text-foreground"
+                                    className="rounded-md border border-control bg-background px-1.5 py-1 text-xs text-foreground"
                                 >
                                     {PAGE_SIZES.map((n) => (
                                         <option key={n} value={n}>
@@ -623,7 +623,7 @@ export default function MemberList({
                                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                                 disabled={page <= 1}
                                 aria-label={t('verein.members.prev')}
-                                className="rounded-md border border-border p-1 hover:bg-muted disabled:opacity-40"
+                                className="rounded-md border border-control p-1 hover:bg-muted disabled:opacity-40"
                             >
                                 <ChevronLeft className="h-4 w-4" />
                             </button>
@@ -643,7 +643,7 @@ export default function MemberList({
                                 onClick={() => setPage((p) => Math.min(pages, p + 1))}
                                 disabled={page >= pages}
                                 aria-label={t('verein.members.next')}
-                                className="rounded-md border border-border p-1 hover:bg-muted disabled:opacity-40"
+                                className="rounded-md border border-control p-1 hover:bg-muted disabled:opacity-40"
                             >
                                 <ChevronRight className="h-4 w-4" />
                             </button>

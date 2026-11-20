@@ -27,7 +27,7 @@ export function formatDate(value: string | Date | null | undefined, language = '
 
 export function SectionCard({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
     return (
-        <section className="rounded-xl border border-border bg-card p-4">
+        <section className="rounded-xl shadow-card bg-card p-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-base font-medium text-foreground">{title}</h2>
                 {action}
@@ -49,10 +49,10 @@ export function EmptyState({ icon, text }: { icon: ReactNode; text: string }) {
 export type Tone = 'success' | 'warning' | 'destructive' | 'primary' | 'muted';
 
 const toneClass: Record<Tone, string> = {
-    success: 'bg-success/10 text-success',
-    warning: 'bg-warning/10 text-warning',
-    destructive: 'bg-destructive/10 text-destructive',
-    primary: 'bg-primary/10 text-primary',
+    success: 'bg-success-soft text-success',
+    warning: 'bg-warning-soft text-warning',
+    destructive: 'bg-destructive-soft text-destructive',
+    primary: 'bg-primary/10 text-primary-text',
     muted: 'bg-muted text-muted-foreground',
 };
 
@@ -201,7 +201,7 @@ export function ConfirmModal({
                         type="button"
                         onClick={() => void confirm()}
                         disabled={busy}
-                        className="rounded-lg bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground hover:opacity-90 disabled:opacity-50"
+                        className="rounded-lg bg-destructive-fill px-4 py-2 text-sm font-semibold text-destructive-foreground hover:opacity-90 disabled:opacity-50"
                     >
                         {confirmLabel}
                     </button>

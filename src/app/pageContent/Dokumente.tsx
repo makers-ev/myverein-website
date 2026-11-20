@@ -87,7 +87,7 @@ export default function DokumentePageContent() {
                     <p className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">{t('docs.archive.noClub')}</p>
                 ) : (
                     <>
-                        <div role="tablist" aria-label={t('docs.archive.title')} className="mb-4 flex gap-2 overflow-x-auto border-b border-border">
+                        <div role="tablist" aria-label={t('docs.archive.title')} className="mb-4 flex gap-2 overflow-x-auto border-b border-hairline">
                             {tabs.map((value) => (
                                 <button
                                     key={value}
@@ -97,7 +97,7 @@ export default function DokumentePageContent() {
                                     aria-selected={current === value}
                                     aria-controls="doc-panel"
                                     onClick={() => setTab(value)}
-                                    className={`whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium transition-colors ${current === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                                    className={`whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium transition-colors ${current === value ? 'border-primary text-primary-text' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
                                 >
                                     {t(`docs.tab.${value}`)}
                                     {value === 'bestaetigungen' && state.openAcks > 0 && (

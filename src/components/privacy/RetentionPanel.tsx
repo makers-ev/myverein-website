@@ -57,7 +57,7 @@ function RuleRow({ clubId, rule, preview, canManage, onChanged }: { clubId: stri
     }
 
     return (
-        <tr className="border-t border-border align-top text-foreground">
+        <tr className="border-t border-hairline align-top text-foreground">
             <td className="px-3 py-2">
                 <p className="font-medium">{rule.label}</p>
                 <p className="text-xs text-muted-foreground">{rule.description}</p>
@@ -88,7 +88,7 @@ function RuleRow({ clubId, rule, preview, canManage, onChanged }: { clubId: stri
                                     type="button"
                                     disabled={busy}
                                     onClick={() => void run(async () => { await apiFetch(path, { method: 'DELETE' }); })}
-                                    className="text-xs font-medium text-primary underline"
+                                    className="text-xs font-medium text-primary-text underline"
                                 >
                                     {t('privacy.retention.reset')}
                                 </button>
@@ -176,7 +176,7 @@ export default function RetentionPanel({ clubId, canManage }: { clubId: string; 
                 <div className="space-y-4">
                     <p className="text-sm text-muted-foreground">{t('privacy.retention.intro')}</p>
                     {policies.dryRun && (
-                        <p role="status" className="rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-foreground">
+                        <p role="status" className="rounded-lg border border-warning/40 bg-warning-soft px-3 py-2 text-sm text-foreground">
                             {t('privacy.retention.dryRun')}
                         </p>
                     )}
@@ -205,7 +205,7 @@ export default function RetentionPanel({ clubId, canManage }: { clubId: string; 
                     <p className="text-xs text-muted-foreground">{t('privacy.retention.noticeHint', { days: policies.noticeDays })}</p>
                     {platformRules.length > 0 && (
                         <details className="text-sm">
-                            <summary className="cursor-pointer font-medium text-primary">{t('privacy.retention.platform')}</summary>
+                            <summary className="cursor-pointer font-medium text-primary-text">{t('privacy.retention.platform')}</summary>
                             <ul className="mt-2 space-y-1.5">
                                 {platformRules.map((r) => (
                                     <li key={r.category} className="text-foreground">
@@ -237,7 +237,7 @@ export default function RetentionPanel({ clubId, canManage }: { clubId: string; 
                             </thead>
                             <tbody>
                                 {runs.map((r) => (
-                                    <tr key={r.id} className="border-t border-border text-foreground">
+                                    <tr key={r.id} className="border-t border-hairline text-foreground">
                                         <td className="px-3 py-2">{formatDate(r.startedAt, language)}</td>
                                         <td className="px-3 py-2">{categoryLabel(r.category)}</td>
                                         <td className="px-3 py-2">{t(r.notice ? 'privacy.retention.runs.notice' : r.dryRun ? 'privacy.retention.runs.dry' : 'privacy.retention.runs.real')}</td>

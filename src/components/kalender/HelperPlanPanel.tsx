@@ -15,7 +15,7 @@ import HelperManage, { ShiftEditor, StationEditor } from './HelperManage';
 import MemberPicker from './MemberPicker';
 import { type CalendarEvent, primaryBtn, secondaryBtn } from './calendarTypes';
 
-const LIGHT_STYLE = { red: 'bg-destructive/15 text-destructive', green: 'bg-success/15 text-success', yellow: 'bg-warning/15 text-warning' } as const;
+const LIGHT_STYLE = { red: 'bg-destructive-soft text-destructive', green: 'bg-success-soft text-success', yellow: 'bg-warning-soft text-warning' } as const;
 
 function timeRange(startsAt: string, endsAt: string, language: string): string {
     const s = new Date(startsAt);
@@ -98,7 +98,7 @@ export default function HelperPlanPanel({ clubId, event, ownClubMemberId }: Prop
 
     return (
         <div className="space-y-4 text-sm">
-            {locked && <p className="rounded-lg bg-destructive/10 px-3 py-2 text-destructive">{t('helpers.cancelled')}</p>}
+            {locked && <p className="rounded-lg bg-destructive-soft px-3 py-2 text-destructive">{t('helpers.cancelled')}</p>}
 
             {plan.mine.length > 0 && (
                 <section aria-labelledby="my-shifts" className="rounded-lg border border-border p-3">
@@ -125,12 +125,12 @@ export default function HelperPlanPanel({ clubId, event, ownClubMemberId }: Prop
             )}
 
             {notice && (
-                <p role="status" className="rounded-lg bg-success/10 px-3 py-2 text-success">
+                <p role="status" className="rounded-lg bg-success-soft px-3 py-2 text-success">
                     {notice}
                 </p>
             )}
             {error && (
-                <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-destructive">
+                <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2 text-destructive">
                     {error}
                 </p>
             )}
@@ -143,7 +143,7 @@ export default function HelperPlanPanel({ clubId, event, ownClubMemberId }: Prop
             ) : (
                 plan.stations.map((station) => (
                     <section key={station.id} aria-labelledby={`station-${station.id}`} className="rounded-lg border border-border">
-                        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-muted/40 px-3 py-2">
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-hairline bg-muted/40 px-3 py-2">
                             <div className="min-w-0">
                                 <h3 id={`station-${station.id}`} className="font-semibold text-foreground">
                                     {station.name}
@@ -153,7 +153,7 @@ export default function HelperPlanPanel({ clubId, event, ownClubMemberId }: Prop
                             {plan.canManage && !locked && <StationEditor clubId={clubId} eventId={event.id} station={station} onChanged={load} />}
                         </div>
                         {station.shifts.length === 0 && <p className="px-3 py-3 text-muted-foreground">{t('helpers.station.noShifts')}</p>}
-                        <ul className="divide-y divide-border">
+                        <ul className="divide-y divide-hairline">
                             {station.shifts.map((shift) => {
                                 const light = shiftLight(shift);
                                 const swaps = swapActions(shift, actingId);
@@ -174,7 +174,7 @@ export default function HelperPlanPanel({ clubId, event, ownClubMemberId }: Prop
                                         {shift.signups.length > 0 ? (
                                             <ul className="flex flex-wrap gap-1.5">
                                                 {shift.signups.map((s) => (
-                                                    <li key={s.signupId} className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs ${s.mine ? 'bg-primary/15 font-semibold text-primary' : 'bg-muted text-foreground'}`}>
+                                                    <li key={s.signupId} className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs ${s.mine ? 'bg-primary/15 font-semibold text-primary-text' : 'bg-muted text-foreground'}`}>
                                                         {s.displayName ?? t('helpers.someone')}
                                                         {plan.canManage && !locked && !s.mine && (
                                                             <button type="button" disabled={busy !== null} aria-label={t('helpers.remove', { name: s.displayName ?? t('helpers.someone') })} onClick={() => void withdraw(shift, s.clubMemberId)} className="font-bold text-muted-foreground hover:text-foreground">
@@ -190,7 +190,7 @@ export default function HelperPlanPanel({ clubId, event, ownClubMemberId }: Prop
 
                                         {swaps.respond.map((w) => (
                                             <div key={w.id} className="flex flex-wrap items-center gap-2 rounded-lg bg-primary/10 px-3 py-2">
-                                                <ArrowLeftRight className="h-4 w-4 text-primary" aria-hidden />
+                                                <ArrowLeftRight className="h-4 w-4 text-primary-text" aria-hidden />
                                                 <span className="text-foreground">{t('helpers.swap.toMe', { name: w.fromName ?? t('helpers.someone') })}</span>
                                                 <button type="button" disabled={busy !== null} onClick={() => void accept(w.id)} className={`${primaryBtn} !px-3 !py-1 text-xs`}>
                                                     {t('helpers.swap.accept')}

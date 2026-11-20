@@ -52,9 +52,9 @@ function ResetPasswordPageInner() {
     if (hasError) {
         return (
             <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-                <div className="w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card p-8 shadow-md">
+                <div className="w-full max-w-md overflow-hidden rounded-2xl shadow-card bg-card p-8 ">
                     <div className="flex flex-col items-center text-center">
-                        <div className="mb-6 rounded-full bg-destructive/10 p-4">
+                        <div className="mb-6 rounded-full bg-destructive-soft p-4">
                             <ExclamationTriangleIcon className="h-12 w-12 text-destructive" />
                         </div>
                         <h1 className="mb-2 text-3xl font-medium text-card-foreground">
@@ -78,9 +78,9 @@ function ResetPasswordPageInner() {
     if (success) {
         return (
             <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-                <div className="w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card p-8 shadow-md">
+                <div className="w-full max-w-md overflow-hidden rounded-2xl shadow-card bg-card p-8 ">
                     <div className="flex flex-col items-center text-center">
-                        <div className="mb-6 rounded-full bg-success/10 p-4">
+                        <div className="mb-6 rounded-full bg-success-soft p-4">
                             <CheckCircleIcon className="h-12 w-12 text-success" />
                         </div>
                         <h1 className="mb-2 text-3xl font-medium text-card-foreground">
@@ -125,7 +125,7 @@ function ResetPasswordPageInner() {
                             minLength={8}
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
-                            className="mt-1 block w-full min-h-11 rounded-lg border border-border bg-background px-3 py-2 text-foreground transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25"
+                            className="mt-1 block w-full min-h-11 rounded-lg border border-control bg-background px-3 py-2 text-foreground transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25"
                         />
                     </div>
 
@@ -142,7 +142,7 @@ function ResetPasswordPageInner() {
                             minLength={8}
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
-                            className="mt-1 block w-full min-h-11 rounded-lg border border-border bg-background px-3 py-2 text-foreground transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25"
+                            className="mt-1 block w-full min-h-11 rounded-lg border border-control bg-background px-3 py-2 text-foreground transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25"
                         />
                     </div>
 

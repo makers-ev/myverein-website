@@ -116,7 +116,7 @@ export default function MemberConsents({
             <p className="text-sm text-muted-foreground">{t('privacy.voluntary')}</p>
             <ul className="space-y-3">
                 {consents.map((c) => (
-                    <li key={c.purposeId} className="rounded-lg border border-border bg-card p-3">
+                    <li key={c.purposeId} className="rounded-lg shadow-card bg-card p-3">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                             <span className="text-sm font-semibold text-foreground">{c.name}</span>
                             <span className="flex flex-wrap items-center gap-1.5">
@@ -128,7 +128,7 @@ export default function MemberConsents({
                         </div>
                         {c.description && <p className="mt-1 text-sm text-muted-foreground">{c.description}</p>}
                         <details className="mt-2 text-sm">
-                            <summary className="cursor-pointer font-medium text-primary">{t('privacy.member.showText', { version: c.text.version })}</summary>
+                            <summary className="cursor-pointer font-medium text-primary-text">{t('privacy.member.showText', { version: c.text.version })}</summary>
                             <p className="mt-2 whitespace-pre-line rounded-lg bg-muted/50 p-3 text-foreground">{c.text.body}</p>
                         </details>
                         {c.decidedAt && (
@@ -205,7 +205,7 @@ function ConsentHistory({ events, purposes }: { events: ConsentEvent[]; purposes
             ) : (
                 <ul className="mt-2 space-y-1.5 text-sm">
                     {events.map((e) => (
-                        <li key={e.id} className="rounded-lg border border-border px-3 py-2">
+                        <li key={e.id} className="rounded-lg border border-control px-3 py-2">
                             <span className="font-medium text-foreground">{name(e)}</span>
                             <span className="text-muted-foreground">
                                 {' · '}

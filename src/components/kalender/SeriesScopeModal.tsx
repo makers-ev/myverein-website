@@ -77,7 +77,7 @@ export default function SeriesScopeModal({ mode, event, t, onClose, onConfirm }:
                     ))}
                 </fieldset>
                 {signups > 0 && (
-                    <p role="status" className="rounded-lg bg-warning/10 px-3 py-2 text-sm text-foreground">
+                    <p role="status" className="rounded-lg bg-warning-soft px-3 py-2 text-sm text-foreground">
                         {t(scope === 'this' ? 'kalender.series.scope.signups.this' : 'kalender.series.scope.signups.more', { count: signups })}
                     </p>
                 )}
@@ -97,7 +97,7 @@ export default function SeriesScopeModal({ mode, event, t, onClose, onConfirm }:
                     </>
                 )}
                 {error && (
-                    <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                    <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2 text-sm text-destructive">
                         {error}
                     </p>
                 )}

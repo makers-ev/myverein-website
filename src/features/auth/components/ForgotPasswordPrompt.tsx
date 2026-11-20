@@ -86,7 +86,7 @@ export function ForgotPasswordPrompt({ onBackToLogin }: ForgotPasswordPromptProp
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="mt-1 block w-full min-h-11 rounded-lg border border-border bg-background px-3 py-2 text-foreground transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25"
+                        className="mt-1 block w-full min-h-11 rounded-lg border border-control bg-background px-3 py-2 text-foreground transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25"
                     />
                 </div>
 
@@ -104,7 +104,7 @@ export function ForgotPasswordPrompt({ onBackToLogin }: ForgotPasswordPromptProp
             <button
                 type="button"
                 onClick={onBackToLogin}
-                className="w-full text-center text-sm font-medium text-primary underline-offset-4 hover:underline"
+                className="w-full text-center text-sm font-medium text-primary-text underline-offset-4 hover:underline"
             >
                 {t('auth.forgotPassword.backToLogin')}
             </button>

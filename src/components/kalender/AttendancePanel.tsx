@@ -34,7 +34,7 @@ interface Props {
 const STATUS_STYLE: Record<AttendanceStatus, string> = {
     anwesend: 'bg-success text-success-foreground',
     entschuldigt: 'bg-warning text-warning-foreground',
-    unentschuldigt: 'bg-destructive text-destructive-foreground',
+    unentschuldigt: 'bg-destructive-fill text-destructive-foreground',
 };
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
@@ -205,7 +205,7 @@ export default function AttendancePanel({ clubId, event }: Props) {
                 </div>
             )}
             {warn && (
-                <div role="status" className="flex items-start gap-2 rounded-lg bg-warning/10 p-3 text-foreground">
+                <div role="status" className="flex items-start gap-2 rounded-lg bg-warning-soft p-3 text-foreground">
                     <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden />
                     <p>{t('attendance.supervision.warning', { count: shown.minorsPresent || shown.entries.filter((e) => e.isMinor && e.status === 'anwesend').length })}</p>
                 </div>
@@ -244,7 +244,7 @@ export default function AttendancePanel({ clubId, event }: Props) {
             {shown.entries.length === 0 ? (
                 <p className="rounded-lg border border-dashed border-border p-4 text-center text-muted-foreground">{t('attendance.empty')}</p>
             ) : (
-                <ul className="divide-y divide-border rounded-lg border border-border">
+                <ul className="divide-y divide-hairline rounded-lg border border-border">
                     {shown.entries.map((e) => (
                         <li key={e.key} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
                             <div className="min-w-0">
@@ -290,7 +290,7 @@ export default function AttendancePanel({ clubId, event }: Props) {
                 )}
             </div>
             {error && (
-                <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-destructive">
+                <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2 text-destructive">
                     {error}
                 </p>
             )}

@@ -77,7 +77,7 @@ export default function RidesPanel({ clubId, event, ownClubMemberId }: Props) {
             </div>
             <p className="text-xs text-muted-foreground">{t('rides.privacy')}</p>
             {error && (
-                <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-destructive">
+                <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2 text-destructive">
                     {error}
                 </p>
             )}
@@ -95,7 +95,7 @@ export default function RidesPanel({ clubId, event, ownClubMemberId }: Props) {
                             <li key={ride.id} className="space-y-2 rounded-lg border border-border p-3">
                                 <div className="flex flex-wrap items-center justify-between gap-2">
                                     <p className="font-semibold text-foreground">{t('rides.driver', { name: ride.driver.displayName ?? t('helpers.someone') })}</p>
-                                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${ride.seatsFree > 0 ? 'bg-success/15 text-success' : 'bg-muted text-muted-foreground'}`}>
+                                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${ride.seatsFree > 0 ? 'bg-success-soft text-success' : 'bg-muted text-muted-foreground'}`}>
                                         {t('rides.seats', { free: ride.seatsFree, total: ride.seats })}
                                     </span>
                                 </div>
@@ -108,7 +108,7 @@ export default function RidesPanel({ clubId, event, ownClubMemberId }: Props) {
 
                                 {!ride.mine && mineReq && (
                                     <p className="flex flex-wrap items-center gap-2">
-                                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${mineReq.status === 'zugesagt' ? 'bg-success/15 text-success' : mineReq.status === 'abgelehnt' ? 'bg-destructive/10 text-destructive' : 'bg-warning/15 text-warning'}`}>
+                                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${mineReq.status === 'zugesagt' ? 'bg-success-soft text-success' : mineReq.status === 'abgelehnt' ? 'bg-destructive-soft text-destructive' : 'bg-warning-soft text-warning'}`}>
                                             {t(`rides.status.${mineReq.status}`)}
                                         </span>
                                         <button type="button" disabled={busy} onClick={() => void act(() => apiFetch(`${base}/${ride.id}/requests/${mineReq.requestId}?${q}`, { method: 'DELETE' }))} className={`${secondaryBtn} !px-3 !py-1 text-xs`}>
@@ -166,7 +166,7 @@ export default function RidesPanel({ clubId, event, ownClubMemberId }: Props) {
                                                         if (await confirm({ title: t('rides.delete'), body: t('rides.delete.body'), confirmLabel: t('rides.delete'), danger: true })) await act(() => apiFetch(`${base}/${ride.id}?${q}`, { method: 'DELETE' }));
                                                     })()
                                                 }
-                                                className="rounded-lg border border-destructive/40 px-3 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
+                                                className="rounded-lg border border-destructive/40 px-3 py-1 text-xs font-medium text-destructive hover:bg-destructive-soft"
                                             >
                                                 {t('rides.delete')}
                                             </button>

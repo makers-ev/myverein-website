@@ -79,7 +79,7 @@ export default function AbstimmungenPageContent() {
                         <LoadError className="mt-6" onRetry={() => { setAccess(null); setRetry((n) => n + 1); }} />
                     ) : (
                         <>
-                            <div role="tablist" aria-label={t('assembly.page.title')} className="mt-6 flex gap-2 overflow-x-auto border-b border-border">
+                            <div role="tablist" aria-label={t('assembly.page.title')} className="mt-6 flex gap-2 overflow-x-auto border-b border-hairline">
                                 {tabs.map((value) => (
                                     <button
                                         key={value}
@@ -89,7 +89,7 @@ export default function AbstimmungenPageContent() {
                                         aria-selected={currentTab === value}
                                         aria-controls="ab-panel"
                                         onClick={() => setTab(value)}
-                                        className={`whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium transition-colors ${currentTab === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                                        className={`whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium transition-colors ${currentTab === value ? 'border-primary text-primary-text' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
                                     >
                                         {t(`assembly.page.tab.${value}`)}
                                     </button>

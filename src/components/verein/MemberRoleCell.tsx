@@ -100,7 +100,7 @@ export default function MemberRoleCell({
                         value={selectedRole}
                         onChange={(e) => setNewRole(e.target.value as RoleType)}
                         aria-label={t('verein.roles.add')}
-                        className="rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground focus:border-primary focus:outline-none"
+                        className="rounded-md border border-control bg-background px-2 py-1 text-xs text-foreground focus:border-primary focus:outline-none"
                     >
                         <option value="" disabled>
                             {t('verein.roles.base.option')}
@@ -124,7 +124,7 @@ export default function MemberRoleCell({
                 </div>
             ) : (
                 availableRoles.length > 0 && (
-                    <button onClick={() => setAdding(true)} className="mt-1.5 text-xs font-medium text-primary hover:underline">
+                    <button onClick={() => setAdding(true)} className="mt-1.5 text-xs font-medium text-primary-text hover:underline">
                         {t('verein.roles.add')}
                     </button>
                 )

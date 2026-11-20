@@ -89,7 +89,7 @@ type Tab = ClubTab;
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
     return (
-        <div className="rounded-xl border border-border bg-card p-4">
+        <div className="rounded-xl shadow-card bg-card p-4">
             <h2 className="mb-3 text-base font-medium text-foreground">{title}</h2>
             {children}
         </div>
@@ -134,7 +134,7 @@ function VereinsinfoTab({ info, t, onPhotoExpired, termsClubId, clubId, canWrite
                     <ul className="space-y-2">
                         {info.pages.map((p) => (
                             <li key={p.id} className="text-sm text-foreground">
-                                <button type="button" onClick={() => setOpenSlug(p.slug)} className="text-left font-medium text-primary underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
+                                <button type="button" onClick={() => setOpenSlug(p.slug)} className="text-left font-medium text-primary-text underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-text">
                                     {p.title}
                                 </button>
                                 {p.hasAttachment && <span className="ml-2 text-xs text-muted-foreground">PDF</span>}
@@ -143,7 +143,7 @@ function VereinsinfoTab({ info, t, onPhotoExpired, termsClubId, clubId, canWrite
                     </ul>
                 )}
                 {canWriteInfo && (
-                    <button type="button" onClick={() => setOpenSlug('')} className="mt-3 rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted">
+                    <button type="button" onClick={() => setOpenSlug('')} className="mt-3 rounded-lg border border-control px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted">
                         {t('docs.info.new')}
                     </button>
                 )}
@@ -198,7 +198,7 @@ function AbteilungenTab({
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder={t('verein.departments.new.placeholder')}
-                        className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                        className="flex-1 rounded-lg border border-control bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
                     />
                     <button
                         type="submit"
@@ -216,7 +216,7 @@ function AbteilungenTab({
             ) : (
                 <ul className="space-y-2">
                     {departments.map((d) => (
-                        <li key={d.id} className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground">
+                        <li key={d.id} className="rounded-lg border border-control bg-card px-3 py-2 text-sm text-foreground">
                             {d.name}
                         </li>
                     ))}
@@ -355,7 +355,7 @@ export default function VereinPageContent() {
                                 <LoadingText />
                             ))}
                         {currentTab === 'mitglieder' && credentialsAvailable && (
-                            <div role="group" aria-label={t('verein.members.view.label')} className="mb-4 inline-flex rounded-lg border border-border p-0.5">
+                            <div role="group" aria-label={t('verein.members.view.label')} className="mb-4 inline-flex rounded-lg border border-control p-0.5">
                                 {(['list', 'credentials'] as const).map((value) => (
                                     <button
                                         key={value}

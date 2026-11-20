@@ -259,7 +259,7 @@ export default function ProfilTab({ me, clubId, onSaved, onPhotoExpired, onDirty
     return (
         <div className="space-y-4">
             <div className="grid gap-4 md:grid-cols-[1fr_1.4fr]">
-                <div className="rounded-xl border border-border bg-card p-5">
+                <div className="rounded-xl shadow-card bg-card p-5">
                     <div className="min-w-0">
                         <p className="truncate font-semibold text-foreground">{me.name ?? '—'}</p>
                         <p className="truncate text-sm text-muted-foreground">{me.email}</p>
@@ -294,7 +294,7 @@ export default function ProfilTab({ me, clubId, onSaved, onPhotoExpired, onDirty
                     {me.roles.length > 0 && (
                         <div className="mt-4 flex flex-wrap gap-1.5">
                             {me.roles.map((r) => (
-                                <span key={r.id} className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                                <span key={r.id} className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary-text">
                                     {t(`verein.role.${r.roleType}`)}
                                 </span>
                             ))}
@@ -302,7 +302,7 @@ export default function ProfilTab({ me, clubId, onSaved, onPhotoExpired, onDirty
                     )}
                 </div>
 
-                <form onSubmit={(e) => void handleSave(e)} noValidate className="min-w-0 rounded-xl border border-border bg-card p-5">
+                <form onSubmit={(e) => void handleSave(e)} noValidate className="min-w-0 rounded-xl shadow-card bg-card p-5">
                     <h2 className="text-base font-medium text-foreground">{t('verein.profil.title')}</h2>
                     <p className="mt-1 text-xs text-muted-foreground">{t('verein.profil.hint')}</p>
                     {minor ? (
@@ -335,7 +335,7 @@ export default function ProfilTab({ me, clubId, onSaved, onPhotoExpired, onDirty
                         ) : null}
                         <p className="text-xs text-muted-foreground">
                             {t('verein.profil.accountHint')}{' '}
-                            <Link href="/settings" onClick={(e) => void openSettings(e)} className="font-semibold text-primary underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
+                            <Link href="/settings" onClick={(e) => void openSettings(e)} className="font-semibold text-primary-text underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-text">
                                 {t('verein.profil.accountLink')}
                             </Link>
                         </p>
@@ -401,7 +401,7 @@ export default function ProfilTab({ me, clubId, onSaved, onPhotoExpired, onDirty
                             {saving ? t('verein.profil.saving') : t('verein.profil.save')}
                         </button>
                         {dirty && !saving ? (
-                            <button type="button" onClick={handleDiscard} className="rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-muted">
+                            <button type="button" onClick={handleDiscard} className="rounded-lg border border-control px-4 py-2 text-sm text-foreground hover:bg-muted">
                                 {t('verein.profil.discard')}
                             </button>
                         ) : null}

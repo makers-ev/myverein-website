@@ -37,7 +37,7 @@ export default function EventAgenda({ events, language, t, colorFor, calendarNam
                 <section key={group.key} aria-label={group.date.toLocaleDateString(language, { dateStyle: 'full' })}>
                     {!hideHeaders && (
                         <h3 className="mb-2 flex items-baseline gap-2 text-sm font-bold text-foreground">
-                            <span className={`text-2xl leading-none ${group.key === todayKey ? 'text-primary' : ''}`}>{group.date.getDate()}</span>
+                            <span className={`text-2xl leading-none ${group.key === todayKey ? 'text-primary-text' : ''}`}>{group.date.getDate()}</span>
                             <span>
                                 {group.date.toLocaleDateString(language, { weekday: 'long' })}
                                 <span className="ml-1 font-normal text-muted-foreground">
@@ -45,7 +45,7 @@ export default function EventAgenda({ events, language, t, colorFor, calendarNam
                                 </span>
                             </span>
                             {group.key === todayKey && (
-                                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">{t('kalender.today')}</span>
+                                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary-text">{t('kalender.today')}</span>
                             )}
                         </h3>
                     )}
@@ -68,7 +68,7 @@ export default function EventAgenda({ events, language, t, colorFor, calendarNam
                                                     <span className="sr-only">{t('kalender.series.badge')}</span>
                                                 </span>
                                             )}
-                                            {ev.cancelled && <span className="rounded-full bg-destructive/10 px-2 py-0.5 font-semibold text-destructive">{t('kalender.events.cancelled')}</span>}
+                                            {ev.cancelled && <span className="rounded-full bg-destructive-soft px-2 py-0.5 font-semibold text-destructive">{t('kalender.events.cancelled')}</span>}
                                             <span>{calendarName(ev.calendarId)}</span>
                                             {ev.category && (
                                                 <span className="rounded-full bg-muted px-2 py-0.5 font-medium text-foreground">{ev.category}</span>
@@ -81,7 +81,7 @@ export default function EventAgenda({ events, language, t, colorFor, calendarNam
                                                 </span>
                                             )}
                                             {ev.myRsvp && (
-                                                <span className={`rounded-full px-2 py-0.5 font-semibold ${ev.myRsvp === 'angemeldet' ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning'}`}>
+                                                <span className={`rounded-full px-2 py-0.5 font-semibold ${ev.myRsvp === 'angemeldet' ? 'bg-success-soft text-success' : 'bg-warning-soft text-warning'}`}>
                                                     {t(ev.myRsvp === 'angemeldet' ? 'kalender.events.rsvp.confirmed' : 'kalender.events.rsvp.waitlist')}
                                                 </span>
                                             )}

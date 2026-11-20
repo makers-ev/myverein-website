@@ -67,11 +67,11 @@ export default function FamiliePageContent() {
                                         role="tab"
                                         aria-selected={active}
                                         onClick={() => setSelected(wardKey(w))}
-                                        className={`rounded-xl border px-4 py-2 text-left text-sm transition-colors ${active ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-card text-foreground hover:bg-muted'}`}
+                                        className={`rounded-xl border px-4 py-2 text-left text-sm transition-colors ${active ? 'border-primary bg-primary/10 text-primary-text' : 'border-border bg-card text-foreground hover:bg-muted'}`}
                                     >
                                         <span className="block font-semibold">{w.firstName ?? w.name}</span>
                                         {multiClub && <span className="block text-xs text-muted-foreground">{w.clubName}</span>}
-                                        {w.openConsents > 0 && <span className="mt-1 inline-block rounded-full bg-warning/10 px-2 py-0.5 text-xs font-semibold text-warning">{t('familie.wards.openConsents', { count: w.openConsents })}</span>}
+                                        {w.openConsents > 0 && <span className="mt-1 inline-block rounded-full bg-warning-soft px-2 py-0.5 text-xs font-semibold text-warning">{t('familie.wards.openConsents', { count: w.openConsents })}</span>}
                                     </button>
                                 );
                             })}

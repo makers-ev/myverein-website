@@ -77,7 +77,7 @@ export default function MemberPicker({ clubId, label, exclude, onPick, disabled 
                 {state === 'idle' && query.trim().length >= 2 && shown.length === 0 && <p className="text-xs text-muted-foreground">{t('events.picker.none')}</p>}
             </div>
             {shown.length > 0 && (
-                <ul className="mt-1 divide-y divide-border rounded-lg border border-border">
+                <ul className="mt-1 divide-y divide-hairline rounded-lg border border-border">
                     {shown.map((m) => (
                         <li key={m.id} className="flex items-center justify-between gap-2 px-3 py-1.5 text-sm">
                             <span className="truncate text-foreground">{m.name}</span>

@@ -54,7 +54,7 @@ import {
 import type { FormField } from '@/lib/formSchema';
 
 const chip = 'inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground';
-const warnChip = 'inline-flex items-center gap-1 rounded-full bg-warning/15 px-2 py-0.5 text-xs font-medium text-warning';
+const warnChip = 'inline-flex items-center gap-1 rounded-full bg-warning-soft px-2 py-0.5 text-xs font-medium text-warning';
 
 /**
  * Editor of one form (Wave 8 W2, `forms:write`): fields (add / edit / delete / move with up-down buttons), privacy notice,
@@ -409,7 +409,7 @@ export default function FormEditor({
     return (
         <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
-                <button type="button" onClick={() => void leave()} className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
+                <button type="button" onClick={() => void leave()} className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-text hover:underline">
                     <ArrowLeft className="h-4 w-4" aria-hidden="true" />
                     {t('forms.editor.back')}
                 </button>
@@ -426,7 +426,7 @@ export default function FormEditor({
             </div>
 
             <div className="flex gap-2 rounded-xl border border-primary/30 bg-primary/5 p-3 text-sm text-foreground" role="note">
-                <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary-text" aria-hidden="true" />
                 <div className="space-y-1">
                     <p className="font-semibold">{t('forms.editor.immutable.title')}</p>
                     <p>{t('forms.editor.immutable.body')}</p>
@@ -457,12 +457,12 @@ export default function FormEditor({
             {(flash || error) && (
                 <div>
                     {flash && (
-                        <p role="status" className="rounded-lg border border-success/40 bg-success/10 p-3 text-sm text-foreground">
+                        <p role="status" className="rounded-lg border border-success/40 bg-success-soft p-3 text-sm text-foreground">
                             {flash}
                         </p>
                     )}
                     {error && (
-                        <div role="alert" className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+                        <div role="alert" className="rounded-lg border border-destructive/40 bg-destructive-soft p-3 text-sm text-destructive">
                             <p>{error}</p>
                             {serverProblems && serverProblems.length > 0 && (
                                 <div className="mt-2 text-foreground">
@@ -476,7 +476,7 @@ export default function FormEditor({
 
             <div className="grid gap-4 lg:grid-cols-2">
                 <div className="min-w-0 space-y-4">
-                    <section className="rounded-xl border border-border bg-card p-4" aria-labelledby="form-editor-fields">
+                    <section className="rounded-xl shadow-card bg-card p-4" aria-labelledby="form-editor-fields">
                         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                             <h3 id="form-editor-fields" className="text-sm font-bold text-foreground">
                                 {t('forms.editor.fields.title', { count: fieldCount, max: MAX_FIELDS })}
@@ -494,14 +494,14 @@ export default function FormEditor({
                         {state.undo && (
                             <div role="status" className="mb-3 flex items-start justify-between gap-2 rounded-lg border border-border bg-muted/50 p-2 text-xs text-foreground">
                                 <p>{state.undo.kind === 'remove' ? t('forms.editor.undo.removed', { label: fieldTitle({ key: state.undo.keys[0] ?? '', label: state.undo.label }, t('forms.editor.field.untitled')) }) : t('forms.editor.undo.moved', { label: fieldTitle({ key: state.undo.keys[0] ?? '', label: state.undo.label }, t('forms.editor.field.untitled')) })}</p>
-                                <button type="button" onClick={() => dispatch({ type: 'undo' })} className="shrink-0 font-semibold text-primary underline">
+                                <button type="button" onClick={() => dispatch({ type: 'undo' })} className="shrink-0 font-semibold text-primary-text underline">
                                     {t('forms.editor.undo.action')}
                                 </button>
                             </div>
                         )}
 
                         {state.droppedConditions.length > 0 && (
-                            <div role="status" className="mb-3 flex items-start justify-between gap-2 rounded-lg border border-warning/40 bg-warning/10 p-2 text-xs text-foreground">
+                            <div role="status" className="mb-3 flex items-start justify-between gap-2 rounded-lg border border-warning/40 bg-warning-soft p-2 text-xs text-foreground">
                                 <p>
                                     {t('forms.editor.droppedConditions', {
                                         fields: state.droppedConditions.map((k) => fieldTitle(state.fields.find((f) => f.key === k) ?? { key: k, label: '' }, k)).join(', '),
@@ -551,7 +551,7 @@ export default function FormEditor({
                                                         disabled={!canMove(index, fieldCount, 'up')}
                                                         onClick={() => void moveField(index, 'up')}
                                                         aria-label={t('forms.editor.field.up', { label: title })}
-                                                        className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30"
+                                                        className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30"
                                                     >
                                                         <ArrowUp className="h-4 w-4" aria-hidden="true" />
                                                     </button>
@@ -561,7 +561,7 @@ export default function FormEditor({
                                                         disabled={!canMove(index, fieldCount, 'down')}
                                                         onClick={() => void moveField(index, 'down')}
                                                         aria-label={t('forms.editor.field.down', { label: title })}
-                                                        className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30"
+                                                        className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30"
                                                     >
                                                         <ArrowDown className="h-4 w-4" aria-hidden="true" />
                                                     </button>
@@ -569,7 +569,7 @@ export default function FormEditor({
                                                         type="button"
                                                         onClick={() => setEditing(index)}
                                                         aria-label={t('forms.editor.field.editNamed', { label: title })}
-                                                        className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                                                        className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                                                     >
                                                         <Pencil className="h-4 w-4" aria-hidden="true" />
                                                     </button>
@@ -577,7 +577,7 @@ export default function FormEditor({
                                                         type="button"
                                                         onClick={() => void removeField(index)}
                                                         aria-label={t('forms.editor.field.deleteNamed', { label: title })}
-                                                        className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive"
+                                                        className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive"
                                                     >
                                                         <Trash2 className="h-4 w-4" aria-hidden="true" />
                                                     </button>
@@ -590,7 +590,7 @@ export default function FormEditor({
                         )}
                     </section>
 
-                    <section className="rounded-xl border border-border bg-card p-4" aria-labelledby="form-editor-privacy">
+                    <section className="rounded-xl shadow-card bg-card p-4" aria-labelledby="form-editor-privacy">
                         <h3 id="form-editor-privacy" className="text-sm font-bold text-foreground">
                             {t('forms.editor.privacy.title')}
                         </h3>
@@ -620,7 +620,7 @@ export default function FormEditor({
                     </section>
 
                     {(describedShape.length > 0 || describedChecks.length > 0) && (
-                        <section className="rounded-xl border border-border bg-card p-4" aria-labelledby="form-editor-checks">
+                        <section className="rounded-xl shadow-card bg-card p-4" aria-labelledby="form-editor-checks">
                             <h3 id="form-editor-checks" className="text-sm font-bold text-foreground">
                                 {t('forms.editor.checks.title')}
                             </h3>
@@ -648,12 +648,12 @@ export default function FormEditor({
                     )}
                 </div>
 
-                <section className="min-w-0 rounded-xl border border-border bg-card p-4 lg:sticky lg:top-4 lg:self-start" aria-labelledby="form-editor-preview">
+                <section className="min-w-0 rounded-xl shadow-card bg-card p-4 lg:sticky lg:top-4 lg:self-start" aria-labelledby="form-editor-preview">
                     <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                         <h3 id="form-editor-preview" className="text-sm font-bold text-foreground">
                             {t('forms.editor.preview.title')}
                         </h3>
-                        <button type="button" onClick={() => setPreviewAnswers({})} className="text-xs font-semibold text-primary underline">
+                        <button type="button" onClick={() => setPreviewAnswers({})} className="text-xs font-semibold text-primary-text underline">
                             {t('forms.editor.preview.reset')}
                         </button>
                     </div>
@@ -674,7 +674,7 @@ export default function FormEditor({
                 </section>
             </div>
 
-            <div className="sticky bottom-0 z-10 -mx-1 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card/95 p-3 backdrop-blur">
+            <div className="sticky bottom-0 z-10 -mx-1 flex flex-wrap items-center gap-2 rounded-xl shadow-card bg-card/95 p-3 backdrop-blur">
                 <button type="button" onClick={() => void save()} disabled={busy || saveBlocked || (!dirty && hasDraft)} className={primaryButtonClass}>
                     {t('forms.editor.save')}
                 </button>
@@ -697,7 +697,7 @@ export default function FormEditor({
                     <History className="h-4 w-4" aria-hidden="true" />
                     {t('forms.editor.versions')}
                 </button>
-                <button type="button" onClick={() => setConfirm('archive')} disabled={busy} className="ml-auto rounded-lg border border-destructive/40 px-4 py-2 text-sm text-destructive hover:bg-destructive/5 disabled:opacity-50">
+                <button type="button" onClick={() => setConfirm('archive')} disabled={busy} className="ml-auto rounded-lg border border-destructive/40 px-4 py-2 text-sm text-destructive hover:bg-destructive-soft disabled:opacity-50">
                     {t('forms.editor.archive')}
                 </button>
             </div>
@@ -762,7 +762,7 @@ export default function FormEditor({
                             <button type="button" onClick={() => setConfirm(null)} disabled={busy} className={secondaryButtonClass}>
                                 {t('forms.editor.publish.cancel')}
                             </button>
-                            <button type="button" onClick={() => void discard()} disabled={busy} className="rounded-lg bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground disabled:opacity-50">
+                            <button type="button" onClick={() => void discard()} disabled={busy} className="rounded-lg bg-destructive-fill px-4 py-2 text-sm font-semibold text-destructive-foreground disabled:opacity-50">
                                 {hasDraft ? t('forms.editor.discardDraft') : t('forms.editor.discardChanges')}
                             </button>
                         </div>
@@ -782,7 +782,7 @@ export default function FormEditor({
                             <button type="button" onClick={() => setConfirm(null)} disabled={busy} className={secondaryButtonClass}>
                                 {t('forms.editor.publish.cancel')}
                             </button>
-                            <button type="button" onClick={() => void archive()} disabled={busy} className="rounded-lg bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground disabled:opacity-50">
+                            <button type="button" onClick={() => void archive()} disabled={busy} className="rounded-lg bg-destructive-fill px-4 py-2 text-sm font-semibold text-destructive-foreground disabled:opacity-50">
                                 {t('forms.editor.archive.confirm')}
                             </button>
                         </div>

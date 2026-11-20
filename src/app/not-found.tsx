@@ -17,7 +17,7 @@ export default function NotFound() {
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-            <div className="w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card p-8 shadow-md">
+            <div className="w-full max-w-md overflow-hidden rounded-2xl shadow-card bg-card p-8 ">
                 <div className="flex flex-col items-center text-center">
                     <div className="mb-6 rounded-full bg-muted p-4">
                         <MagnifyingGlassIcon className="h-12 w-12 text-muted-foreground" />

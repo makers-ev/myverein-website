@@ -26,7 +26,7 @@ function OldVersion({ clubId, item }: { clubId: string; item: PrivacyNoticeListI
     }
 
     return (
-        <details className="rounded-lg border border-border px-3 py-2 text-sm" onToggle={(e) => void toggle((e.currentTarget as HTMLDetailsElement).open)}>
+        <details className="rounded-lg border border-control px-3 py-2 text-sm" onToggle={(e) => void toggle((e.currentTarget as HTMLDetailsElement).open)}>
             <summary className="cursor-pointer font-medium text-foreground">
                 {t('privacy.history.version', { version: item.version })}
                 <span className="ml-2 font-normal text-muted-foreground">{formatDate(item.publishedAt, language)}</span>

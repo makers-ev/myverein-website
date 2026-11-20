@@ -151,7 +151,7 @@ export default function SeriesRuleFields({ rule, onChange, startDate, clubId, la
                 {rule.skipHolidays && stateKnown === false && (
                     <p className="text-xs text-muted-foreground">
                         {t('kalender.series.holidays.no-state')}{' '}
-                        <Link href="/verein" className="font-semibold text-primary underline">
+                        <Link href="/verein" className="font-semibold text-primary-text underline">
                             {t('kalender.series.holidays.set-state')}
                         </Link>
                     </p>

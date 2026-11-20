@@ -55,7 +55,7 @@ export default function NotificationPreferences() {
     }
 
     return (
-        <section className="bg-card border border-border rounded-lg p-6 shadow-sm" aria-labelledby="prefs-title">
+        <section className="bg-card shadow-card rounded-lg p-6 " aria-labelledby="prefs-title">
             <h2 id="prefs-title" className="text-lg font-semibold">
                 {t('prefs.title')}
             </h2>
@@ -80,7 +80,7 @@ export default function NotificationPreferences() {
                                         ))}
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-border">
+                                <tbody className="divide-y divide-hairline">
                                     {prefs.categories.map((cat) => (
                                         <tr key={cat.category}>
                                             <th scope="row" className="py-3 pr-3 text-left font-normal">

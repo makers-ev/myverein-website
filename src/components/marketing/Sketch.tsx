@@ -32,7 +32,7 @@ export function PaperCard({
     as?: ElementType;
     className?: string;
 }) {
-    return <Tag className={`mk-paper relative rounded-2xl border border-border bg-card p-6 text-card-foreground ${className}`}>{children}</Tag>;
+    return <Tag className={`mk-paper relative rounded-2xl shadow-card bg-card p-6 text-card-foreground ${className}`}>{children}</Tag>;
 }
 
 /** Highlighter stroke behind the hero's key phrase. The text stays readable without the stroke. */

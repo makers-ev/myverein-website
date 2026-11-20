@@ -44,7 +44,7 @@ export default function JoinPrivacyNotice({ slug, onAcknowledgedChange }: { slug
             <h4 className="text-sm font-semibold text-foreground">{t('privacy.join.title')}</h4>
             <p className="mt-1 text-xs text-muted-foreground">{t('privacy.join.version', { version: notice.version, date: formatDate(notice.publishedAt, language) })}</p>
             <details className="mt-2 text-sm">
-                <summary className="cursor-pointer font-medium text-primary">{t('privacy.join.read')}</summary>
+                <summary className="cursor-pointer font-medium text-primary-text">{t('privacy.join.read')}</summary>
                 <p className="mt-2 max-h-72 overflow-y-auto whitespace-pre-line rounded-lg bg-background p-3 text-foreground">{notice.body}</p>
             </details>
             <label className="mt-3 flex items-start gap-2 text-sm text-foreground">

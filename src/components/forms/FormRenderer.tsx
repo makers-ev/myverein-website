@@ -110,7 +110,7 @@ function FieldShell({
     );
     if (group) {
         return (
-            <fieldset id={id} tabIndex={-1} aria-describedby={describedBy} aria-invalid={error || extra?.shown ? true : undefined} className="min-w-0 rounded focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+            <fieldset id={id} tabIndex={-1} aria-describedby={describedBy} aria-invalid={error || extra?.shown ? true : undefined} className="min-w-0 rounded-lg focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-text">
                 <legend className="text-sm font-medium text-foreground">
                     {field.label}
                     <Required field={field} />
@@ -188,11 +188,11 @@ function PrivacyBlock({ text, title }: { text: string; title?: string }) {
     return (
         <section className="rounded-xl border-2 border-primary/40 bg-primary/5 p-4" aria-labelledby={headingId}>
             <h3 id={headingId} className="flex items-center gap-2 text-sm font-bold text-foreground">
-                <ShieldCheck className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+                <ShieldCheck className="h-5 w-5 shrink-0 text-primary-text" aria-hidden="true" />
                 {title ?? t('forms.privacy.title')}
             </h3>
             {/* Plain text on purpose: texts come from the club's form definition and are never interpreted as HTML. */}
-            <div tabIndex={0} role="region" aria-labelledby={headingId} className="mt-2 max-h-64 overflow-y-auto whitespace-pre-line break-words text-sm text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
+            <div tabIndex={0} role="region" aria-labelledby={headingId} className="mt-2 max-h-64 overflow-y-auto whitespace-pre-line break-words text-sm text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-text">
                 {text}
             </div>
         </section>
@@ -626,7 +626,7 @@ export default function FormRenderer({
                                             {own.length > 0 && (
                                                 <ul className="space-y-1.5">
                                                     {own.map((f) => (
-                                                        <li key={f.id} className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2 text-sm">
+                                                        <li key={f.id} className="flex items-center justify-between gap-2 rounded-lg border border-control px-3 py-2 text-sm">
                                                             <span className="flex min-w-0 items-center gap-2">
                                                                 <FileText className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
                                                                 <span className="truncate text-foreground">{f.filename}</span>
@@ -638,7 +638,7 @@ export default function FormRenderer({
                                                                     disabled={disabled || busy || removing[f.id]}
                                                                     onClick={() => void remove(field, f)}
                                                                     aria-label={t('forms.file.removeNamed', { name: f.filename })}
-                                                                    className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-destructive disabled:opacity-50"
+                                                                    className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-destructive disabled:opacity-50"
                                                                 >
                                                                     <Trash2 className="h-4 w-4" aria-hidden="true" />
                                                                 </button>
@@ -672,7 +672,7 @@ export default function FormRenderer({
                                             <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                                                 <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
                                                 {progress === null || progress === undefined ? t('forms.file.uploading') : t('forms.file.uploadingPercent', { percent: progress })}
-                                                <button type="button" onClick={() => controllers.current.get(field.key)?.abort()} className="font-semibold text-primary underline">
+                                                <button type="button" onClick={() => controllers.current.get(field.key)?.abort()} className="font-semibold text-primary-text underline">
                                                     {t('forms.file.cancel')}
                                                 </button>
                                             </p>

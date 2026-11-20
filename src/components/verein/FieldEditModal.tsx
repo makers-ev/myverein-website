@@ -418,9 +418,9 @@ export default function FieldEditModal({
                             hint={t('forms.editor.field.sensitiveHint')}
                         />
                         {draft.sensitive === true && draft.mapsTo !== undefined && (
-                            <div role="alert" className="mt-2 rounded-lg border border-warning/40 bg-warning/10 p-2 text-xs text-foreground">
+                            <div role="alert" className="mt-2 rounded-lg border border-warning/40 bg-warning-soft p-2 text-xs text-foreground">
                                 <p>{t('forms.editor.field.sensitiveMapped')}</p>
-                                <button type="button" onClick={() => setDraft(applyMappingSelection(draft, ''))} className="mt-1 font-semibold text-primary underline">
+                                <button type="button" onClick={() => setDraft(applyMappingSelection(draft, ''))} className="mt-1 font-semibold text-primary-text underline">
                                     {t('forms.editor.field.mapping.remove')}
                                 </button>
                             </div>
@@ -535,7 +535,7 @@ export default function FieldEditModal({
                 )}
 
                 {attempted && !valid && (
-                    <div role="alert" className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+                    <div role="alert" className="rounded-lg border border-destructive/40 bg-destructive-soft p-3 text-sm text-destructive">
                         <p className="font-semibold">{t('forms.editor.field.problems')}</p>
                         <ul className="mt-1 list-disc space-y-0.5 pl-5">
                             {problems.map((p, i) => (

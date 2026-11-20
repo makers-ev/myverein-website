@@ -113,7 +113,7 @@ export default function MemberExportDialog({
                 <p className="rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">{t('verein.export.intro')}</p>
 
                 {error && (
-                    <p role="alert" className="flex items-start gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+                    <p role="alert" className="flex items-start gap-2 rounded-lg bg-destructive-soft p-3 text-sm text-destructive">
                         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
                         <span>
                             {error}
@@ -122,7 +122,7 @@ export default function MemberExportDialog({
                     </p>
                 )}
                 {done && (
-                    <p role="status" className="flex items-center gap-2 rounded-lg bg-success/10 p-3 text-sm text-success">
+                    <p role="status" className="flex items-center gap-2 rounded-lg bg-success-soft p-3 text-sm text-success">
                         <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
                         {t('verein.export.done')}
                     </p>
@@ -131,7 +131,7 @@ export default function MemberExportDialog({
                 <fieldset>
                     <legend className="mb-1 flex w-full items-center justify-between text-sm font-bold text-foreground">
                         {t('verein.export.columns')}
-                        <button type="button" onClick={() => setColumns(allSelected ? [] : defaultExportColumns(canSensitive))} className="text-xs font-medium text-primary hover:underline">
+                        <button type="button" onClick={() => setColumns(allSelected ? [] : defaultExportColumns(canSensitive))} className="text-xs font-medium text-primary-text hover:underline">
                             {allSelected ? t('verein.export.columns.none') : t('verein.export.columns.all')}
                         </button>
                     </legend>
@@ -140,7 +140,7 @@ export default function MemberExportDialog({
                             const disabled = col.sensitive && !canSensitive;
                             return (
                                 <li key={col.key}>
-                                    <label className={`flex items-center gap-2 rounded px-1 py-1 text-sm ${disabled ? 'cursor-not-allowed text-muted-foreground' : 'cursor-pointer text-foreground hover:bg-muted'}`}>
+                                    <label className={`flex items-center gap-2 rounded-lg px-1 py-1 text-sm ${disabled ? 'cursor-not-allowed text-muted-foreground' : 'cursor-pointer text-foreground hover:bg-muted'}`}>
                                         <input
                                             type="checkbox"
                                             checked={columns.includes(col.key)}
@@ -172,7 +172,7 @@ export default function MemberExportDialog({
                         <ul className="grid gap-1 sm:grid-cols-2">
                             {customDefs.map((d) => (
                                 <li key={d.key}>
-                                    <label className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm text-foreground hover:bg-muted">
+                                    <label className="flex cursor-pointer items-center gap-2 rounded-lg px-1 py-1 text-sm text-foreground hover:bg-muted">
                                         <input
                                             type="checkbox"
                                             checked={customKeys.includes(d.key)}

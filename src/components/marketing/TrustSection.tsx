@@ -56,7 +56,7 @@ export default function TrustSection() {
                                 <StatusBadge status={item.status} className="mb-3" />
                                 <h3 className="text-lg font-semibold text-foreground">{t(`${item.i18nKey}.title`)}</h3>
                                 <p className="mt-2 flex-1 leading-relaxed text-muted-foreground">{t(`${item.i18nKey}.body`)}</p>
-                                <p className="mt-4 border-t border-border pt-3 text-sm text-foreground">{t(`mk.trust.check.${id}`)}</p>
+                                <p className="mt-4 border-t border-hairline pt-3 text-sm text-foreground">{t(`mk.trust.check.${id}`)}</p>
                             </PaperCard>
                         </li>
                     );

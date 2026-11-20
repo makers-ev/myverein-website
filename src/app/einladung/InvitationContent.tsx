@@ -38,7 +38,7 @@ function inviteStores(): TokenStore[] {
 
 const buttonClass =
     'block min-h-11 w-full rounded-lg bg-primary px-5 py-3 text-center text-sm font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98] disabled:opacity-50';
-const secondaryClass = 'block w-full rounded-lg border border-border px-5 py-3 text-center text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50';
+const secondaryClass = 'block w-full rounded-lg border border-control px-5 py-3 text-center text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50';
 
 type View =
     | { kind: 'init' }
@@ -57,12 +57,12 @@ function Shell({ children, status }: { children: React.ReactNode; status?: 'ok' 
             <div className="w-full max-w-md overflow-hidden rounded-2xl bg-card p-8 shadow-xl">
                 <div className="flex flex-col items-center text-center">
                     {status === 'ok' && (
-                        <div className="mb-6 rounded-full bg-success/10 p-4 dark:bg-green-950">
+                        <div className="mb-6 rounded-full bg-success-soft p-4 dark:bg-green-950">
                             <CheckCircleIcon className="h-12 w-12 text-success" aria-hidden="true" />
                         </div>
                     )}
                     {status === 'warn' && (
-                        <div className="mb-6 rounded-full bg-destructive/10 p-4 dark:bg-red-950">
+                        <div className="mb-6 rounded-full bg-destructive-soft p-4 dark:bg-red-950">
                             <ExclamationTriangleIcon className="h-12 w-12 text-destructive" aria-hidden="true" />
                         </div>
                     )}
@@ -311,7 +311,7 @@ export default function InvitationContent() {
                         </>
                     ) : (
                         <div role="alert" className="w-full space-y-3 text-left">
-                            <p className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm text-foreground">
+                            <p className="rounded-lg border border-warning/40 bg-warning-soft p-3 text-sm text-foreground">
                                 {t('verein.invite.mismatch', { email: accountEmail, invited: preview.invitedEmail })}
                             </p>
                             <button type="button" onClick={() => void switchAccount()} className={buttonClass}>

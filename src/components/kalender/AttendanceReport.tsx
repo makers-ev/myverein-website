@@ -72,7 +72,7 @@ export function MemberAttendance({ clubId, memberId }: { clubId: string; memberI
                         <span className="text-2xl font-bold">{percent(m.rate)}</span> {t('attReport.own.rate', { present: m.present, recorded: m.recorded })}
                     </p>
                     <p className="text-muted-foreground">{t('attReport.own.counts', { present: m.present, excused: m.excused, unexcused: m.unexcused })}</p>
-                    <ul className="divide-y divide-border rounded-lg border border-border">
+                    <ul className="divide-y divide-hairline rounded-lg border border-border">
                         {report.entries.map((e) => (
                             <li key={`${e.eventId}-${e.startsAt}`} className="flex items-center justify-between gap-2 px-3 py-2">
                                 <span className="min-w-0 truncate text-foreground">
@@ -158,7 +158,7 @@ export function GroupAttendance({ clubId, departments }: { clubId: string; depar
                     {exportError}
                 </p>
             )}
-            <div role="group" aria-label={t('attReport.mode.label')} className="inline-flex rounded-lg border border-border bg-background p-0.5">
+            <div role="group" aria-label={t('attReport.mode.label')} className="inline-flex rounded-lg border border-control bg-background p-0.5">
                 {(['members', 'events'] as const).map((value) => (
                     <button
                         key={value}
@@ -192,11 +192,11 @@ export function GroupAttendance({ clubId, departments }: { clubId: string; depar
                                     <th scope="col" className="px-3 py-2">{t('attReport.col.rate')}</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-border">
+                            <tbody className="divide-y divide-hairline">
                                 {report.members.map((m) => (
                                     <tr key={m.clubMemberId} className="text-foreground">
                                         <th scope="row" className="px-3 py-2 font-medium">
-                                            <button type="button" aria-expanded={openMember === m.clubMemberId} onClick={() => setOpenMember(openMember === m.clubMemberId ? null : m.clubMemberId)} className="text-left text-primary hover:underline">
+                                            <button type="button" aria-expanded={openMember === m.clubMemberId} onClick={() => setOpenMember(openMember === m.clubMemberId ? null : m.clubMemberId)} className="text-left text-primary-text hover:underline">
                                                 {m.displayName}
                                             </button>
                                         </th>
@@ -225,7 +225,7 @@ export function GroupAttendance({ clubId, departments }: { clubId: string; depar
                                 <th scope="col" className="px-3 py-2">{t('attReport.col.rate')}</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-border">
+                        <tbody className="divide-y divide-hairline">
                             {report.events.map((e) => (
                                 <tr key={e.eventId} className="text-foreground">
                                     <th scope="row" className="px-3 py-2 font-medium">

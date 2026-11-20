@@ -22,14 +22,14 @@ export function LegalDocument({ keyPrefix, sectionCount }: { keyPrefix: keyof ty
 
   return (
     <div className="mx-auto max-w-[44rem] px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
-      <header className="mb-10 border-b border-border pb-8">
+      <header className="mb-10 border-b border-hairline pb-8">
         <Icon className="mb-5 h-6 w-6 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
         <h1 className="font-display text-4xl leading-[1.1] text-foreground sm:text-5xl">{t(`${keyPrefix}.title`)}</h1>
         <p className="mt-4 text-sm text-muted-foreground">{t(`${keyPrefix}.updated`)}</p>
       </header>
 
       {showLanguageFallback && (
-        <p className="mb-8 rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-foreground">
+        <p className="mb-8 rounded-lg border border-warning/40 bg-warning-soft px-4 py-3 text-sm text-foreground">
           {t('legal.fallback-notice')}
         </p>
       )}

@@ -94,7 +94,7 @@ function PurposeCard({ clubId, purpose, canManage, onChanged }: { clubId: string
     }
 
     return (
-        <li className="rounded-xl border border-border bg-card p-4">
+        <li className="rounded-xl shadow-card bg-card p-4">
             <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0">
                     <h3 className="text-base font-medium text-foreground">{purpose.name}</h3>
@@ -150,7 +150,7 @@ function PurposeCard({ clubId, purpose, canManage, onChanged }: { clubId: string
 
             {purpose.currentText && (
                 <div className="mt-3">
-                    <button type="button" aria-expanded={historyOpen} onClick={() => setHistoryOpen((v) => !v)} className="text-sm font-medium text-primary underline">
+                    <button type="button" aria-expanded={historyOpen} onClick={() => setHistoryOpen((v) => !v)} className="text-sm font-medium text-primary-text underline">
                         {t(historyOpen ? 'privacy.history.hide' : 'privacy.history.show')}
                     </button>
                     {historyOpen && (

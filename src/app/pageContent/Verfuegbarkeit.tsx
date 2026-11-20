@@ -174,17 +174,17 @@ export default function VerfuegbarkeitPageContent() {
                 {clubs === null ? (
                     <LoadingText className="mt-6" />
                 ) : !activeClub ? (
-                    <div className="mt-6 rounded-xl border border-border bg-card p-4">
+                    <div className="mt-6 rounded-xl shadow-card bg-card p-4">
                         <p className="text-sm font-semibold text-foreground">{t('verein.no-club.title')}</p>
                         <p className="mt-1 text-sm text-muted-foreground">{t('verein.no-club.body')}</p>
                     </div>
                 ) : (
                     <div className="mt-6 space-y-4">
-                        <section className="rounded-xl border border-border bg-card p-4">
+                        <section className="rounded-xl shadow-card bg-card p-4">
                             <h2 className="text-base font-medium text-foreground">{t('verfuegbarkeit.weekly.title')}</h2>
                             <p className="mb-3 mt-0.5 text-xs text-muted-foreground">{t('verfuegbarkeit.weekly.hint')}</p>
                             {error && (
-                                <p role="alert" className="mb-3 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                                <p role="alert" className="mb-3 rounded-lg bg-destructive-soft px-3 py-2 text-sm text-destructive">
                                     {error}
                                 </p>
                             )}
@@ -215,7 +215,7 @@ export default function VerfuegbarkeitPageContent() {
                             </div>
 
                             {WEEKDAY_KEYS.some((_, day) => rows[day]?.available) && (
-                                <ul className="mt-4 divide-y divide-border rounded-lg border border-border">
+                                <ul className="mt-4 divide-y divide-hairline rounded-lg border border-border">
                                     {WEEKDAY_KEYS.map((key, day) => {
                                         const row = rows[day];
                                         if (!row?.available) return null;
@@ -251,7 +251,7 @@ export default function VerfuegbarkeitPageContent() {
                             )}
                         </section>
 
-                        <section className="rounded-xl border border-border bg-card p-4">
+                        <section className="rounded-xl shadow-card bg-card p-4">
                             <h2 className="mb-3 text-base font-medium text-foreground">{t('verfuegbarkeit.exceptions.title')}</h2>
 
                             {exceptions.length === 0 ? (
@@ -259,13 +259,13 @@ export default function VerfuegbarkeitPageContent() {
                             ) : (
                                 <ul className="mb-4 space-y-2">
                                     {exceptions.map((exc) => (
-                                        <li key={exc.id} className="flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-2 text-sm">
+                                        <li key={exc.id} className="flex items-center gap-3 rounded-lg border border-control bg-background px-3 py-2 text-sm">
                                             <span className="w-28 font-medium tabular-nums text-foreground">
                                                 {new Date(`${exc.date}T00:00`).toLocaleDateString(language, { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' })}
                                             </span>
                                             <span
                                                 className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                                                    exc.isAvailable ? 'bg-success/15 text-success' : 'bg-destructive/15 text-destructive'
+                                                    exc.isAvailable ? 'bg-success-soft text-success' : 'bg-destructive-soft text-destructive'
                                                 }`}
                                             >
                                                 {t(exc.isAvailable ? 'verfuegbarkeit.exceptions.available' : 'verfuegbarkeit.exceptions.unavailable')}

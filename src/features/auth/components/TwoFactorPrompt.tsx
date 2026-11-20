@@ -65,7 +65,7 @@ export function TwoFactorPrompt({ onVerified, onCancel }: TwoFactorPromptProps) 
                     maxLength={6}
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-border bg-background px-3 py-2 text-center text-lg tracking-[0.5em] focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="mt-1 block w-full rounded-lg border border-control bg-background px-3 py-2 text-center text-lg tracking-[0.5em] focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                     placeholder="000000"
                 />
             </div>
@@ -76,7 +76,7 @@ export function TwoFactorPrompt({ onVerified, onCancel }: TwoFactorPromptProps) 
                 <button
                     type="button"
                     onClick={onCancel}
-                    className="flex-1 rounded-md border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted transition-colors"
+                    className="flex-1 rounded-md border border-control bg-card px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted transition-colors"
                 >
                     {t('auth.2fa.cancel')}
                 </button>

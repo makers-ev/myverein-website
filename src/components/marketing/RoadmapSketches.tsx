@@ -12,7 +12,7 @@ export default function RoadmapSketches() {
     const groups = roadmapGroups.map((group) => [group, soonItems.filter((item) => item.group === group)] as const).filter(([, items]) => items.length > 0);
 
     return (
-        <section id="roadmap-teaser" className="border-t border-border" aria-labelledby="mk-road-title">
+        <section id="roadmap-teaser" className="border-t border-hairline" aria-labelledby="mk-road-title">
             <div className={MK_SECTION}>
                 <SectionHead id="mk-road-title" title={`${t('mk.road.title.pre')} ${t('mk.road.title.mark')}`} intro={t('mk.road.intro')} />
 
@@ -38,7 +38,7 @@ export default function RoadmapSketches() {
                         <p className="mt-2 max-w-2xl leading-relaxed text-muted-foreground">{t('mk.road.billing.body')}</p>
                         <ul className="mt-4 flex flex-wrap gap-2">
                             {outOfScopeItems.map((item) => (
-                                <li key={item.id} className="rounded-md border border-border bg-muted px-2.5 py-1 text-sm text-foreground">
+                                <li key={item.id} className="rounded-md border border-control bg-muted px-2.5 py-1 text-sm text-foreground">
                                     {t(`${item.i18nKey}.title`)}
                                 </li>
                             ))}
@@ -46,7 +46,7 @@ export default function RoadmapSketches() {
                     </PaperCard>
                     <Link
                         href="/roadmap"
-                        className="inline-flex min-h-12 items-center justify-center rounded-lg border border-border bg-card px-6 text-base font-medium text-foreground transition-colors hover:bg-muted active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                        className="inline-flex min-h-12 items-center justify-center rounded-lg border border-control bg-card px-6 text-base font-medium text-foreground transition-colors hover:bg-muted active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-text"
                     >
                         {t('mk.road.link')}
                     </Link>

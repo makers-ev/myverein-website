@@ -51,7 +51,7 @@ export default function OptionsEditor({
                                 disabled={!canMove(index, options.length, 'up')}
                                 onClick={() => onChange(moveItem(options, index, 'up'))}
                                 aria-label={t('forms.editor.options.up', { number: index + 1 })}
-                                className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30"
+                                className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30"
                             >
                                 <ArrowUp className="h-4 w-4" aria-hidden="true" />
                             </button>
@@ -60,7 +60,7 @@ export default function OptionsEditor({
                                 disabled={!canMove(index, options.length, 'down')}
                                 onClick={() => onChange(moveItem(options, index, 'down'))}
                                 aria-label={t('forms.editor.options.down', { number: index + 1 })}
-                                className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30"
+                                className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30"
                             >
                                 <ArrowDown className="h-4 w-4" aria-hidden="true" />
                             </button>
@@ -70,7 +70,7 @@ export default function OptionsEditor({
                                 title={protectLocked && locked.has(option.value) ? t('forms.cf.options.protected') : undefined}
                                 onClick={() => onChange(options.filter((_, i) => i !== index))}
                                 aria-label={protectLocked && locked.has(option.value) ? t('forms.cf.options.removeProtected', { number: index + 1 }) : t('forms.editor.options.remove', { number: index + 1 })}
-                                className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive disabled:opacity-30 disabled:hover:text-muted-foreground"
+                                className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive disabled:opacity-30 disabled:hover:text-muted-foreground"
                             >
                                 <Trash2 className="h-4 w-4" aria-hidden="true" />
                             </button>

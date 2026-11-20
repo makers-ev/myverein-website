@@ -123,7 +123,7 @@ const CookieConsent = ({ gaId }: { gaId?: string }) => {
 
             {/* Wenn nicht sichtbar, rendern wir nichts (oder den Re-Open Button) */}
             {!isVisible ? null : (
-                <div className="fixed inset-x-3 bottom-3 z-50 max-h-[calc(100vh-1.5rem)] overflow-y-auto rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-xl sm:left-auto sm:right-4 sm:bottom-4 sm:max-w-md">
+                <div className="fixed inset-x-3 bottom-3 z-50 max-h-[calc(100vh-1.5rem)] overflow-y-auto rounded-2xl shadow-card bg-card p-5 text-card-foreground shadow-xl sm:left-auto sm:right-4 sm:bottom-4 sm:max-w-md">
                     <div>
                         {/* Header Section */}
                         <div className="mb-4 flex items-start justify-between gap-4">
@@ -188,7 +188,7 @@ const CookieConsent = ({ gaId }: { gaId?: string }) => {
                                             handleToggle(category.id)
                                         }
                                         disabled={category.required}
-                                        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+                                        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-text ${
                                             category.required
                                                 ? 'opacity-50 cursor-not-allowed'
                                                 : 'cursor-pointer'
@@ -207,10 +207,10 @@ const CookieConsent = ({ gaId }: { gaId?: string }) => {
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex flex-col gap-2 border-t border-border pt-4 sm:flex-row sm:justify-end">
+                        <div className="flex flex-col gap-2 border-t border-hairline pt-4 sm:flex-row sm:justify-end">
                             <button
                                 onClick={handleSaveSelection}
-                                className="min-h-11 rounded-lg border border-border bg-card px-5 text-sm font-medium text-foreground transition-colors hover:bg-muted active:scale-[0.98]"
+                                className="min-h-11 rounded-lg border border-control bg-card px-5 text-sm font-medium text-foreground transition-colors hover:bg-muted active:scale-[0.98]"
                             >
                                 {t('cookie.save')}
                             </button>

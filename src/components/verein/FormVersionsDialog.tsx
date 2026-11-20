@@ -13,8 +13,8 @@ import { formatDate, secondaryButtonClass } from '@/lib/clubMembers';
 import { type FormVersion, type FormVersionSummary, previewFields } from '@/lib/formEditor';
 
 const statusClass: Record<FormVersion['status'], string> = {
-    published: 'bg-success/10 text-success',
-    draft: 'bg-primary/10 text-primary',
+    published: 'bg-success-soft text-success',
+    draft: 'bg-primary/10 text-primary-text',
     archived: 'bg-muted text-muted-foreground',
 };
 
@@ -48,7 +48,7 @@ function VersionView({ clubId, formId, version, categories, onBack }: { clubId: 
 
     return (
         <div>
-            <button type="button" onClick={onBack} className="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
+            <button type="button" onClick={onBack} className="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary-text hover:underline">
                 <ArrowLeft className="h-4 w-4" aria-hidden="true" />
                 {t('forms.editor.versions.back')}
             </button>
@@ -134,7 +134,7 @@ export default function FormVersionsDialog({ clubId, formId, categories, onClose
             ) : (
                 <ul className="space-y-2">
                     {versions.map((v) => (
-                        <li key={v.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border px-3 py-2">
+                        <li key={v.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-control px-3 py-2">
                             <div className="min-w-0">
                                 <p className="flex flex-wrap items-center gap-2 text-sm font-semibold text-foreground">
                                     {t('forms.editor.versions.version', { version: v.version })}

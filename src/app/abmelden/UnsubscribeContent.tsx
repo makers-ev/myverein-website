@@ -26,12 +26,12 @@ function Shell({ children, status }: { children: React.ReactNode; status?: 'ok' 
             <div className="w-full max-w-md overflow-hidden rounded-2xl bg-card p-8 shadow-xl">
                 <div className="flex flex-col items-center text-center">
                     {status === 'ok' && (
-                        <div className="mb-6 rounded-full bg-success/10 p-4 dark:bg-green-950">
+                        <div className="mb-6 rounded-full bg-success-soft p-4 dark:bg-green-950">
                             <CheckCircleIcon className="h-10 w-10 text-success" aria-hidden />
                         </div>
                     )}
                     {status === 'warn' && (
-                        <div className="mb-6 rounded-full bg-warning/10 p-4 dark:bg-amber-950">
+                        <div className="mb-6 rounded-full bg-warning-soft p-4 dark:bg-amber-950">
                             <ExclamationTriangleIcon className="h-10 w-10 text-warning" aria-hidden />
                         </div>
                     )}
@@ -98,7 +98,7 @@ export default function UnsubscribeContent() {
             <Shell status="warn">
                 <h1 className="text-2xl font-medium leading-8 text-foreground">{t(`unsubscribe.${view.kind}.title`)}</h1>
                 <p className="mt-2 text-sm text-muted-foreground">{t(`unsubscribe.${view.kind}.body`)}</p>
-                <Link href="/" className="mt-6 text-sm font-medium text-primary hover:underline">
+                <Link href="/" className="mt-6 text-sm font-medium text-primary-text hover:underline">
                     {t('unsubscribe.home')}
                 </Link>
             </Shell>
@@ -114,7 +114,7 @@ export default function UnsubscribeContent() {
                 <h1 className="text-2xl font-medium leading-8 text-foreground">{t('unsubscribe.done.title')}</h1>
                 <p className="mt-2 text-sm text-muted-foreground">{t('unsubscribe.done.body', { club, category })}</p>
                 <p className="mt-3 text-xs text-muted-foreground">{t('unsubscribe.done.hint')}</p>
-                <Link href="/settings" className="mt-6 text-sm font-medium text-primary hover:underline">
+                <Link href="/settings" className="mt-6 text-sm font-medium text-primary-text hover:underline">
                     {t('unsubscribe.settings')}
                 </Link>
             </Shell>

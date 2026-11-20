@@ -26,13 +26,13 @@ export default function ChangelogPageContent() {
             <PageHeader title={t('changelog.title')} intro={t('changelog.intro')} />
 
             {releases.length === 0 ? (
-                <div className="mt-8 rounded-xl border border-border bg-card p-4">
+                <div className="mt-8 rounded-xl shadow-card bg-card p-4">
                     <p className="text-sm text-muted-foreground">{t('changelog.empty')}</p>
                 </div>
             ) : (
-                <ol className="mt-12 border-t border-border">
+                <ol className="mt-12 border-t border-hairline">
                     {releases.map((release) => (
-                        <li key={release.id} className="grid gap-4 border-b border-border py-8 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-10">
+                        <li key={release.id} className="grid gap-4 border-b border-hairline py-8 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-10">
                             <div>
                                 <time dateTime={release.date} className="font-mono text-sm text-muted-foreground">
                                     {new Date(release.date).toLocaleDateString(dateLocale(language), {

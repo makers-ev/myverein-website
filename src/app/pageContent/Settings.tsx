@@ -235,7 +235,7 @@ export default function SettingsPageContent() {
 
 				<NotificationPreferences />
 
-				<form onSubmit={handleSaveProfile} className="bg-card border border-border rounded-lg p-6 shadow-sm">
+				<form onSubmit={handleSaveProfile} className="bg-card shadow-card rounded-lg p-6 ">
 					<h2 className="text-lg font-semibold">Profile</h2>
 
 					<div className="mt-4 space-y-4">
@@ -244,7 +244,7 @@ export default function SettingsPageContent() {
 							<input
 								value={name}
 								onChange={(e) => setName(e.target.value)}
-								className="mt-1 block w-full rounded-lg border border-border bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary transition"
+								className="mt-1 block w-full rounded-lg border border-control bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary transition"
 							/>
 						</div>
 
@@ -254,7 +254,7 @@ export default function SettingsPageContent() {
 								value={email}
 								disabled
 								type="email"
-								className="mt-1 block w-full rounded-md border border-border bg-muted px-3 py-2 shadow-sm text-muted-foreground"
+								className="mt-1 block w-full rounded-md border border-control bg-muted px-3 py-2 shadow-sm text-muted-foreground"
 							/>
 						</div>
 					</div>
@@ -264,26 +264,26 @@ export default function SettingsPageContent() {
 					<button
 						type="submit"
 						disabled={profileSubmitting}
-						className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded shadow hover:brightness-110 transition disabled:opacity-60"
+						className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg shadow hover:brightness-110 transition disabled:opacity-60"
 					>
 						{profileSubmitting ? "Saving..." : "Save"}
 					</button>
 				</form>
 
-				<div className="bg-card border border-border rounded-lg p-6 shadow-sm">
+				<div className="bg-card shadow-card rounded-lg p-6 ">
 					<h2 className="text-lg font-semibold">Security</h2>
 					<p className="text-sm text-muted-foreground">Manage password and two-factor authentication</p>
 
 					<div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
 						{/* Change password */}
-						<div className="rounded p-4 border border-dashed border-border">
+						<div className="rounded-lg p-4 border border-dashed border-border">
 							<div className="font-medium">Change password</div>
 							<div className="text-sm text-muted-foreground">Update your password regularly to keep your account safe</div>
 
 							{!showPasswordForm ? (
 								<button
 									onClick={() => setShowPasswordForm(true)}
-									className="mt-3 px-3 py-2 rounded bg-muted hover:bg-border transition"
+									className="mt-3 px-3 py-2 rounded-lg bg-muted hover:bg-border transition"
 								>
 									Change
 								</button>
@@ -296,7 +296,7 @@ export default function SettingsPageContent() {
 										autoComplete="current-password"
 										value={currentPassword}
 										onChange={(e) => setCurrentPassword(e.target.value)}
-										className="block w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+										className="block w-full rounded-lg border border-control bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
 									/>
 									<input
 										type="password"
@@ -306,14 +306,14 @@ export default function SettingsPageContent() {
 										autoComplete="new-password"
 										value={newPassword}
 										onChange={(e) => setNewPassword(e.target.value)}
-										className="block w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+										className="block w-full rounded-lg border border-control bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
 									/>
 									{passwordError && <p className="text-sm text-destructive">{passwordError}</p>}
 									<div className="flex gap-2">
 										<button
 											type="submit"
 											disabled={passwordSubmitting}
-											className="px-3 py-2 rounded bg-primary text-primary-foreground text-sm hover:brightness-110 transition disabled:opacity-60"
+											className="px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm hover:brightness-110 transition disabled:opacity-60"
 										>
 											{passwordSubmitting ? "Saving..." : "Save password"}
 										</button>
@@ -325,7 +325,7 @@ export default function SettingsPageContent() {
 												setCurrentPassword("")
 												setNewPassword("")
 											}}
-											className="px-3 py-2 rounded border border-border text-sm hover:bg-muted transition"
+											className="px-3 py-2 rounded-lg border border-control text-sm hover:bg-muted transition"
 										>
 											Cancel
 										</button>
@@ -335,14 +335,14 @@ export default function SettingsPageContent() {
 						</div>
 
 						{/* Two-factor authentication */}
-						<div className="rounded p-4 border border-dashed border-border">
+						<div className="rounded-lg p-4 border border-dashed border-border">
 							<div className="font-medium">Two-factor authentication</div>
 							<div className="text-sm text-muted-foreground">Protect your account with an extra verification step</div>
 
 							{twoFactorStep === "idle" && (
 								<button
 									onClick={() => setTwoFactorStep(twoFactorEnabled ? "disable" : "enable")}
-									className={`mt-3 px-3 py-2 rounded transition ${
+									className={`mt-3 px-3 py-2 rounded-lg transition ${
 										twoFactorEnabled
 											? "bg-muted hover:bg-border"
 											: "bg-primary text-primary-foreground hover:brightness-110"
@@ -362,21 +362,21 @@ export default function SettingsPageContent() {
 										autoComplete="current-password"
 										value={twoFactorPassword}
 										onChange={(e) => setTwoFactorPassword(e.target.value)}
-										className="block w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+										className="block w-full rounded-lg border border-control bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
 									/>
 									{twoFactorError && <p className="text-sm text-destructive">{twoFactorError}</p>}
 									<div className="flex gap-2">
 										<button
 											type="submit"
 											disabled={twoFactorSubmitting}
-											className="px-3 py-2 rounded bg-primary text-primary-foreground text-sm hover:brightness-110 transition disabled:opacity-60"
+											className="px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm hover:brightness-110 transition disabled:opacity-60"
 										>
 											{twoFactorSubmitting ? "Please wait..." : "Continue"}
 										</button>
 										<button
 											type="button"
 											onClick={resetTwoFactorFlow}
-											className="px-3 py-2 rounded border border-border text-sm hover:bg-muted transition"
+											className="px-3 py-2 rounded-lg border border-control text-sm hover:bg-muted transition"
 										>
 											Cancel
 										</button>
@@ -390,7 +390,7 @@ export default function SettingsPageContent() {
 										Add this key to your authenticator app, then enter the 6-digit code it shows.
 									</p>
 									{totpUri && (
-										<code className="block break-all rounded bg-muted p-2 text-xs">
+										<code className="block break-all rounded-lg bg-muted p-2 text-xs">
 											{totpUri}
 										</code>
 									)}
@@ -402,21 +402,21 @@ export default function SettingsPageContent() {
 										maxLength={6}
 										value={totpCode}
 										onChange={(e) => setTotpCode(e.target.value)}
-										className="block w-full rounded-lg border border-border bg-background px-3 py-2 text-center text-sm tracking-[0.3em] focus:outline-none focus:ring-2 focus:ring-primary"
+										className="block w-full rounded-lg border border-control bg-background px-3 py-2 text-center text-sm tracking-[0.3em] focus:outline-none focus:ring-2 focus:ring-primary"
 									/>
 									{twoFactorError && <p className="text-sm text-destructive">{twoFactorError}</p>}
 									<div className="flex gap-2">
 										<button
 											type="submit"
 											disabled={twoFactorSubmitting || totpCode.length !== 6}
-											className="px-3 py-2 rounded bg-primary text-primary-foreground text-sm hover:brightness-110 transition disabled:opacity-60"
+											className="px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm hover:brightness-110 transition disabled:opacity-60"
 										>
 											{twoFactorSubmitting ? "Verifying..." : "Verify & enable"}
 										</button>
 										<button
 											type="button"
 											onClick={resetTwoFactorFlow}
-											className="px-3 py-2 rounded border border-border text-sm hover:bg-muted transition"
+											className="px-3 py-2 rounded-lg border border-control text-sm hover:bg-muted transition"
 										>
 											Cancel
 										</button>
@@ -434,21 +434,21 @@ export default function SettingsPageContent() {
 										autoComplete="current-password"
 										value={twoFactorPassword}
 										onChange={(e) => setTwoFactorPassword(e.target.value)}
-										className="block w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+										className="block w-full rounded-lg border border-control bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
 									/>
 									{twoFactorError && <p className="text-sm text-destructive">{twoFactorError}</p>}
 									<div className="flex gap-2">
 										<button
 											type="submit"
 											disabled={twoFactorSubmitting}
-											className="px-3 py-2 rounded bg-destructive text-destructive-foreground text-sm hover:brightness-110 transition disabled:opacity-60"
+											className="px-3 py-2 rounded-lg bg-destructive-fill text-destructive-foreground text-sm hover:brightness-110 transition disabled:opacity-60"
 										>
 											{twoFactorSubmitting ? "Please wait..." : "Disable"}
 										</button>
 										<button
 											type="button"
 											onClick={resetTwoFactorFlow}
-											className="px-3 py-2 rounded border border-border text-sm hover:bg-muted transition"
+											className="px-3 py-2 rounded-lg border border-control text-sm hover:bg-muted transition"
 										>
 											Cancel
 										</button>
@@ -460,11 +460,11 @@ export default function SettingsPageContent() {
 				</div>
 			</div>
 
-			<div className="bg-card border border-border rounded-lg p-6 shadow-sm mt-6">
+			<div className="bg-card shadow-card rounded-lg p-6 mt-6">
 				<h2 className="text-lg font-semibold">{t('settings.section-help')}</h2>
 				<button
 					onClick={() => window.dispatchEvent(new Event('open-intro'))}
-					className="mt-3 inline-flex items-center gap-2 px-3 py-2 rounded bg-muted hover:bg-border transition"
+					className="mt-3 inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-muted hover:bg-border transition"
 				>
 					<HelpCircle className="h-4 w-4" />
 					{t('settings.replay-intro')}
@@ -478,7 +478,7 @@ export default function SettingsPageContent() {
 				</p>
 				<p className="mt-2 text-sm text-foreground">
 					{t('privacy.settings.clubHint')}{' '}
-					<Link href="/verein" className="font-semibold text-primary underline">
+					<Link href="/verein" className="font-semibold text-primary-text underline">
 						{t('privacy.settings.clubLink')}
 					</Link>
 				</p>
@@ -486,7 +486,7 @@ export default function SettingsPageContent() {
 				{!showDeleteForm ? (
 					<button
 						onClick={() => setShowDeleteForm(true)}
-						className="mt-3 px-3 py-2 rounded bg-destructive text-destructive-foreground text-sm hover:brightness-110 transition"
+						className="mt-3 px-3 py-2 rounded-lg bg-destructive-fill text-destructive-foreground text-sm hover:brightness-110 transition"
 					>
 						Delete account
 					</button>
@@ -500,14 +500,14 @@ export default function SettingsPageContent() {
 							autoComplete="current-password"
 							value={deletePassword}
 							onChange={(e) => setDeletePassword(e.target.value)}
-							className="block w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+							className="block w-full rounded-lg border border-control bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
 						/>
 						{deleteError && <p className="text-sm text-destructive">{deleteError}</p>}
 						<div className="flex gap-2">
 							<button
 								type="submit"
 								disabled={deleteSubmitting}
-								className="px-3 py-2 rounded bg-destructive text-destructive-foreground text-sm hover:brightness-110 transition disabled:opacity-60"
+								className="px-3 py-2 rounded-lg bg-destructive-fill text-destructive-foreground text-sm hover:brightness-110 transition disabled:opacity-60"
 							>
 								{deleteSubmitting ? "Deleting..." : "Permanently delete"}
 							</button>
@@ -518,7 +518,7 @@ export default function SettingsPageContent() {
 									setDeleteError(null)
 									setDeletePassword("")
 								}}
-								className="px-3 py-2 rounded border border-border text-sm hover:bg-muted transition"
+								className="px-3 py-2 rounded-lg border border-control text-sm hover:bg-muted transition"
 							>
 								Cancel
 							</button>
@@ -528,7 +528,7 @@ export default function SettingsPageContent() {
 			</div>
 
 			{saved && (
-				<div className="fixed right-6 bottom-6 bg-primary text-primary-foreground px-4 py-2 rounded shadow-lg">
+				<div className="fixed right-6 bottom-6 bg-primary text-primary-foreground px-4 py-2 rounded-lg shadow-lg">
 					{saved}
 				</div>
 			)}

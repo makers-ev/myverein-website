@@ -36,7 +36,7 @@ function Duration({ minutes }: { minutes: number | null }) {
     return <>{t('time.minutes', { hours: d.hours, minutes: d.minutes })}</>;
 }
 
-const STATUS_TONE = { offen: 'bg-warning/15 text-warning', bestaetigt: 'bg-success/15 text-success', abgelehnt: 'bg-destructive/10 text-destructive' } as const;
+const STATUS_TONE = { offen: 'bg-warning-soft text-warning', bestaetigt: 'bg-success-soft text-success', abgelehnt: 'bg-destructive-soft text-destructive' } as const;
 
 /** Trainer time tracking (W10): clock in/out, suggestions from attendance, manual entries, confirmation, hours report. Report only, no payout. */
 export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, ownClubMemberId, events, departments }: Props) {
@@ -107,14 +107,14 @@ export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, o
         <div className="space-y-6 text-sm">
             <p className="rounded-lg bg-muted/50 px-3 py-2 text-muted-foreground">{t('time.intro')}</p>
             {error && (
-                <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-destructive">
+                <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2 text-destructive">
                     {error}
                 </p>
             )}
 
             {canTrack && (
                 <>
-            <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+            <section className="space-y-3 rounded-xl shadow-card bg-card p-4">
                 <h3 className="font-semibold text-foreground">{t('time.clock.title')}</h3>
                 {current ? (
                     <div className="flex flex-wrap items-center gap-3">
@@ -151,10 +151,10 @@ export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, o
             </section>
 
             {suggestions.length > 0 && (
-                <section className="space-y-2 rounded-xl border border-border bg-card p-4">
+                <section className="space-y-2 rounded-xl shadow-card bg-card p-4">
                     <h3 className="font-semibold text-foreground">{t('time.suggestions.title')}</h3>
                     <p className="text-xs text-muted-foreground">{t('time.suggestions.hint')}</p>
-                    <ul className="divide-y divide-border">
+                    <ul className="divide-y divide-hairline">
                         {suggestions.map((s) => (
                             <li key={s.eventId} className="flex flex-wrap items-center justify-between gap-2 py-2">
                                 <span className="text-foreground">
@@ -169,7 +169,7 @@ export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, o
                 </section>
             )}
 
-            <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+            <section className="space-y-3 rounded-xl shadow-card bg-card p-4">
                 <h3 className="font-semibold text-foreground">{t('time.manual.title')}</h3>
                 <form
                     className="flex flex-wrap items-end gap-3"
@@ -235,7 +235,7 @@ export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, o
                         </select>
                     </div>
                     {canConfirm && (
-                        <div role="group" aria-label={t('time.filter.status')} className="inline-flex rounded-lg border border-border bg-background p-0.5">
+                        <div role="group" aria-label={t('time.filter.status')} className="inline-flex rounded-lg border border-control bg-background p-0.5">
                             {(['mine', 'team'] as const).map((v) => (
                                 <button key={v} type="button" aria-pressed={scope === v} onClick={() => setScope(v)} className={`rounded-md px-3 py-1.5 text-sm font-medium ${scope === v ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
                                     {t(`time.filter.scope.${v}`)}
@@ -259,7 +259,7 @@ export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, o
                                     <th scope="col" className="px-3 py-2"><span className="sr-only">{t('participants.col.actions')}</span></th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-border">
+                            <tbody className="divide-y divide-hairline">
                                 {entries.map((e) => (
                                     <tr key={e.id} className="align-top text-foreground">
                                         <th scope="row" className="px-3 py-2 font-medium">
@@ -393,7 +393,7 @@ function RateCards({ clubId }: { clubId: string }) {
         items.length > 0 && (
             <div>
                 <h4 className="mb-1 text-xs font-semibold text-muted-foreground">{title}</h4>
-                <ul className="divide-y divide-border">
+                <ul className="divide-y divide-hairline">
                     {items.map((c) => (
                         <li key={c.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                             <span className="text-foreground">
@@ -415,7 +415,7 @@ function RateCards({ clubId }: { clubId: string }) {
         );
 
     return (
-        <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+        <section className="space-y-3 rounded-xl shadow-card bg-card p-4">
             <h3 className="font-semibold text-foreground">{t('time.rates.title')}</h3>
             <p className="text-xs text-muted-foreground">{t('time.rates.hint')}</p>
             {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
@@ -431,7 +431,7 @@ function RateCards({ clubId }: { clubId: string }) {
                     {list(t('time.rates.group.people'), groups.people)}
                 </div>
             )}
-            <form onSubmit={(e) => void submit(e)} className="space-y-3 border-t border-border pt-3">
+            <form onSubmit={(e) => void submit(e)} className="space-y-3 border-t border-hairline pt-3">
                 {editing && <p className="font-medium text-foreground">{t('time.rates.editing', { target: cardTarget(editing) })}</p>}
                 <div className="grid gap-3 sm:grid-cols-2">
                     {!editing && (

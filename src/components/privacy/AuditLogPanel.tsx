@@ -87,13 +87,13 @@ export default function AuditLogPanel({ clubId, focus, onFocusChange }: { clubId
             {(focus || filter.actorId) && (
                 <div className="mb-3 flex flex-wrap gap-2">
                     {focus && (
-                        <button type="button" onClick={() => { onFocusChange(null); apply({ ...filter, page: 1 }); }} aria-label={t('audit.filter.remove')} className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                        <button type="button" onClick={() => { onFocusChange(null); apply({ ...filter, page: 1 }); }} aria-label={t('audit.filter.remove')} className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary-text">
                             {t('audit.filter.member', { name: focus.name })}
                             <X className="h-3 w-3" aria-hidden />
                         </button>
                     )}
                     {filter.actorId && (
-                        <button type="button" onClick={() => apply({ ...filter, actorId: '', page: 1 })} aria-label={t('audit.filter.remove')} className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                        <button type="button" onClick={() => apply({ ...filter, actorId: '', page: 1 })} aria-label={t('audit.filter.remove')} className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary-text">
                             {t('audit.filter.actor', { name: actorName })}
                             <X className="h-3 w-3" aria-hidden />
                         </button>
@@ -169,7 +169,7 @@ export default function AuditLogPanel({ clubId, focus, onFocusChange }: { clubId
                             </thead>
                             <tbody>
                                 {result.data.map((e) => (
-                                    <tr key={e.id} className="border-t border-border align-top text-foreground">
+                                    <tr key={e.id} className="border-t border-hairline align-top text-foreground">
                                         <td className="whitespace-nowrap px-3 py-2 text-xs text-muted-foreground">
                                             {formatDate(e.createdAt, language)}{' '}
                                             {new Date(e.createdAt).toLocaleTimeString(language, { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Berlin' })}
@@ -187,7 +187,7 @@ export default function AuditLogPanel({ clubId, focus, onFocusChange }: { clubId
                                                         onFocusChange({ id: e.subjectMember!.id, name: e.subjectMember!.name ?? t('audit.member.unknown') });
                                                         apply({ ...filter, page: 1 });
                                                     }}
-                                                    className="text-left text-primary underline"
+                                                    className="text-left text-primary-text underline"
                                                 >
                                                     {e.subjectMember.name ?? '—'}
                                                 </button>
@@ -204,7 +204,7 @@ export default function AuditLogPanel({ clubId, focus, onFocusChange }: { clubId
                                                         setActorName(e.actor!.name ?? '—');
                                                         apply({ ...filter, actorId: e.actor!.userId, page: 1 });
                                                     }}
-                                                    className="text-left text-primary underline"
+                                                    className="text-left text-primary-text underline"
                                                 >
                                                     {e.actor.name ?? '—'}
                                                 </button>

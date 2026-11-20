@@ -123,7 +123,7 @@ function CalendarFormModal({
                 </label>
                 {locked && <p className="text-xs text-muted-foreground">{t('kalender.calendars.default.locked')}</p>}
                 {error && (
-                    <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                    <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2 text-sm text-destructive">
                         {error}
                     </p>
                 )}
@@ -196,7 +196,7 @@ function VisibilityModal({
                     ) : (
                         <ul className="flex flex-wrap gap-2">
                             {grants.map((g) => (
-                                <li key={g.id} className="inline-flex items-center gap-1 rounded-full bg-primary/10 py-1 pl-3 pr-1 text-xs font-medium text-primary">
+                                <li key={g.id} className="inline-flex items-center gap-1 rounded-full bg-primary/10 py-1 pl-3 pr-1 text-xs font-medium text-primary-text">
                                     {labelFor(g)}
                                     <button
                                         type="button"
@@ -312,7 +312,7 @@ export default function CalendarManager({
     };
 
     return (
-        <section className="rounded-xl border border-border bg-card p-4">
+        <section className="rounded-xl shadow-card bg-card p-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-base font-medium text-foreground">{t('kalender.calendars.title')}</h2>
                 <button type="button" onClick={() => setModal({ kind: 'create' })} className={`${secondaryBtn} inline-flex items-center gap-1.5 !px-3 !py-1.5`}>
@@ -331,13 +331,13 @@ export default function CalendarManager({
             ) : (
                 <ul className="grid gap-2 sm:grid-cols-2">
                     {calendars.map((cal) => (
-                        <li key={cal.id} className="flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-2.5">
+                        <li key={cal.id} className="flex items-center gap-3 rounded-lg border border-control bg-background px-3 py-2.5">
                             <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: colorFor(cal.id) }} aria-hidden />
                             <div className="min-w-0 flex-1">
                                 <p className="flex items-center gap-2 truncate text-sm font-semibold text-foreground">
                                     {cal.name}
                                     {cal.isDefault && (
-                                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary-text">
                                             {t('kalender.calendars.default')}
                                         </span>
                                     )}

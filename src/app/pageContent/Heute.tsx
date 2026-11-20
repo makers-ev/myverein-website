@@ -14,7 +14,7 @@ import HelpLink from '@/components/HelpLink';
 import { useActiveClub } from '@/components/shell/ActiveClubProvider';
 import { EmptyState, ErrorState, Skeleton } from '@/components/ui';
 
-const linkCls = 'inline-flex min-h-11 items-center whitespace-nowrap rounded-lg border border-border bg-card px-4 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-muted active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary';
+const linkCls = 'inline-flex min-h-11 items-center whitespace-nowrap rounded-lg border border-control bg-card px-4 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-muted active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-text';
 
 /** Open-item count of a card: a quiet figure, red only when something is overdue. */
 function Count({ children, danger = false }: { children: ReactNode; danger?: boolean }) {
@@ -23,7 +23,7 @@ function Count({ children, danger = false }: { children: ReactNode; danger?: boo
 
 function Card({ title, badge, href, linkLabel, children }: { title: string; badge?: ReactNode; href: string; linkLabel: string; children?: ReactNode }) {
     return (
-        <section className="flex flex-col items-start rounded-xl border border-border bg-card p-5">
+        <section className="flex flex-col items-start rounded-xl shadow-card bg-card p-5">
             <div className="flex w-full items-start justify-between gap-3">
                 <h2 className="text-base font-medium text-foreground">{title}</h2>
                 {badge}
@@ -93,7 +93,7 @@ export default function HeutePageContent() {
         body = (
             <div className="space-y-4">
                 {setup && setup.open.length > 0 && (
-                    <section className="rounded-xl border border-border bg-card p-5">
+                    <section className="rounded-xl shadow-card bg-card p-5">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                             <h2 className="text-base font-medium text-foreground">{t('today.setup.title')}</h2>
                             <a href={docsTopicUrl('setup')} target="_blank" rel="noopener noreferrer" className={linkCls}>
@@ -106,7 +106,7 @@ export default function HeutePageContent() {
                             {SETUP_STEPS.filter((s) => setup.open.includes(s.key) || setup.done.includes(s.key)).map((s) => {
                                 const done = setup.done.includes(s.key);
                                 return (
-                                    <li key={s.key} className="flex min-h-11 items-center justify-between gap-3 border-t border-border py-1 text-sm first:border-t-0">
+                                    <li key={s.key} className="flex min-h-11 items-center justify-between gap-3 border-t border-hairline py-1 text-sm first:border-t-0">
                                         <span className={`flex items-center gap-2.5 ${done ? 'text-muted-foreground' : 'text-foreground'}`}>
                                             {done ? <CircleCheck aria-hidden="true" strokeWidth={1.5} className="h-[18px] w-[18px] shrink-0 text-success" /> : <Circle aria-hidden="true" strokeWidth={1.5} className="h-[18px] w-[18px] shrink-0 text-muted-foreground" />}
                                             {t(`today.setup.${s.key}`)}
@@ -173,7 +173,7 @@ export default function HeutePageContent() {
                                 <Card key={todo.key} title={t(`today.board.${todo.key}`)} badge={<Count>{todo.count}</Count>} href={todo.key === 'maintenanceDue' ? '/standorte' : todo.key === 'openExits' ? '/verein?tab=austritte' : '/verein?tab=mitglieder'} linkLabel={t('today.board.action')} />
                             ))}
                             {data.board.memberCount !== undefined && (
-                                <section className="rounded-xl border border-border bg-card p-5">
+                                <section className="rounded-xl shadow-card bg-card p-5">
                                     <h3 className="text-base font-medium text-foreground">{t('today.board.memberCount')}</h3>
                                     <p className="mt-2 text-[2rem] font-medium leading-none tabular-nums text-foreground">{data.board.memberCount.toLocaleString(dateLocale(language))}</p>
                                 </section>

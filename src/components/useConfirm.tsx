@@ -46,13 +46,13 @@ export function useConfirm(): { confirm: (options: ConfirmOptions) => Promise<bo
             title={options.title}
             footer={
                 <div className="flex justify-end gap-2">
-                    <button type="button" onClick={() => settle(false)} className="rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-muted">
+                    <button type="button" onClick={() => settle(false)} className="rounded-lg border border-control px-4 py-2 text-sm text-foreground hover:bg-muted">
                         {options.cancelLabel ?? t('forms.confirm.cancel')}
                     </button>
                     <button
                         type="button"
                         onClick={() => settle(true)}
-                        className={`rounded-lg px-4 py-2 text-sm font-semibold ${options.danger ? 'bg-destructive text-destructive-foreground' : 'bg-primary text-primary-foreground'}`}
+                        className={`rounded-lg px-4 py-2 text-sm font-semibold ${options.danger ? 'bg-destructive-fill text-destructive-foreground' : 'bg-primary text-primary-foreground'}`}
                     >
                         {options.confirmLabel}
                     </button>

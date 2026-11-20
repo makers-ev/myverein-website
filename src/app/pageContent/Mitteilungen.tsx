@@ -126,7 +126,7 @@ export default function MitteilungenPageContent() {
             ) : (
                 <>
                     {tabs.length > 1 && (
-                        <div role="tablist" className="mt-6 flex gap-2 overflow-x-auto border-b border-border">
+                        <div role="tablist" className="mt-6 flex gap-2 overflow-x-auto border-b border-hairline">
                             {tabs.map((value) => (
                                 <button
                                     key={value}
@@ -140,7 +140,7 @@ export default function MitteilungenPageContent() {
                                         setTab(value);
                                     }}
                                     className={`whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
-                                        currentTab === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
+                                        currentTab === value ? 'border-primary text-primary-text' : 'border-transparent text-muted-foreground hover:text-foreground'
                                     }`}
                                 >
                                     {t(`mitteilungen.tab.${value}`)}
@@ -149,7 +149,7 @@ export default function MitteilungenPageContent() {
                         </div>
                     )}
                     {notice && (
-                        <p role="status" className="mt-4 rounded-lg bg-success/10 px-3 py-2 text-sm text-success">
+                        <p role="status" className="mt-4 rounded-lg bg-success-soft px-3 py-2 text-sm text-success">
                             {notice}
                         </p>
                     )}

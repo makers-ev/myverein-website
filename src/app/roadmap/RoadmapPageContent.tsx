@@ -82,17 +82,17 @@ export default function RoadmapPageContent() {
             <PageHeader title={t('roadmap.title')} intro={t('roadmap.intro')} />
 
             {periods.length === 0 ? (
-                <div className="mt-8 rounded-xl border border-border bg-card p-4">
+                <div className="mt-8 rounded-xl shadow-card bg-card p-4">
                     <p className="text-sm text-muted-foreground">{t('roadmap.empty')}</p>
                 </div>
             ) : (
-                <ol className="mt-12 border-t border-border">
+                <ol className="mt-12 border-t border-hairline">
                     {periods.map((group) => (
-                        <li key={group.period} className="grid gap-4 border-b border-border py-8 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-10">
+                        <li key={group.period} className="grid gap-4 border-b border-hairline py-8 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-10">
                             <h2 className="text-lg font-semibold leading-snug text-foreground">{group.period}</h2>
                             <ul className="space-y-3">
                                 {group.items.map((item) => (
-                                    <li key={item.id} className="rounded-xl border border-border bg-card p-5 shadow-xs">
+                                    <li key={item.id} className="rounded-xl shadow-card bg-card p-5 ">
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="flex min-w-0 items-start gap-3">
                                                 <item.icon className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
@@ -116,13 +116,13 @@ export default function RoadmapPageContent() {
                 <h2 className="mb-5 text-xl font-semibold text-foreground">{t('roadmap.bugs.title')}</h2>
 
                 {KNOWN_BUGS.length === 0 ? (
-                    <div className="rounded-xl border border-border bg-card p-4">
+                    <div className="rounded-xl shadow-card bg-card p-4">
                         <p className="text-sm text-muted-foreground">{t('roadmap.bugs.empty')}</p>
                     </div>
                 ) : (
                     <ul className="space-y-3">
                         {KNOWN_BUGS.map((bug) => (
-                            <li key={bug.id} className="rounded-xl border border-border bg-card p-5 shadow-xs">
+                            <li key={bug.id} className="rounded-xl shadow-card bg-card p-5 ">
                                 <div className="flex items-start justify-between gap-4">
                                     <div className="flex items-start gap-3">
                                         <bug.icon className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
@@ -142,7 +142,7 @@ export default function RoadmapPageContent() {
                     <p className="text-sm text-muted-foreground">{t('roadmap.bugs.report-info')}</p>
                     <Link
                         href="/contact#bug"
-                        className="inline-flex min-h-11 shrink-0 items-center gap-1.5 text-sm font-medium text-primary underline-offset-4 hover:underline"
+                        className="inline-flex min-h-11 shrink-0 items-center gap-1.5 text-sm font-medium text-primary-text underline-offset-4 hover:underline"
                     >
                         {t('roadmap.bugs.report-link')}
                         <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />

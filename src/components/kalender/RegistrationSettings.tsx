@@ -183,7 +183,7 @@ export default function RegistrationSettings({ clubId, event, info, onSaved }: P
                 )}
 
                 {error && (
-                    <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-destructive">
+                    <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2 text-destructive">
                         {error}
                     </p>
                 )}
@@ -231,7 +231,7 @@ export default function RegistrationSettings({ clubId, event, info, onSaved }: P
                                     {t(publicLinkActive ? 'registration.link.replace' : 'registration.link.create')}
                                 </button>
                                 {publicLinkActive && (
-                                    <button type="button" disabled={linkBusy} onClick={() => void revokeLink()} className="rounded-lg border border-destructive/40 px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50">
+                                    <button type="button" disabled={linkBusy} onClick={() => void revokeLink()} className="rounded-lg border border-destructive/40 px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive-soft disabled:opacity-50">
                                         {t('registration.link.revoke')}
                                     </button>
                                 )}

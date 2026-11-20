@@ -94,7 +94,7 @@ export default function ExitSection({
             ) : (
                 <div className="space-y-4">
                     {flash && (
-                        <p role="status" className="rounded-lg border border-success/40 bg-success/10 p-3 text-sm text-foreground">
+                        <p role="status" className="rounded-lg border border-success/40 bg-success-soft p-3 text-sm text-foreground">
                             {flash}
                         </p>
                     )}
@@ -321,14 +321,14 @@ function CancelDialog({
                 <span className="mt-1 block text-xs font-normal">{t('verein.exit.dialog.desiredHint')}</span>
             </label>
             {notice && (
-                <p role="status" className="mt-4 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm text-foreground">
+                <p role="status" className="mt-4 rounded-lg border border-warning/40 bg-warning-soft p-3 text-sm text-foreground">
                     {notice}
                 </p>
             )}
             <div className="mt-4">
                 {withoutForm ? (
                     <div>
-                        <p role="status" className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm text-foreground">
+                        <p role="status" className="rounded-lg border border-warning/40 bg-warning-soft p-3 text-sm text-foreground">
                             {t('forms.exit.withoutForm')}
                         </p>
                         <label className="mt-3 block text-xs font-semibold text-muted-foreground">

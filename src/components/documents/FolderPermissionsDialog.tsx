@@ -91,7 +91,7 @@ export default function FolderPermissionsDialog({ clubId, folderId, folderName, 
                     {entries.length === 0 && <p className="rounded-lg border border-dashed border-border px-3 py-3 text-sm text-muted-foreground">{t(inheritsFrom ? 'docs.perm.inherits' : 'docs.perm.none')}</p>}
                     <ul className="space-y-2">
                         {entries.map((e) => (
-                            <li key={entryKey(e)} className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2 text-sm">
+                            <li key={entryKey(e)} className="flex items-center justify-between gap-2 rounded-lg border border-control px-3 py-2 text-sm">
                                 <span className="min-w-0 truncate text-foreground">
                                     <span className="text-xs text-muted-foreground">{t(`docs.perm.subject.${e.subjectType}`)}: </span>
                                     {label(e)}
@@ -101,7 +101,7 @@ export default function FolderPermissionsDialog({ clubId, folderId, folderName, 
                                         aria-label={t('docs.perm.level')}
                                         value={e.level}
                                         onChange={(ev) => add({ ...e, level: ev.target.value as DocLevel })}
-                                        className="rounded-lg border border-border bg-background px-2 py-1 text-sm text-foreground"
+                                        className="rounded-lg border border-control bg-background px-2 py-1 text-sm text-foreground"
                                     >
                                         {LEVELS.map((l) => (
                                             <option key={l} value={l}>

@@ -27,7 +27,7 @@ export default function ClubSwitcher() {
                         id="club-switcher"
                         value={activeClub.clubId}
                         onChange={(e) => switchClub(e.target.value)}
-                        className="min-h-11 max-w-[14rem] truncate rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+                        className="min-h-11 max-w-[14rem] truncate rounded-lg border border-control bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-text"
                     >
                         {clubs.map((c) => (
                             <option key={c.clubId} value={c.clubId}>

@@ -10,7 +10,7 @@ export default function Finale() {
     const { t } = useLanguage();
 
     return (
-        <section id="finale" className="border-t border-border" aria-labelledby="mk-finale-title">
+        <section id="finale" className="border-t border-hairline" aria-labelledby="mk-finale-title">
             <div className="mx-auto max-w-4xl px-4 py-24 text-center sm:px-6 sm:py-32">
                 <h2 id="mk-finale-title" className="font-display text-5xl leading-[1.05] text-foreground sm:text-6xl">
                     {t('mk.finale.title.pre')} <Marker>{t('mk.finale.title.mark')}</Marker>
@@ -27,7 +27,7 @@ export default function Finale() {
                 <div className="mt-8 flex flex-col items-center gap-3">
                     <Link
                         href="/contact#beta"
-                        className="inline-flex min-h-12 items-center justify-center rounded-lg bg-primary px-6 text-base font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                        className="inline-flex min-h-12 items-center justify-center rounded-lg bg-primary px-6 text-base font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-text"
                     >
                         {t('mk.finale.cta')}
                     </Link>

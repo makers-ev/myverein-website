@@ -146,7 +146,7 @@ export default function ClubRemindersPanel({ clubId }: { clubId: string }) {
                     <legend className="text-sm font-semibold text-foreground">{t('verein.reminders.age.title')}</legend>
                     <Toggle checked={ageAuto} onChange={setAgeAuto} label={t('verein.reminders.age.label')} />
                     <p className="text-xs text-muted-foreground">{t('verein.reminders.age.hint')}</p>
-                    {ageAuto && <p className="rounded-lg bg-warning/10 px-3 py-2 text-xs text-foreground">{t('verein.reminders.age.warning')}</p>}
+                    {ageAuto && <p className="rounded-lg bg-warning-soft px-3 py-2 text-xs text-foreground">{t('verein.reminders.age.warning')}</p>}
                 </fieldset>
 
                 <fieldset className="space-y-3">
@@ -163,7 +163,7 @@ export default function ClubRemindersPanel({ clubId }: { clubId: string }) {
                 </fieldset>
 
                 <div className="rounded-lg border border-border bg-muted/30 p-3">
-                    <button type="button" onClick={() => setCatalogOpen((o) => !o)} aria-expanded={catalogOpen} className="text-sm font-semibold text-primary underline">
+                    <button type="button" onClick={() => setCatalogOpen((o) => !o)} aria-expanded={catalogOpen} className="text-sm font-semibold text-primary-text underline">
                         {t('verein.catalog.link')}
                     </button>
                     {catalogOpen && <NotificationCatalogInfo />}

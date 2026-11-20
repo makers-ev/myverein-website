@@ -23,13 +23,13 @@ export default function DpaBanner({ current, onOpen }: { current: DpaCurrent | n
               ? t('privacy.dpa.banner.grace', { count: Math.max(current.status.daysLeft ?? 0, 0), date: formatDate(current.status.deadline, language) })
               : t('privacy.dpa.banner.open');
     return (
-        <div role={blocked ? 'alert' : 'status'} className={`mt-4 flex flex-wrap items-center gap-3 rounded-xl border p-3 text-sm ${blocked ? 'border-destructive/40 bg-destructive/5' : 'border-warning/40 bg-warning/10'}`}>
+        <div role={blocked ? 'alert' : 'status'} className={`mt-4 flex flex-wrap items-center gap-3 rounded-xl border p-3 text-sm ${blocked ? 'border-destructive/40 bg-destructive-soft' : 'border-warning/40 bg-warning-soft'}`}>
             {blocked ? <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" aria-hidden="true" /> : <FileSignature className="h-4 w-4 shrink-0 text-warning" aria-hidden="true" />}
             <p className="min-w-0 flex-1 text-foreground">
                 <span className="font-semibold">{t('privacy.dpa.banner.title', { version: current.version?.version ?? '' })}</span> {text}{' '}
                 {!current.canAccept && <span className="text-muted-foreground">{t('privacy.dpa.banner.ownerOnly')}</span>}
             </p>
-            <button type="button" onClick={onOpen} className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted">
+            <button type="button" onClick={onOpen} className="rounded-lg border border-control bg-background px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted">
                 {t(current.canAccept ? 'privacy.dpa.banner.sign' : 'privacy.dpa.banner.view')}
             </button>
         </div>

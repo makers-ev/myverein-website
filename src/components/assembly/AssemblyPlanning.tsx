@@ -126,7 +126,7 @@ function AgendaEditor({ clubId, meetingId, canEdit }: { clubId: string; meetingI
                                     <p className="mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
                                         <span>{t(`assembly.voteKind.${item.voteKind}`)}</span>
                                         {item.voteKind !== 'none' && <span>· {t(`assembly.topic.${item.topic}`)}</span>}
-                                        <span className={`rounded-full px-2 py-0.5 font-semibold ${item.announced ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning'}`}>{t(item.announced ? 'assembly.agenda.announced' : 'assembly.agenda.draft')}</span>
+                                        <span className={`rounded-full px-2 py-0.5 font-semibold ${item.announced ? 'bg-success-soft text-success' : 'bg-warning-soft text-warning'}`}>{t(item.announced ? 'assembly.agenda.announced' : 'assembly.agenda.draft')}</span>
                                     </p>
                                 </div>
                                 {canEdit && !item.announced && (
@@ -146,7 +146,7 @@ function AgendaEditor({ clubId, meetingId, canEdit }: { clubId: string; meetingI
                                                     void run(() => apiFetch(`/meetings/${meetingId}/agenda-items/${item.id}?clubId=${clubId}`, { method: 'DELETE' }));
                                                 }
                                             }}
-                                            className="rounded-lg p-1.5 text-destructive hover:bg-destructive/10 disabled:opacity-40"
+                                            className="rounded-lg p-1.5 text-destructive hover:bg-destructive-soft disabled:opacity-40"
                                         >
                                             <Trash2 className="h-4 w-4" aria-hidden />
                                         </button>
@@ -158,7 +158,7 @@ function AgendaEditor({ clubId, meetingId, canEdit }: { clubId: string; meetingI
                 )}
                 {error && <ErrorText>{error}</ErrorText>}
                 {canEdit && (
-                    <form onSubmit={add} className="space-y-3 border-t border-border pt-3">
+                    <form onSubmit={add} className="space-y-3 border-t border-hairline pt-3">
                         <div className="grid gap-3 sm:grid-cols-2">
                             <div className="sm:col-span-2">
                                 <label htmlFor="ag-title" className={labelClass}>
@@ -212,7 +212,7 @@ function AgendaEditor({ clubId, meetingId, canEdit }: { clubId: string; meetingI
 
 function Tile({ label, value }: { label: string; value: number }) {
     return (
-        <div className="rounded-lg border border-border bg-background px-3 py-2 text-center">
+        <div className="rounded-lg border border-control bg-background px-3 py-2 text-center">
             <p className="text-lg font-bold text-foreground">{value}</p>
             <p className="text-xs text-muted-foreground">{label}</p>
         </div>
@@ -339,7 +339,7 @@ function InvitationProof({ clubId, meetingId, invitation, canSensitive, onChange
                             <table className="w-full text-left text-sm">
                                 <caption className="sr-only">{t('assembly.invite.proof.title')}</caption>
                                 <thead>
-                                    <tr className="border-b border-border text-xs text-muted-foreground">
+                                    <tr className="border-b border-hairline text-xs text-muted-foreground">
                                         <th scope="col" className="py-1 pr-3">{t('assembly.col.name')}</th>
                                         <th scope="col" className="py-1 pr-3">{t('assembly.col.channel')}</th>
                                         <th scope="col" className="py-1">{t('assembly.col.status')}</th>
@@ -347,7 +347,7 @@ function InvitationProof({ clubId, meetingId, invitation, canSensitive, onChange
                                 </thead>
                                 <tbody>
                                     {rows.map((r) => (
-                                        <tr key={r.id} className="border-b border-border/50">
+                                        <tr key={r.id} className="border-b border-hairline/50">
                                             <td className="py-1 pr-3 text-foreground">{r.displayName ?? '—'}</td>
                                             <td className="py-1 pr-3 text-muted-foreground">{t(`assembly.channel.${r.channel}`)}</td>
                                             <td className="py-1 text-foreground">
@@ -467,11 +467,11 @@ export default function AssemblyPlanning({ clubId, meetingId, status, canSensiti
                                 ))}
                             </ul>
                             {onOpenRules ? (
-                                <button type="button" onClick={onOpenRules} className="mt-2 text-sm font-medium text-primary underline">
+                                <button type="button" onClick={onOpenRules} className="mt-2 text-sm font-medium text-primary-text underline">
                                     {t('assembly.invite.openRules')}
                                 </button>
                             ) : (
-                                <Link href="/verein" className="mt-2 inline-block text-sm font-medium text-primary underline">
+                                <Link href="/verein" className="mt-2 inline-block text-sm font-medium text-primary-text underline">
                                     {t('assembly.invite.openRules')}
                                 </Link>
                             )}

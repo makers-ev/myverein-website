@@ -21,14 +21,14 @@ function VerifyEmailPageInner() {
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-            <div className="w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card p-8 shadow-md">
+            <div className="w-full max-w-md overflow-hidden rounded-2xl shadow-card bg-card p-8 ">
                 <div className="flex flex-col items-center text-center">
                     {hasError ? (
-                        <div className="mb-6 rounded-full bg-destructive/10 p-4">
+                        <div className="mb-6 rounded-full bg-destructive-soft p-4">
                             <ExclamationTriangleIcon className="h-12 w-12 text-destructive" />
                         </div>
                     ) : (
-                        <div className="mb-6 rounded-full bg-success/10 p-4">
+                        <div className="mb-6 rounded-full bg-success-soft p-4">
                             <CheckCircleIcon className="h-12 w-12 text-success" />
                         </div>
                     )}

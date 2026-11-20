@@ -52,7 +52,7 @@ export default function OwnAbsencesPanel({ clubId }: { clubId: string }) {
         >
             <p className="mb-3 text-sm text-muted-foreground">{t('absence.own.intro')}</p>
             {notice && (
-                <p role="status" className="mb-3 rounded-lg bg-success/10 px-3 py-2 text-sm text-success">
+                <p role="status" className="mb-3 rounded-lg bg-success-soft px-3 py-2 text-sm text-success">
                     {notice}
                 </p>
             )}
