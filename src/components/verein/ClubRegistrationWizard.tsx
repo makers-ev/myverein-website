@@ -378,7 +378,7 @@ export default function ClubRegistrationWizard({
                                     aria-checked={legalForm === f}
                                     onClick={() => setLegalForm(f)}
                                     className={`rounded-full border px-3 py-1 text-sm transition-colors ${
-                                        legalForm === f ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-foreground hover:border-primary'
+                                        legalForm === f ? 'border-primary bg-primary text-primary-foreground' : 'border-control text-foreground hover:border-primary'
                                     }`}
                                 >
                                     {t(`verein.create.legalForm.${f}`)}
@@ -620,7 +620,7 @@ export default function ClubRegistrationWizard({
                                 aria-checked={claimedRole === r}
                                 onClick={() => setClaimedRole(r)}
                                 className={`rounded-full border px-3 py-1 text-sm transition-colors ${
-                                    claimedRole === r ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-foreground hover:border-primary'
+                                    claimedRole === r ? 'border-primary bg-primary text-primary-foreground' : 'border-control text-foreground hover:border-primary'
                                 }`}
                             >
                                 {t(`verein.role.${r}`)}

@@ -294,7 +294,7 @@ export default function ProfilTab({ me, clubId, onSaved, onPhotoExpired, onDirty
                     {me.roles.length > 0 && (
                         <div className="mt-4 flex flex-wrap gap-1.5">
                             {me.roles.map((r) => (
-                                <span key={r.id} className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary-text">
+                                <span key={r.id} className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary-soft-foreground">
                                     {t(`verein.role.${r.roleType}`)}
                                 </span>
                             ))}

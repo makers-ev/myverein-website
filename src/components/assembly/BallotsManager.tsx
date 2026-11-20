@@ -38,7 +38,7 @@ interface VotesResponse {
 
 const STATUS_TONE: Record<string, string> = {
     draft: 'bg-muted text-muted-foreground',
-    open: 'bg-primary/10 text-primary-text',
+    open: 'bg-primary-soft text-primary-soft-foreground',
     closed: 'bg-warning-soft text-warning',
     counted: 'bg-warning-soft text-warning',
     finalized: 'bg-success-soft text-success',

@@ -193,7 +193,7 @@ export function Navbar({
                                 href={link.href}
                                 className={`block rounded-lg px-3 py-2.5 text-base font-medium transition-colors ${
                                     pathname === link.href
-                                        ? 'bg-primary/10 text-primary-text'
+                                        ? 'bg-primary-soft text-primary-soft-foreground'
                                         : 'text-muted-foreground hover:bg-muted'
                                 }`}
                             >
@@ -224,7 +224,7 @@ export function Navbar({
                                         className={`flex min-h-11 items-center gap-2 rounded-lg border px-3 py-1 text-sm transition-colors ${
                                             language === lang.id
                                                 ? 'border-foreground/30 bg-muted font-medium text-foreground'
-                                                : 'border-border text-muted-foreground'
+                                                : 'border-control text-muted-foreground'
                                         }`}
                                     >
                                         {lang.nativeLabel}

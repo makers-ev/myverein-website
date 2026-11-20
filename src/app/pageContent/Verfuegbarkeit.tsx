@@ -202,7 +202,7 @@ export default function VerfuegbarkeitPageContent() {
                                             className={`flex min-h-16 flex-col items-center justify-center rounded-lg border px-1 py-2 text-center transition-colors ${
                                                 row.available
                                                     ? 'border-primary bg-primary text-primary-foreground'
-                                                    : 'border-border bg-background text-muted-foreground hover:bg-muted'
+                                                    : 'border-control bg-background text-muted-foreground hover:bg-muted'
                                             }`}
                                         >
                                             <span className="text-xs font-bold sm:text-sm">{t(`verfuegbarkeit.weekday.${key}`).slice(0, 2)}</span>

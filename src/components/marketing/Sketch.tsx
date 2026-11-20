@@ -10,7 +10,7 @@ import { useInView } from './useInView';
 /** Shared page rhythm of every marketing chapter: one container width and one vertical padding (56 on phones, 72 from sm). */
 export const MK_SECTION = 'mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-18 lg:px-8';
 
-/** Chapter heading: display serif title, optional intro, left aligned on a calm column. */
+/** Chapter heading: bold system-font title, optional intro, left aligned on a calm column. */
 export function SectionHead({ id, title, intro, className = '' }: { id: string; title: ReactNode; intro?: ReactNode; className?: string }) {
     return (
         <div className={`max-w-2xl ${className}`}>

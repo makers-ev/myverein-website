@@ -196,7 +196,7 @@ function VisibilityModal({
                     ) : (
                         <ul className="flex flex-wrap gap-2">
                             {grants.map((g) => (
-                                <li key={g.id} className="inline-flex items-center gap-1 rounded-full bg-primary/10 py-1 pl-3 pr-1 text-xs font-medium text-primary-text">
+                                <li key={g.id} className="inline-flex items-center gap-1 rounded-full bg-primary-soft py-1 pl-3 pr-1 text-xs font-medium text-primary-soft-foreground">
                                     {labelFor(g)}
                                     <button
                                         type="button"
@@ -337,7 +337,7 @@ export default function CalendarManager({
                                 <p className="flex items-center gap-2 truncate text-sm font-semibold text-foreground">
                                     {cal.name}
                                     {cal.isDefault && (
-                                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary-text">
+                                        <span className="rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-semibold text-primary-soft-foreground">
                                             {t('kalender.calendars.default')}
                                         </span>
                                     )}

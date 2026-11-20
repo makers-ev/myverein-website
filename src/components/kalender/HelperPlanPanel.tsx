@@ -189,7 +189,7 @@ export default function HelperPlanPanel({ clubId, event, ownClubMemberId }: Prop
                                         )}
 
                                         {swaps.respond.map((w) => (
-                                            <div key={w.id} className="flex flex-wrap items-center gap-2 rounded-lg bg-primary/10 px-3 py-2">
+                                            <div key={w.id} className="flex flex-wrap items-center gap-2 rounded-lg bg-primary-soft px-3 py-2">
                                                 <ArrowLeftRight className="h-4 w-4 text-primary-text" aria-hidden />
                                                 <span className="text-foreground">{t('helpers.swap.toMe', { name: w.fromName ?? t('helpers.someone') })}</span>
                                                 <button type="button" disabled={busy !== null} onClick={() => void accept(w.id)} className={`${primaryBtn} !px-3 !py-1 text-xs`}>

@@ -87,13 +87,13 @@ export default function AuditLogPanel({ clubId, focus, onFocusChange }: { clubId
             {(focus || filter.actorId) && (
                 <div className="mb-3 flex flex-wrap gap-2">
                     {focus && (
-                        <button type="button" onClick={() => { onFocusChange(null); apply({ ...filter, page: 1 }); }} aria-label={t('audit.filter.remove')} className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary-text">
+                        <button type="button" onClick={() => { onFocusChange(null); apply({ ...filter, page: 1 }); }} aria-label={t('audit.filter.remove')} className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary-soft-foreground">
                             {t('audit.filter.member', { name: focus.name })}
                             <X className="h-3 w-3" aria-hidden />
                         </button>
                     )}
                     {filter.actorId && (
-                        <button type="button" onClick={() => apply({ ...filter, actorId: '', page: 1 })} aria-label={t('audit.filter.remove')} className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary-text">
+                        <button type="button" onClick={() => apply({ ...filter, actorId: '', page: 1 })} aria-label={t('audit.filter.remove')} className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary-soft-foreground">
                             {t('audit.filter.actor', { name: actorName })}
                             <X className="h-3 w-3" aria-hidden />
                         </button>

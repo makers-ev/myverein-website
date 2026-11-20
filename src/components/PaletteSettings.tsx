@@ -36,7 +36,7 @@ function CustomEditor() {
                                 type="color"
                                 value={customAnchors[mode][key]}
                                 onChange={(e) => updateAnchor(mode, key, e.target.value)}
-                                className="h-7 w-10 cursor-pointer rounded-lg border border-border bg-transparent p-0"
+                                className="h-7 w-10 cursor-pointer rounded-lg border border-control bg-transparent p-0"
                             />
                         </label>
                     ))}

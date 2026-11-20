@@ -38,7 +38,7 @@ export default function RolePicker() {
                             } ${
                                 role === r
                                     ? 'border-primary bg-primary text-primary-foreground'
-                                    : 'border-border bg-card text-foreground hover:bg-muted'
+                                    : 'border-control bg-card text-foreground hover:bg-muted'
                             }`}
                         >
                             {t(`mk.role.${r}.name`)}

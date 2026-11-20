@@ -52,7 +52,7 @@ const toneClass: Record<Tone, string> = {
     success: 'bg-success-soft text-success',
     warning: 'bg-warning-soft text-warning',
     destructive: 'bg-destructive-soft text-destructive',
-    primary: 'bg-primary/10 text-primary-text',
+    primary: 'bg-primary-soft text-primary-soft-foreground',
     muted: 'bg-muted text-muted-foreground',
 };
 

@@ -365,7 +365,7 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
                                             <div className="min-w-0">
                                                 <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-foreground">
                                                     {t(s.onBehalfOf === 'guardian' ? 'forms.apply.open.forChild' : 'forms.apply.open.forSelf')}
-                                                    <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary-text">
+                                                    <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary-soft-foreground">
                                                         <Clock className="h-3 w-3" aria-hidden="true" />
                                                         {t('forms.apply.open.waiting')}
                                                     </span>
@@ -430,7 +430,7 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
                                                 aria-checked={club.mode === m}
                                                 onClick={() => void changeMode(m)}
                                                 className={`rounded-full border px-3 py-1 text-sm transition-colors ${
-                                                    club.mode === m ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-foreground hover:border-primary'
+                                                    club.mode === m ? 'border-primary bg-primary text-primary-foreground' : 'border-control text-foreground hover:border-primary'
                                                 }`}
                                             >
                                                 {t(m === 'guardian' ? 'forms.apply.mode.child' : 'forms.apply.mode.self')}

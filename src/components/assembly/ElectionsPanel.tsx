@@ -454,7 +454,7 @@ export default function ElectionsPanel({ clubId, canManage, departments, prefill
                     <ul className="space-y-2">
                         {list.map((e) => (
                             <li key={e.id}>
-                                <button type="button" onClick={() => setSelected(e.id)} className="flex w-full items-center justify-between gap-3 rounded-lg border border-border bg-background p-3 text-left hover:bg-muted/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-text">
+                                <button type="button" onClick={() => setSelected(e.id)} className="flex w-full items-center justify-between gap-3 rounded-lg border border-control bg-background p-3 text-left hover:bg-muted/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-text">
                                     <span className="text-sm font-semibold text-foreground">
                                         {t(`verein.role.${e.roleType}`)} · {t('assembly.elections.seats', { count: e.seats })}
                                     </span>

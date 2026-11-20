@@ -364,7 +364,7 @@ export default function MemberList({
                         {t('verein.members.columns')}
                     </button>
                     {columnsOpen && (
-                        <div className="absolute right-0 z-20 mt-1 w-56 rounded-xl shadow-card bg-card p-2 shadow-lg">
+                        <div className="absolute right-0 z-20 mt-1 w-56 rounded-xl bg-card p-2 shadow-lg">
                             {OPTIONAL_COLUMNS.map((c) => (
                                 <label key={c} className="flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm text-foreground hover:bg-muted">
                                     <input type="checkbox" checked={show(c)} onChange={() => toggleColumn(c)} />
@@ -456,7 +456,7 @@ export default function MemberList({
             {filtered && (
                 <div className="mb-3 flex flex-wrap items-center gap-2" role="group" aria-label={t('verein.members.chips.label')}>
                     {chips.map((c) => (
-                        <span key={c.id} className="inline-flex items-center gap-1 rounded-full bg-primary/10 py-0.5 pl-2.5 pr-1 text-xs font-semibold text-primary-text">
+                        <span key={c.id} className="inline-flex items-center gap-1 rounded-full bg-primary-soft py-0.5 pl-2.5 pr-1 text-xs font-semibold text-primary-soft-foreground">
                             {c.label}
                             <button type="button" onClick={c.clear} aria-label={t('verein.members.chip.remove')} className="rounded-full p-0.5 hover:bg-primary/20">
                                 <X className="h-3 w-3" aria-hidden="true" />
@@ -633,7 +633,7 @@ export default function MemberList({
                                     type="button"
                                     onClick={() => setPage(n)}
                                     aria-current={n === page ? 'page' : undefined}
-                                    className={`min-w-[1.75rem] rounded-md border px-2 py-1 ${n === page ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-foreground hover:bg-muted'}`}
+                                    className={`min-w-[1.75rem] rounded-md border px-2 py-1 ${n === page ? 'border-primary bg-primary text-primary-foreground' : 'border-control text-foreground hover:bg-muted'}`}
                                 >
                                     {n}
                                 </button>

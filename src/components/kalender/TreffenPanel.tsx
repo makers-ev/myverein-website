@@ -76,7 +76,7 @@ const MEETING_STATUSES = ['terminfindung', 'geplant', 'abgehalten', 'protokollie
 
 const STATUS_STYLES: Record<Meeting['status'], string> = {
     terminfindung: 'bg-warning-soft text-warning',
-    geplant: 'bg-primary/10 text-primary-text',
+    geplant: 'bg-primary-soft text-primary-soft-foreground',
     abgehalten: 'bg-success-soft text-success',
     protokolliert: 'bg-muted text-muted-foreground',
     abgesagt: 'bg-destructive-soft text-destructive',
@@ -1107,7 +1107,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, canManageAssembly, canR
                             <li key={r.id} className="rounded-lg border border-border bg-background p-3 text-sm">
                                 <div className="flex items-start justify-between gap-2">
                                     <p className="text-foreground">{r.description}</p>
-                                    <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary-text">{r.result}</span>
+                                    <span className="shrink-0 rounded-full bg-primary-soft px-2 py-0.5 text-xs font-semibold text-primary-soft-foreground">{r.result}</span>
                                 </div>
                                 {r.correctionNote && (
                                     <p className="mt-2 rounded-md bg-warning-soft px-2 py-1.5 text-xs text-foreground">

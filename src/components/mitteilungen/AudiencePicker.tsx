@@ -27,7 +27,7 @@ function CheckChip({ checked, onChange, children, disabled }: { checked: boolean
     return (
         <label
             className={`inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1 text-sm transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-primary-text ${
-                checked ? 'border-primary bg-primary/10 text-primary-text' : 'border-border bg-background text-foreground hover:bg-muted'
+                checked ? 'border-primary bg-primary-soft text-primary-soft-foreground' : 'border-control bg-background text-foreground hover:bg-muted'
             } ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}
         >
             <input type="checkbox" checked={checked} disabled={disabled} onChange={onChange} className="sr-only" />
@@ -93,7 +93,7 @@ function MemberSearch({
             {(picked.length > 0 || unnamedCount > 0) && (
                 <ul className="flex flex-wrap gap-2" aria-label={t('mitteilungen.audience.members.picked')}>
                     {unnamedCount > 0 && (
-                        <li className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-sm text-primary-text">
+                        <li className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-3 py-1 text-sm text-primary-soft-foreground">
                             {t('mitteilungen.audience.members.saved', { count: unnamedCount })}
                             <button type="button" onClick={onClearUnnamed} className="rounded-full px-1 hover:text-destructive" aria-label={t('mitteilungen.audience.members.saved.clear')}>
                                 ×
@@ -101,7 +101,7 @@ function MemberSearch({
                         </li>
                     )}
                     {picked.map((m) => (
-                        <li key={m.id} className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-sm text-primary-text">
+                        <li key={m.id} className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-3 py-1 text-sm text-primary-soft-foreground">
                             {m.name}
                             <button type="button" onClick={() => onChange(picked.filter((p) => p.id !== m.id))} className="rounded-full px-1 hover:text-destructive" aria-label={t('mitteilungen.audience.members.remove', { name: m.name })}>
                                 ×

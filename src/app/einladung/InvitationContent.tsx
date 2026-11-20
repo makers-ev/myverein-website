@@ -57,12 +57,12 @@ function Shell({ children, status }: { children: React.ReactNode; status?: 'ok' 
             <div className="w-full max-w-md overflow-hidden rounded-2xl bg-card p-8 shadow-xl">
                 <div className="flex flex-col items-center text-center">
                     {status === 'ok' && (
-                        <div className="mb-6 rounded-full bg-success-soft p-4 dark:bg-green-950">
+                        <div className="mb-6 rounded-full bg-success-soft p-4">
                             <CheckCircleIcon className="h-12 w-12 text-success" aria-hidden="true" />
                         </div>
                     )}
                     {status === 'warn' && (
-                        <div className="mb-6 rounded-full bg-destructive-soft p-4 dark:bg-red-950">
+                        <div className="mb-6 rounded-full bg-destructive-soft p-4">
                             <ExclamationTriangleIcon className="h-12 w-12 text-destructive" aria-hidden="true" />
                         </div>
                     )}

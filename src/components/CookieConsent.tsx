@@ -123,7 +123,7 @@ const CookieConsent = ({ gaId }: { gaId?: string }) => {
 
             {/* Wenn nicht sichtbar, rendern wir nichts (oder den Re-Open Button) */}
             {!isVisible ? null : (
-                <div className="fixed inset-x-3 bottom-3 z-50 max-h-[calc(100vh-1.5rem)] overflow-y-auto rounded-2xl shadow-card bg-card p-5 text-card-foreground shadow-xl sm:left-auto sm:right-4 sm:bottom-4 sm:max-w-md">
+                <div className="fixed inset-x-3 bottom-3 z-50 max-h-[calc(100vh-1.5rem)] overflow-y-auto rounded-2xl bg-card p-5 text-card-foreground shadow-xl sm:left-auto sm:right-4 sm:bottom-4 sm:max-w-md">
                     <div>
                         {/* Header Section */}
                         <div className="mb-4 flex items-start justify-between gap-4">

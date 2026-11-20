@@ -37,7 +37,7 @@ function TreeNode({ node, selected, onSelect, depth }: { node: FolderNode; selec
                 aria-current={selected === node.id ? 'true' : undefined}
                 onClick={() => onSelect(node.id)}
                 style={{ paddingLeft: `${0.5 + depth * 0.9}rem` }}
-                className={`flex w-full items-center gap-1.5 rounded-lg py-1.5 pr-2 text-left text-sm ${selected === node.id ? 'bg-primary/10 font-semibold text-primary-text' : 'text-foreground hover:bg-muted'}`}
+                className={`flex w-full items-center gap-1.5 rounded-lg py-1.5 pr-2 text-left text-sm ${selected === node.id ? 'bg-primary-soft font-semibold text-primary-soft-foreground' : 'text-foreground hover:bg-muted'}`}
             >
                 <FolderIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
                 <span className="truncate">{node.name}</span>
@@ -154,7 +154,7 @@ export default function DocumentArchive({ clubId, gate, departments, initial }: 
                 <ul>
                     {rootLevel && (
                         <li>
-                            <button type="button" aria-current={selected === null ? 'true' : undefined} onClick={() => setSelected(null)} className={`flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-sm ${selected === null ? 'bg-primary/10 font-semibold text-primary-text' : 'text-foreground hover:bg-muted'}`}>
+                            <button type="button" aria-current={selected === null ? 'true' : undefined} onClick={() => setSelected(null)} className={`flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-sm ${selected === null ? 'bg-primary-soft font-semibold text-primary-soft-foreground' : 'text-foreground hover:bg-muted'}`}>
                                 <FileText className="h-4 w-4 shrink-0" aria-hidden="true" />
                                 {t('docs.archive.noFolder')}
                             </button>

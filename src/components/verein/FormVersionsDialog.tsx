@@ -14,7 +14,7 @@ import { type FormVersion, type FormVersionSummary, previewFields } from '@/lib/
 
 const statusClass: Record<FormVersion['status'], string> = {
     published: 'bg-success-soft text-success',
-    draft: 'bg-primary/10 text-primary-text',
+    draft: 'bg-primary-soft text-primary-soft-foreground',
     archived: 'bg-muted text-muted-foreground',
 };
 

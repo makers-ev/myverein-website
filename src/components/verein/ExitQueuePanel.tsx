@@ -506,7 +506,7 @@ function ReviewDialog({
                                             type="button"
                                             aria-pressed={mode === m}
                                             onClick={() => setMode(m)}
-                                            className={`rounded-full border px-3 py-1 text-sm ${mode === m ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-foreground hover:border-primary'}`}
+                                            className={`rounded-full border px-3 py-1 text-sm ${mode === m ? 'border-primary bg-primary text-primary-foreground' : 'border-control text-foreground hover:border-primary'}`}
                                         >
                                             {t(`verein.exit.decision.${m}`)}
                                         </button>
@@ -720,7 +720,7 @@ function DirectExitDialog({
                                 setKind(k);
                                 setDate('');
                             }}
-                            className={`rounded-full border px-3 py-1 text-sm ${kind === k ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-foreground hover:border-primary'}`}
+                            className={`rounded-full border px-3 py-1 text-sm ${kind === k ? 'border-primary bg-primary text-primary-foreground' : 'border-control text-foreground hover:border-primary'}`}
                         >
                             {t(`verein.exit.kind.${k}`)}
                         </button>

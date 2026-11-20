@@ -121,7 +121,7 @@ export default function ContactForm() {
               type="button"
               onClick={() => setCategory(c)}
               className={`min-h-11 rounded-lg border px-4 text-sm font-medium transition-colors active:scale-[0.98] ${
-                category === c ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card text-foreground hover:bg-muted'
+                category === c ? 'border-primary bg-primary text-primary-foreground' : 'border-control bg-card text-foreground hover:bg-muted'
               }`}
             >
               {t(`contact.category-${c}`)}

@@ -258,7 +258,7 @@ export default function AttendancePanel({ clubId, event }: Props) {
                                     {!e.onRoster && !e.guestName && <span>{t('attendance.badge.added')}</span>}
                                 </p>
                             </div>
-                            <div role="group" aria-label={t('attendance.row.label', { name: e.displayName })} className="inline-flex overflow-hidden rounded-lg border border-border">
+                            <div role="group" aria-label={t('attendance.row.label', { name: e.displayName })} className="inline-flex overflow-hidden rounded-lg border border-control">
                                 {ATTENDANCE_STATUSES.map((s) => (
                                     <button
                                         key={s}

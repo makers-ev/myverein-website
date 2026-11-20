@@ -427,7 +427,7 @@ export default function CategoriesPanel({ clubId, onChanged }: { clubId: string;
                                             <p className="text-sm font-semibold text-foreground">
                                                 {c.name}
                                                 {c.archived && <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs font-normal text-muted-foreground">{t('verein.categories.archived')}</span>}
-                                                {!c.archived && c.applicantSelectable && <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-normal text-primary-text">{t('forms.category.applicantSelectable.chip')}</span>}
+                                                {!c.archived && c.applicantSelectable && <span className="ml-2 rounded-full bg-primary-soft px-2 py-0.5 text-xs font-normal text-primary-soft-foreground">{t('forms.category.applicantSelectable.chip')}</span>}
                                             </p>
                                             <p className="mt-0.5 text-xs text-muted-foreground">
                                                 <code>{c.key}</code> · {c.votingRight ? t('verein.categories.voting.yes') : t('verein.categories.voting.no')} · {ageRangeText(c, t)}

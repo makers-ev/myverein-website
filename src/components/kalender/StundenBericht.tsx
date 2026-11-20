@@ -171,7 +171,7 @@ export default function StundenBericht({ clubId, range: initialRange, department
                         <ul className="mt-2 flex flex-wrap gap-1.5" aria-label={t('time.report.people.selected')}>
                             {memberIds.map((id) => (
                                 <li key={id}>
-                                    <button type="button" onClick={() => setMemberIds(toggleId(memberIds, id))} className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary-text" aria-label={t('time.report.people.remove', { name: names.get(id) ?? id })}>
+                                    <button type="button" onClick={() => setMemberIds(toggleId(memberIds, id))} className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-medium text-primary-soft-foreground" aria-label={t('time.report.people.remove', { name: names.get(id) ?? id })}>
                                         {names.get(id) ?? id} ×
                                     </button>
                                 </li>

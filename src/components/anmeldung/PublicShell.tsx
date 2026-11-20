@@ -18,12 +18,12 @@ export function PublicShell({ children, status, wide = false }: { children: Reac
         <div className="flex flex-col items-center justify-center bg-background p-4 py-12">
             <div className={`w-full ${wide ? 'max-w-xl' : 'max-w-md'} overflow-hidden rounded-2xl bg-card p-6 shadow-xl sm:p-8`}>
                 {status === 'ok' && (
-                    <div className="mx-auto mb-6 w-fit rounded-full bg-success-soft p-4 dark:bg-green-950">
+                    <div className="mx-auto mb-6 w-fit rounded-full bg-success-soft p-4">
                         <CheckCircleIcon className="h-10 w-10 text-success" aria-hidden />
                     </div>
                 )}
                 {status === 'warn' && (
-                    <div className="mx-auto mb-6 w-fit rounded-full bg-warning-soft p-4 dark:bg-amber-950">
+                    <div className="mx-auto mb-6 w-fit rounded-full bg-warning-soft p-4">
                         <ExclamationTriangleIcon className="h-10 w-10 text-warning" aria-hidden />
                     </div>
                 )}

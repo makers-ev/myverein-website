@@ -112,13 +112,13 @@ export default function ApplicationsPanel({ clubId, onDecided }: { clubId: strin
                                             <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-foreground">
                                                 <span className="break-words">{a.subjectName ?? a.name ?? '—'}</span>
                                                 {child && (
-                                                    <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary-text">
+                                                    <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary-soft-foreground">
                                                         <Baby className="h-3.5 w-3.5" aria-hidden="true" />
                                                         {t('forms.review.badge.child')}
                                                     </span>
                                                 )}
                                                 {a.legacy && <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">{t('forms.review.badge.legacy')}</span>}
-                                                {category && <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary-text">{category}</span>}
+                                                {category && <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary-soft-foreground">{category}</span>}
                                             </p>
                                             <p className="break-words text-xs text-muted-foreground">
                                                 {child ? t('forms.review.list.by', { name: a.name ?? '—' }) : (a.email ?? '—')} · {t('verein.applications.submitted')} {formatDate(a.createdAt, language)}

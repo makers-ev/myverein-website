@@ -376,7 +376,7 @@ function VersionHistory({ clubId, detail, canWrite, onBack, onRestored }: { club
                         <li key={v.versionNo} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm">
                             <span className="min-w-0 text-foreground">
                                 <span className="font-semibold">{t('docs.info.version', { n: v.versionNo })}</span> · {v.title}
-                                {v.current && <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary-text">{t('docs.info.version.current')}</span>}
+                                {v.current && <span className="ml-2 rounded-full bg-primary-soft px-2 py-0.5 text-xs font-semibold text-primary-soft-foreground">{t('docs.info.version.current')}</span>}
                                 <span className="block text-xs text-muted-foreground">
                                     {formatDate(v.createdAt, language)}
                                     {v.createdByName ? ` · ${v.createdByName}` : ''}

@@ -1,7 +1,7 @@
 /**
  * Single source of the shared control classes (inputs, buttons). The per-feature constants
  * (`inputClass`, `primaryButtonClass`, `primaryBtn`, ...) re-export these so a form control looks the same on every page.
- * Controls are 44px tall (touch target), radius 8px, colour and filter transitions only, a tiny press scale.
+ * Controls are 44px tall (touch target), radius 16px (`rounded-lg`), colour and filter transitions only, a tiny press scale.
  */
 export const UI_INPUT =
     'min-h-11 w-full rounded-lg border border-control bg-card px-3 py-2 text-sm text-foreground transition-colors placeholder:text-muted-foreground hover:border-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25 disabled:opacity-60 [color-scheme:light] dark:[color-scheme:dark]';

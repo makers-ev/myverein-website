@@ -163,7 +163,7 @@ export default function MemberStatusDialog({
                                 aria-pressed={target === s}
                                 onClick={() => setTarget(s)}
                                 className={`rounded-full border px-3 py-1 text-sm ${
-                                    target === s ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-foreground hover:border-primary'
+                                    target === s ? 'border-primary bg-primary text-primary-foreground' : 'border-control text-foreground hover:border-primary'
                                 }`}
                             >
                                 {t(`verein.status.${s}`)}

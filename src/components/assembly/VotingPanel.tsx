@@ -155,7 +155,7 @@ function VoteFlow({ clubId, ballot, forClubMemberId, forName, locked, onVoted, o
                     return (
                         <label
                             key={o.id}
-                            className={`flex min-h-12 w-full cursor-pointer items-center gap-3 rounded-xl border-2 px-4 py-3 text-left text-base font-medium text-foreground focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-primary-text ${on ? 'border-primary bg-primary/10' : 'border-border bg-background hover:bg-muted'}`}
+                            className={`flex min-h-12 w-full cursor-pointer items-center gap-3 rounded-xl border-2 px-4 py-3 text-left text-base font-medium text-foreground focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-primary-text ${on ? 'border-primary bg-primary/10' : 'border-control bg-background hover:bg-muted'}`}
                         >
                             <input type={single ? 'radio' : 'checkbox'} name={groupName} checked={on} onChange={() => setSelected((s) => toggleSelection(ballot, s, o.id))} className="sr-only" />
                             <Icon className={`h-6 w-6 shrink-0 ${on ? 'text-primary-text' : 'text-muted-foreground'}`} aria-hidden />

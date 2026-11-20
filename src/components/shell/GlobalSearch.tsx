@@ -200,7 +200,7 @@ function SearchBox({ clubId }: { clubId: string }) {
             <div role="status" aria-live="polite" className="sr-only">
                 {expanded ? status : ''}
             </div>
-            <div id={`${listId}-panel`} hidden={!expanded} className="animate-menu absolute left-0 right-0 top-full z-40 mt-1 max-h-96 overflow-y-auto rounded-xl shadow-card bg-card p-1 shadow-lg">
+            <div id={`${listId}-panel`} hidden={!expanded} className="animate-menu absolute left-0 right-0 top-full z-40 mt-1 max-h-96 overflow-y-auto rounded-xl bg-card p-1 shadow-lg">
                 {showList ? (
                     <div role="listbox" aria-label={t('search.label')}>
                         {body}
