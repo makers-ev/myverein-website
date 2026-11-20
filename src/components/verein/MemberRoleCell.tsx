@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { roleLabel } from '@/lib/roleLabel';
 
 import RoleBadge from '@/components/verein/RoleBadge';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -107,7 +108,7 @@ export default function MemberRoleCell({
                         </option>
                         {availableRoles.map((rt) => (
                             <option key={rt} value={rt}>
-                                {t(`verein.role.${rt}`)}
+                                {roleLabel(t, rt)}
                             </option>
                         ))}
                     </select>

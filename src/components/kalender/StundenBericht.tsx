@@ -1,5 +1,6 @@
 'use client';
 
+import { roleLabel } from '@/lib/roleLabel';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Download } from 'lucide-react';
 
@@ -83,11 +84,6 @@ export default function StundenBericht({ clubId, range: initialRange, department
         }
     }
 
-    const roleLabel = (r: string) => {
-        const key = `verein.role.${r}`;
-        const label = t(key);
-        return label === key ? r : label;
-    };
     const people = useMemo(() => options?.people ?? [], [options]);
     const names = useMemo(() => new Map(people.map((p) => [p.clubMemberId, p.displayName])), [people]);
     const hits = people.filter((p) => !search.trim() || p.displayName.toLowerCase().includes(search.trim().toLowerCase())).slice(0, 50);
@@ -157,7 +153,7 @@ export default function StundenBericht({ clubId, range: initialRange, department
                             {options.roleTypes.map((r) => (
                                 <label key={r} className="inline-flex items-center gap-1.5 text-sm text-foreground">
                                     <input type="checkbox" checked={roleTypes.includes(r)} onChange={() => setRoleTypes(roleTypes.includes(r) ? roleTypes.filter((x) => x !== r) : [...roleTypes, r])} />
-                                    {roleLabel(r)}
+                                    {roleLabel(t, r)}
                                 </label>
                             ))}
                         </div>
@@ -237,7 +233,7 @@ export default function StundenBericht({ clubId, range: initialRange, department
                             {rows.map((p, i) => (
                                 <tr key={`${p.clubMemberId ?? ''}|${p.eventId ?? ''}|${i}`} className="text-foreground">
                                     {showPerson && <th scope="row" className="px-3 py-2 font-medium">{p.displayName}</th>}
-                                    {showPerson && <td className="px-3 py-2">{(p.roleTypes ?? []).map(roleLabel).join(', ')}</td>}
+                                    {showPerson && <td className="px-3 py-2">{(p.roleTypes ?? []).map((r) => roleLabel(t, r)).join(', ')}</td>}
                                     {showEvent && (
                                         <th scope={showPerson ? undefined : 'row'} className="px-3 py-2 font-medium">
                                             {p.eventTitle ?? t('time.report.noEvent')}

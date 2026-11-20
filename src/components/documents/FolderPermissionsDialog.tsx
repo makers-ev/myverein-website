@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Trash2 } from 'lucide-react';
+import { roleLabel } from '@/lib/roleLabel';
 
 import { Modal } from '@/components/Modal';
 import LoadingText from '@/components/LoadingText';
@@ -77,7 +78,7 @@ export default function FolderPermissionsDialog({ clubId, folderId, folderName, 
         }
     }
 
-    const label = (e: FolderPermissionEntry) => (e.subjectType === 'rolle' ? t(`verein.role.${e.roleType}`) : (e.name ?? '—'));
+    const label = (e: FolderPermissionEntry) => (e.subjectType === 'rolle' ? roleLabel(t, e.roleType) : (e.name ?? '—'));
 
     return (
         <Modal open onClose={onClose} title={t('docs.perm.title', { name: folderName })}>
@@ -146,7 +147,7 @@ export default function FolderPermissionsDialog({ clubId, folderId, folderName, 
                                     <select value={roleType} onChange={(e) => setRoleType(e.target.value)} className={inputClass}>
                                         {ROLES.map((r) => (
                                             <option key={r} value={r}>
-                                                {t(`verein.role.${r}`)}
+                                                {roleLabel(t, r)}
                                             </option>
                                         ))}
                                     </select>

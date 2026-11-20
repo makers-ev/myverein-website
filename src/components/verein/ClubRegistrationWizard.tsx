@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { FileText, Loader2, Trash2 } from 'lucide-react';
+import { roleLabel } from '@/lib/roleLabel';
 
 import { apiFetch, ApiError } from '@/lib/api-client';
 import { memberErrorKey } from '@/lib/clubMembers';
@@ -623,7 +624,7 @@ export default function ClubRegistrationWizard({
                                     claimedRole === r ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-foreground hover:border-primary'
                                 }`}
                             >
-                                {t(`verein.role.${r}`)}
+                                {roleLabel(t, r)}
                             </button>
                         ))}
                     </div>

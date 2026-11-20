@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Eye, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { roleLabel } from '@/lib/roleLabel';
 
 import { Modal } from '@/components/Modal';
 import { apiFetch } from '@/lib/api-client';
@@ -181,7 +182,7 @@ function VisibilityModal({
         g.memberId
             ? `${t('kalender.calendars.visibility.member')}: ${g.memberId}`
             : g.roleType
-              ? `${t('kalender.calendars.visibility.role')}: ${t(`verein.role.${g.roleType}`)}`
+              ? `${t('kalender.calendars.visibility.role')}: ${roleLabel(t, g.roleType)}`
               : `${t('kalender.calendars.visibility.department')}: ${departments.find((d) => d.id === g.departmentId)?.name ?? g.departmentId}`;
 
     return (
@@ -237,7 +238,7 @@ function VisibilityModal({
                                 >
                                     {CLUB_ROLE_TYPES.map((rt) => (
                                         <option key={rt} value={rt}>
-                                            {t(`verein.role.${rt}`)}
+                                            {roleLabel(t, rt)}
                                         </option>
                                     ))}
                                 </select>

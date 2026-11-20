@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { AlertTriangle, CheckCircle2, Clock } from 'lucide-react';
 import Link from 'next/link';
+import { roleLabel } from '@/lib/roleLabel';
 
 import { apiFetch } from '@/lib/api-client';
 import { type ExpiringRole, type TermStatus, termDaysLeft, termStatusOf } from '@/lib/assembly';
@@ -70,7 +71,7 @@ export function ExpiringRolesCard({ clubId }: { clubId: string }) {
                     <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 text-sm text-foreground">
                         <span className="flex flex-wrap items-center gap-2">
                             <span className="font-medium">{r.name ?? '—'}</span>
-                            <span className="text-muted-foreground">{t(`verein.role.${r.roleType}`)}</span>
+                            <span className="text-muted-foreground">{roleLabel(t, r.roleType)}</span>
                             <TermBadge termEndsAt={r.termEndsAt} status={r.termStatus} daysLeft={r.termDaysLeft} />
                         </span>
                         <Link href={`/abstimmungen?tab=wahlen&role=${encodeURIComponent(r.roleType)}${r.departmentId ? `&department=${encodeURIComponent(r.departmentId)}` : ''}`} className="text-sm font-medium text-primary underline">
