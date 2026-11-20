@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Mail, Phone } from 'lucide-react';
+import { roleLabel } from '@/lib/roleLabel';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api-client';
@@ -41,7 +42,7 @@ export default function WardContacts({ clubId, wardId }: { clubId: string; wardI
                         <li key={`${c.clubMemberId}-${c.department.id}-${c.roleType}`} className="text-sm">
                             <p className="font-semibold text-foreground">{c.name}</p>
                             <p className="text-xs text-muted-foreground">
-                                {t(`verein.role.${c.roleType}`)} · {c.department.name}
+                                {roleLabel(t, c.roleType)} · {c.department.name}
                             </p>
                             <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
                                 {c.phone && (

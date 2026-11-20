@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { roleLabel } from '@/lib/roleLabel';
 
 import { apiFetch } from '@/lib/api-client';
 import {
@@ -151,7 +152,7 @@ function ElectionDetail({ clubId, id, canManage, onBack }: { clubId: string; id:
             <button type="button" onClick={onBack} className="text-sm font-medium text-primary-text hover:underline">
                 ← {t('assembly.elections.back')}
             </button>
-            <SectionCard title={`${t(`verein.role.${election.roleType}`)} · ${t('assembly.elections.seats', { count: election.seats })}`}>
+            <SectionCard title={`${roleLabel(t, election.roleType)} · ${t('assembly.elections.seats', { count: election.seats })}`}>
                 <div className="space-y-3">
                     <p className="text-sm text-muted-foreground">
                         {t(`assembly.election.status.${election.status}`)}
@@ -378,7 +379,7 @@ export default function ElectionsPanel({ clubId, canManage, departments, prefill
                                 <select id="el-role" value={roleType} onChange={(e) => setRoleType(e.target.value)} className={inputClass}>
                                     {ELECTION_ROLE_TYPES.map((r) => (
                                         <option key={r} value={r}>
-                                            {t(`verein.role.${r}`)}
+                                            {roleLabel(t, r)}
                                         </option>
                                     ))}
                                 </select>
@@ -456,7 +457,7 @@ export default function ElectionsPanel({ clubId, canManage, departments, prefill
                             <li key={e.id}>
                                 <button type="button" onClick={() => setSelected(e.id)} className="flex w-full items-center justify-between gap-3 rounded-lg border border-control bg-background p-3 text-left hover:bg-muted/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-text">
                                     <span className="text-sm font-semibold text-foreground">
-                                        {t(`verein.role.${e.roleType}`)} · {t('assembly.elections.seats', { count: e.seats })}
+                                        {roleLabel(t, e.roleType)} · {t('assembly.elections.seats', { count: e.seats })}
                                     </span>
                                     <span className="text-xs text-muted-foreground">{t(`assembly.election.status.${e.status}`)}</span>
                                 </button>

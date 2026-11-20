@@ -3,6 +3,7 @@
 import { useEffect, useId, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { roleLabel } from '@/lib/roleLabel';
 
 import { formatDate, inputClass, memberErrorKey, secondaryButtonClass, todayIso } from '@/lib/clubMembers';
 import { apiFetch } from '@/lib/api-client';
@@ -295,7 +296,7 @@ export default function ProfilTab({ me, clubId, onSaved, onPhotoExpired, onDirty
                         <div className="mt-4 flex flex-wrap gap-1.5">
                             {me.roles.map((r) => (
                                 <span key={r.id} className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary-soft-foreground">
-                                    {t(`verein.role.${r.roleType}`)}
+                                    {roleLabel(t, r.roleType)}
                                 </span>
                             ))}
                         </div>

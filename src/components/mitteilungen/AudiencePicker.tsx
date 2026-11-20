@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { roleLabel } from '@/lib/roleLabel';
 
 import { apiFetch } from '@/lib/api-client';
 import { type MemberCategory, type MemberListResponse } from '@/lib/clubMembers';
@@ -221,7 +222,7 @@ export default function AudiencePicker({
                             <Group legend={t('mitteilungen.audience.roles')}>
                                 {AUDIENCE_ROLE_TYPES.map((r) => (
                                     <CheckChip key={r} checked={!!value.roleTypes?.includes(r)} onChange={() => set({ roleTypes: toggle(value.roleTypes, r) })}>
-                                        {t(`verein.role.${r}`)}
+                                        {roleLabel(t, r)}
                                     </CheckChip>
                                 ))}
                             </Group>
