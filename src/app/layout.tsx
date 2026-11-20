@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { headers, cookies } from "next/headers";
-import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { COOKIE_NAME as LANG_COOKIE_NAME } from "@/contexts/languageCookie";
 import { supportedLanguageIds, isSupportedLanguage } from "@/contexts/supportedLanguages";
@@ -15,23 +14,6 @@ import { AuthNav } from "@/components/AuthNav";
 import Logo from "@/components/Logo";
 import { url, defaultLanguage, description as projectDescription } from "../../project.config.json";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-// Display face for large public headlines only (the `.font-display` class in globals.css).
-const instrumentSerif = Instrument_Serif({
-  variable: "--font-instrument-serif",
-  subsets: ["latin", "latin-ext"],
-  weight: "400",
-});
 
 // `url` in project.config.json ships as the unfilled "https://<url>.com" placeholder
 // -- `<`/`>` make that an invalid URL, so `new URL()` throws and would crash
@@ -106,7 +88,7 @@ export default async function RootLayout({
   return (
     <html
       lang={initialLanguage}
-      className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} h-full antialiased`}
+      className="h-full antialiased"
       suppressHydrationWarning
     >
       {/* suppressHydrationWarning is required here by next-themes: it sets the

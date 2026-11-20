@@ -10,80 +10,104 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * Central color source of truth for the whole app -- both themes' values
- * live here, nowhere else. Semantic names (background/foreground/card/...)
- * instead of raw hex scattered through components, so a component never
- * hardcodes "this is light-mode gray" -- it says `bg-card`, and this file
- * decides what that means per theme.
+ * Central color source of truth for the whole app -- both themes' values live here, nowhere else. Semantic names
+ * (background/foreground/card/...) instead of raw hex scattered through components: a component says `bg-card`, and this
+ * file decides what that means per theme.
  *
- * Values below are the "vereinsblau" palette (see src/theme/palettes.ts,
- * ADR-008, and the company vault's "Product Color - MyVerein" doc) -- this
- * block is the pre-hydration default every visitor sees before
- * PaletteProvider.tsx runs, so it must match DEFAULT_PALETTE_ID exactly or
- * the first paint flashes the wrong colors. Vereinsblau (deep institutional
- * blue) as primary, Pokal-Gold (amber) as accent -- the first palette in
- * this registry where primary and accent are deliberately different hues,
- * see palettes.ts's comment.
+ * "Vereinsheim" design (2026), identical to the mobile app: warm paper canvas, Vereinsblau for things you can act on,
+ * Pokal-Gold accent, three stepped surfaces in dark mode. Values below are the "vereinsblau" palette of
+ * src/theme/palettes.ts and the pre-hydration default every visitor sees before PaletteProvider.tsx runs, so they must
+ * match it exactly (guarded by src/theme/contrast.test.ts) or the first paint flashes the wrong colors.
+ *
+ * Roles: `--primary` is the solid FILL of the primary action (white text); `--primary-text` is primary used as TEXT
+ * (links, active labels, AA on every surface); `--border` is a decorative hairline, `--border-control` the visible
+ * boundary of an interactive control (>= 3:1). `*-soft` are quiet tints with their own readable text color.
  */
 :root {
-  --background: #fafaf7;
-  --foreground: #22252b;
+  --background: #f7f5f0;
+  --foreground: #1d2129;
 
   --card: #ffffff;
-  --card-foreground: #22252b;
+  --card-foreground: #1d2129;
 
-  --muted: #eef0f2;
-  --muted-foreground: #5b6270;
+  --muted: #efece5;
+  --muted-foreground: #585e6b;
 
-  --border: #e2e4e8;
+  --border: #dedad0;
+  --border-control: #8c877b;
 
-  --primary: #2c4870;
+  --primary: #24416b;
   --primary-foreground: #ffffff;
+  --primary-text: #24416b;
+  --primary-soft: #e4eaf3;
+  --primary-soft-foreground: #1c3558;
 
   --accent: #8a6408;
   --accent-foreground: #ffffff;
+  --accent-soft: #f6ebcf;
+  --accent-soft-foreground: #5e4305;
 
   /*
-   * Status colors, fixed regardless of the chosen palette -- shouldn't
-   * shift with the accent (same rule the mobile app's colors.ts already
-   * documents). Found while wiring this file: NotificationBell.tsx and
-   * Notifications.tsx already referenced bg-destructive/text-destructive*
-   * classes that had no definition anywhere in this repo (an upstream
-   * template gap, not introduced here) -- fixed alongside adding
-   * success/warning, which club material/beitrag status views need.
+   * Status colors, fixed regardless of the chosen palette (same rule as the mobile app's palettes.ts FIXED_COLORS).
+   * The plain tone is TEXT; `*-soft` is its quiet tint; `--destructive-fill` is the solid red of an irreversible action.
    */
-  --destructive: #A81818;
+  --destructive: #a81818;
+  --destructive-fill: #a81818;
   --destructive-foreground: #ffffff;
-  --success: #256B2B;
-  --success-foreground: #ffffff;
-  --warning: #8A5310;
-  --warning-foreground: #ffffff;
+  --destructive-soft: #fbeae8;
+  --success: #256b2b;
+  --success-soft: #e6f1e5;
+  --warning: #8a5310;
+  --warning-soft: #f8ecda;
+  --info: #1f5a8a;
+  --info-soft: #e3eef6;
+  --scrim: #0b0c0f;
+
+  --shadow-card-color: rgb(26 22 12 / 0.06);
+  --shadow-card-color-2: rgb(26 22 12 / 0.04);
+  --hairline: #ece9e2;
+  --font-system: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 .dark {
-  --background: #16181d;
-  --foreground: #e8e9ec;
+  --background: #0e1013;
+  --foreground: #ecedef;
 
-  --card: #1e2127;
-  --card-foreground: #e8e9ec;
+  --card: #1d2027;
+  --card-foreground: #ecedef;
 
-  --muted: #282b32;
-  --muted-foreground: #b4b8c0;
+  --muted: #2a2e37;
+  --muted-foreground: #a9afba;
 
-  --border: #343841;
+  --border: #353a45;
+  --border-control: #7d8492;
 
-  --primary: #7a9bc7;
-  --primary-foreground: #16181d;
+  --primary: #3f6db0;
+  --primary-foreground: #ffffff;
+  --primary-text: #93b3e3;
+  --primary-soft: #1f2e45;
+  --primary-soft-foreground: #c9d9f2;
 
   --accent: #e0b84d;
-  --accent-foreground: #16181d;
+  --accent-foreground: #0e1013;
+  --accent-soft: #3a3020;
+  --accent-soft-foreground: #f0d58e;
 
-  --destructive: #FCA5A5;
-  --destructive-foreground: #16181d;
-  --success: #66BB6A;
-  --success-foreground: #16181d;
+  --destructive: #fca5a5;
+  --destructive-fill: #b83232;
+  --destructive-foreground: #ffffff;
+  --destructive-soft: #3b2224;
+  --success: #7bc67f;
+  --success-soft: #1e3322;
   --warning: #e8b84b;
-  --warning-foreground: #16181d;
+  --warning-soft: #3a2e19;
+  --info: #8ec3ea;
+  --info-soft: #1b2d3d;
+  --scrim: #0b0c0f;
+
+  --shadow-card-color: rgb(0 0 0 / 0.35);
+  --shadow-card-color-2: rgb(0 0 0 / 0.25);
+  --hairline: #2a2e37;
 }
 
 @theme inline {
@@ -94,28 +118,48 @@
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
+  --color-control: var(--border-control);
+  --color-hairline: var(--hairline);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-text: var(--primary-text);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-soft-foreground: var(--primary-soft-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-soft-foreground: var(--accent-soft-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-fill: var(--destructive-fill);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-soft: var(--destructive-soft);
   --color-success: var(--success);
-  --color-success-foreground: var(--success-foreground);
+  --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
-  --color-warning-foreground: var(--warning-foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-display: var(--font-instrument-serif);
+  --color-warning-soft: var(--warning-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-scrim: var(--scrim);
 
-  /*
-   * Two working weights plus one for rare emphasis. Geist is a variable font, so the in-between steps are real:
-   * `font-semibold` reads as a step above medium, and `font-bold`/`font-extrabold` stop at 600 (no 700-900 headings).
-   */
+  /* System font stack (Apple style): no webfont, nothing to load. */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-display: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+  /* Radii: cards 22 (xl), buttons/inputs 16 (lg), hero 26 (2xl), chips 12 (md); pills use rounded-full. */
+  --radius-xs: 0.375rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.375rem;
+  --radius-2xl: 1.625rem;
+  --radius-3xl: 2rem;
+
+  /* Regular system weights. */
   --font-weight-medium: 500;
-  --font-weight-semibold: 560;
-  --font-weight-bold: 600;
-  --font-weight-extrabold: 600;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
 
   /* One easing curve for the whole UI; durations are chosen per use (feedback 150ms, menus 200ms, entrances 400ms). */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -123,9 +167,11 @@
   --default-transition-duration: 150ms;
   --default-transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 
-  /* Neutral elevation, tinted by the text colour so it follows palette and theme. Dark themes lean on surface steps and hairlines. */
+  /* Soft elevation instead of hard borders: `shadow-card` for cards, `shadow-hero` (tinted by the primary) for hero cards. */
   --shadow-xs: 0 1px 2px color-mix(in srgb, var(--foreground) 6%, transparent);
   --shadow-sm: 0 1px 2px color-mix(in srgb, var(--foreground) 6%, transparent), 0 1px 1px color-mix(in srgb, var(--foreground) 4%, transparent);
+  --shadow-card: 0 1px 3px var(--shadow-card-color), 0 6px 20px var(--shadow-card-color-2);
+  --shadow-hero: 0 10px 28px -8px color-mix(in srgb, var(--primary) 45%, transparent), 0 2px 6px color-mix(in srgb, var(--primary) 18%, transparent);
   --shadow-md: 0 4px 12px -2px color-mix(in srgb, var(--foreground) 8%, transparent), 0 1px 2px color-mix(in srgb, var(--foreground) 6%, transparent);
   --shadow-lg: 0 12px 32px -8px color-mix(in srgb, var(--foreground) 14%, transparent), 0 2px 4px color-mix(in srgb, var(--foreground) 6%, transparent);
   --shadow-xl: 0 20px 48px -12px color-mix(in srgb, var(--foreground) 20%, transparent), 0 2px 6px color-mix(in srgb, var(--foreground) 8%, transparent);
@@ -135,30 +181,32 @@
 body {
   background: var(--color-background);
   color: var(--color-foreground);
-  font-family: var(--font-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
-  font-feature-settings: "cv11", "ss01";
+  font-family: var(--font-system);
   -webkit-font-smoothing: antialiased;
 }
 
 @layer base {
   h1, h2, h3, h4 { text-wrap: balance; }
+  /* Large titles: bold with slightly tight tracking (Apple style). */
+  h1 { letter-spacing: -0.025em; }
+  h2, h3 { letter-spacing: -0.015em; }
   p, li { text-wrap: pretty; }
   /* Numbers line up in every table and figure. */
   table, .tabular { font-variant-numeric: tabular-nums; }
-  /* One visible focus ring for keyboard users, in the palette's primary; component-level rings still win. */
+  /* One visible focus ring for keyboard users, in the palette's primary text color (AA on every surface); component-level rings still win. */
   :where(a, button, input, select, textarea, summary, [role="button"], [tabindex]:not([tabindex="-1"])):focus-visible {
-    outline: 2px solid var(--primary);
+    outline: 2px solid var(--primary-text);
     outline-offset: 2px;
   }
   :where(input, select, textarea):focus-visible { outline-offset: 0; }
   ::selection { background: color-mix(in srgb, var(--primary) 24%, transparent); }
 }
 
-/* Display face for large public headlines only (hero, section titles, page titles). Never for labels or buttons. */
+/* Large public headlines (hero, section titles, page titles): bold system face with slightly negative tracking. Never for labels or buttons. */
 .font-display {
-  font-family: var(--font-display), Georgia, "Times New Roman", serif;
-  font-weight: 400;
-  letter-spacing: -0.01em;
+  font-family: var(--font-system);
+  font-weight: 700;
+  letter-spacing: -0.025em;
 }
 
 /* Reduced motion: no transitions or animations anywhere, the finished state is simply shown. */

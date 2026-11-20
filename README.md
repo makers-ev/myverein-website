@@ -110,17 +110,19 @@ Error texts: `mapApiError(err, t, overrides?)` in `src/lib/mapApiError.ts` is th
 
 Dates and numbers: `dateLocale(language)` (`src/lib/clubMembers.ts`) is the only source of the formatting locale (`de-DE` / `en-GB` from the UI language, which defaults to the browser's `Accept-Language`); no page hardcodes a locale.
 
-### Visual design system
+### Visual design system ("Vereinsheim")
 
-One look across the public pages and the signed-in app. All colours stay on the palette tokens (no value changed, see [Color palettes & theming](#color-palettes--theming)); the design work sits in type, space, radius, elevation, icons and motion.
+One look across the public pages and the signed-in app, identical to the mobile app: Apple style, rounded, clean. Colours live in the palette tokens (see [Color palettes & theming](#color-palettes--theming)); the rest sits in type, radius, elevation and the event highlight.
 
-- **Type:** Geist for the whole interface (applied on `body` via `--font-sans`; it used to fall back to Arial), Geist Mono for figures and meta, Instrument Serif only for large public headlines (`.font-display`, loaded in `layout.tsx`). Weights: 400 and 500 for text, 560 (`font-semibold`) and 600 (`font-bold`/`font-extrabold`) are the only emphasis steps; they are mapped in `globals.css` `@theme` so no heading renders at 700-900. Sentence case everywhere (no uppercase tracked labels), tabular figures in tables (`table`, `.tabular`), balanced headings.
+- **Type:** the system stack `-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif` (`--font-sans`, no webfont, no `next/font`). Large titles (`PageHeader`, hero, `.font-display`) are bold with slightly negative letter-spacing (-0.025em); weights follow the system (medium 500, semibold 600, bold 700). `font-mono` is the system monospace stack. Sentence case, tabular figures in tables (`table`, `.tabular`), balanced headings.
 - **Space:** 4px grid. Marketing chapters share `MK_SECTION` (`max-w-7xl`, 56/72 vertical padding); public content pages use `max-w-5xl` / `max-w-7xl` with `PageHeader`.
-- **Shape:** controls 8px (`rounded-lg`), cards 12-16px (`rounded-xl`/`rounded-2xl`), tags 6px (`rounded-md`); pills only for avatars and switches.
-- **Elevation:** neutral tokens `shadow-xs` to `shadow-2xl` (tinted by `--foreground`, defined in `globals.css`); borders are the palette's `--border` hairline. No coloured shadows, glows, gradients or blurred blobs.
+- **Shape:** cards 22px (`rounded-xl`), buttons and inputs 16px (`rounded-lg`), hero cards 26px (`rounded-2xl`), small chips 12px (`rounded-md`); tags, badges and avatars are full pills (`rounded-full`).
+- **Elevation:** cards use the soft `shadow-card` instead of a hard border, dividers are the light `--border` hairline; hero cards use `shadow-hero` (soft shadow tinted with the primary). Interactive controls keep a visible `border-control` (`--border-control`, at least 3:1). Dark mode relies on the stepped surfaces (canvas / card / muted).
+- **Events:** calendar items are lightly highlighted, not loud: a tinted date tile (`bg-primary-soft`) and a faint tinted event row.
 - **Icons:** lucide at 16 or 18px, stroke 1.5, in the muted or foreground colour; no emoji in the interface (the language switcher shows `DE`/`EN` codes, not flags).
-- **Motion:** one easing curve (`--ease-out`), 150ms for feedback, 180ms for menus (`.animate-menu`), 400-900ms for marketing entrances; only colour, background, opacity and transform are transitioned (no `transition-all`, nothing bounces, nothing loops except the loading skeleton). A global `prefers-reduced-motion` rule shows the finished state.
-- **Focus:** a global 2px primary outline on `:focus-visible` (base layer); component rings still win. Touch targets are at least 44px (`min-h-11`), compact menu rows 36px.
+- **Motion:** one easing curve (`--ease-out`), 150ms for feedback, 180ms for menus (`.animate-menu`), 400-900ms for marketing entrances; only colour, background, opacity and transform are transitioned. A global `prefers-reduced-motion` rule shows the finished state.
+- **Focus:** a global 2px `--primary-text` outline on `:focus-visible` (base layer); component rings still win. Touch targets are at least 44px (`min-h-11`), compact menu rows 36px.
+- **Colour roles in classes:** `bg-primary text-primary-foreground` is the solid action; `text-primary-text` is primary as text/links; `bg-primary-soft text-primary-soft-foreground`, `bg-accent-soft text-accent-soft-foreground` and `bg-{success,warning,info,destructive}-soft` are quiet tints (status text `text-success` etc.); `bg-destructive-fill` is the solid red of an irreversible action; `border-control` is the border of an input or secondary button.
 
 ### Internationalisation (Wave 14 DS3)
 
@@ -408,24 +410,24 @@ each palette defines its own light *and* dark token set.
 
 | Piece | File | Role |
 |---|---|---|
-| Palette registry | `src/theme/palettes.ts` | `palettes` — a `Record<paletteId, { label, light, dark }>` of predefined palettes (`vereinsblau`, `ink-navy`, `ocean`, `forest`, `sunset`). The `vereinsblau` default must always match `globals.css`'s `:root`/`.dark` values exactly (see below) |
+| Palette registry | `src/theme/palettes.ts` | `palettes` — a `Record<paletteId, { label, light, dark }>` of predefined palettes (`vereinsblau`, `ink-navy`, `ocean`, `forest`, `sunset`) with the roles `background/foreground/card/muted/mutedForeground/border/borderControl/primary/primaryForeground/primaryText/primarySoft(+Foreground)/accent(+Foreground)/accentSoft(+Foreground)`, plus `TOKEN_CSS_VARS` (token to CSS variable). Mirrors the mobile app's registry. The `vereinsblau` default must always match `globals.css`'s `:root`/`.dark` values exactly (see below) |
 | Runtime application | `src/components/PaletteProvider.tsx` | Wraps the app (inside `ThemeProvider`, since it reads `next-themes`' `resolvedTheme` to know which mode's tokens to apply). On every palette/mode change, writes the active token set as inline CSS custom properties on `<html>` (`--background`, `--primary`, etc.), overriding `globals.css`'s defaults. Persists the chosen palette id and any custom colors to `localStorage` (`color-palette-id` / `color-palette-custom`) — exposes both via the `usePalette()` hook |
-| Custom palette derivation | `src/theme/deriveTokens.ts` | Pure function: 3 anchor colors (background/foreground/primary, one set per mode) → a full token set, mixing card/muted/border from the anchors and picking black/white foreground text by contrast. No WCAG contrast enforcement — a user can pick a poorly-readable combination (deliberate, see the vault's `ADR-008`) |
+| Custom palette derivation | `src/theme/deriveTokens.ts` | Pure function: 3 anchor colors (background/foreground/primary, one set per mode) → a full token set, mixing card/muted/border from the anchors and deriving the Vereinsheim roles (primary fill, `primaryText`, soft tints, `mutedForeground`, `borderControl`) so that text reaches 4.5:1 and control borders 3:1; the anchors themselves stay the user's choice |
 | Custom palette UI | `src/components/PaletteSettings.tsx` | Predefined-palette swatches + (when "Custom" is selected) 6 native `<input type="color">` pickers, wired to `usePalette()` |
-| Contrast guard (Wave 14 N5) | `src/theme/contrast.ts`, `src/theme/contrast.test.ts` | Vitest: every palette (light + dark) must reach WCAG AA 4.5:1 for text pairs, `FIXED_COLORS` (`destructive`/`success`/`warning`, palette-independent, exported from `palettes.ts`) must pass on every surface, and `globals.css`'s defaults must equal the `vereinsblau` palette. Values mirror the mobile app's `src/theme/palettes.ts` — change both together |
+| Contrast guard (Wave 14 N5) | `src/theme/contrast.ts`, `src/theme/contrast.test.ts` | Vitest: every palette (light + dark) must reach WCAG AA 4.5:1 for text pairs and 3:1 for control borders, derived custom palettes stay AA, `FIXED_COLORS` (`destructive`/`success`/`warning`/`info` plus soft tints, palette-independent, exported from `palettes.ts`) must pass on every surface, and `globals.css`'s defaults must equal the `vereinsblau` palette. Values mirror the mobile app's `src/theme/palettes.ts` — change both together |
 
 **Adding a new predefined palette:** add an entry to the `palettes` object in
 `src/theme/palettes.ts` with a `label`, `light`, and `dark` token set — the
 `TokenSet` type requires every key, so TypeScript catches a missing one. It
 shows up in Settings automatically; no other file to touch.
 
-**Changing the default palette's colors:** `ink-navy` is the *only* palette
+**Changing the default palette's colors:** `vereinsblau` is the *only* palette
 that also needs updating in **two other places**, because it's what a first
 paint renders before `PaletteProvider` has run client-side:
 
 - `src/app/globals.css`'s `:root`/`.dark` blocks — the actual values a fresh
   page load uses before any JS executes.
-- `src/theme/palettes.ts`'s `palettes['ink-navy']` entry — must mirror
+- `src/theme/palettes.ts`'s `palettes.vereinsblau` entry — must mirror
   `globals.css` exactly, or switching away from a different palette back to
   the default (or a plain reload) shows a mismatched color for one frame.
 
@@ -433,7 +435,7 @@ paint renders before `PaletteProvider` has run client-side:
 this same "keep in sync by hand" note, for the same reason — see [SEO](#seo).)
 
 **Known limitation:** switching to a *non-default* palette flashes the
-default (`ink-navy`) for one frame on a full page reload — there's no
+default (`vereinsblau`) for one frame on a full page reload — there's no
 pre-hydration blocking script for the palette, unlike `next-themes`' own
 light/dark FOUC-prevention script. Acceptable for a template; fixing it
 would mean adding a second nonce'd inline script mirroring that approach.
