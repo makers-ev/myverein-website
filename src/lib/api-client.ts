@@ -2,6 +2,12 @@ import { authClient, backendUrl } from '@/lib/auth-client';
 
 /** Fired on `window` when a write was refused with `403 DPA_REQUIRED` (processor agreement not accepted in time). */
 export const DPA_REQUIRED_EVENT = 'myverein:dpa-required';
+/** A club route answered `403 CLUB_SUSPENDED` (platform suspension); `detail.note` is the text the platform wants members to see. */
+export const CLUB_SUSPENDED_EVENT = 'myverein:club-suspended';
+
+export function isClubSuspended(err: unknown): boolean {
+    return err instanceof ApiError && err.status === 403 && (err.code === 'CLUB_SUSPENDED' || (err.details as { code?: unknown } | undefined)?.code === 'club_suspended');
+}
 
 /** Mirrors the backend's `AppError`/`ErrorCode` shape (src/lib/errors.ts). */
 export class ApiError extends Error {
@@ -84,6 +90,10 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
         );
         // Wave 10: the DPA gate locks writes of the whole club; every screen hears about it (see DpaRequiredNotice).
         if (apiError.status === 403 && apiError.code === 'DPA_REQUIRED' && typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(DPA_REQUIRED_EVENT));
+        if (isClubSuspended(apiError) && typeof window !== 'undefined') {
+            const note = (apiError.details as { note?: unknown } | undefined)?.note;
+            window.dispatchEvent(new CustomEvent(CLUB_SUSPENDED_EVENT, { detail: { note: typeof note === 'string' && note.trim() ? note : null } }));
+        }
         throw apiError;
     }
 

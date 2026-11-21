@@ -245,6 +245,13 @@ The homepage (`pageContent/Homepage.tsx`) only composes chapters from `src/compo
 - **Texts:** `PublicClubTranslation.ts` (DE/EN only, keys `pc.`, `finder.`, `pcEditor.`).
 - **Not yet:** a sitemap of club pages (the backend has no list route) and an index release (pages stay `noindex`, see the open decision above).
 
+### Suspension, conversions and notices (Wave 15 review follow-ups)
+
+- **`403 CLUB_SUSPENDED`:** `apiFetch` announces it (`CLUB_SUSPENDED_EVENT`, like `DPA_REQUIRED`); `components/ClubSuspendedNotice.tsx` (protected layout) shows a calm note "Dieser Verein ist vorübergehend gesperrt" with the platform's `note` if any (never the internal reason). `mapApiError`/`memberErrorKey` map it to `err.clubSuspended`, also on `/einladung` (preview and accept). The suspended club's `/my-clubs` flag is not used yet.
+- **Lead conversion** needs `leads:write` **and** `members:write` (`canConvertLeads`; the button is hidden otherwise). `409 possible_duplicate` asks "Es gibt schon ein Mitglied mit dieser E-Mail. Trotzdem übernehmen?" (link to the member list) and sends again with `{ confirmDuplicate: true }`.
+- **Public page editor:** `422 privacy_notice_required` (enquiry form without a published club privacy notice) is explained with a link to the Datenschutz tab (notice is kept under Datenschutz > Datenschutzhinweis); the page shows no form while the club has no published notice, even if the form is switched on. The calendar picker warns that every future event of the chosen calendars appears publicly and recommends a calendar of its own.
+- The website uses no `/api/auth/organization/*` member-list paths (the backend blocks them for non-board accounts); all member data goes through the club routes.
+
 ### Adding a protected page
 
 1. Create the route as a new folder under `src/app/(protected)/`, e.g.

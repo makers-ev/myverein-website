@@ -41,6 +41,7 @@ import MemberList from '@/components/verein/MemberList';
 import MemberAvatar from '@/components/verein/MemberAvatar';
 import RoleBadge from '@/components/verein/RoleBadge';
 import LeadsPanel from '@/components/leads/LeadsPanel';
+import { canConvertLeads } from '@/lib/leads';
 import SponsorsPanel from '@/components/sponsors/SponsorsPanel';
 import ProfilTab, { type OwnMembership } from '@/components/verein/ProfilTab';
 import LoadingText from '@/components/LoadingText';
@@ -422,7 +423,7 @@ export default function VereinPageContent() {
                         {currentTab === 'formulare' && gate.manage && <FormsPanel clubId={activeClub.clubId} permissions={permissions} onDirtyChange={onFormsDirty} onOpenCategorySettings={tabs.includes('einstellungen') ? () => void selectTab('einstellungen') : undefined} />}
                         {currentTab === 'zusatzfelder' && gate.manage && <CustomFieldsPanel clubId={activeClub.clubId} permissions={permissions} />}
                         {currentTab === 'sponsoren' && (permissions.includes('sponsors:read') || permissions.includes('sponsors:write')) && <SponsorsPanel clubId={activeClub.clubId} canWrite={permissions.includes('sponsors:write')} />}
-                        {currentTab === 'interessenten' && permissions.includes('leads:write') && <LeadsPanel clubId={activeClub.clubId} departments={(info?.departments ?? []).map((d) => ({ id: d.id, name: d.name }))} />}
+                        {currentTab === 'interessenten' && permissions.includes('leads:write') && <LeadsPanel clubId={activeClub.clubId} canConvertMember={canConvertLeads(permissions)} departments={(info?.departments ?? []).map((d) => ({ id: d.id, name: d.name }))} />}
                         {currentTab === 'fehlt' && permissions.includes('absences:read') && (
                             <AbsencesBoardPanel clubId={activeClub.clubId} departments={(info?.departments ?? []).map((d) => ({ id: d.id, name: d.name }))} />
                         )}

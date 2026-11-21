@@ -50,7 +50,7 @@ function LeadRow({ lead, onOpen, extra }: { lead: Lead; onOpen: () => void; extr
  * Prospect pipeline (Wave 15 W3), tab `interessenten` with `leads:write`: requests from the public club page and manual entries,
  * status, notes, conversion to a member record, and waitlists per department.
  */
-export default function LeadsPanel({ clubId, departments }: { clubId: string; departments: { id: string; name: string }[] }) {
+export default function LeadsPanel({ clubId, departments, canConvertMember }: { clubId: string; canConvertMember: boolean; departments: { id: string; name: string }[] }) {
     const { t } = useLanguage();
     const [view, setView] = useState<View>('requests');
     const [filters, setFilters] = useState<LeadFilters>(emptyFilters);
@@ -282,7 +282,7 @@ export default function LeadsPanel({ clubId, departments }: { clubId: string; de
                 </>
             ) : null}
 
-            {dialog && <LeadDialog key={dialog.lead?.id ?? 'new'} clubId={clubId} lead={dialog.lead} departments={departments} onClose={() => setDialog(null)} onDone={onDone} />}
+            {dialog && <LeadDialog key={dialog.lead?.id ?? 'new'} clubId={clubId} lead={dialog.lead} departments={departments} canConvertMember={canConvertMember} onClose={() => setDialog(null)} onDone={onDone} />}
         </div>
     );
 }

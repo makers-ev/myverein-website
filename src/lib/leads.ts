@@ -147,6 +147,22 @@ export function leadPatch(original: LeadForm, next: LeadForm): Record<string, un
     return patch;
 }
 
+/**
+ * Converting a lead creates a member record, so it needs `members:write` on top of `leads:write` (deny-by-default: the button is
+ * hidden otherwise; the backend answers 403 anyway).
+ */
+export function canConvertLeads(permissions: readonly string[] | null | undefined): boolean {
+    return !!permissions && permissions.includes('leads:write') && permissions.includes('members:write');
+}
+
+/** `409 possible_duplicate`: a member of the club already has this e-mail address (`clubMemberId` of that member). */
+export function possibleDuplicate(err: unknown): { clubMemberId: string | null } | null {
+    if (!(err instanceof ApiError) || err.status !== 409) return null;
+    const d = err.details as { code?: unknown; clubMemberId?: unknown } | undefined;
+    if (d?.code !== 'possible_duplicate') return null;
+    return { clubMemberId: typeof d.clubMemberId === 'string' ? d.clubMemberId : null };
+}
+
 /** Plain-language key for a failed lead request. */
 export function leadErrorKey(err: unknown): string {
     if (err instanceof ApiError) {

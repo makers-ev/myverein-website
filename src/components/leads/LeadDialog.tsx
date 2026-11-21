@@ -11,7 +11,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api-client';
 import { inputClass, primaryButtonClass, secondaryButtonClass } from '@/lib/clubMembers';
 import { UI_BTN_DANGER_OUTLINE, UI_LABEL } from '@/lib/uiClasses';
-import { LEAD_LIMITS, canConvert, createLeadBody, emptyLeadForm, formFromLead, leadErrorKey, leadPatch, leadProblem, nextStatuses, statusTone, type Lead, type LeadForm } from '@/lib/leads';
+import { LEAD_LIMITS, canConvert, createLeadBody, emptyLeadForm, formFromLead, leadErrorKey, leadPatch, leadProblem, nextStatuses, possibleDuplicate, statusTone, type Lead, type LeadForm } from '@/lib/leads';
 
 export type LeadDialogResult = { kind: 'created' | 'saved' | 'deleted' } | { kind: 'converted' };
 
@@ -20,7 +20,7 @@ export type LeadDialogResult = { kind: 'created' | 'saved' | 'deleted' } | { kin
  * trial training date, department, waitlist, internal notes, and "Aufnehmen" (converts to a member record). `lead === null` is the
  * manual entry (a call, an email, someone at the sports field).
  */
-export default function LeadDialog({ clubId, lead, departments, onClose, onDone }: { clubId: string; lead: Lead | null; departments: { id: string; name: string }[]; onClose: () => void; onDone: (result: LeadDialogResult) => void }) {
+export default function LeadDialog({ clubId, lead, departments, canConvertMember, onClose, onDone }: { clubId: string; lead: Lead | null; departments: { id: string; name: string }[]; canConvertMember: boolean; onClose: () => void; onDone: (result: LeadDialogResult) => void }) {
     const { t, language } = useLanguage();
     const uid = useId();
     const id = (n: string) => `${uid}-${n}`;
@@ -49,12 +49,15 @@ export default function LeadDialog({ clubId, lead, departments, onClose, onDone 
         onClose();
     }
 
-    async function run(action: () => Promise<LeadDialogResult>) {
+    /** An action may answer `null` = the person backed out (nothing happened, the dialog stays). */
+    async function run(action: () => Promise<LeadDialogResult | null>) {
         if (busy) return;
         setBusy(true);
         setError(null);
         try {
-            onDone(await action());
+            const result = await action();
+            if (result === null) setBusy(false);
+            else onDone(result);
         } catch (err) {
             setError(t(leadErrorKey(err)));
             setBusy(false);
@@ -77,7 +80,27 @@ export default function LeadDialog({ clubId, lead, departments, onClose, onDone 
         if (!lead) return;
         if (!(await confirm({ title: t('leads.convert.title'), body: t('leads.convert.body', { name: lead.name }), confirmLabel: t('leads.convert.confirm') }))) return;
         await run(async () => {
-            await apiFetch(`/club-leads/${lead.id}/convert?${q}`, { method: 'POST' });
+            try {
+                await apiFetch(`/club-leads/${lead.id}/convert?${q}`, { method: 'POST' });
+            } catch (err) {
+                const dup = possibleDuplicate(err);
+                if (!dup) throw err;
+                // A member of the club already has this e-mail address: ask, then send again with the explicit confirmation.
+                const again = await confirm({
+                    title: t('leads.convert.duplicate.title'),
+                    body: (
+                        <>
+                            {t('leads.convert.duplicate.body')}{' '}
+                            <Link href="/verein?tab=mitglieder" target="_blank" rel="noopener noreferrer" className="font-medium text-primary-text underline">
+                                {t('leads.convert.duplicate.link')}
+                            </Link>
+                        </>
+                    ),
+                    confirmLabel: t('leads.convert.duplicate.confirm'),
+                });
+                if (!again) return null;
+                await apiFetch(`/club-leads/${lead.id}/convert?${q}`, { method: 'POST', body: { confirmDuplicate: true } });
+            }
             return { kind: 'converted' };
         });
     }
@@ -250,7 +273,7 @@ export default function LeadDialog({ clubId, lead, departments, onClose, onDone 
                         </div>
                     )}
 
-                    {lead && canConvert(lead) && (
+                    {lead && canConvertMember && canConvert(lead) && (
                         <section className="rounded-xl bg-primary-soft p-4">
                             <h3 className="text-sm font-bold text-primary-soft-foreground">{t('leads.convert.heading')}</h3>
                             <p className="mt-1 text-sm text-primary-soft-foreground">{t('leads.convert.hint')}</p>

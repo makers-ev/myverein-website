@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import PublicClubView from '@/components/publicClub/PublicClubView';
@@ -26,6 +27,7 @@ function detailsCode(err: unknown): string | null {
 export function editorErrorKey(err: unknown): string {
     const code = detailsCode(err);
     if (code === 'contact_consent_required') return 'pcEditor.consent.required';
+    if (code === 'privacy_notice_required') return 'pcEditor.error.privacyNotice';
     if (code === 'unknown_image') return 'pcEditor.error.image';
     if (code === 'image_limit') return 'pcEditor.image.limit';
     if (code === 'unknown_department' || code === 'unknown_calendar') return 'pcEditor.error.reference';
@@ -198,7 +200,7 @@ export default function PublicProfilePanel({ clubId, clubName, departments, onDi
     const [loadError, setLoadError] = useState<unknown>(null);
     const [consent, setConsent] = useState(false);
     const [busy, setBusy] = useState(false);
-    const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
+    const [status, setStatus] = useState<{ ok: boolean; text: string; noticeLink?: boolean } | null>(null);
 
     const apply = useCallback((d: EditorData) => {
         setData(d);
@@ -279,7 +281,8 @@ export default function PublicProfilePanel({ clubId, clubName, departments, onDi
             else apply(next);
             setStatus({ ok: true, text: t(okKey) });
         } catch (err) {
-            setStatus({ ok: false, text: t(editorErrorKey(err)) });
+            const key = editorErrorKey(err);
+            setStatus({ ok: false, text: t(key), noticeLink: key === 'pcEditor.error.privacyNotice' });
         } finally {
             setBusy(false);
         }
@@ -432,6 +435,7 @@ export default function PublicProfilePanel({ clubId, clubName, departments, onDi
                         <p id="pce-inquiry-hint" className="ml-14 mt-1 text-xs text-muted-foreground">
                             {t('pcEditor.inquiryEnabled.hint')}
                         </p>
+                        {draft.leadFormEnabled && <p className="ml-14 mt-1 text-xs text-muted-foreground">{t('pcEditor.inquiry.notice.hint')}</p>}
                     </div>
                     {draft.leadFormEnabled && (
                         <div className="ml-14">
@@ -467,6 +471,14 @@ export default function PublicProfilePanel({ clubId, clubName, departments, onDi
                     {status && (
                         <p role={status.ok ? 'status' : 'alert'} className={`text-sm ${status.ok ? 'text-success' : 'text-destructive'}`}>
                             {status.text}
+                            {status.noticeLink && (
+                                <>
+                                    {' '}
+                                    <Link href="/verein?tab=datenschutz" className="font-semibold underline">
+                                        {t('pcEditor.error.privacyNotice.link')}
+                                    </Link>
+                                </>
+                            )}
                         </p>
                     )}
                 </div>

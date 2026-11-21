@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { ApiError } from './api-client';
-import { canConvert, createLeadBody, emptyFilters, emptyLeadForm, formFromLead, isOpen, leadErrorKey, leadPatch, leadProblem, leadsQuery, nextStatuses, pageCount, type Lead } from './leads';
+import { canConvert, canConvertLeads, possibleDuplicate, createLeadBody, emptyFilters, emptyLeadForm, formFromLead, isOpen, leadErrorKey, leadPatch, leadProblem, leadsQuery, nextStatuses, pageCount, type Lead } from './leads';
 
 const lead = (over: Partial<Lead> = {}): Lead => ({
     id: 'l1',
@@ -85,3 +85,19 @@ describe('leadErrorKey', () => {
         expect(leadErrorKey(new ApiError(403, 'FORBIDDEN', 'no'))).toBe('verein.err.forbidden');
     });
 });
+
+describe('conversion rights and duplicates (backend: leads:write and members:write)', () => {
+    it('needs both rights, deny-by-default', () => {
+        expect(canConvertLeads(['leads:write', 'members:write'])).toBe(true);
+        expect(canConvertLeads(['leads:write'])).toBe(false);
+        expect(canConvertLeads(['members:write'])).toBe(false);
+        expect(canConvertLeads(null)).toBe(false);
+    });
+    it('recognises the duplicate conflict and its member', () => {
+        expect(possibleDuplicate(new ApiError(409, 'CONFLICT', 'x', { code: 'possible_duplicate', clubMemberId: 'm1' }))).toEqual({ clubMemberId: 'm1' });
+        expect(possibleDuplicate(new ApiError(409, 'CONFLICT', 'x', { code: 'lead_already_converted' }))).toBeNull();
+        expect(possibleDuplicate(new ApiError(422, 'X', 'x', { code: 'possible_duplicate' }))).toBeNull();
+        expect(possibleDuplicate(new Error('x'))).toBeNull();
+    });
+});
+
