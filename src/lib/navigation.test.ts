@@ -27,6 +27,13 @@ describe('buildNavGroups', () => {
         for (const t of visibleTabs(perms, base.roles)) expect(tabs).toContain(t);
         expect(g.find((x) => x.id === 'admin')!.entries.map((e) => e.id)).toContain('customFields');
     });
+    it('adds the sponsors entry only with a sponsors right', () => {
+        const none = buildNavGroups({ ...base, permissions: ['members:write'] }).flatMap((x) => x.entries);
+        expect(none.some((e) => e.id === 'sponsors')).toBe(false);
+        const entry = buildNavGroups({ ...base, permissions: ['sponsors:write'] }).flatMap((x) => x.entries).find((e) => e.id === 'sponsors');
+        expect(entry?.href).toBe('/verein?tab=sponsoren');
+        expect(breadcrumbsFor('/verein', 'sponsoren').map((c) => c.labelKey)).toEqual(['nav.heute', 'nav.verein', 'verein.tab.sponsoren']);
+    });
     it('reduces a guardian-only account to the family area', () => {
         const g = buildNavGroups({ hasClub: false, hasWards: true, permissions: null, roles: [] });
         expect(g).toHaveLength(1);

@@ -42,6 +42,14 @@ describe('visible tabs', () => {
         expect(visibleTabs(['announcements:write_department'], mitglied.roles)).not.toContain('einstellungen');
     });
 
+    it('offers the sponsors tab with sponsors:read or sponsors:write only (Wave 15)', () => {
+        expect(visibleTabs([], mitglied.roles)).not.toContain('sponsoren');
+        expect(visibleTabs(['members:write'], mitglied.roles)).not.toContain('sponsoren');
+        expect(visibleTabs(['sponsors:read'], mitglied.roles)).toContain('sponsoren');
+        expect(visibleTabs(['sponsors:write'], mitglied.roles)).toContain('sponsoren');
+        expect(visibleTabs(guardian.permissions, guardian.roles)).not.toContain('sponsoren');
+    });
+
     it('offers "Wer fehlt" only with absences:read', () => {
         expect(visibleTabs([], mitglied.roles)).not.toContain('fehlt');
         expect(visibleTabs(['absences:read'], mitglied.roles)).toContain('fehlt');

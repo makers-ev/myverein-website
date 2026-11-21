@@ -39,6 +39,7 @@ import MarketingTranslation from './MarketingTranslation';
 import MarketingHeroTranslation from './MarketingHeroTranslation';
 import MarketingStoryTranslation from './MarketingStoryTranslation';
 import MarketingTrustTranslation from './MarketingTrustTranslation';
+import OutreachTranslation from './OutreachTranslation';
 
 interface LanguageContextType {
     language: Language;
@@ -79,6 +80,7 @@ export const translations: Record<Language, Record<string, string>> = supportedL
             ...(id === 'de' || id === 'en' ? AssemblyTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? VerfuegbarkeitTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? StandorteTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? OutreachTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? RoadmapTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? ChangelogTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? FeaturesTranslation[id] : {}),

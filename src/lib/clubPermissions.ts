@@ -4,7 +4,7 @@
  * a missing or unknown permission grants nothing. Pure, so the gating rules are unit-tested.
  */
 
-export type ClubTab = 'info' | 'profil' | 'mitglieder' | 'abteilungen' | 'austritte' | 'kennzahlen' | 'formulare' | 'zusatzfelder' | 'einstellungen' | 'fehlt' | 'datenschutz';
+export type ClubTab = 'info' | 'profil' | 'mitglieder' | 'abteilungen' | 'austritte' | 'kennzahlen' | 'formulare' | 'zusatzfelder' | 'einstellungen' | 'fehlt' | 'datenschutz' | 'sponsoren';
 
 export const can = (permissions: readonly string[] | null | undefined, permission: string): boolean => !!permissions && permissions.includes(permission);
 
@@ -19,6 +19,8 @@ export function visibleTabs(permissions: readonly string[], roles: ReadonlyArray
     if (can(permissions, 'members:write')) tabs.push('austritte');
     if (can(permissions, 'club_stats:read')) tabs.push('kennzahlen');
     if (can(permissions, 'forms:write')) tabs.push('formulare', 'zusatzfelder');
+    // Wave 15: sponsors and partners (`sponsors:read` = board incl. beisitz, changes need `sponsors:write`).
+    if (can(permissions, 'sponsors:read') || can(permissions, 'sponsors:write')) tabs.push('sponsoren');
     // Club rules and reminders hang on members:write, the club's mail template on announcements:write (Wave 9 W6).
     // Wave 11: the statute parameters of the general assembly (`assembly:manage`) live there as well.
     // Wave 13: branding (`branding:write`) and the storage overview (`storage:read`) live there too.

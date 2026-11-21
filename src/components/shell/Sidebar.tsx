@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { Building2, CalendarDays, ClipboardList, Clock, FileText, Home, HeartHandshake, LayoutGrid, LogOut, Megaphone, MapPin, PanelLeftClose, PanelLeftOpen, Settings as SettingsIcon, ShieldCheck, CircleHelp, UserCircle, Users, Vote, BarChart3, FormInput, ListPlus, CalendarOff, type LucideIcon } from 'lucide-react';
+import { Building2, CalendarDays, ClipboardList, Clock, FileText, Home, HeartHandshake, LayoutGrid, LogOut, Megaphone, MapPin, PanelLeftClose, PanelLeftOpen, Settings as SettingsIcon, ShieldCheck, CircleHelp, UserCircle, Users, Vote, BarChart3, FormInput, ListPlus, CalendarOff, Handshake, type LucideIcon } from 'lucide-react';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 import { docsUrl } from '@/lib/docs';
@@ -29,6 +29,7 @@ const ICONS: Record<NavIcon, LucideIcon> = {
     absences: CalendarOff,
     privacy: ShieldCheck,
     settings: SettingsIcon,
+    sponsors: Handshake,
 };
 
 /** Grouped, collapsible side navigation. `collapsed` shows icons only (desktop); the mobile drawer always renders it expanded. */
