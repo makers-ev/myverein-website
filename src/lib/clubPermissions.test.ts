@@ -50,6 +50,12 @@ describe('visible tabs', () => {
         expect(visibleTabs(guardian.permissions, guardian.roles)).not.toContain('sponsoren');
     });
 
+    it('offers the prospects tab only with leads:write (Wave 15)', () => {
+        expect(visibleTabs(['members:write', 'sponsors:write'], mitglied.roles)).not.toContain('interessenten');
+        expect(visibleTabs(['leads:write'], mitglied.roles)).toContain('interessenten');
+        expect(visibleTabs(guardian.permissions, guardian.roles)).not.toContain('interessenten');
+    });
+
     it('offers "Wer fehlt" only with absences:read', () => {
         expect(visibleTabs([], mitglied.roles)).not.toContain('fehlt');
         expect(visibleTabs(['absences:read'], mitglied.roles)).toContain('fehlt');

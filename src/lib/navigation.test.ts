@@ -34,6 +34,11 @@ describe('buildNavGroups', () => {
         expect(entry?.href).toBe('/verein?tab=sponsoren');
         expect(breadcrumbsFor('/verein', 'sponsoren').map((c) => c.labelKey)).toEqual(['nav.heute', 'nav.verein', 'verein.tab.sponsoren']);
     });
+    it('adds the prospects entry only with leads:write', () => {
+        const entries = (perms: string[]) => buildNavGroups({ ...base, permissions: perms }).flatMap((x) => x.entries);
+        expect(entries(['sponsors:write']).some((e) => e.id === 'leads')).toBe(false);
+        expect(entries(['leads:write']).find((e) => e.id === 'leads')?.href).toBe('/verein?tab=interessenten');
+    });
     it('reduces a guardian-only account to the family area', () => {
         const g = buildNavGroups({ hasClub: false, hasWards: true, permissions: null, roles: [] });
         expect(g).toHaveLength(1);

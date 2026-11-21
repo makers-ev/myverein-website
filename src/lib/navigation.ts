@@ -5,7 +5,7 @@ import { can, isGuardianOnly, visibleTabs, type ClubTab } from '@/lib/clubPermis
  * permissions (deny-by-default). Pure so the gating is unit-tested; the sidebar only renders it.
  */
 
-export type NavIcon = 'today' | 'club' | 'members' | 'departments' | 'profile' | 'announcements' | 'votes' | 'family' | 'calendar' | 'availability' | 'locations' | 'documents' | 'applications' | 'exits' | 'stats' | 'forms' | 'customFields' | 'absences' | 'privacy' | 'settings' | 'sponsors';
+export type NavIcon = 'today' | 'club' | 'members' | 'departments' | 'profile' | 'announcements' | 'votes' | 'family' | 'calendar' | 'availability' | 'locations' | 'documents' | 'applications' | 'exits' | 'stats' | 'forms' | 'customFields' | 'absences' | 'privacy' | 'settings' | 'sponsors' | 'leads';
 
 export interface NavEntry {
     id: string;
@@ -73,6 +73,7 @@ export function buildNavGroups({ hasClub, hasWards, permissions, roles }: NavInp
     if (tabs.includes('formulare')) admin.push(verein('forms', 'nav.admin.forms', 'forms', 'formulare'));
     if (tabs.includes('zusatzfelder')) admin.push(verein('customFields', 'nav.admin.customFields', 'customFields', 'zusatzfelder'));
     if (tabs.includes('sponsoren')) admin.push(verein('sponsors', 'nav.admin.sponsors', 'sponsors', 'sponsoren'));
+    if (tabs.includes('interessenten')) admin.push(verein('leads', 'nav.admin.leads', 'leads', 'interessenten'));
     if (tabs.includes('fehlt')) admin.push(verein('absences', 'nav.admin.absences', 'absences', 'fehlt'));
     if (tabs.includes('datenschutz')) admin.push(verein('privacy', 'nav.admin.privacy', 'privacy', 'datenschutz'));
     if (tabs.includes('einstellungen')) admin.push(verein('settings', 'nav.admin.settings', 'settings', 'einstellungen'));
@@ -99,7 +100,7 @@ const PAGE_LABELS: Record<string, string> = {
     '/notifications': 'nav.notifications',
 };
 
-const CLUB_TABS: readonly ClubTab[] = ['info', 'profil', 'mitglieder', 'abteilungen', 'austritte', 'kennzahlen', 'formulare', 'zusatzfelder', 'einstellungen', 'fehlt', 'datenschutz', 'sponsoren'];
+const CLUB_TABS: readonly ClubTab[] = ['info', 'profil', 'mitglieder', 'abteilungen', 'austritte', 'kennzahlen', 'formulare', 'zusatzfelder', 'einstellungen', 'fehlt', 'datenschutz', 'sponsoren', 'interessenten'];
 
 /** `?tab=` as the club page reads it: an unknown value falls back to the default tab. */
 export function normalizeTab(tab: string | null): ClubTab {
