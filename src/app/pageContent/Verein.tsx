@@ -412,7 +412,7 @@ export default function VereinPageContent() {
                             ) : (
                                 <LoadingText />
                             ))}
-                        {currentTab === 'kennzahlen' && <ClubStatsPanel clubId={activeClub.clubId} />}
+                        {currentTab === 'kennzahlen' && <ClubStatsPanel clubId={activeClub.clubId} canSensitive={permissions.includes('members:read_sensitive')} />}
                         {currentTab === 'formulare' && gate.manage && <FormsPanel clubId={activeClub.clubId} permissions={permissions} onDirtyChange={onFormsDirty} onOpenCategorySettings={tabs.includes('einstellungen') ? () => void selectTab('einstellungen') : undefined} />}
                         {currentTab === 'zusatzfelder' && gate.manage && <CustomFieldsPanel clubId={activeClub.clubId} permissions={permissions} />}
                         {currentTab === 'sponsoren' && (permissions.includes('sponsors:read') || permissions.includes('sponsors:write')) && <SponsorsPanel clubId={activeClub.clubId} canWrite={permissions.includes('sponsors:write')} />}
