@@ -20,6 +20,8 @@ import BrandingPanel from '@/components/documents/BrandingPanel';
 import StoragePanel from '@/components/documents/StoragePanel';
 import ClubInfoDialog from '@/components/documents/ClubInfoDialog';
 import ClubSettingsPanel from '@/components/verein/ClubSettingsPanel';
+import PublicProfilePanel from '@/components/verein/PublicProfilePanel';
+import { PUBLIC_PROFILE_PERMISSION } from '@/lib/publicClub';
 import ClubRemindersPanel from '@/components/verein/ClubRemindersPanel';
 import ClubMailTemplatePanel from '@/components/verein/ClubMailTemplatePanel';
 import CredentialsPanel from '@/components/verein/CredentialsPanel';
@@ -428,6 +430,7 @@ export default function VereinPageContent() {
                                 {permissions.includes('members:write') && <ClubRemindersPanel clubId={activeClub.clubId} />}
                                 {permissions.includes('announcements:write') && <ClubMailTemplatePanel clubId={activeClub.clubId} />}
                                 {docsGate.branding && <BrandingPanel clubId={activeClub.clubId} />}
+                                {permissions.includes(PUBLIC_PROFILE_PERMISSION) && <PublicProfilePanel clubId={activeClub.clubId} clubName={activeClub.clubName ?? ''} departments={(info?.departments ?? []).map((d) => ({ id: d.id, name: d.name }))} />}
                                 {docsGate.storage && <StoragePanel clubId={activeClub.clubId} canEmptyTrash={docsGate.manage} />}
                                 {permissions.includes('members:write') && <CategoriesPanel clubId={activeClub.clubId} onChanged={() => setMembersReload((n) => n + 1)} />}
                             </div>

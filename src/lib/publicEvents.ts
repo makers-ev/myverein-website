@@ -87,7 +87,7 @@ interface ErrorBody {
     error?: { code?: string; details?: { code?: string; fields?: Record<string, unknown> } };
 }
 
-async function call<T>(path: string, method: 'GET' | 'POST' | 'PATCH' | 'DELETE', body?: unknown, fetchImpl: typeof fetch = fetch): Promise<PublicResult<T>> {
+export async function call<T>(path: string, method: 'GET' | 'POST' | 'PATCH' | 'DELETE', body?: unknown, fetchImpl: typeof fetch = fetch): Promise<PublicResult<T>> {
     try {
         const res = await fetchImpl(`${backendUrl}${path}`, {
             method,
