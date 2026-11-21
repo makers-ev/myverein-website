@@ -41,7 +41,7 @@ interface ClubState {
  * form supports it, a parent can apply for a child (separate draft and application). `onRefresh` lets the user re-check
  * their membership (e.g. after the board approved in the meantime).
  */
-export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefresh: () => void; className?: string }) {
+export default function JoinClubCard({ onRefresh, className = 'mt-6', suggestedSlug }: { onRefresh: () => void; className?: string; suggestedSlug?: string }) {
     const { t, language } = useLanguage();
     const [slug, setSlug] = useState('');
     const [phase, setPhase] = useState<'slug' | 'loading' | 'ready'>('slug');
@@ -84,6 +84,12 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
             alive.current = false;
         };
     }, []);
+
+    // A club picked in "Verein finden" fills the code field (the person still presses "load", nothing is submitted for them).
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        if (suggestedSlug) setSlug(suggestedSlug);
+    }, [suggestedSlug]);
 
     /** Loads the club's form and the person's own submissions; resumes the newest draft of the chosen mode. */
     async function load(clubSlug: string, preferred?: OnBehalfOf, keepForm = false): Promise<boolean> {
