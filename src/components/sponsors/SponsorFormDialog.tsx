@@ -107,6 +107,14 @@ export default function SponsorFormDialog({
         return c.create.length + c.update.length + c.remove.length > 0;
     })() || logoFile !== null || removeLogo;
 
+    // Closing (Escape, backdrop, "Abbrechen") with typed input asks first; a pristine form or the read-only view closes at once.
+    const hasInput = !readOnly && (isEdit ? dirty : JSON.stringify(form) !== JSON.stringify(original) || logoFile !== null);
+    async function requestClose() {
+        if (busy) return;
+        if (hasInput && !(await confirm({ title: t('forms.confirm.discard.title'), body: t('forms.editor.discardChanges.body'), confirmLabel: t('forms.confirm.discard.confirm'), danger: true }))) return;
+        onClose();
+    }
+
     async function save() {
         if (busy || problem || readOnly) return;
         setBusy(true);
@@ -173,7 +181,7 @@ export default function SponsorFormDialog({
             <Modal
                 open
                 size="lg"
-                onClose={busy ? () => undefined : onClose}
+                onClose={() => void requestClose()}
                 title={title}
                 footer={
                     <div className="flex flex-wrap items-center justify-between gap-2">
@@ -186,7 +194,7 @@ export default function SponsorFormDialog({
                             )}
                         </div>
                         <div className="flex gap-2">
-                            <button type="button" onClick={onClose} disabled={busy} className={secondaryButtonClass}>
+                            <button type="button" onClick={() => void requestClose()} disabled={busy} className={secondaryButtonClass}>
                                 {t(readOnly ? 'sponsors.form.close' : 'sponsors.form.cancel')}
                             </button>
                             {canWrite && (

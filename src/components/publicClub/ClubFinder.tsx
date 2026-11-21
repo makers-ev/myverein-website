@@ -6,6 +6,7 @@ import { Search } from 'lucide-react';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 import { rememberClubSlug } from '@/lib/applicantStatus';
+import { markJoinIntent } from '@/lib/joinIntent';
 import { type ClubHit, isSearchable, MIN_SEARCH_LENGTH, searchClubs } from '@/lib/publicClub';
 import { UI_BTN_PRIMARY, UI_BTN_SECONDARY, UI_INPUT, UI_LABEL } from '@/lib/uiClasses';
 
@@ -115,7 +116,10 @@ export default function ClubFinder({ onPick, heading = 'h2' }: { onPick?: (slug:
                                             {t('finder.hit.join')}
                                         </button>
                                     ) : (
-                                        <Link href="/verein" aria-label={t('finder.hit.join.aria', { name: hit.name })} onClick={() => rememberClubSlug(hit.slug)} className={UI_BTN_PRIMARY}>
+                                        <Link href="/verein" aria-label={t('finder.hit.join.aria', { name: hit.name })} onClick={() => {
+                                                rememberClubSlug(hit.slug);
+                                                markJoinIntent();
+                                            }} className={UI_BTN_PRIMARY}>
                                             {t('finder.hit.join')}
                                         </Link>
                                     )}

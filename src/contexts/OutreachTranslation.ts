@@ -201,7 +201,7 @@ const OutreachTranslation: Translation = {
         'leads.done.deleted': 'Anfrage gelöscht.',
         'leads.done.converted': 'Als Interessent in der Mitgliederliste angelegt. Dort kannst du die Einladung senden.',
 
-        'leads.err.name': 'Bitte gib einen Namen ein.',
+        'leads.err.name': 'Bitte gib einen Namen mit mindestens 2 Zeichen ein.',
         'leads.err.email': 'Die E-Mail-Adresse sieht nicht richtig aus.',
         'leads.err.transition': 'Dieser Statuswechsel geht von hier aus nicht. Lade die Seite neu, vielleicht hat jemand anderes die Anfrage schon bearbeitet.',
         'leads.err.useConvert': 'Zum Mitglied wird eine Anfrage über „In die Mitgliederliste übernehmen“.',
@@ -448,7 +448,7 @@ const OutreachTranslation: Translation = {
         'leads.done.deleted': 'Request deleted.',
         'leads.done.converted': 'Created as a prospect in the member list. You can send the invitation there.',
 
-        'leads.err.name': 'Please enter a name.',
+        'leads.err.name': 'Please enter a name of at least 2 characters.',
         'leads.err.email': 'The email address does not look right.',
         'leads.err.transition': 'This status change is not possible from here. Reload the page, someone else may have handled the request already.',
         'leads.err.useConvert': 'A request becomes a member through "Move to the member list".',

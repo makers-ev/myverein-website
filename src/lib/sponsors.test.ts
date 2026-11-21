@@ -126,6 +126,7 @@ describe('logoProblem / sponsorErrorKey', () => {
     });
     it('maps the backend detail codes to plain wording', () => {
         expect(sponsorErrorKey(new ApiError(422, 'UNPROCESSABLE_ENTITY', 'x', { code: 'invalid_period' }))).toBe('sponsors.err.period');
+        expect(sponsorErrorKey(new ApiError(422, 'UNPROCESSABLE_ENTITY', 'x', [{ path: ['website'], message: 'must be an http(s) link' }]))).toBe('sponsors.err.website');
         expect(sponsorErrorKey(new ApiError(422, 'UNPROCESSABLE_ENTITY', 'x', { code: 'contact_limit' }))).toBe('sponsors.err.contactLimit');
         expect(sponsorErrorKey(new ApiError(403, 'FORBIDDEN', 'no'))).toBe('verein.err.forbidden');
     });

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import InquiryForm from '@/components/publicClub/InquiryForm';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { rememberClubSlug } from '@/lib/applicantStatus';
+import { markJoinIntent } from '@/lib/joinIntent';
 import { type PublicClub, type PublicEvent } from '@/lib/publicClub';
 
 // The server renders in UTC, the browser in its own zone: a fixed zone keeps server and client output identical.
@@ -51,7 +52,13 @@ export default function PublicClubView({ club, preview = false }: { club: Public
                     <img src={club.logoUrl} alt={t('pc.logo.alt', { name: club.name })} width={96} height={96} className="h-24 w-24 shrink-0 rounded-xl border border-hairline bg-card object-contain p-1" referrerPolicy="no-referrer" />
                 )}
                 <div className="min-w-0">
-                    <h1 className="font-display text-4xl leading-[1.08] text-foreground sm:text-5xl">{club.name}</h1>
+                    {preview ? (
+                        <p role="heading" aria-level={3} className="font-display text-4xl leading-[1.08] text-foreground sm:text-5xl">
+                            {club.name}
+                        </p>
+                    ) : (
+                        <h1 className="font-display text-4xl leading-[1.08] text-foreground sm:text-5xl">{club.name}</h1>
+                    )}
                     {club.tagline && <p className="mt-2 text-lg text-foreground">{club.tagline}</p>}
                     {club.city && <p className="mt-1 text-base text-muted-foreground">{club.city}</p>}
                 </div>
@@ -123,7 +130,7 @@ export default function PublicClubView({ club, preview = false }: { club: Public
                             <>
                                 <dt className="text-muted-foreground">{t('pc.contact.phone')}</dt>
                                 <dd>
-                                    <a href={`tel:${club.contact?.phone.replace(/[^+\d]/g, '')}`} className="font-medium text-primary-text hover:underline">
+                                    <a href={`tel:${club.contact.phone.replace(/[^+\d]/g, '')}`} className="font-medium text-primary-text hover:underline">
                                         {club.contact?.phone}
                                     </a>
                                 </dd>
@@ -146,7 +153,7 @@ export default function PublicClubView({ club, preview = false }: { club: Public
             {club.sponsors.length > 0 && (
                 <Section id="pc-sponsors" title={t('pc.sponsors')}>
                     <ul className="flex flex-wrap items-center gap-x-8 gap-y-5">
-                        {club.sponsors.map((s) => {
+                        {club.sponsors.map((s, i) => {
                             const content = s.logoUrl ? (
                                 // eslint-disable-next-line @next/next/no-img-element -- see above
                                 <img src={s.logoUrl} alt={t('pc.sponsors.logo.alt', { name: s.name })} height={48} loading="lazy" className="h-12 w-auto max-w-40 object-contain" referrerPolicy="no-referrer" />
@@ -154,7 +161,7 @@ export default function PublicClubView({ club, preview = false }: { club: Public
                                 <span className="text-sm font-medium text-foreground">{s.name}</span>
                             );
                             return (
-                                <li key={s.name}>
+                                <li key={`${i}-${s.name}`}>
                                     {s.website && !preview ? (
                                         <a href={s.website} target="_blank" rel="noopener noreferrer sponsored" aria-label={s.logoUrl ? undefined : s.name} className="inline-flex min-h-11 items-center">
                                             {content}
@@ -199,12 +206,15 @@ export default function PublicClubView({ club, preview = false }: { club: Public
     );
 }
 
-/** Leads into the normal joining flow: the protected club page offers the remembered code (JoinClubCard) and asks for sign-in first. */
+/** Leads into the normal joining flow: the club page `/verein` offers the remembered code (join card, or "join another club" for members of other clubs) and asks for sign-in first. */
 function JoinLink({ slug, label }: { slug: string; label: string }) {
     return (
         <Link
             href="/verein"
-            onClick={() => rememberClubSlug(slug)}
+            onClick={() => {
+                rememberClubSlug(slug);
+                markJoinIntent();
+            }}
             className="mt-4 inline-flex min-h-11 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98]"
         >
             {label}

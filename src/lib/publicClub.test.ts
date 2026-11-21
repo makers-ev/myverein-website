@@ -14,8 +14,10 @@ import {
     previewClub,
     publicClubJsonLd,
     safeHttpUrl,
+    imageProblem,
     searchClubs,
     submitLead,
+    trustedClientIp,
 } from './publicClub';
 
 const raw = {
@@ -73,24 +75,24 @@ describe('fetchPublicClub', () => {
     const ok = (status: number, body: unknown) => vi.fn().mockResolvedValue(new Response(JSON.stringify(body), { status })) as unknown as typeof fetch;
     it('maps 404 to notFound and does not call for malformed slugs', async () => {
         const f = ok(404, {});
-        expect(await fetchPublicClub('tsv', f)).toEqual({ kind: 'notFound' });
+        expect(await fetchPublicClub('tsv', null, f)).toEqual({ kind: 'notFound' });
         const g = vi.fn() as unknown as typeof fetch;
-        expect(await fetchPublicClub('../etc', g)).toEqual({ kind: 'notFound' });
+        expect(await fetchPublicClub('../etc', null, g)).toEqual({ kind: 'notFound' });
         expect(g).not.toHaveBeenCalled();
     });
     it('maps errors to unavailable (never to notFound)', async () => {
-        expect(await fetchPublicClub('tsv', ok(500, {}))).toEqual({ kind: 'unavailable' });
-        expect(await fetchPublicClub('tsv', ok(429, {}))).toEqual({ kind: 'unavailable' });
-        expect(await fetchPublicClub('tsv', vi.fn().mockRejectedValue(new Error('down')) as unknown as typeof fetch)).toEqual({ kind: 'unavailable' });
+        expect(await fetchPublicClub('tsv', null, ok(500, {}))).toEqual({ kind: 'unavailable' });
+        expect(await fetchPublicClub('tsv', null, ok(429, {}))).toEqual({ kind: 'unavailable' });
+        expect(await fetchPublicClub('tsv', null, vi.fn().mockRejectedValue(new Error('down')) as unknown as typeof fetch)).toEqual({ kind: 'unavailable' });
     });
     it('returns the normalized club', async () => {
-        const r = await fetchPublicClub('tsv-beispiel', ok(200, { data: raw }));
+        const r = await fetchPublicClub('tsv-beispiel', null, ok(200, { data: raw }));
         expect(r.kind).toBe('ok');
     });
     it('sends no cookies', async () => {
         const f = ok(200, { data: raw });
-        await fetchPublicClub('tsv-beispiel', f);
-        expect((f as unknown as ReturnType<typeof vi.fn>).mock.calls[0][1]).toMatchObject({ credentials: 'omit' });
+        await fetchPublicClub('tsv-beispiel', null, f);
+        expect((f as unknown as ReturnType<typeof vi.fn>).mock.calls[0][1]).toMatchObject({ credentials: 'omit', cache: 'no-store' });
     });
 });
 
@@ -192,5 +194,43 @@ describe('editor helpers', () => {
         expect(p.contact).toBeNull();
         expect(p.events).toEqual([]);
         expect(p.indexable).toBe(false);
+    });
+});
+
+describe('trustedClientIp', () => {
+    const read = (h: Record<string, string>) => (n: string) => h[n] ?? null;
+    it('forwards nothing without a configured trusted header (safe default)', () => {
+        expect(trustedClientIp(read({ 'x-forwarded-for': '1.2.3.4' }), {})).toBeNull();
+    });
+    it('takes the entry the nearest trusted proxy added, not the forgeable left side', () => {
+        const env = { PUBLIC_CLIENT_IP_HEADER: 'X-Forwarded-For' };
+        expect(trustedClientIp(read({ 'x-forwarded-for': '6.6.6.6, 203.0.113.9' }), env)).toBe('203.0.113.9');
+        expect(trustedClientIp(read({ 'x-forwarded-for': '6.6.6.6, 203.0.113.9, 10.0.0.1' }), { ...env, PUBLIC_CLIENT_IP_HOPS: '2' })).toBe('203.0.113.9');
+    });
+    it('rejects garbage', () => {
+        expect(trustedClientIp(read({ 'x-real-ip': '<script>' }), { PUBLIC_CLIENT_IP_HEADER: 'x-real-ip' })).toBeNull();
+        expect(trustedClientIp(read({}), { PUBLIC_CLIENT_IP_HEADER: 'x-real-ip' })).toBeNull();
+    });
+});
+
+describe('imageProblem', () => {
+    it('checks type and size before the upload', () => {
+        expect(imageProblem({ type: 'image/gif', size: 10 })).toBe('media.err.type');
+        expect(imageProblem({ type: 'image/png', size: 6 * 1024 * 1024 })).toBe('pcEditor.image.tooLarge');
+        expect(imageProblem({ type: 'image/webp', size: 1024 })).toBeNull();
+    });
+});
+
+describe('fetch with token', () => {
+    it('sends the client address only together with the token', async () => {
+        const f = vi.fn().mockResolvedValue(new Response('{}', { status: 404 })) as unknown as typeof fetch;
+        vi.stubEnv('PUBLIC_API_TRUSTED_TOKEN', 'tok');
+        await fetchPublicClub('tsv', '203.0.113.9', f);
+        expect((f as unknown as ReturnType<typeof vi.fn>).mock.calls[0][1].headers).toMatchObject({ 'X-Public-Api-Token': 'tok', 'X-Public-Client-Ip': '203.0.113.9' });
+        vi.stubEnv('PUBLIC_API_TRUSTED_TOKEN', '');
+        await fetchPublicClub('tsv', '203.0.113.9', f);
+        const headers = (f as unknown as ReturnType<typeof vi.fn>).mock.calls[1][1].headers;
+        expect(headers).not.toHaveProperty('X-Public-Client-Ip');
+        vi.unstubAllEnvs();
     });
 });

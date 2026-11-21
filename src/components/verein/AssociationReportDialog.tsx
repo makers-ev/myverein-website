@@ -6,7 +6,7 @@ import { AlertTriangle, CheckCircle2, Download, Eye, Loader2, ShieldAlert } from
 import { Modal } from '@/components/Modal';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api-client';
-import { inputClass, primaryButtonClass, secondaryButtonClass } from '@/lib/clubMembers';
+import { formatDate, inputClass, primaryButtonClass, secondaryButtonClass } from '@/lib/clubMembers';
 import { fetchCsvBlob, isRateLimited, saveBlob } from '@/lib/memberCsv';
 import { UI_LABEL } from '@/lib/uiClasses';
 import type { CustomFieldDefinition } from '@/lib/customFields';
@@ -245,11 +245,11 @@ export default function AssociationReportDialog({ clubId, canSensitive, onClose 
                     {!preview && busy !== 'preview' && <p className="text-sm text-muted-foreground">{t('assoc.preview.hint')}</p>}
                     {preview &&
                         (preview.rows.length === 0 ? (
-                            <p className="rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground">{t('assoc.preview.empty', { date: preview.stichtag })}</p>
+                            <p className="rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground">{t('assoc.preview.empty', { date: formatDate(preview.stichtag, language) })}</p>
                         ) : (
                             <div className="relative overflow-x-auto rounded-xl border border-border">
                                 <table className="w-full min-w-[20rem] text-left text-sm">
-                                    <caption className="sr-only">{t('assoc.preview.caption', { date: preview.stichtag })}</caption>
+                                    <caption className="sr-only">{t('assoc.preview.caption', { date: formatDate(preview.stichtag, language) })}</caption>
                                     <thead className="bg-muted text-xs text-muted-foreground">
                                         <tr>
                                             {shownColumns.map((c) => (

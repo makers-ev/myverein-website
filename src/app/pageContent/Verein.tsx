@@ -13,6 +13,7 @@ import { documentsGate } from '@/lib/documentAccess';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ApplicationsPanel from '@/components/verein/ApplicationsPanel';
 import NoClubSection from '@/components/verein/NoClubSection';
+import MoreClubsSection from '@/components/verein/MoreClubsSection';
 import CategoriesPanel from '@/components/verein/CategoriesPanel';
 import AssemblyRulesPanel from '@/components/assembly/AssemblyRulesPanel';
 import { ExpiringRolesCard, TermBadge } from '@/components/assembly/TermsOfOffice';
@@ -246,6 +247,8 @@ export default function VereinPageContent() {
     const [formsDirty, setFormsDirty] = useState(false);
     const onFormsDirty = useCallback((dirty: boolean) => setFormsDirty(dirty), []);
     // Own custom field edits in "Mein Profil" (separate save button).
+    const [publicDirty, setPublicDirty] = useState(false);
+    const onPublicDirty = useCallback((dirty: boolean) => setPublicDirty(dirty), []);
     const [profilDirty, setProfilDirty] = useState(false);
     const onProfilDirty = useCallback((dirty: boolean) => setProfilDirty(dirty), []);
     // "Qualifikationen" next to the member list: offered by role, hidden once the endpoint says 403/404.
@@ -315,8 +318,8 @@ export default function VereinPageContent() {
 
     async function selectTab(next: Tab) {
         // Unsaved edits (form editor, own custom fields) survive only inside their tab: leaving it needs a confirmation.
-        const unsaved = next !== currentTab && ((currentTab === 'formulare' && formsDirty) || (currentTab === 'profil' && profilDirty));
-        if (unsaved && !(await confirm({ title: t('forms.editor.leave.title'), body: t(currentTab === 'formulare' ? 'forms.editor.leaveConfirm' : 'verein.profil.leaveConfirm'), confirmLabel: t('forms.editor.leave.confirm'), danger: true }))) return;
+        const unsaved = next !== currentTab && ((currentTab === 'formulare' && formsDirty) || (currentTab === 'profil' && profilDirty) || (currentTab === 'einstellungen' && publicDirty));
+        if (unsaved && !(await confirm({ title: t('forms.editor.leave.title'), body: t(currentTab === 'formulare' ? 'forms.editor.leaveConfirm' : currentTab === 'einstellungen' ? 'forms.editor.discardChanges.body' : 'verein.profil.leaveConfirm'), confirmLabel: t('forms.editor.leave.confirm'), danger: true }))) return;
         setTab(next);
     }
 
@@ -347,6 +350,7 @@ export default function VereinPageContent() {
 
                     <div className="mt-4">
                         {currentTab === 'info' && (info ? <VereinsinfoTab info={info} t={t} onPhotoExpired={refetchBoardPhotos} termsClubId={permissions.includes('assembly:manage') || permissions.includes('roles:write') ? activeClub.clubId : null} clubId={activeClub.clubId} canWriteInfo={docsGate.editClubInfo} onInfoChanged={() => void refreshClubData(activeClub.clubId)} /> : <LoadingText />)}
+                        {currentTab === 'info' && <MoreClubsSection onRefreshClubs={loadClubs} />}
                         {currentTab === 'profil' &&
                             (me ? (
                                 <div className="space-y-6">
@@ -430,7 +434,7 @@ export default function VereinPageContent() {
                                 {permissions.includes('members:write') && <ClubRemindersPanel clubId={activeClub.clubId} />}
                                 {permissions.includes('announcements:write') && <ClubMailTemplatePanel clubId={activeClub.clubId} />}
                                 {docsGate.branding && <BrandingPanel clubId={activeClub.clubId} />}
-                                {permissions.includes(PUBLIC_PROFILE_PERMISSION) && <PublicProfilePanel clubId={activeClub.clubId} clubName={activeClub.clubName ?? ''} departments={(info?.departments ?? []).map((d) => ({ id: d.id, name: d.name }))} />}
+                                {permissions.includes(PUBLIC_PROFILE_PERMISSION) && <PublicProfilePanel onDirtyChange={onPublicDirty} clubId={activeClub.clubId} clubName={activeClub.clubName ?? ''} departments={(info?.departments ?? []).map((d) => ({ id: d.id, name: d.name }))} />}
                                 {docsGate.storage && <StoragePanel clubId={activeClub.clubId} canEmptyTrash={docsGate.manage} />}
                                 {permissions.includes('members:write') && <CategoriesPanel clubId={activeClub.clubId} onChanged={() => setMembersReload((n) => n + 1)} />}
                             </div>

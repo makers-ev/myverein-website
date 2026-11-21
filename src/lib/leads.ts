@@ -118,7 +118,7 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** Translation key of the first problem of the form, or `null`: a name is required, an e-mail address only if given must look valid. */
 export function leadProblem(f: LeadForm): string | null {
-    if (f.name.trim().length < 1) return 'leads.err.name';
+    if (f.name.trim().length < 2) return 'leads.err.name';
     if (f.email.trim() !== '' && !EMAIL.test(f.email.trim())) return 'leads.err.email';
     return null;
 }

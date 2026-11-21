@@ -214,7 +214,8 @@ export function sponsorErrorKey(err: unknown): string {
         const code = (err.details as { code?: unknown } | undefined)?.code;
         if (code === 'invalid_period') return 'sponsors.err.period';
         if (code === 'contact_limit') return 'sponsors.err.contactLimit';
-        if (err.status === 422 && /http\(s\) link/i.test(JSON.stringify(err.details ?? ''))) return 'sponsors.err.website';
+        // A rejected field arrives as the validator's issue list (`details: [{ path: ['website'], ... }]`), no `details.code`.
+        if (err.status === 422 && Array.isArray(err.details) && err.details.some((i) => (i as { path?: unknown[] } | null)?.path?.[0] === 'website')) return 'sponsors.err.website';
     }
     return memberErrorKey(err);
 }

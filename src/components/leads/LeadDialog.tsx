@@ -41,6 +41,14 @@ export default function LeadDialog({ clubId, lead, departments, onClose, onDone 
     // Current status plus the steps the backend allows from it.
     const statusOptions = lead ? [lead.status, ...nextStatuses(lead.status)] : [];
 
+    // Closing (Escape, backdrop, "Abbrechen") with typed input asks first; an untouched form closes at once.
+    const hasInput = isEdit ? dirty : JSON.stringify(form) !== JSON.stringify(original);
+    async function requestClose() {
+        if (busy) return;
+        if (hasInput && !(await confirm({ title: t('forms.confirm.discard.title'), body: t('forms.editor.discardChanges.body'), confirmLabel: t('forms.confirm.discard.confirm'), danger: true }))) return;
+        onClose();
+    }
+
     async function run(action: () => Promise<LeadDialogResult>) {
         if (busy) return;
         setBusy(true);
@@ -88,7 +96,7 @@ export default function LeadDialog({ clubId, lead, departments, onClose, onDone 
             <Modal
                 open
                 size="lg"
-                onClose={busy ? () => undefined : onClose}
+                onClose={() => void requestClose()}
                 title={t(isEdit ? 'leads.dialog.title.edit' : 'leads.dialog.title.create')}
                 footer={
                     <div className="flex flex-wrap items-center justify-between gap-2">
@@ -101,7 +109,7 @@ export default function LeadDialog({ clubId, lead, departments, onClose, onDone 
                             )}
                         </div>
                         <div className="flex gap-2">
-                            <button type="button" onClick={onClose} disabled={busy} className={secondaryButtonClass}>
+                            <button type="button" onClick={() => void requestClose()} disabled={busy} className={secondaryButtonClass}>
                                 {t('leads.cancel')}
                             </button>
                             <button type="button" onClick={() => void save()} disabled={busy || !!problem || !dirty} className={primaryButtonClass}>
@@ -143,7 +151,7 @@ export default function LeadDialog({ clubId, lead, departments, onClose, onDone 
                                     </a>
                                 )}
                                 {lead.phone && (
-                                    <a href={`tel:${lead.phone}`} className="inline-flex min-h-8 items-center gap-1.5 text-primary-text hover:underline">
+                                    <a href={`tel:${lead.phone.replace(/[^+\d]/g, '')}`} className="inline-flex min-h-8 items-center gap-1.5 text-primary-text hover:underline">
                                         <Phone className="h-4 w-4" aria-hidden="true" />
                                         {lead.phone}
                                     </a>

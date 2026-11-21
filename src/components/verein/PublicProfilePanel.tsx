@@ -9,7 +9,7 @@ import { useConfirm } from '@/components/useConfirm';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ApiError, apiFetch } from '@/lib/api-client';
 import { mediaErrorKey } from '@/lib/mediaUpload';
-import { changedDraft, EDITOR_PATH, type EditorData, isLive, normalizeEditorData, previewClub, type ProfileDraft, type PublicNamed, safeHttpUrl } from '@/lib/publicClub';
+import { changedDraft, EDITOR_PATH, type EditorData, isLive, normalizeEditorData, previewClub, type ProfileDraft, type PublicNamed, safeHttpUrl, imageProblem, MAX_GALLERY_IMAGES } from '@/lib/publicClub';
 import { UI_BTN_DANGER_OUTLINE, UI_BTN_PRIMARY, UI_BTN_SECONDARY, UI_INPUT, UI_LABEL } from '@/lib/uiClasses';
 import { url as siteUrl } from '../../../project.config.json';
 
@@ -27,9 +27,25 @@ export function editorErrorKey(err: unknown): string {
     const code = detailsCode(err);
     if (code === 'contact_consent_required') return 'pcEditor.consent.required';
     if (code === 'unknown_image') return 'pcEditor.error.image';
+    if (code === 'image_limit') return 'pcEditor.image.limit';
     if (code === 'unknown_department' || code === 'unknown_calendar') return 'pcEditor.error.reference';
     if (err instanceof ApiError && (err.status === 400 || err.status === 422)) return 'pcEditor.invalid';
     return 'pcEditor.saveError';
+}
+
+/** Uploads one image to the public page's own image route; the returned key goes into the draft (`logoKey`, `coverKey`, `galleryKeys`). */
+async function uploadProfileImage(clubId: string, file: File): Promise<{ key: string; previewUrl: string | null }> {
+    const body = new FormData();
+    body.append('file', file);
+    const res = await apiFetch<{ data: { key: string; previewUrl?: string | null } }>(`${EDITOR_PATH}/images?clubId=${encodeURIComponent(clubId)}`, { method: 'POST', body });
+    return { key: res.data.key, previewUrl: safeHttpUrl(res.data.previewUrl) };
+}
+
+/** Translation key for a failed image upload. */
+function uploadErrorKey(err: unknown): string {
+    if (detailsCode(err) === 'image_limit') return 'pcEditor.image.limit';
+    if (err instanceof ApiError && err.status === 413) return 'pcEditor.image.tooLarge';
+    return mediaErrorKey(err);
 }
 
 function CheckList({ legend, hint, items, selected, onChange, empty }: { legend: string; hint?: string; items: PublicNamed[]; selected: string[]; onChange: (ids: string[]) => void; empty: string }) {
@@ -65,14 +81,17 @@ function ImageField({ label, id, clubId, url, onChange, onError }: { label: stri
         const file = e.target.files?.[0];
         e.target.value = '';
         if (!file) return;
+        const problem = imageProblem(file);
+        if (problem) {
+            onError(t(problem));
+            return;
+        }
         setBusy(true);
         try {
-            const body = new FormData();
-            body.append('file', file);
-            const res = await apiFetch<{ data: { key: string; url: string } }>(`${EDITOR_PATH}/images?clubId=${encodeURIComponent(clubId)}`, { method: 'POST', body });
-            onChange({ key: res.data.key, url: safeHttpUrl(res.data.url) });
+            const uploaded = await uploadProfileImage(clubId, file);
+            onChange({ key: uploaded.key, url: uploaded.previewUrl });
         } catch (err) {
-            onError(t(mediaErrorKey(err)));
+            onError(t(uploadErrorKey(err)));
         } finally {
             setBusy(false);
         }
@@ -101,13 +120,75 @@ function ImageField({ label, id, clubId, url, onChange, onError }: { label: stri
     );
 }
 
+/** Gallery of up to six images: add (upload) and remove; the order is the order of keys. */
+function GalleryField({ clubId, keys, urls, onChange, onError }: { clubId: string; keys: string[]; urls: (string | null)[]; onChange: (keys: string[], urls: (string | null)[]) => void; onError: (message: string) => void }) {
+    const { t } = useLanguage();
+    const [busy, setBusy] = useState(false);
+
+    async function add(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        e.target.value = '';
+        if (!file) return;
+        const problem = imageProblem(file);
+        if (problem) {
+            onError(t(problem));
+            return;
+        }
+        setBusy(true);
+        try {
+            const uploaded = await uploadProfileImage(clubId, file);
+            onChange([...keys, uploaded.key], [...urls, uploaded.previewUrl]);
+        } catch (err) {
+            onError(t(uploadErrorKey(err)));
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    return (
+        <div>
+            <span className={UI_LABEL}>{t('pcEditor.gallery')}</span>
+            {keys.length > 0 && (
+                <ul className="mb-2 flex flex-wrap gap-3">
+                    {keys.map((key, i) => (
+                        <li key={key} className="flex flex-col items-start gap-1">
+                            {urls[i] && (
+                                // eslint-disable-next-line @next/next/no-img-element -- signed preview URL delivered by the media layer
+                                <img src={urls[i]!} alt={t('pcEditor.gallery.alt', { n: i + 1 })} width={96} height={72} className="h-16 w-24 rounded-lg border border-hairline object-cover" referrerPolicy="no-referrer" />
+                            )}
+                            <button
+                                type="button"
+                                disabled={busy}
+                                aria-label={t('pcEditor.gallery.remove', { n: i + 1 })}
+                                onClick={() => onChange(keys.filter((_, j) => j !== i), urls.filter((_, j) => j !== i))}
+                                className="min-h-11 text-xs font-medium text-destructive hover:underline"
+                            >
+                                {t('pcEditor.image.remove')}
+                            </button>
+                        </li>
+                    ))}
+                </ul>
+            )}
+            {keys.length < MAX_GALLERY_IMAGES && (
+                <>
+                    <input id="pce-gallery" type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(e) => void add(e)} disabled={busy} />
+                    <label htmlFor="pce-gallery" className={`${UI_BTN_SECONDARY} cursor-pointer ${busy ? 'opacity-50' : ''}`}>
+                        {t(busy ? 'pcEditor.image.busy' : 'pcEditor.gallery.add')}
+                    </label>
+                </>
+            )}
+            <p className="mt-1 text-xs text-muted-foreground">{t('pcEditor.gallery.hint')}</p>
+        </div>
+    );
+}
+
 /**
  * Editor of the public club page in "Einstellungen" (Wave 15 W2, `public_profile:write`; the backend checks it again). The page is off by
  * default. The board releases each part on its own (a part is released by filling it or choosing it), sees a preview of the draft built
  * by the same component as the public page, saves the draft and publishes or withdraws separately. Only changed fields are sent;
  * publishing needs a saved draft, and contact details need an explicit confirmation (backend `contact_consent_required`).
  */
-export default function PublicProfilePanel({ clubId, clubName, departments }: { clubId: string; clubName: string; departments: PublicNamed[] }) {
+export default function PublicProfilePanel({ clubId, clubName, departments, onDirtyChange }: { clubId: string; clubName: string; departments: PublicNamed[]; onDirtyChange?: (dirty: boolean) => void }) {
     const { t } = useLanguage();
     const { confirm, dialog } = useConfirm();
     const [data, setData] = useState<EditorData | null>(null);
@@ -147,6 +228,13 @@ export default function PublicProfilePanel({ clubId, clubName, departments }: { 
         // eslint-disable-next-line react-hooks/set-state-in-effect
         void load();
     }, [load]);
+
+    // Unsaved edits are reported upward so the tab switch can ask first (same pattern as FormsPanel); cleared when the panel goes away.
+    const isDirty = !!data && !!draft && Object.keys(changedDraft(data.draft, draft)).length > 0;
+    useEffect(() => {
+        onDirtyChange?.(isDirty);
+    }, [isDirty, onDirtyChange]);
+    useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
 
     const preview = useMemo(() => (data && draft ? previewClub(draft, { slug: data.slug, name: clubName, departments }) : null), [data, draft, clubName, departments]);
 
@@ -312,6 +400,7 @@ export default function PublicProfilePanel({ clubId, clubName, departments }: { 
                         <ImageField label={t('pcEditor.logo')} id="pce-logo" clubId={clubId} url={draft.logoUrl} onChange={(v) => setDraft((d) => (d ? { ...d, logoKey: v.key, logoUrl: v.url } : d))} onError={(text) => setStatus({ ok: false, text })} />
                         <ImageField label={t('pcEditor.cover')} id="pce-cover" clubId={clubId} url={draft.coverUrl} onChange={(v) => setDraft((d) => (d ? { ...d, coverKey: v.key, coverUrl: v.url } : d))} onError={(text) => setStatus({ ok: false, text })} />
                     </div>
+                    <GalleryField clubId={clubId} keys={draft.galleryKeys} urls={draft.galleryUrls} onChange={(keys, urls) => setDraft((d) => (d ? { ...d, galleryKeys: keys, galleryUrls: urls } : d))} onError={(text) => setStatus({ ok: false, text })} />
                 </fieldset>
 
                 <CheckList legend={t('pcEditor.departments')} items={departments} selected={draft.departmentIds} onChange={(ids) => set('departmentIds', ids)} empty={t('pcEditor.departments.none')} />

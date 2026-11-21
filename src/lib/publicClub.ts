@@ -12,8 +12,6 @@ export const CLUB_SLUG_FORMAT = /^[a-z0-9][a-z0-9-]{0,79}$/;
 /** Search thresholds of the backend: a name of at least 3 characters or a place of at least 2. */
 export const MIN_SEARCH_LENGTH = 3;
 export const MIN_CITY_LENGTH = 2;
-/** Seconds the server keeps a fetched public page (ISR-style revalidation of the data cache). */
-export const PUBLIC_CLUB_REVALIDATE_SECONDS = 300;
 
 export interface PublicNamed {
     id: string;
@@ -58,28 +56,51 @@ export interface PublicClub {
     sponsors: PublicSponsor[];
     leadForm: { enabled: boolean; trialTraining: boolean; departments: PublicNamed[] };
     /**
-     * Whether search engines may index the page. The backend contract has no such flag yet, so this is `false` until it does
-     * (the page then carries `noindex`, see `src/app/v/[slug]/page.tsx`).
+     * Whether search engines may index the page. NOT a contract field: the backend does not send it, so this stays `false` (the page
+     * carries `noindex`, see `src/app/v/[slug]/page.tsx`) and is only read in case the backend adds it. Open product decision:
+     * does "publish" imply "may be indexed"?
      */
     indexable: boolean;
 }
 
 export type PublicClubFetch = { kind: 'ok'; club: PublicClub } | { kind: 'notFound' } | { kind: 'unavailable' };
 
-/** Server-only token of the website server for the backend's public rate limits (never sent from the browser). */
-function trustedHeaders(): Record<string, string> {
-    const token = typeof window === 'undefined' ? process.env.PUBLIC_API_TRUSTED_TOKEN : undefined;
-    return token ? { 'X-Public-Api-Token': token } : {};
+const IP_FORMAT = /^[0-9a-fA-F:.]{2,64}$/;
+
+/**
+ * The visitor's address for the backend's per-visitor rate limit, taken ONLY from the header the operator named in
+ * `PUBLIC_CLIENT_IP_HEADER` (a header a trusted reverse proxy sets or overwrites, e.g. `x-forwarded-for` or `x-real-ip`). Unset =
+ * nothing is forwarded (safe default: a client-supplied header is never believed). For a comma list (`x-forwarded-for`) the entry
+ * `PUBLIC_CLIENT_IP_HOPS` from the right is used (default 1 = the address the nearest trusted proxy saw); entries to the left can be forged.
+ */
+export function trustedClientIp(read: (name: string) => string | null, env: Record<string, string | undefined> = process.env): string | null {
+    const name = env.PUBLIC_CLIENT_IP_HEADER?.trim().toLowerCase();
+    if (!name) return null;
+    const parts = (read(name) ?? '').split(',').map((p) => p.trim()).filter(Boolean);
+    const hops = Math.max(1, Number.parseInt(env.PUBLIC_CLIENT_IP_HOPS ?? '1', 10) || 1);
+    const ip = parts[parts.length - hops];
+    return ip && IP_FORMAT.test(ip) ? ip : null;
 }
 
-/** Server-side read for `/v/[slug]`: cached for a few minutes, any 404 (missing or not public) is `notFound`. */
-export async function fetchPublicClub(slug: string, fetchImpl: typeof fetch = fetch): Promise<PublicClubFetch> {
+/** Server-only headers for the backend's public rate limits (never sent from the browser). The client address only goes along with the token. */
+function trustedHeaders(clientIp: string | null): Record<string, string> {
+    const token = typeof window === 'undefined' ? process.env.PUBLIC_API_TRUSTED_TOKEN : undefined;
+    if (!token) return {};
+    return { 'X-Public-Api-Token': token, ...(clientIp && IP_FORMAT.test(clientIp) ? { 'X-Public-Client-Ip': clientIp } : {}) };
+}
+
+/**
+ * Server-side read for `/v/[slug]`. NOT cached (`no-store`): a withdrawn or suspended page must answer 404 at once (the data cache would
+ * keep serving the last 200). The load is carried by the backend's per-visitor limit, which is why production needs the token and the
+ * client-address header (see README Configuration). Any 404 (missing, not public, suspended) is `notFound`.
+ */
+export async function fetchPublicClub(slug: string, clientIp: string | null = null, fetchImpl: typeof fetch = fetch): Promise<PublicClubFetch> {
     if (!CLUB_SLUG_FORMAT.test(slug) || !backendUrl) return { kind: 'notFound' };
     try {
         const res = await fetchImpl(`${backendUrl}/public/clubs/${encodeURIComponent(slug)}`, {
-            headers: { Accept: 'application/json', ...trustedHeaders() },
+            headers: { Accept: 'application/json', ...trustedHeaders(clientIp) },
             credentials: 'omit',
-            next: { revalidate: PUBLIC_CLUB_REVALIDATE_SECONDS },
+            cache: 'no-store',
         });
         if (res.status === 404 || res.status === 410) return { kind: 'notFound' };
         if (!res.ok) return { kind: 'unavailable' };
@@ -266,7 +287,8 @@ export interface ProfileDraft {
     trialTrainingEnabled: boolean;
     logoUrl: string | null;
     coverUrl: string | null;
-    galleryUrls: string[];
+    /** Signed previews, same order as `galleryKeys` (`null` = no preview available). */
+    galleryUrls: (string | null)[];
 }
 
 export interface EditorData {
@@ -314,10 +336,7 @@ export function normalizeEditorData(data: unknown): EditorData | null {
             trialTrainingEnabled: p.trialTrainingEnabled === true,
             logoUrl: safeHttpUrl(p.logoUrl),
             coverUrl: safeHttpUrl(p.coverUrl),
-            galleryUrls: arr(p.galleryUrls).flatMap((u) => {
-                const url = safeHttpUrl(u);
-                return url ? [url] : [];
-            }),
+            galleryUrls: arr(p.galleryUrls).map((u) => safeHttpUrl(u)),
         },
     };
 }
@@ -355,11 +374,24 @@ export function previewClub(draft: ProfileDraft, club: { slug: string; name: str
         contact: contact.email || contact.phone || contact.website ? contact : null,
         logoUrl: draft.logoUrl,
         coverUrl: draft.coverUrl,
-        galleryUrls: draft.galleryUrls,
+        galleryUrls: draft.galleryUrls.filter((u): u is string => u !== null),
         departments: shown,
         events: [],
         sponsors: [],
         leadForm: { enabled: draft.leadFormEnabled, trialTraining: draft.leadFormEnabled && draft.trialTrainingEnabled, departments: shown },
         indexable: false,
     };
+}
+
+// ----- Editor image upload (backend `POST /club-public-profile/images`: PNG/JPEG/WebP, <= 5 MB, at most 6 gallery images) -----
+
+export const PROFILE_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+export const MAX_GALLERY_IMAGES = 6;
+const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+/** Client pre-check before an upload (translation key of the problem, or `null`); the backend checks again (magic bytes, size). */
+export function imageProblem(file: Pick<File, 'type' | 'size'>): string | null {
+    if (!IMAGE_TYPES.includes(file.type)) return 'media.err.type';
+    if (file.size > PROFILE_IMAGE_MAX_BYTES) return 'pcEditor.image.tooLarge';
+    return null;
 }

@@ -37,6 +37,7 @@ export default function InquiryForm({ club, disabled = false }: { club: Pick<Pub
     const [accepted, setAccepted] = useState(false);
     const [honeypot, setHoneypot] = useState('');
     const [error, setError] = useState<string | null>(null);
+    const [fieldErrors, setFieldErrors] = useState<Record<string, unknown>>({});
     const [busy, setBusy] = useState(false);
     const [done, setDone] = useState(false);
     const submitting = useRef(false);
@@ -48,6 +49,7 @@ export default function InquiryForm({ club, disabled = false }: { club: Pick<Pub
         submitting.current = true;
         setBusy(true);
         setError(null);
+        setFieldErrors({});
         const r = await submitLead(club.slug, {
             name: name.trim(),
             email: email.trim(),
@@ -61,8 +63,15 @@ export default function InquiryForm({ club, disabled = false }: { club: Pick<Pub
         submitting.current = false;
         setBusy(false);
         if (r.kind === 'ok') setDone(true);
-        else setError(t(inquiryErrorKey(r.kind)));
+        else {
+            if (r.kind === 'invalid') setFieldErrors(r.fields);
+            setError(t(inquiryErrorKey(r.kind)));
+        }
     }
+
+    const bad = (key: string) => key in fieldErrors;
+    const fieldHint = (key: string, id: string) => (bad(key) ? <p id={`${id}-err`} className="mt-1 text-xs text-destructive">{t('pc.form.err.field')}</p> : null);
+    const attrs = (key: string, id: string) => (bad(key) ? { 'aria-invalid': true as const, 'aria-describedby': `${id}-err` } : {});
 
     if (done) {
         return (
@@ -94,19 +103,27 @@ export default function InquiryForm({ club, disabled = false }: { club: Pick<Pub
                 <label htmlFor="pc-name" className={UI_LABEL}>
                     {t('pc.form.name')} <span aria-hidden className="text-destructive">*</span>
                 </label>
-                <input id="pc-name" type="text" required maxLength={100} autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} disabled={disabled} className={UI_INPUT} />
+                <input id="pc-name" type="text" required maxLength={100} autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} disabled={disabled} className={UI_INPUT} aria-describedby={name.trim().length === 1 ? 'pc-name-hint' : undefined} {...attrs('name', 'pc-name')} />
+                {name.trim().length === 1 && (
+                    <p id="pc-name-hint" className="mt-1 text-xs text-muted-foreground">
+                        {t('pc.form.name.hint')}
+                    </p>
+                )}
+                {fieldHint('name', 'pc-name')}
             </div>
             <div>
                 <label htmlFor="pc-email" className={UI_LABEL}>
                     {t('pc.form.email')} <span aria-hidden className="text-destructive">*</span>
                 </label>
-                <input id="pc-email" type="email" required maxLength={200} autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} disabled={disabled} className={UI_INPUT} />
+                <input id="pc-email" type="email" required maxLength={200} autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} disabled={disabled} className={UI_INPUT} {...attrs('email', 'pc-email')} />
+                {fieldHint('email', 'pc-email')}
             </div>
             <div>
                 <label htmlFor="pc-phone" className={UI_LABEL}>
                     {t('pc.form.phone')}
                 </label>
-                <input id="pc-phone" type="tel" maxLength={40} autoComplete="tel" value={phone} onChange={(e) => setPhone(e.target.value)} disabled={disabled} className={UI_INPUT} />
+                <input id="pc-phone" type="tel" maxLength={40} autoComplete="tel" value={phone} onChange={(e) => setPhone(e.target.value)} disabled={disabled} className={UI_INPUT} {...attrs('phone', 'pc-phone')} />
+                {fieldHint('phone', 'pc-phone')}
             </div>
             {club.leadForm.departments.length > 0 && (
                 <div>
@@ -127,7 +144,8 @@ export default function InquiryForm({ club, disabled = false }: { club: Pick<Pub
                 <label htmlFor="pc-message" className={UI_LABEL}>
                     {t('pc.form.message')}
                 </label>
-                <textarea id="pc-message" rows={4} maxLength={2000} value={message} onChange={(e) => setMessage(e.target.value)} disabled={disabled} className={UI_INPUT} />
+                <textarea id="pc-message" rows={4} maxLength={2000} value={message} onChange={(e) => setMessage(e.target.value)} disabled={disabled} className={UI_INPUT} {...attrs('message', 'pc-message')} />
+                {fieldHint('message', 'pc-message')}
             </div>
             {/* Honeypot: hidden from people and assistive technology, bots fill it in. */}
             <div aria-hidden="true" inert className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
@@ -139,7 +157,7 @@ export default function InquiryForm({ club, disabled = false }: { club: Pick<Pub
                     <span>{t('pc.form.privacy', { club: club.name })}</span>
                 </label>
                 <p className="mt-1 text-xs text-muted-foreground">
-                    {t('pc.form.privacy.hint')}{' '}
+                    {t('pc.form.privacy.hint', { club: club.name })}{' '}
                     <a href="/privacy" target="_blank" rel="noopener noreferrer" className="font-medium text-primary-text underline">
                         {t('pc.form.privacy.link')}
                     </a>

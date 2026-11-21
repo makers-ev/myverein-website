@@ -56,8 +56,9 @@ describe('query and paging', () => {
 describe('form', () => {
     it('needs a name and a plausible email if one is given', () => {
         expect(leadProblem(emptyLeadForm())).toBe('leads.err.name');
-        expect(leadProblem({ ...emptyLeadForm(), name: 'A', email: 'kaputt' })).toBe('leads.err.email');
-        expect(leadProblem({ ...emptyLeadForm(), name: 'A' })).toBeNull();
+        expect(leadProblem({ ...emptyLeadForm(), name: 'Al', email: 'kaputt' })).toBe('leads.err.email');
+        expect(leadProblem({ ...emptyLeadForm(), name: 'A' })).toBe('leads.err.name'); // contract: 2-100 characters
+        expect(leadProblem({ ...emptyLeadForm(), name: 'Al' })).toBeNull();
     });
     it('builds the manual entry without empty fields', () => {
         expect(createLeadBody({ ...emptyLeadForm(), name: ' Mia ', phone: '0123', departmentId: 'd1' })).toEqual({ name: 'Mia', phone: '0123', departmentId: 'd1' });
