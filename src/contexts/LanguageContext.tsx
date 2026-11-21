@@ -30,6 +30,7 @@ import TreffenTranslation from './TreffenTranslation';
 import AssemblyTranslation from './AssemblyTranslation';
 import VerfuegbarkeitTranslation from './VerfuegbarkeitTranslation';
 import UxTranslation from './UxTranslation';
+import PublicClubTranslation from './PublicClubTranslation';
 import StandorteTranslation from './StandorteTranslation';
 import RoadmapTranslation from './RoadmapTranslation';
 import ChangelogTranslation from './ChangelogTranslation';
@@ -88,6 +89,7 @@ export const translations: Record<Language, Record<string, string>> = supportedL
             ...(id === 'de' || id === 'en' ? MarketingStoryTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? MarketingTrustTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? UxTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? PublicClubTranslation[id] : {}),
         };
         return acc;
     },

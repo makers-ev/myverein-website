@@ -1,3 +1,5 @@
+import { PUBLIC_PROFILE_PERMISSION } from './publicClub';
+
 /**
  * Permission gating of the club area (Wave 8 W7). The permission strings come from `GET /club-members/me` (`permissions`);
  * the backend enforces every one of them again, the UI only hides or disables what the caller may not use. Deny-by-default:
@@ -22,7 +24,7 @@ export function visibleTabs(permissions: readonly string[], roles: ReadonlyArray
     // Club rules and reminders hang on members:write, the club's mail template on announcements:write (Wave 9 W6).
     // Wave 11: the statute parameters of the general assembly (`assembly:manage`) live there as well.
     // Wave 13: branding (`branding:write`) and the storage overview (`storage:read`) live there too.
-    if (can(permissions, 'members:write') || can(permissions, 'announcements:write') || can(permissions, 'assembly:manage') || can(permissions, 'branding:write') || can(permissions, 'storage:read')) tabs.push('einstellungen');
+    if (can(permissions, 'members:write') || can(permissions, 'announcements:write') || can(permissions, 'assembly:manage') || can(permissions, 'branding:write') || can(permissions, 'storage:read') || can(permissions, PUBLIC_PROFILE_PERMISSION)) tabs.push('einstellungen');
     // Wave 10: "Wer fehlt" for trainers and the board (`absences:read`), "Datenschutz" (consents, access log) for `privacy:read` / `privacy:manage`.
     if (can(permissions, 'absences:read')) tabs.push('fehlt');
     if (can(permissions, 'privacy:read') || can(permissions, 'privacy:manage')) tabs.push('datenschutz');

@@ -82,3 +82,11 @@ describe('canSeeCredentialOverview', () => {
         expect(canSeeCredentialOverview(null, undefined)).toBe(false);
     });
 });
+
+describe('public club page editor (Wave 15 W2)', () => {
+    it('opens the settings tab for the public page permission only', async () => {
+        const { visibleTabs } = await import('./clubPermissions');
+        expect(visibleTabs([], [{ roleType: 'mitglied' }])).not.toContain('einstellungen');
+        expect(visibleTabs(['public_profile:write'], [{ roleType: 'schriftfuehrer' }])).toContain('einstellungen');
+    });
+});
