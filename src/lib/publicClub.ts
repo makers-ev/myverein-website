@@ -33,6 +33,13 @@ export interface PublicSponsor {
     website: string | null;
 }
 
+/** The club's published privacy notice (a public legal text, only delivered while the inquiry form is on). */
+export interface PrivacyNotice {
+    version: number | string | null;
+    body: string;
+    publishedAt: string | null;
+}
+
 export interface PublicContact {
     email: string | null;
     phone: string | null;
@@ -54,7 +61,7 @@ export interface PublicClub {
     departments: PublicNamed[];
     events: PublicEvent[];
     sponsors: PublicSponsor[];
-    leadForm: { enabled: boolean; trialTraining: boolean; departments: PublicNamed[] };
+    leadForm: { enabled: boolean; trialTraining: boolean; departments: PublicNamed[]; privacyNotice: PrivacyNotice | null };
     /**
      * Whether search engines may index the page. NOT a contract field: the backend does not send it, so this stays `false` (the page
      * carries `noindex`, see `src/app/v/[slug]/page.tsx`) and is only read in case the backend adds it. Open product decision:
@@ -146,6 +153,8 @@ export function normalizePublicClub(data: unknown): PublicClub | null {
     const contact = rec(d.contact);
     const contactOut: PublicContact = { email: str(contact.email), phone: str(contact.phone), website: safeHttpUrl(contact.website) };
     const lead = rec(d.leadForm);
+    const notice = rec(lead.privacyNotice);
+    const noticeBody = str(notice.body);
     return {
         slug,
         name,
@@ -174,7 +183,12 @@ export function normalizePublicClub(data: unknown): PublicClub | null {
             const n = str(o.name);
             return n ? [{ name: n, logoUrl: safeHttpUrl(o.logoUrl), website: safeHttpUrl(o.website) }] : [];
         }),
-        leadForm: { enabled: lead.enabled === true, trialTraining: lead.trialTraining === true, departments: named(lead.departments) },
+        leadForm: {
+            enabled: lead.enabled === true,
+            trialTraining: lead.trialTraining === true,
+            departments: named(lead.departments),
+            privacyNotice: noticeBody ? { body: noticeBody, version: typeof notice.version === 'number' || typeof notice.version === 'string' ? notice.version : null, publishedAt: str(notice.publishedAt) } : null,
+        },
         indexable: d.indexable === true,
     };
 }
@@ -378,7 +392,7 @@ export function previewClub(draft: ProfileDraft, club: { slug: string; name: str
         departments: shown,
         events: [],
         sponsors: [],
-        leadForm: { enabled: draft.leadFormEnabled, trialTraining: draft.leadFormEnabled && draft.trialTrainingEnabled, departments: shown },
+        leadForm: { enabled: draft.leadFormEnabled, trialTraining: draft.leadFormEnabled && draft.trialTrainingEnabled, departments: shown, privacyNotice: null },
         indexable: false,
     };
 }

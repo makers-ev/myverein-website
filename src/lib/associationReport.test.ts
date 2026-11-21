@@ -71,7 +71,8 @@ describe('gender field and errors', () => {
     it('maps the backend codes and names the file', () => {
         expect(reportErrorKey(new ApiError(422, 'UNPROCESSABLE_ENTITY', 'x', { code: 'gender_field_required' }))).toBe('assoc.err.genderField');
         expect(reportErrorKey(new ApiError(422, 'UNPROCESSABLE_ENTITY', 'x', { code: 'unknown_gender_field' }))).toBe('assoc.err.genderUnknown');
-        expect(reportErrorKey(new ApiError(403, 'FORBIDDEN', 'no'))).toBe('verein.err.forbidden');
+        expect(reportErrorKey(new ApiError(422, 'UNPROCESSABLE_ENTITY', 'x', { code: 'invalid_age_bands' }))).toBe('assoc.err.ageBands');
+        expect(reportErrorKey(new ApiError(403, 'FORBIDDEN', 'x'))).toBe('assoc.err.sensitive');
         expect(reportFilename('2026-01-01')).toBe('verbandsmeldung-2026-01-01.csv');
     });
 });

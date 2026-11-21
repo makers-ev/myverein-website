@@ -251,6 +251,7 @@ const OutreachTranslation: Translation = {
         'assoc.err.ageBands': 'Bitte Zahlen von 1 bis 120 mit Komma trennen und aufsteigend angeben, zum Beispiel 6,14,18.',
         'assoc.err.genderField': 'Wähle das Zusatzfeld, in dem das Geschlecht steht.',
         'assoc.err.genderUnknown': 'Dieses Zusatzfeld gibt es nicht mehr. Bitte wähle ein anderes.',
+        'assoc.err.sensitive': 'Dafür fehlt die Berechtigung für geschützte Mitgliederdaten oder für die Kennzahlen. Wähle ein nicht geschütztes Feld oder frage den Vorstand.',
     },
     en: {
         'nav.admin.sponsors': 'Sponsors',
@@ -498,6 +499,7 @@ const OutreachTranslation: Translation = {
         'assoc.err.ageBands': 'Please give numbers from 1 to 120, separated by commas and ascending, for example 6,14,18.',
         'assoc.err.genderField': 'Choose the custom field that holds the gender.',
         'assoc.err.genderUnknown': 'This custom field no longer exists. Please choose another one.',
+        'assoc.err.sensitive': 'You lack the right to read protected member data or club statistics. Choose an unprotected field or ask the board.',
     },
 };
 

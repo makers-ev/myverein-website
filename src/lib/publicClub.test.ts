@@ -62,6 +62,15 @@ describe('normalizePublicClub', () => {
     });
 });
 
+describe('privacy notice of the club', () => {
+    it('is kept only with text and only inside the lead form', () => {
+        const withNotice = normalizePublicClub({ ...raw, leadForm: { ...raw.leadForm, privacyNotice: { version: 3, body: 'Wir speichern ...', publishedAt: '2026-11-01T00:00:00.000Z' } } })!;
+        expect(withNotice.leadForm.privacyNotice).toEqual({ version: 3, body: 'Wir speichern ...', publishedAt: '2026-11-01T00:00:00.000Z' });
+        expect(normalizePublicClub(raw)!.leadForm.privacyNotice).toBeNull();
+        expect(normalizePublicClub({ ...raw, leadForm: { enabled: true, privacyNotice: { version: 1, body: '  ' } } })!.leadForm.privacyNotice).toBeNull();
+    });
+});
+
 describe('safeHttpUrl', () => {
     it('accepts http(s) only', () => {
         expect(safeHttpUrl('https://a.example/x')).toBe('https://a.example/x');

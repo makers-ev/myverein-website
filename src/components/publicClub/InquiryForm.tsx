@@ -156,12 +156,19 @@ export default function InquiryForm({ club, disabled = false }: { club: Pick<Pub
                     <input type="checkbox" required checked={accepted} onChange={(e) => setAccepted(e.target.checked)} disabled={disabled} className="mt-1 h-4 w-4" />
                     <span>{t('pc.form.privacy', { club: club.name })}</span>
                 </label>
-                <p className="mt-1 text-xs text-muted-foreground">
-                    {t('pc.form.privacy.hint', { club: club.name })}{' '}
-                    <a href="/privacy" target="_blank" rel="noopener noreferrer" className="font-medium text-primary-text underline">
-                        {t('pc.form.privacy.link')}
-                    </a>
-                </p>
+                {club.leadForm.privacyNotice ? (
+                    <details className="mt-2 rounded-lg border border-hairline px-3 py-2 text-sm">
+                        <summary className="min-h-8 cursor-pointer font-medium text-primary-text">{t('pc.form.notice.title', { club: club.name })}</summary>
+                        <div className="mt-2 max-h-60 overflow-y-auto whitespace-pre-line text-xs text-foreground">{club.leadForm.privacyNotice.body}</div>
+                    </details>
+                ) : (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                        {t('pc.form.privacy.hint', { club: club.name })}{' '}
+                        <a href="/privacy" target="_blank" rel="noopener noreferrer" className="font-medium text-primary-text underline">
+                            {t('pc.form.privacy.link')}
+                        </a>
+                    </p>
+                )}
             </div>
             {error && (
                 <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2 text-sm text-destructive">

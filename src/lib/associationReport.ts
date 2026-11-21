@@ -110,6 +110,9 @@ export function reportErrorKey(err: unknown): string {
         const code = (err.details as { code?: unknown } | undefined)?.code;
         if (code === 'gender_field_required') return 'assoc.err.genderField';
         if (code === 'unknown_gender_field') return 'assoc.err.genderUnknown';
+        if (code === 'invalid_age_bands') return 'assoc.err.ageBands';
+        // A protected gender field without the right to read protected data is a plain 403 (no details.code).
+        if (err.status === 403) return 'assoc.err.sensitive';
     }
     return memberErrorKey(err);
 }
