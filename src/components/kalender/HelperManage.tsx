@@ -58,7 +58,7 @@ export default function HelperManage({ mode, clubId, eventId, stationId, event, 
 
     if (!open) {
         return (
-            <div className={mode === 'shift' ? 'border-t border-border px-3 py-2' : ''}>
+            <div className={mode === 'shift' ? 'border-t border-hairline px-3 py-2' : ''}>
                 <button type="button" onClick={() => setOpen(true)} className={`${secondaryBtn} inline-flex items-center gap-1.5`}>
                     <Plus className="h-4 w-4" aria-hidden />
                     {t(mode === 'station' ? 'helpers.manage.addStation' : 'helpers.manage.addShift')}
@@ -207,7 +207,7 @@ export function StationEditor({ clubId, eventId, station, onChanged }: { clubId:
                     <button type="button" onClick={() => setEditing(true)} className={`${secondaryBtn} !px-3 !py-1 text-xs`}>
                         {t('helpers.manage.rename')}
                     </button>
-                    <button type="button" onClick={() => void remove()} className="rounded-lg border border-destructive/40 px-3 py-1 text-xs font-medium text-destructive hover:bg-destructive/10">
+                    <button type="button" onClick={() => void remove()} className="rounded-lg border border-destructive/40 px-3 py-1 text-xs font-medium text-destructive hover:bg-destructive-soft">
                         {t('helpers.manage.station.delete')}
                     </button>
                 </>
@@ -279,7 +279,7 @@ export function ShiftEditor({ clubId, eventId, shift, onChanged, onSignUp }: { c
                 <button type="button" onClick={() => (mode === 'suggest' ? setMode('closed') : void loadSuggestions())} aria-expanded={mode === 'suggest'} className={`${secondaryBtn} !px-3 !py-1 text-xs`}>
                     {t('helpers.manage.suggest')}
                 </button>
-                <button type="button" onClick={() => void remove()} className="rounded-lg border border-destructive/40 px-3 py-1 text-xs font-medium text-destructive hover:bg-destructive/10">
+                <button type="button" onClick={() => void remove()} className="rounded-lg border border-destructive/40 px-3 py-1 text-xs font-medium text-destructive hover:bg-destructive-soft">
                     {t('helpers.manage.shift.delete')}
                 </button>
             </div>
@@ -301,7 +301,7 @@ export function ShiftEditor({ clubId, eventId, shift, onChanged, onSignUp }: { c
                     ) : candidates.length === 0 ? (
                         <p className="text-sm text-muted-foreground">{t('helpers.manage.suggest.none')}</p>
                     ) : (
-                        <ul className="divide-y divide-border">
+                        <ul className="divide-y divide-hairline">
                             {candidates.map((c) => (
                                 <li key={c.clubMemberId} className="flex flex-wrap items-center justify-between gap-2 py-1.5">
                                     <span className="min-w-0 text-sm text-foreground">

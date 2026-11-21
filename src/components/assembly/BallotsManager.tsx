@@ -38,11 +38,11 @@ interface VotesResponse {
 
 const STATUS_TONE: Record<string, string> = {
     draft: 'bg-muted text-muted-foreground',
-    open: 'bg-primary/10 text-primary',
-    closed: 'bg-warning/15 text-warning',
-    counted: 'bg-warning/15 text-warning',
-    finalized: 'bg-success/15 text-success',
-    cancelled: 'bg-destructive/15 text-destructive',
+    open: 'bg-primary-soft text-primary-soft-foreground',
+    closed: 'bg-warning-soft text-warning',
+    counted: 'bg-warning-soft text-warning',
+    finalized: 'bg-success-soft text-success',
+    cancelled: 'bg-destructive-soft text-destructive',
 };
 
 /** Business rule, not a form error: shown above the action buttons with the quorum numbers and the way to fix it. */
@@ -197,7 +197,7 @@ export function BallotCard({ clubId, ballot, onChanged, onCheckIn }: { clubId: s
                     {view.description && <p className="whitespace-pre-line text-sm text-foreground">{view.description}</p>}
                     <ul className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                         {view.options.map((o) => (
-                            <li key={o.id} className="rounded-full border border-border px-2 py-0.5">
+                            <li key={o.id} className="rounded-full border border-control px-2 py-0.5">
                                 {o.label}
                             </li>
                         ))}

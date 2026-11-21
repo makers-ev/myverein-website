@@ -12,7 +12,7 @@ import { dateLocale } from '@/lib/clubMembers';
 /** Inline error of a failed action; announced to screen readers. */
 export function ErrorText({ children }: { children: React.ReactNode }) {
     return (
-        <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2 text-sm text-destructive">
             {children}
         </p>
     );
@@ -22,7 +22,7 @@ export function ErrorText({ children }: { children: React.ReactNode }) {
 export function Notice({ tone = 'info', children }: { tone?: 'info' | 'warning'; children: React.ReactNode }) {
     const Icon = tone === 'warning' ? AlertTriangle : Info;
     return (
-        <div role={tone === 'warning' ? 'alert' : 'note'} className={`flex gap-2 rounded-lg border px-3 py-2 text-sm ${tone === 'warning' ? 'border-warning/40 bg-warning/10 text-foreground' : 'border-border bg-muted/40 text-muted-foreground'}`}>
+        <div role={tone === 'warning' ? 'alert' : 'note'} className={`flex gap-2 rounded-lg border px-3 py-2 text-sm ${tone === 'warning' ? 'border-warning/40 bg-warning-soft text-foreground' : 'border-border bg-muted/40 text-muted-foreground'}`}>
             <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${tone === 'warning' ? 'text-warning' : ''}`} aria-hidden />
             <div className="min-w-0">{children}</div>
         </div>
@@ -77,7 +77,7 @@ export function MemberPicker({ clubId, label, onPick, excludeIds = [], disabled 
             {failed && <p className="mt-1 text-xs text-destructive">{t('common.error')}</p>}
             {q.trim().length >= 2 && !failed && visible.length === 0 && <p className="mt-1 text-xs text-muted-foreground">{t('assembly.picker.none')}</p>}
             {visible.length > 0 && (
-                <ul className="mt-1 divide-y divide-border rounded-lg border border-border bg-background" aria-label={t('assembly.picker.results')}>
+                <ul className="mt-1 divide-y divide-hairline rounded-lg border border-border bg-background" aria-label={t('assembly.picker.results')}>
                     {visible.map((m) => (
                         <li key={m.id}>
                             <button
@@ -87,7 +87,7 @@ export function MemberPicker({ clubId, label, onPick, excludeIds = [], disabled 
                                     setQ('');
                                     setResults([]);
                                 }}
-                                className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm text-foreground hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+                                className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm text-foreground hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-text"
                             >
                                 <span className="truncate">{m.name ?? '—'}</span>
                                 {!m.hasAccount && <span className="shrink-0 text-xs text-muted-foreground">{t('assembly.picker.noAccount')}</span>}

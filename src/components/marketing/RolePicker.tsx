@@ -33,12 +33,12 @@ export default function RolePicker() {
                             type="button"
                             aria-pressed={role === r}
                             onClick={() => setRole(r)}
-                            className={`min-h-11 rounded-lg border px-4 text-sm font-medium transition-colors active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+                            className={`min-h-11 rounded-lg border px-4 text-sm font-medium transition-colors active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-text ${
                                 isSoon ? 'border-dashed' : 'border-solid'
                             } ${
                                 role === r
                                     ? 'border-primary bg-primary text-primary-foreground'
-                                    : 'border-border bg-card text-foreground hover:bg-muted'
+                                    : 'border-control bg-card text-foreground hover:bg-muted'
                             }`}
                         >
                             {t(`mk.role.${r}.name`)}
@@ -65,7 +65,7 @@ export default function RolePicker() {
                         </li>
                     ))}
                 </ul>
-                <p className="mt-6 border-t border-border pt-4 text-sm text-muted-foreground">
+                <p className="mt-6 border-t border-hairline pt-4 text-sm text-muted-foreground">
                     <span className="font-medium text-foreground">{t('mk.roles.notLabel')}</span> {t(`mk.roles.${role}.not`)}
                 </p>
             </div>

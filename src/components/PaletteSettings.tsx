@@ -25,7 +25,7 @@ function CustomEditor() {
     };
 
     return (
-        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-border pt-4">
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-hairline pt-4">
             {(['light', 'dark'] as const).map((mode) => (
                 <div key={mode} className="flex flex-col gap-2">
                     <span className="text-xs font-medium text-muted-foreground capitalize">{mode}</span>
@@ -36,7 +36,7 @@ function CustomEditor() {
                                 type="color"
                                 value={customAnchors[mode][key]}
                                 onChange={(e) => updateAnchor(mode, key, e.target.value)}
-                                className="h-7 w-10 cursor-pointer rounded border border-border bg-transparent p-0"
+                                className="h-7 w-10 cursor-pointer rounded-lg border border-control bg-transparent p-0"
                             />
                         </label>
                     ))}
@@ -54,7 +54,7 @@ export function PaletteSettings() {
     const { paletteId, setPaletteId } = usePalette();
 
     return (
-        <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
+        <div className="bg-card shadow-card rounded-xl p-6 ">
             <h2 className="text-lg font-semibold">{t('settings.section-appearance')}</h2>
             <p className="text-sm text-muted-foreground">{t('settings.color-palette')}</p>
 
@@ -63,7 +63,7 @@ export function PaletteSettings() {
                     <button
                         key={id}
                         onClick={() => setPaletteId(id)}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                             paletteId === id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-border'
                         }`}
                     >
@@ -73,7 +73,7 @@ export function PaletteSettings() {
                 ))}
                 <button
                     onClick={() => setPaletteId('custom')}
-                    className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                         paletteId === 'custom' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-border'
                     }`}
                 >

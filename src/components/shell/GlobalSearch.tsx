@@ -189,10 +189,10 @@ function SearchBox({ clubId }: { clubId: string }) {
                         choose(activeIndex);
                     }
                 }}
-                className="min-h-11 w-full rounded-lg border border-border bg-card py-1.5 pl-9 pr-12 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+                className="min-h-11 w-full rounded-lg border border-control bg-card py-1.5 pl-9 pr-12 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-text"
             />
             {!open && !q && (
-                <kbd aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-md border border-border bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground sm:block">
+                <kbd aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-md border border-control bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground sm:block">
                     Ctrl K
                 </kbd>
             )}
@@ -200,7 +200,7 @@ function SearchBox({ clubId }: { clubId: string }) {
             <div role="status" aria-live="polite" className="sr-only">
                 {expanded ? status : ''}
             </div>
-            <div id={`${listId}-panel`} hidden={!expanded} className="animate-menu absolute left-0 right-0 top-full z-40 mt-1 max-h-96 overflow-y-auto rounded-xl border border-border bg-card p-1 shadow-lg">
+            <div id={`${listId}-panel`} hidden={!expanded} className="animate-menu absolute left-0 right-0 top-full z-40 mt-1 max-h-96 overflow-y-auto rounded-xl bg-card p-1 shadow-lg">
                 {showList ? (
                     <div role="listbox" aria-label={t('search.label')}>
                         {body}

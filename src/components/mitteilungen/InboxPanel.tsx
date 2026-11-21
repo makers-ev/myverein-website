@@ -20,7 +20,7 @@ function InboxCard({ item, expanded, onToggle }: { item: InboxItem; expanded: bo
     return (
         <li
             className={`rounded-xl border p-3 ${
-                item.urgent ? 'border-destructive/50 bg-destructive/5' : unread ? 'border-primary/40 bg-primary/5' : 'border-border bg-card'
+                item.urgent ? 'border-destructive/50 bg-destructive-soft' : unread ? 'border-primary/40 bg-primary/5' : 'border-border bg-card'
             }`}
         >
             <button type="button" onClick={onToggle} aria-expanded={expanded} className="flex w-full flex-col gap-1 text-left">
@@ -42,7 +42,7 @@ function InboxCard({ item, expanded, onToggle }: { item: InboxItem; expanded: bo
                 <div className="mt-2 space-y-2">
                     <p className="whitespace-pre-line text-sm text-foreground">{item.body}</p>
                     {href && (
-                        <a href={href} className="inline-block text-sm font-medium text-primary hover:underline" {...(href.startsWith('/') ? {} : { target: '_blank', rel: 'noopener noreferrer' })}>
+                        <a href={href} className="inline-block text-sm font-medium text-primary-text hover:underline" {...(href.startsWith('/') ? {} : { target: '_blank', rel: 'noopener noreferrer' })}>
                             {item.ctaLabel || t('mitteilungen.inbox.open')}
                         </a>
                     )}
@@ -127,7 +127,7 @@ export default function InboxPanel({ clubId }: { clubId: string }) {
 
     return (
         <div className="space-y-4">
-            <div role="group" aria-label={t('mitteilungen.inbox.filter')} className="inline-flex rounded-lg border border-border p-0.5">
+            <div role="group" aria-label={t('mitteilungen.inbox.filter')} className="inline-flex rounded-lg border border-control p-0.5">
                 {([false, true] as const).map((only) => (
                     <button
                         key={String(only)}

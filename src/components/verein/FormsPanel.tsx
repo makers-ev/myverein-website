@@ -171,15 +171,15 @@ export default function FormsPanel({
             ) : (
                 <ul className="grid gap-3 sm:grid-cols-2">
                     {list.map((f) => (
-                        <li key={f.id} className="flex flex-col justify-between gap-3 rounded-xl border border-border bg-card p-4">
+                        <li key={f.id} className="flex flex-col justify-between gap-3 rounded-xl shadow-card bg-card p-4">
                             <div className="min-w-0">
                                 <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
                                     {f.purpose === 'aufnahme' ? (
-                                        <ClipboardList className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                                        <ClipboardList className="h-4 w-4 shrink-0 text-primary-text" aria-hidden="true" />
                                     ) : f.purpose === 'veranstaltungsanmeldung' ? (
-                                        <CalendarCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                                        <CalendarCheck className="h-4 w-4 shrink-0 text-primary-text" aria-hidden="true" />
                                     ) : (
-                                        <DoorOpen className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                                        <DoorOpen className="h-4 w-4 shrink-0 text-primary-text" aria-hidden="true" />
                                     )}
                                     <span className="break-words">{f.name}</span>
                                 </p>

@@ -206,14 +206,14 @@ export function formatDate(value: string | Date | null | undefined, language: st
 export function statusChipClass(status: string): string {
     switch (status) {
         case 'aktiv':
-            return 'bg-success/15 text-success';
+            return 'bg-success-soft text-success';
         case 'probe':
         case 'interessent':
-            return 'bg-primary/10 text-primary';
+            return 'bg-primary-soft text-primary-soft-foreground';
         case 'ruhend':
-            return 'bg-warning/15 text-warning';
+            return 'bg-warning-soft text-warning';
         case 'ausgeschlossen':
-            return 'bg-destructive/10 text-destructive';
+            return 'bg-destructive-soft text-destructive';
         default:
             return 'bg-muted text-muted-foreground';
     }

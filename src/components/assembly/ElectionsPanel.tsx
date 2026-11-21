@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { roleLabel } from '@/lib/roleLabel';
 
 import { apiFetch } from '@/lib/api-client';
 import {
@@ -43,7 +44,7 @@ function CandidateRow({ clubId, election, candidate, canManage, ownId, busy, run
     const patch = (status: string) => run(() => apiFetch(`${base}?clubId=${clubId}`, { method: 'PATCH', body: { status } }));
     const accept = (value: boolean) => run(() => apiFetch(`${base}/accept?clubId=${clubId}`, { method: 'POST', body: { accept: value } }));
     return (
-        <li className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 py-2">
+        <li className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-control bg-background px-3 py-2">
             <div className="min-w-0">
                 <p className="text-sm font-semibold text-foreground">{candidate.displayName ?? '—'}</p>
                 <p className="text-xs text-muted-foreground">
@@ -148,10 +149,10 @@ function ElectionDetail({ clubId, id, canManage, onBack }: { clubId: string; id:
 
     return (
         <div className="space-y-4">
-            <button type="button" onClick={onBack} className="text-sm font-medium text-primary hover:underline">
+            <button type="button" onClick={onBack} className="text-sm font-medium text-primary-text hover:underline">
                 ← {t('assembly.elections.back')}
             </button>
-            <SectionCard title={`${t(`verein.role.${election.roleType}`)} · ${t('assembly.elections.seats', { count: election.seats })}`}>
+            <SectionCard title={`${roleLabel(t, election.roleType)} · ${t('assembly.elections.seats', { count: election.seats })}`}>
                 <div className="space-y-3">
                     <p className="text-sm text-muted-foreground">
                         {t(`assembly.election.status.${election.status}`)}
@@ -268,7 +269,7 @@ function ProposeCandidate({ clubId, electionId, exclude, busy, run }: { clubId: 
     const { t } = useLanguage();
     const [willing, setWilling] = useState(false);
     return (
-        <div className="space-y-2 border-t border-border pt-3">
+        <div className="space-y-2 border-t border-hairline pt-3">
             <MemberPicker
                 clubId={clubId}
                 label={t('assembly.elections.propose')}
@@ -378,7 +379,7 @@ export default function ElectionsPanel({ clubId, canManage, departments, prefill
                                 <select id="el-role" value={roleType} onChange={(e) => setRoleType(e.target.value)} className={inputClass}>
                                     {ELECTION_ROLE_TYPES.map((r) => (
                                         <option key={r} value={r}>
-                                            {t(`verein.role.${r}`)}
+                                            {roleLabel(t, r)}
                                         </option>
                                     ))}
                                 </select>
@@ -427,7 +428,7 @@ export default function ElectionsPanel({ clubId, canManage, departments, prefill
                                 {lead ? (
                                     <p className="text-sm text-foreground">
                                         {t('assembly.elections.leadLabel')}: <strong>{lead.name}</strong>{' '}
-                                        <button type="button" onClick={() => setLead(null)} className="text-primary underline">
+                                        <button type="button" onClick={() => setLead(null)} className="text-primary-text underline">
                                             {t('assembly.picker.clear')}
                                         </button>
                                     </p>
@@ -454,9 +455,9 @@ export default function ElectionsPanel({ clubId, canManage, departments, prefill
                     <ul className="space-y-2">
                         {list.map((e) => (
                             <li key={e.id}>
-                                <button type="button" onClick={() => setSelected(e.id)} className="flex w-full items-center justify-between gap-3 rounded-lg border border-border bg-background p-3 text-left hover:bg-muted/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
+                                <button type="button" onClick={() => setSelected(e.id)} className="flex w-full items-center justify-between gap-3 rounded-lg border border-control bg-background p-3 text-left hover:bg-muted/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-text">
                                     <span className="text-sm font-semibold text-foreground">
-                                        {t(`verein.role.${e.roleType}`)} · {t('assembly.elections.seats', { count: e.seats })}
+                                        {roleLabel(t, e.roleType)} · {t('assembly.elections.seats', { count: e.seats })}
                                     </span>
                                     <span className="text-xs text-muted-foreground">{t(`assembly.election.status.${e.status}`)}</span>
                                 </button>

@@ -15,7 +15,7 @@ export default function AnswerList({ answers }: { answers: readonly RenderedAnsw
     return (
         <dl className="space-y-2">
             {answers.map((a) => (
-                <div key={a.key} className="rounded-lg border border-border px-3 py-2">
+                <div key={a.key} className="rounded-lg border border-control px-3 py-2">
                     <dt className="break-words text-xs font-semibold text-muted-foreground">{a.label}</dt>
                     <dd className={`mt-0.5 whitespace-pre-line break-words text-sm ${a.answered && !a.redacted ? 'text-foreground' : 'text-muted-foreground'}`}>
                         {a.redacted ? (

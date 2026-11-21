@@ -102,7 +102,7 @@ The shared building blocks, named identically in myverein-mobile (`src/component
 | `Badge` | `src/components/ui.tsx` | `tone?` (`neutral`/`primary`/`danger`), `children` | Short statuses as a quiet tag (6px radius); always with text, never color alone. Counts on dashboards are plain figures, not badges |
 | `LoadError` | `src/components/LoadError.tsx` | `onRetry`, `error?`, `className?` | Thin wrapper around `ErrorState` kept for the existing pages |
 | `LoadingText` | `src/components/LoadingText.tsx` | `className?` | Inline "…" loading placeholder |
-| `PageHeader` | `src/components/PageHeader.tsx` | `title`, `intro?`, `children?`, `className?` | Header of public content pages (features, changelog, roadmap, about, contact): display-serif title, one intro paragraph, left aligned |
+| `PageHeader` | `src/components/PageHeader.tsx` | `title`, `intro?`, `children?`, `className?` | Header of public content pages (features, changelog, roadmap, about, contact): bold system-font title, one intro paragraph, left aligned |
 | `Modal` | `src/components/Modal.tsx` | `open`, `onClose`, `title`, `footer?`, `size?` | Every dialog: focus trap, Escape (topmost only), focus restore, `aria-modal` |
 | `useConfirm` | `src/components/useConfirm.tsx` | `confirm({title, body, confirmLabel, danger?})` -> `Promise<boolean>`, `dialog` | Every confirmation; never `window.confirm` |
 
@@ -110,17 +110,20 @@ Error texts: `mapApiError(err, t, overrides?)` in `src/lib/mapApiError.ts` is th
 
 Dates and numbers: `dateLocale(language)` (`src/lib/clubMembers.ts`) is the only source of the formatting locale (`de-DE` / `en-GB` from the UI language, which defaults to the browser's `Accept-Language`); no page hardcodes a locale.
 
-### Visual design system
+### Visual design system ("Vereinsheim")
 
-One look across the public pages and the signed-in app. All colours stay on the palette tokens (no value changed, see [Color palettes & theming](#color-palettes--theming)); the design work sits in type, space, radius, elevation, icons and motion.
+One look across the public pages and the signed-in app, identical to the mobile app: Apple style, rounded, clean. Colours live in the palette tokens (see [Color palettes & theming](#color-palettes--theming)); the rest sits in type, radius, elevation and the event highlight.
 
-- **Type:** Geist for the whole interface (applied on `body` via `--font-sans`; it used to fall back to Arial), Geist Mono for figures and meta, Instrument Serif only for large public headlines (`.font-display`, loaded in `layout.tsx`). Weights: 400 and 500 for text, 560 (`font-semibold`) and 600 (`font-bold`/`font-extrabold`) are the only emphasis steps; they are mapped in `globals.css` `@theme` so no heading renders at 700-900. Sentence case everywhere (no uppercase tracked labels), tabular figures in tables (`table`, `.tabular`), balanced headings.
+- **Type:** the system stack `-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif` (`--font-sans`, no webfont, no `next/font`). Large titles (`PageHeader`, hero, `.font-display`) are bold with slightly negative letter-spacing (-0.025em); weights follow the system (medium 500, semibold 600, bold 700). `font-mono` is the system monospace stack. Sentence case, tabular figures in tables (`table`, `.tabular`), balanced headings.
 - **Space:** 4px grid. Marketing chapters share `MK_SECTION` (`max-w-7xl`, 56/72 vertical padding); public content pages use `max-w-5xl` / `max-w-7xl` with `PageHeader`.
-- **Shape:** controls 8px (`rounded-lg`), cards 12-16px (`rounded-xl`/`rounded-2xl`), tags 6px (`rounded-md`); pills only for avatars and switches.
-- **Elevation:** neutral tokens `shadow-xs` to `shadow-2xl` (tinted by `--foreground`, defined in `globals.css`); borders are the palette's `--border` hairline. No coloured shadows, glows, gradients or blurred blobs.
+- **Shape:** cards 22px (`rounded-xl`), buttons and inputs 16px (`rounded-lg`), hero cards 26px (`rounded-2xl`), small chips 12px (`rounded-md`); tags, badges and avatars are full pills (`rounded-full`).
+- **Elevation:** cards use the soft `shadow-card` instead of a hard border, dividers inside cards and lists are the light `--hairline` (palette role `divider`, never stronger than `--border`); hero cards use `shadow-hero` (soft shadow tinted with the primary). Interactive controls keep a visible `border-control` (`--border-control`, at least 3:1). Dark mode relies on the stepped surfaces (canvas / card / muted).
+- **Events:** calendar items are lightly highlighted, not loud: a tinted date tile (`bg-primary-soft`) and a faint tinted event row.
 - **Icons:** lucide at 16 or 18px, stroke 1.5, in the muted or foreground colour; no emoji in the interface (the language switcher shows `DE`/`EN` codes, not flags).
-- **Motion:** one easing curve (`--ease-out`), 150ms for feedback, 180ms for menus (`.animate-menu`), 400-900ms for marketing entrances; only colour, background, opacity and transform are transitioned (no `transition-all`, nothing bounces, nothing loops except the loading skeleton). A global `prefers-reduced-motion` rule shows the finished state.
-- **Focus:** a global 2px primary outline on `:focus-visible` (base layer); component rings still win. Touch targets are at least 44px (`min-h-11`), compact menu rows 36px.
+- **Motion:** one easing curve (`--ease-out`), 150ms for feedback, 180ms for menus (`.animate-menu`), 400-900ms for marketing entrances; only colour, background, opacity and transform are transitioned. A global `prefers-reduced-motion` rule shows the finished state.
+- **Focus:** a global 2px `--primary-text` outline on `:focus-visible` (base layer); component rings still win. Touch targets are at least 44px (`min-h-11`), compact menu rows 36px.
+- **Colour roles in classes:** `bg-primary text-primary-foreground` is the solid action; `text-primary-text` is primary as text/links; `bg-primary-soft text-primary-soft-foreground`, `bg-accent-soft text-accent-soft-foreground` and `bg-{success,warning,info,destructive}-soft` are quiet tints (status text `text-success` etc.); `bg-destructive-fill` is the solid red of an irreversible action; `border-control` is the border of an input, secondary button or an unselected chip/toggle; `border-hairline` / `divide-hairline` are the light inner lines.
+- **CSS variables beyond the palette roles** (`globals.css`): `--hairline` (= palette `divider`, set by `PaletteProvider`), `--scrim` (dialog overlay, used as `bg-scrim/50`), `--info` / `--info-soft`, `--shadow-card-color` / `--shadow-card-color-2` (shadow tints, lighter in light mode, black in dark mode, feeding `shadow-card`), `--font-system` (the single system font stack, also behind `--font-sans`, `--font-display`; includes `system-ui` and `Segoe UI` as fallbacks).
 
 ### Internationalisation (Wave 14 DS3)
 
@@ -137,7 +140,7 @@ Everything under `(protected)/` is wrapped by `src/components/shell/AppShell.tsx
 - **Skip link** (`SkipLink.tsx`): first focusable element of every page, jumps to `<main id="main-content">`.
 - **Member table (S3):** sticky header inside a scroll area (max 70vh), a "Spalten" chooser hides optional columns (Kategorie, Konto, Abteilungen, Rollen, Mitglied seit; remembered in `localStorage` `myverein.memberColumns.hidden`), filter chips and sorting as before. The in-page tab bar of `/verein` is gone: every tab is a sidebar entry (*Verein* vs. *Verwaltung*, same permission gating via `visibleTabs`), active state and breadcrumbs come from `?tab=`, deep links keep working, no tab = Vereinsinfo. The open-application/exit count badges of the old tab bar are dropped. Not done yet: bulk actions and detail side panels (still dialogs).
 - **Accessibility (S4):** skip link, `aria-current` in the sidebar, `aria-expanded` on the language, account, menu and sidebar toggles, Escape closes the language and account menus and the mobile drawer, touch targets of the new controls are at least 44 px (`min-h-11`), dialogs trap focus and restore it (`Modal`). The shell is responsive: sidebar drawer, wrapping header and a horizontally scrolling table on phones. Not verified by tooling here: contrast audit (axe/Lighthouse) -- run `lighthouserc.js` before release.
-- **Look of the shell:** active sidebar entry is a surface step with a hairline (no tinted fill), group labels in sentence case, breadcrumbs with chevrons, the search shows a `Ctrl K` keycap while idle, every app page shares one container (`max-w-6xl`, left edge identical on all pages; narrow forms constrain an inner block). Open-item counts on *Heute* are quiet figures (red only when overdue), not pills.
+- **Look of the shell:** active sidebar entry is a quiet `primary-soft` tint with bold text, group labels in sentence case, breadcrumbs with chevrons, the search shows a `Ctrl K` keycap while idle, every app page shares one container (`max-w-6xl`, left edge identical on all pages; narrow forms constrain an inner block). Open-item counts on *Heute* are quiet figures (red only when overdue), not pills.
 - **Shared controls:** `src/lib/uiClasses.ts` (`UI_INPUT`, `UI_BTN_PRIMARY`, `UI_BTN_SECONDARY`, `UI_BTN_DANGER`, `UI_BTN_DANGER_OUTLINE`, `UI_BTN_ICON`, `UI_LABEL`) is the single source of input and button classes; the per-feature constants (`inputClass`, `primaryButtonClass`, `primaryBtn`, ...) re-export it.
 - Landing after login is `/heute` (`resolveCallbackUrl` default).
 - Account menu (`AuthNav`) keeps the same links for the marketing pages; the notification bell and the club inbox link stay in the navbar.
@@ -223,7 +226,7 @@ Club documents, archive, personal storage, branding and storage quota. Permissio
 
 ### Marketing homepage
 
-The homepage (`pageContent/Homepage.tsx`) only composes chapters from `src/components/marketing/`. Visual language: hand-drawn ink on quiet paper (paper-cut people, a growing club network and a few stick-figure moments), display-serif chapter titles, one hairline card style; **solid frame = available today, dashed frame = "we are sketching this" (never presented as available)**.
+The homepage (`pageContent/Homepage.tsx`) only composes chapters from `src/components/marketing/`. Visual language: hand-drawn ink on quiet paper (paper-cut people, a growing club network and a few stick-figure moments), bold system-font chapter titles, one hairline card style; **solid frame = available today, dashed frame = "we are sketching this" (never presented as available)**.
 
 - **Single source of truth:** `marketingData.ts` lists every feature item with `status: 'live' | 'soon'`, `featureRef` (vault Feature List ids) and, for `soon`, the `wave` (kept internally for the roadmap grouping, never shown on the page). Flipping `soon` -> `live` turns the dashed sketch into ink everywhere (roadmap sketches, media breaks, quiz, role picker). `marketingData.test.ts` checks unique ids, wave/featureRef presence and DE+EN keys.
 - **Copy:** `MarketingTranslation.ts`, `MarketingHeroTranslation.ts`, `MarketingStoryTranslation.ts`, `MarketingTrustTranslation.ts` (DE/EN only, other languages fall back to English like the other marketing pages; key prefix `mk.`).
@@ -387,7 +390,7 @@ The privacy screens add no website variable: whether the AV-Vertrag gate locks w
 | `appName` | Every `{{appName}}` occurrence app-wide (`LanguageContext.tsx`'s `t()` always fills it in, see [SEO](#seo)) — legal copy (`LegalTranslation.ts`), contact-form e-mails (`contactEmailTemplate.ts`/`contactAdminEmailTemplate.ts`), the contact form's `mailto:` fallback subject (`ContactForm.tsx`) |
 | `title`, `description`, `url`, `author`, `authorUrl`, `keywords` | Page titles/SEO metadata — see [SEO](#seo) |
 | `logoPath` | The generated OG/Twitter/favicon images (`opengraph-image.tsx`/`twitter-image.tsx`/`icon.tsx`/`apple-icon.tsx`) — swap the referenced SVG file, or point `logoPath` at a new one |
-| `primaryColor` | The accent color in contact-form e-mails (`BRAND.primary`/`HEADER_BG`) — mail clients can't read CSS variables, so this can't just reference `globals.css` |
+| `primaryColor` | The accent color in contact-form e-mails (`BRAND.primary`/`HEADER_BG`) and the OG image background; keep it equal to `--primary` in `globals.css` (`#24416b`) — mail clients can't read CSS variables, so this can't just reference `globals.css` |
 | `defaultLanguage` | Last-resort fallback in `layout.tsx`/`LanguageContext.tsx`: a saved cookie choice wins first, then the browser's `Accept-Language` header (`acceptLanguage.ts`), and only if neither matches a supported language does this value apply |
 
 What's still separate, and why:
@@ -408,24 +411,24 @@ each palette defines its own light *and* dark token set.
 
 | Piece | File | Role |
 |---|---|---|
-| Palette registry | `src/theme/palettes.ts` | `palettes` — a `Record<paletteId, { label, light, dark }>` of predefined palettes (`vereinsblau`, `ink-navy`, `ocean`, `forest`, `sunset`). The `vereinsblau` default must always match `globals.css`'s `:root`/`.dark` values exactly (see below) |
+| Palette registry | `src/theme/palettes.ts` | `palettes` — a `Record<paletteId, { label, light, dark }>` of predefined palettes (`vereinsblau`, `ink-navy`, `ocean`, `forest`, `sunset`) with the roles `background/foreground/card/muted/mutedForeground/border/divider/borderControl/primary/primaryForeground/primaryText/primarySoft(+Foreground)/accent(+Foreground)/accentSoft(+Foreground)`, plus `TOKEN_CSS_VARS` (token to CSS variable). Copied from the mobile app's registry (same values and roles, plus `divider`); the website only adds `TOKEN_CSS_VARS`. The `vereinsblau` default must always match `globals.css`'s `:root`/`.dark` values exactly (see below) |
 | Runtime application | `src/components/PaletteProvider.tsx` | Wraps the app (inside `ThemeProvider`, since it reads `next-themes`' `resolvedTheme` to know which mode's tokens to apply). On every palette/mode change, writes the active token set as inline CSS custom properties on `<html>` (`--background`, `--primary`, etc.), overriding `globals.css`'s defaults. Persists the chosen palette id and any custom colors to `localStorage` (`color-palette-id` / `color-palette-custom`) — exposes both via the `usePalette()` hook |
-| Custom palette derivation | `src/theme/deriveTokens.ts` | Pure function: 3 anchor colors (background/foreground/primary, one set per mode) → a full token set, mixing card/muted/border from the anchors and picking black/white foreground text by contrast. No WCAG contrast enforcement — a user can pick a poorly-readable combination (deliberate, see the vault's `ADR-008`) |
+| Custom palette derivation | `src/theme/deriveTokens.ts` | Pure function: 3 anchor colors (background/foreground/primary, one set per mode) → a full token set, mixing card/muted/border from the anchors and deriving the Vereinsheim roles (primary fill, `primaryText`, soft tints, `mutedForeground`, `borderControl`) so that text reaches 4.5:1 and control borders 3:1; the anchors themselves stay the user's choice |
 | Custom palette UI | `src/components/PaletteSettings.tsx` | Predefined-palette swatches + (when "Custom" is selected) 6 native `<input type="color">` pickers, wired to `usePalette()` |
-| Contrast guard (Wave 14 N5) | `src/theme/contrast.ts`, `src/theme/contrast.test.ts` | Vitest: every palette (light + dark) must reach WCAG AA 4.5:1 for text pairs, `FIXED_COLORS` (`destructive`/`success`/`warning`, palette-independent, exported from `palettes.ts`) must pass on every surface, and `globals.css`'s defaults must equal the `vereinsblau` palette. Values mirror the mobile app's `src/theme/palettes.ts` — change both together |
+| Contrast guard (Wave 14 N5) | `src/theme/contrast.ts`, `src/theme/contrast.test.ts` | Vitest: every palette (light + dark) must reach WCAG AA 4.5:1 for text pairs and 3:1 for control borders, derived custom palettes stay AA, `FIXED_COLORS` (`destructive`/`success`/`warning`/`info` plus soft tints, palette-independent, exported from `palettes.ts`) must pass on every surface, and `globals.css`'s defaults must equal the `vereinsblau` palette. Values mirror the mobile app's `src/theme/palettes.ts` — change both together |
 
 **Adding a new predefined palette:** add an entry to the `palettes` object in
 `src/theme/palettes.ts` with a `label`, `light`, and `dark` token set — the
 `TokenSet` type requires every key, so TypeScript catches a missing one. It
 shows up in Settings automatically; no other file to touch.
 
-**Changing the default palette's colors:** `ink-navy` is the *only* palette
+**Changing the default palette's colors:** `vereinsblau` is the *only* palette
 that also needs updating in **two other places**, because it's what a first
 paint renders before `PaletteProvider` has run client-side:
 
 - `src/app/globals.css`'s `:root`/`.dark` blocks — the actual values a fresh
   page load uses before any JS executes.
-- `src/theme/palettes.ts`'s `palettes['ink-navy']` entry — must mirror
+- `src/theme/palettes.ts`'s `palettes.vereinsblau` entry — must mirror
   `globals.css` exactly, or switching away from a different palette back to
   the default (or a plain reload) shows a mismatched color for one frame.
 
@@ -433,7 +436,7 @@ paint renders before `PaletteProvider` has run client-side:
 this same "keep in sync by hand" note, for the same reason — see [SEO](#seo).)
 
 **Known limitation:** switching to a *non-default* palette flashes the
-default (`ink-navy`) for one frame on a full page reload — there's no
+default (`vereinsblau`) for one frame on a full page reload — there's no
 pre-hydration blocking script for the palette, unlike `next-themes`' own
 light/dark FOUC-prevention script. Acceptable for a template; fixing it
 would mean adding a second nonce'd inline script mirroring that approach.

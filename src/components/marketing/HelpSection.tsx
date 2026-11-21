@@ -32,7 +32,7 @@ export default function HelpSection() {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 aria-label={t(`mk.help.${id}.label`)}
-                                className="mt-5 inline-flex min-h-11 items-center gap-1.5 font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                                className="mt-5 inline-flex min-h-11 items-center gap-1.5 font-medium text-primary-text underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-text"
                             >
                                 {t(`mk.help.${id}.cta`)}
                                 <ArrowUpRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />

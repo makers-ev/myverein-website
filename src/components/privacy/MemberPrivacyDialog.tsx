@@ -14,7 +14,7 @@ import MemberRequestRecorder from './MemberRequestRecorder';
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
     return (
-        <section className="rounded-xl border border-border bg-card p-4">
+        <section className="rounded-xl shadow-card bg-card p-4">
             <h3 className="mb-3 text-base font-medium text-foreground">{title}</h3>
             {children}
         </section>

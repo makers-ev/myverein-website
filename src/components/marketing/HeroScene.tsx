@@ -103,7 +103,7 @@ export default function HeroScene() {
 
     return (
         <section
-            className="relative border-b border-border"
+            className="relative border-b border-hairline"
             onMouseEnter={() => setWordPaused(true)}
             onMouseLeave={() => setWordPaused(false)}
             onFocus={() => setWordPaused(true)}
@@ -121,7 +121,7 @@ export default function HeroScene() {
                     <p className="mt-5 text-lg text-foreground">
                         <span aria-hidden="true">
                             <span className="text-muted-foreground">{t('mk.hero.eg')}</span>{' '}
-                            <span key={wordIndex} className="mk-b1-word font-medium text-primary">
+                            <span key={wordIndex} className="mk-b1-word font-medium text-primary-text">
                                 {t(WORD_KEYS[wordIndex])}
                             </span>
                         </span>
@@ -131,13 +131,13 @@ export default function HeroScene() {
                     <div className="mt-8 flex flex-wrap items-center gap-3">
                         <Link
                             href="/contact#beta"
-                            className="inline-flex min-h-12 items-center rounded-lg bg-primary px-6 text-base font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                            className="inline-flex min-h-12 items-center rounded-lg bg-primary px-6 text-base font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-text"
                         >
                             {t('mk.hero.cta')}
                         </Link>
                         <a
                             href="#woche"
-                            className="inline-flex min-h-12 items-center rounded-lg border border-border bg-card px-6 text-base font-medium text-foreground transition-colors hover:bg-muted active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                            className="inline-flex min-h-12 items-center rounded-lg border border-control bg-card px-6 text-base font-medium text-foreground transition-colors hover:bg-muted active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-text"
                         >
                             {t('mk.hero.cta-week')}
                         </a>
@@ -147,7 +147,7 @@ export default function HeroScene() {
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label={t('help.nav.label')}
-                        className="mt-3 inline-flex min-h-11 items-center gap-1 text-sm font-medium text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                        className="mt-3 inline-flex min-h-11 items-center gap-1 text-sm font-medium text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-text"
                     >
                         {t('mk.help.hero')}
                         <ArrowUpRight className="size-4" strokeWidth={1.5} aria-hidden="true" />
@@ -159,7 +159,7 @@ export default function HeroScene() {
                         ref={ref}
                         role="group"
                         aria-label={t('mk.hero.stage.alt')}
-                        className={`relative h-[28rem] overflow-hidden rounded-3xl border border-border bg-muted/50 sm:h-[30rem] lg:h-[34rem] ${messy ? 'mk-b1-messy' : ''}`}
+                        className={`relative h-[28rem] overflow-hidden rounded-2xl bg-muted/50 shadow-hero sm:h-[30rem] lg:h-[34rem] ${messy ? 'mk-b1-messy' : ''}`}
                     >
                         <Network className="absolute inset-0 size-full opacity-40" />
                         <div className="absolute inset-0 flex items-center justify-center">
@@ -173,12 +173,12 @@ export default function HeroScene() {
                                         </li>
                                     ))}
                                 </ul>
-                                <p className="mt-4 border-t border-border pt-3 text-xs text-muted-foreground">{t('mk.hero.card.note')}</p>
+                                <p className="mt-4 border-t border-hairline pt-3 text-xs text-muted-foreground">{t('mk.hero.card.note')}</p>
                             </PaperCard>
                         </div>
                         {TOOLS.map((tool, i) => (
                             <div key={tool} aria-hidden="true" className={`mk-b1-obj mk-b1-o${i + 1} mk-d${i + 1}`}>
-                                <div className="mk-paper flex w-24 flex-col sm:w-28 items-center gap-1.5 rounded-xl border border-border bg-card px-2 py-3 text-foreground">
+                                <div className="mk-paper flex w-24 flex-col sm:w-28 items-center gap-1.5 rounded-xl bg-card px-2 py-3 text-foreground">
                                     <ToolIcon tool={tool} />
                                     <span className="text-xs font-medium">{t(`mk.hero.obj.${tool}`)}</span>
                                 </div>
@@ -194,8 +194,8 @@ export default function HeroScene() {
                                 setTouched(true);
                                 setTidy((v) => !v);
                             }}
-                            className={`inline-flex min-h-11 items-center gap-2 rounded-lg border px-4 text-sm font-medium transition-colors active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
-                                tidy ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card text-foreground hover:bg-muted'
+                            className={`inline-flex min-h-11 items-center gap-2 rounded-lg border px-4 text-sm font-medium transition-colors active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-text ${
+                                tidy ? 'border-primary bg-primary text-primary-foreground' : 'border-control bg-card text-foreground hover:bg-muted'
                             }`}
                         >
                             {tidy ? <Check className="size-4" strokeWidth={1.5} aria-hidden="true" /> : <Pencil className="size-4" strokeWidth={1.5} aria-hidden="true" />}

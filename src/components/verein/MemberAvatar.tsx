@@ -35,7 +35,7 @@ export default function MemberAvatar({
 
     return (
         <span
-            className={`relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/15 font-bold text-primary ${SIZES[size]}`}
+            className={`relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/15 font-bold text-primary-text ${SIZES[size]}`}
             aria-hidden="true"
         >
             {showImage ? (

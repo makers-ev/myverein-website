@@ -73,7 +73,7 @@ export function Navbar({
     };
 
     return (
-        <nav className="sticky top-0 z-50 w-full border-b border-border bg-background">
+        <nav className="sticky top-0 z-50 w-full border-b border-hairline bg-background">
             <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
                 {/* --- LEFT: LOGO & NAV --- */}
                 <div className="flex items-center gap-10">
@@ -93,7 +93,7 @@ export function Navbar({
                                     href={link.href}
                                     className={`text-sm font-medium transition-colors ${
                                         isActive
-                                            ? 'text-primary'
+                                            ? 'text-primary-text'
                                             : 'text-muted-foreground hover:text-foreground'
                                     }`}
                                 >
@@ -138,7 +138,7 @@ export function Navbar({
                         </button>
 
                         {isLangOpen && (
-                            <div className="animate-menu absolute right-0 mt-2 max-h-80 w-48 origin-top-right overflow-y-auto rounded-xl border border-border bg-card p-1.5 shadow-lg focus:outline-none">
+                            <div className="animate-menu absolute right-0 mt-2 max-h-80 w-48 origin-top-right overflow-y-auto rounded-xl border border-control bg-card p-1.5 shadow-lg focus:outline-none">
                                 <div className="flex flex-col gap-0.5">
                                     {supportedLanguages.map((lang) => (
                                         <button
@@ -185,7 +185,7 @@ export function Navbar({
 
             {/* --- MOBILE NAVIGATION MENU --- */}
             {isMobileMenuOpen && (
-                <div className="animate-menu border-t border-border bg-background px-4 py-4 shadow-lg md:hidden">
+                <div className="animate-menu border-t border-hairline bg-background px-4 py-4 shadow-lg md:hidden">
                     <div className="flex flex-col space-y-3">
                         {mainLinks.map((link) => (
                             <Link
@@ -193,7 +193,7 @@ export function Navbar({
                                 href={link.href}
                                 className={`block rounded-lg px-3 py-2.5 text-base font-medium transition-colors ${
                                     pathname === link.href
-                                        ? 'bg-primary/10 text-primary'
+                                        ? 'bg-primary-soft text-primary-soft-foreground'
                                         : 'text-muted-foreground hover:bg-muted'
                                 }`}
                             >
@@ -211,7 +211,7 @@ export function Navbar({
                         </a>
 
                         {/* Mobile Language Selector */}
-                        <div className="flex flex-col gap-2 px-3 py-2 border-t border-border mt-2 pt-3">
+                        <div className="flex flex-col gap-2 px-3 py-2 border-t border-hairline mt-2 pt-3">
                             <span className="text-sm font-medium text-muted-foreground">
                                 {t('nav.language_label')}
                             </span>
@@ -224,7 +224,7 @@ export function Navbar({
                                         className={`flex min-h-11 items-center gap-2 rounded-lg border px-3 py-1 text-sm transition-colors ${
                                             language === lang.id
                                                 ? 'border-foreground/30 bg-muted font-medium text-foreground'
-                                                : 'border-border text-muted-foreground'
+                                                : 'border-control text-muted-foreground'
                                         }`}
                                     >
                                         {lang.nativeLabel}
@@ -235,7 +235,7 @@ export function Navbar({
 
                         {/* Mobile Guest Buttons */}
                         {mobileGuestNav && (
-                            <div className="mt-2 border-t border-border pt-4">
+                            <div className="mt-2 border-t border-hairline pt-4">
                                 {mobileGuestNav}
                             </div>
                         )}

@@ -154,7 +154,7 @@ function CategoryFormModal({
 
                 {category ? (
                     <p className="text-xs text-muted-foreground">
-                        {t('verein.categories.field.key')}: <code className="rounded bg-muted px-1 py-0.5 text-foreground">{category.key}</code> · {t('verein.categories.key.immutable')}
+                        {t('verein.categories.field.key')}: <code className="rounded-lg bg-muted px-1 py-0.5 text-foreground">{category.key}</code> · {t('verein.categories.key.immutable')}
                     </p>
                 ) : (
                     <label className="block text-xs font-semibold text-muted-foreground">
@@ -309,7 +309,7 @@ function ArchiveModal({
                         type="button"
                         onClick={() => void archive()}
                         disabled={busy}
-                        className="rounded-lg bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground disabled:opacity-50"
+                        className="rounded-lg bg-destructive-fill px-4 py-2 text-sm font-semibold text-destructive-foreground disabled:opacity-50"
                     >
                         {t('verein.categories.archive.confirm')}
                     </button>
@@ -392,13 +392,13 @@ export default function CategoriesPanel({ clubId, onChanged }: { clubId: string;
             </div>
 
             {notice && (
-                <p role="status" className="mb-3 rounded-lg bg-success/10 px-3 py-2 text-sm text-foreground">
+                <p role="status" className="mb-3 rounded-lg bg-success-soft px-3 py-2 text-sm text-foreground">
                     {notice}
                 </p>
             )}
 
             {loadError ? (
-                <div role="alert" className="rounded-xl border border-destructive/40 bg-destructive/5 p-4 text-sm">
+                <div role="alert" className="rounded-xl border border-destructive/40 bg-destructive-soft p-4 text-sm">
                     <p className="text-destructive">{loadError}</p>
                     <button type="button" onClick={() => void load()} className={`${secondaryButtonClass} mt-3`}>
                         {t('verein.create.retry')}
@@ -421,13 +421,13 @@ export default function CategoriesPanel({ clubId, onChanged }: { clubId: string;
                     ) : (
                         <ul className="space-y-2">
                             {visible.map((c) => (
-                                <li key={c.id} className={`rounded-xl border border-border bg-card p-3 ${c.archived ? 'opacity-60' : ''}`}>
+                                <li key={c.id} className={`rounded-xl shadow-card bg-card p-3 ${c.archived ? 'opacity-60' : ''}`}>
                                     <div className="flex flex-wrap items-start justify-between gap-2">
                                         <div className="min-w-0">
                                             <p className="text-sm font-semibold text-foreground">
                                                 {c.name}
                                                 {c.archived && <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs font-normal text-muted-foreground">{t('verein.categories.archived')}</span>}
-                                                {!c.archived && c.applicantSelectable && <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-normal text-primary">{t('forms.category.applicantSelectable.chip')}</span>}
+                                                {!c.archived && c.applicantSelectable && <span className="ml-2 rounded-full bg-primary-soft px-2 py-0.5 text-xs font-normal text-primary-soft-foreground">{t('forms.category.applicantSelectable.chip')}</span>}
                                             </p>
                                             <p className="mt-0.5 text-xs text-muted-foreground">
                                                 <code>{c.key}</code> · {c.votingRight ? t('verein.categories.voting.yes') : t('verein.categories.voting.no')} · {ageRangeText(c, t)}
@@ -440,7 +440,7 @@ export default function CategoriesPanel({ clubId, onChanged }: { clubId: string;
                                                 <button
                                                     type="button"
                                                     onClick={() => setEditing(c)}
-                                                    className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                                                    className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                                                     aria-label={t('verein.categories.edit', { name: c.name })}
                                                 >
                                                     <Pencil className="h-4 w-4" />
@@ -453,7 +453,7 @@ export default function CategoriesPanel({ clubId, onChanged }: { clubId: string;
                                                     <button
                                                         type="button"
                                                         onClick={() => setArchiving(c)}
-                                                        className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive"
+                                                        className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive"
                                                         aria-label={t('verein.categories.archive.action', { name: c.name })}
                                                     >
                                                         <Archive className="h-4 w-4" />

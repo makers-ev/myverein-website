@@ -3,7 +3,7 @@ export interface ColumnSeries {
     label: string;
     /** Tailwind fill class for the SVG bars, e.g. "fill-primary". */
     fillClass: string;
-    /** Tailwind text class for the value under the bar, e.g. "text-primary". */
+    /** Tailwind text class for the value under the bar, e.g. "text-primary-text". */
     textClass: string;
     /** Tailwind background class for the legend swatch (fill-* only works on SVG). */
     bgClass: string;

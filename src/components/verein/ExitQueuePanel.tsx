@@ -108,7 +108,7 @@ export default function ExitQueuePanel({
     return (
         <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-2">
-                <div role="group" aria-label={t('verein.exit.queue.bucket')} className="flex rounded-lg border border-border p-0.5">
+                <div role="group" aria-label={t('verein.exit.queue.bucket')} className="flex rounded-lg border border-control p-0.5">
                     {(['pending', 'decided'] as const).map((b) => (
                         <button
                             key={b}
@@ -163,7 +163,7 @@ export default function ExitQueuePanel({
             </div>
 
             {error ? (
-                <div role="alert" className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+                <div role="alert" className="rounded-lg border border-destructive/40 bg-destructive-soft p-3 text-sm text-destructive">
                     {error}{' '}
                     <button type="button" onClick={() => setVersion((v) => v + 1)} className="font-semibold underline">
                         {t('verein.common.retry')}
@@ -178,7 +178,7 @@ export default function ExitQueuePanel({
             ) : (
                 <ul className="space-y-2">
                     {state.rows.map((r) => (
-                        <li key={r.id} className="rounded-xl border border-border bg-card p-3">
+                        <li key={r.id} className="rounded-xl shadow-card bg-card p-3">
                             <div className="flex flex-wrap items-center gap-2">
                                 <span className="font-semibold text-foreground">{r.memberName ?? '—'}</span>
                                 <Chip tone={r.kind === 'exclusion' ? 'destructive' : 'primary'}>{t(`verein.exit.kind.${r.kind}`)}</Chip>
@@ -234,11 +234,11 @@ export default function ExitQueuePanel({
 
             {state && state.total > PAGE_SIZE && (
                 <div className="flex items-center justify-end gap-2 text-sm text-muted-foreground">
-                    <button type="button" aria-label={t('verein.exit.queue.prev')} disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="rounded p-1 hover:bg-muted disabled:opacity-40">
+                    <button type="button" aria-label={t('verein.exit.queue.prev')} disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="rounded-lg p-1 hover:bg-muted disabled:opacity-40">
                         <ChevronLeft className="h-4 w-4" />
                     </button>
                     <span>{t('verein.exit.queue.page', { page, pages })}</span>
-                    <button type="button" aria-label={t('verein.exit.queue.next')} disabled={page >= pages} onClick={() => setPage((p) => p + 1)} className="rounded p-1 hover:bg-muted disabled:opacity-40">
+                    <button type="button" aria-label={t('verein.exit.queue.next')} disabled={page >= pages} onClick={() => setPage((p) => p + 1)} className="rounded-lg p-1 hover:bg-muted disabled:opacity-40">
                         <ChevronRight className="h-4 w-4" />
                     </button>
                 </div>
@@ -492,7 +492,7 @@ function ReviewDialog({
                     <Checklist detail={detail} />
 
                     {own ? (
-                        <p role="status" className="mt-4 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm text-foreground">
+                        <p role="status" className="mt-4 rounded-lg border border-warning/40 bg-warning-soft p-3 text-sm text-foreground">
                             {t('verein.exit.selfApproval')}
                         </p>
                     ) : (
@@ -506,7 +506,7 @@ function ReviewDialog({
                                             type="button"
                                             aria-pressed={mode === m}
                                             onClick={() => setMode(m)}
-                                            className={`rounded-full border px-3 py-1 text-sm ${mode === m ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-foreground hover:border-primary'}`}
+                                            className={`rounded-full border px-3 py-1 text-sm ${mode === m ? 'border-primary bg-primary text-primary-foreground' : 'border-control text-foreground hover:border-primary'}`}
                                         >
                                             {t(`verein.exit.decision.${m}`)}
                                         </button>
@@ -720,7 +720,7 @@ function DirectExitDialog({
                                 setKind(k);
                                 setDate('');
                             }}
-                            className={`rounded-full border px-3 py-1 text-sm ${kind === k ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-foreground hover:border-primary'}`}
+                            className={`rounded-full border px-3 py-1 text-sm ${kind === k ? 'border-primary bg-primary text-primary-foreground' : 'border-control text-foreground hover:border-primary'}`}
                         >
                             {t(`verein.exit.kind.${k}`)}
                         </button>
@@ -732,7 +732,7 @@ function DirectExitDialog({
                 {selected ? (
                     <div className="flex items-center justify-between gap-2 rounded-lg border border-border p-2 text-sm">
                         <span className="font-medium text-foreground">{selected.name ?? '—'}</span>
-                        <button type="button" onClick={() => setSelected(null)} className="text-xs font-semibold text-primary underline">
+                        <button type="button" onClick={() => setSelected(null)} className="text-xs font-semibold text-primary-text underline">
                             {t('verein.exit.direct.change')}
                         </button>
                     </div>
@@ -757,7 +757,7 @@ function DirectExitDialog({
                         {results && results.length === 0 && <p className="mt-1 text-xs text-muted-foreground">{t('verein.exit.direct.noResults')}</p>}
                         <p className="mt-1 text-xs text-muted-foreground">{t('verein.exit.direct.selfHint')}</p>
                         {results && results.length > 0 && (
-                            <ul className="mt-1 divide-y divide-border rounded-lg border border-border">
+                            <ul className="mt-1 divide-y divide-hairline rounded-lg border border-border">
                                 {results.map((m) => (
                                     <li key={m.id}>
                                         <button type="button" onClick={() => setSelected(m)} className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-muted">

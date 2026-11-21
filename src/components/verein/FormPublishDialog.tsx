@@ -19,7 +19,7 @@ export function ProblemList({ problems, onGoToField, goLabel }: { problems: read
                         {t(p.key)}
                     </span>
                     {onGoToField && p.fieldKey && (
-                        <button type="button" onClick={() => onGoToField(p.fieldKey!)} className="text-xs font-semibold text-primary underline">
+                        <button type="button" onClick={() => onGoToField(p.fieldKey!)} className="text-xs font-semibold text-primary-text underline">
                             {goLabel ?? t('forms.editor.problem.goto')}
                         </button>
                     )}
@@ -93,7 +93,7 @@ export default function FormPublishDialog({
             }
         >
             <div className="space-y-4">
-                <div className="flex gap-2 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm text-foreground">
+                <div className="flex gap-2 rounded-lg border border-warning/40 bg-warning-soft p-3 text-sm text-foreground">
                     <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden="true" />
                     <div className="space-y-1">
                         <p className="font-semibold">{t('forms.editor.publish.warnTitle')}</p>
@@ -120,7 +120,7 @@ export default function FormPublishDialog({
                 {needsSave && <p className="text-sm text-muted-foreground">{t('forms.editor.publish.unsavedHint')}</p>}
 
                 {blocked && (
-                    <section role="alert" className="rounded-lg border border-destructive/40 bg-destructive/5 p-3">
+                    <section role="alert" className="rounded-lg border border-destructive/40 bg-destructive-soft p-3">
                         <h3 className="flex items-center gap-1.5 text-sm font-bold text-destructive">
                             <ShieldAlert className="h-4 w-4" aria-hidden="true" />
                             {t('forms.editor.publish.blocked')}
@@ -132,7 +132,7 @@ export default function FormPublishDialog({
                 )}
 
                 {serverProblems && serverProblems.length > 0 && (
-                    <section role="alert" className="rounded-lg border border-destructive/40 bg-destructive/5 p-3">
+                    <section role="alert" className="rounded-lg border border-destructive/40 bg-destructive-soft p-3">
                         <h3 className="flex items-center gap-1.5 text-sm font-bold text-destructive">
                             <ShieldAlert className="h-4 w-4" aria-hidden="true" />
                             {t('forms.editor.publish.refused')}

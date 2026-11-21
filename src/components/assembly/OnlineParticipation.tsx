@@ -141,7 +141,7 @@ export function OnlineJoin({ clubId, meetingId, mode, onlineUrl, scheduledAt }: 
             <div className="space-y-3">
                 <p className="text-sm text-foreground">{t(`assembly.online.member.${mode}`)}</p>
                 {onlineUrl ? (
-                    <a href={onlineUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm font-medium text-primary underline">
+                    <a href={onlineUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-text underline">
                         <ExternalLink className="h-4 w-4" aria-hidden />
                         {t('assembly.online.member.link')}
                     </a>

@@ -200,7 +200,7 @@ export default function KalenderPageContent() {
     return (
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
             <div className="flex items-center gap-1">
-                <h1 className="text-[1.75rem] font-medium leading-9 text-foreground">{t('kalender.page.title')}</h1>
+                <h1 className="text-[1.75rem] font-bold leading-9 text-foreground">{t('kalender.page.title')}</h1>
                 <HelpLink topic="calendar" />
             </div>
 
@@ -209,13 +209,13 @@ export default function KalenderPageContent() {
             ) : clubs === null ? (
                 <LoadingText className="mt-6" />
             ) : !activeClub ? (
-                <div className="mt-6 rounded-xl border border-border bg-card p-4">
+                <div className="mt-6 rounded-xl shadow-card bg-card p-4">
                     <p className="text-sm font-semibold text-foreground">{t('verein.no-club.title')}</p>
                     <p className="mt-1 text-sm text-muted-foreground">{t('verein.no-club.body')}</p>
                 </div>
             ) : (
                 <>
-                    <div role="tablist" aria-label={t('kalender.page.title')} className="mt-6 flex gap-2 overflow-x-auto border-b border-border">
+                    <div role="tablist" aria-label={t('kalender.page.title')} className="mt-6 flex gap-2 overflow-x-auto border-b border-hairline">
                         {pageTabs.map((value, index) => (
                             <button
                                 key={value}
@@ -235,7 +235,7 @@ export default function KalenderPageContent() {
                                     document.getElementById(`kal-tab-${pageTabs[target]}`)?.focus();
                                 }}
                                 className={`border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
-                                    tab === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
+                                    tab === value ? 'border-primary text-primary-text' : 'border-transparent text-muted-foreground hover:text-foreground'
                                 }`}
                             >
                                 {t(`kalender.tab.${value}`)}
@@ -269,7 +269,7 @@ export default function KalenderPageContent() {
                                             </h2>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <div role="group" aria-label={t('kalender.view.label')} className="inline-flex rounded-lg border border-border bg-background p-0.5">
+                                            <div role="group" aria-label={t('kalender.view.label')} className="inline-flex rounded-lg border border-control bg-background p-0.5">
                                                 {(
                                                     [
                                                         ['month', CalendarDays],
@@ -343,13 +343,13 @@ export default function KalenderPageContent() {
                                                 onSelectDay={(day) => setSelectedDay(dayKey(day))}
                                                 onCellClick={handleCellClick}
                                             />
-                                            <section className="rounded-xl border border-border bg-card p-4">
+                                            <section className="rounded-xl shadow-card bg-card p-4">
                                                 <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                                                     <h3 className="text-base font-medium text-foreground">
                                                         {selectedDate.toLocaleDateString(language, { weekday: 'long', day: 'numeric', month: 'long' })}
                                                     </h3>
                                                     {canWrite && calendars.length > 0 && (
-                                                        <button type="button" onClick={() => openCreate(selectedDate)} className="text-sm font-medium text-primary hover:underline">
+                                                        <button type="button" onClick={() => openCreate(selectedDate)} className="text-sm font-medium text-primary-text hover:underline">
                                                             + {t('kalender.events.new')}
                                                         </button>
                                                     )}
@@ -371,7 +371,7 @@ export default function KalenderPageContent() {
                                             </section>
                                         </>
                                     ) : (
-                                        <section className="rounded-xl border border-border bg-card p-4">
+                                        <section className="rounded-xl shadow-card bg-card p-4">
                                             {upcoming.length === 0 ? (
                                                 <p className="text-sm text-muted-foreground">{t('kalender.events.empty')}</p>
                                             ) : (

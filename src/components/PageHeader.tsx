@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 
 /**
- * Header of the public content pages (features, changelog, roadmap, about, contact): display-serif title, one intro
- * paragraph, left aligned. App pages keep their own sans titles; the serif is for public headlines only.
+ * Header of the public content pages (features, changelog, roadmap, about, contact): bold system-font title with tight tracking, one intro
+ * paragraph, left aligned. App pages keep their own smaller titles.
  */
 export function PageHeader({ title, intro, children, className = '' }: { title: ReactNode; intro?: ReactNode; children?: ReactNode; className?: string }) {
     return (

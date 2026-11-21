@@ -12,7 +12,7 @@ export default function RoadmapSketches() {
     const groups = roadmapGroups.map((group) => [group, soonItems.filter((item) => item.group === group)] as const).filter(([, items]) => items.length > 0);
 
     return (
-        <section id="roadmap-teaser" className="border-t border-border" aria-labelledby="mk-road-title">
+        <section id="roadmap-teaser" className="border-t border-hairline" aria-labelledby="mk-road-title">
             <div className={MK_SECTION}>
                 <SectionHead id="mk-road-title" title={`${t('mk.road.title.pre')} ${t('mk.road.title.mark')}`} intro={t('mk.road.intro')} />
 
@@ -46,7 +46,7 @@ export default function RoadmapSketches() {
                     </PaperCard>
                     <Link
                         href="/roadmap"
-                        className="inline-flex min-h-12 items-center justify-center rounded-lg border border-border bg-card px-6 text-base font-medium text-foreground transition-colors hover:bg-muted active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                        className="inline-flex min-h-12 items-center justify-center rounded-lg border border-control bg-card px-6 text-base font-medium text-foreground transition-colors hover:bg-muted active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-text"
                     >
                         {t('mk.road.link')}
                     </Link>

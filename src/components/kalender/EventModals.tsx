@@ -149,7 +149,7 @@ export function CancelEventModal({ event, clubId, calendar, t, onClose, onCancel
                     <Toggle checked={notify} onChange={setNotify} label={t('kalender.notify.label')} />
                     <p className="text-xs text-muted-foreground">{t(notify ? (calendar?.departmentId ? 'kalender.cancelEvent.audience.department' : 'kalender.cancelEvent.audience') : 'kalender.notify.off')}</p>
                 </div>
-                <div className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm text-foreground" aria-live="polite">
+                <div className="rounded-lg border border-control bg-muted/30 px-3 py-2 text-sm text-foreground" aria-live="polite">
                     <p className="font-semibold">{t('kalender.cancelEvent.preview.title')}</p>
                     {previewError ? (
                         <p role="alert" className="mt-1 text-destructive">
@@ -175,7 +175,7 @@ export function CancelEventModal({ event, clubId, calendar, t, onClose, onCancel
                                     {preview.audience.unreachable > 0 && <p className="text-xs text-muted-foreground">{t('kalender.cancelEvent.preview.unreachable', { count: preview.audience.unreachable })}</p>}
                                     {preview.audience.sharedAddress > 0 && <p className="text-xs text-muted-foreground">{t('kalender.cancelEvent.preview.shared', { count: preview.audience.sharedAddress })}</p>}
                                     {tooLarge && (
-                                        <p role="alert" className="rounded-md bg-warning/10 px-2 py-1 text-foreground">
+                                        <p role="alert" className="rounded-md bg-warning-soft px-2 py-1 text-foreground">
                                             {t('kalender.cancelEvent.preview.tooLarge', { total: preview.audience.total })}
                                         </p>
                                     )}
@@ -187,7 +187,7 @@ export function CancelEventModal({ event, clubId, calendar, t, onClose, onCancel
                     )}
                 </div>
                 {error && (
-                    <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                    <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2 text-sm text-destructive">
                         {error}
                     </p>
                 )}
@@ -212,7 +212,7 @@ function EventTabBar({ tabs, active, onChange }: { tabs: EventTab[]; active: Eve
         document.getElementById(`event-tab-${tabs[next]}`)?.focus();
     }
     return (
-        <div role="tablist" aria-label={t('events.tabs.label')} className="-mt-1 mb-4 flex gap-1 overflow-x-auto border-b border-border">
+        <div role="tablist" aria-label={t('events.tabs.label')} className="-mt-1 mb-4 flex gap-1 overflow-x-auto border-b border-hairline">
             {tabs.map((value, index) => (
                 <button
                     key={value}
@@ -224,7 +224,7 @@ function EventTabBar({ tabs, active, onChange }: { tabs: EventTab[]; active: Eve
                     tabIndex={active === value ? 0 : -1}
                     onClick={() => onChange(value)}
                     onKeyDown={(e) => onKeyDown(e, index)}
-                    className={`shrink-0 border-b-2 px-3 py-2 text-sm font-medium transition-colors ${active === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                    className={`shrink-0 border-b-2 px-3 py-2 text-sm font-medium transition-colors ${active === value ? 'border-primary text-primary-text' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
                 >
                     {t(`events.tab.${value}`)}
                 </button>
@@ -316,13 +316,13 @@ export function EventDetailModal({ event, clubId, calendar, color, canWrite, can
                 <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                         {cancelled ? (
-                            <span className="rounded-full bg-destructive/10 px-2.5 py-1 text-xs font-semibold text-destructive">{t('kalender.events.cancelled')}</span>
+                            <span className="rounded-full bg-destructive-soft px-2.5 py-1 text-xs font-semibold text-destructive">{t('kalender.events.cancelled')}</span>
                         ) : registration === null ? (
                             <span className="text-xs text-muted-foreground" role="status">{t('common.loading')}</span>
                         ) : regInfo?.enabled ? (
                             <>
                                 {rsvp && (
-                                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${rsvp === 'angemeldet' ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning'}`}>
+                                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${rsvp === 'angemeldet' ? 'bg-success-soft text-success' : 'bg-warning-soft text-warning'}`}>
                                         {t(rsvp === 'angemeldet' ? 'kalender.events.rsvp.confirmed' : 'kalender.events.rsvp.waitlist')}
                                     </span>
                                 )}
@@ -334,7 +334,7 @@ export function EventDetailModal({ event, clubId, calendar, color, canWrite, can
                             <>
                                 <span
                                     className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                                        rsvp === 'angemeldet' ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning'
+                                        rsvp === 'angemeldet' ? 'bg-success-soft text-success' : 'bg-warning-soft text-warning'
                                     }`}
                                 >
                                     {t(rsvp === 'angemeldet' ? 'kalender.events.rsvp.confirmed' : 'kalender.events.rsvp.waitlist')}
@@ -393,7 +393,7 @@ export function EventDetailModal({ event, clubId, calendar, color, canWrite, can
             {activeTab === 'details' && (
             <div className="space-y-3 text-sm">
                 {cancelled && (
-                    <div role="status" className="flex items-start gap-2 rounded-lg bg-destructive/10 p-3 text-destructive">
+                    <div role="status" className="flex items-start gap-2 rounded-lg bg-destructive-soft p-3 text-destructive">
                         <Ban className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
                         <p>
                             <span className="font-semibold">{t('kalender.events.cancelled')}</span>
@@ -876,7 +876,7 @@ export function EventFormModal({ clubId, calendars, colorFor, event, scope, init
                             ))}
                         </select>
                         {locationBusy && (showSingleOnly || scope === 'this') && (
-                            <p role="status" className="mt-1 rounded-lg bg-warning/10 px-3 py-2 text-xs text-foreground">
+                            <p role="status" className="mt-1 rounded-lg bg-warning-soft px-3 py-2 text-xs text-foreground">
                                 {t('occupancy.eventWarning')}
                             </p>
                         )}
@@ -924,7 +924,7 @@ export function EventFormModal({ clubId, calendars, colorFor, event, scope, init
                     </div>
                 )}
                 {error && (
-                    <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                    <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2 text-sm text-destructive">
                         {error}
                     </p>
                 )}

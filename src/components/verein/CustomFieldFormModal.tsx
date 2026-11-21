@@ -275,7 +275,7 @@ export default function CustomFieldFormModal({
                 </div>
 
                 {attempted && (problems.length > 0 || violations.length > 0) && (
-                    <div role="alert" className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+                    <div role="alert" className="rounded-lg border border-destructive/40 bg-destructive-soft p-3 text-sm text-destructive">
                         <ul className="list-disc space-y-0.5 pl-5">
                             {problems.map((p) => (
                                 <li key={p}>{t(`forms.cf.problem.${p}`)}</li>

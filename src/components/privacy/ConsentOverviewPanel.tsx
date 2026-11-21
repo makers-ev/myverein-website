@@ -183,7 +183,7 @@ export default function ConsentOverviewPanel({ clubId, permissions, onOpenAudit 
                                 </thead>
                                 <tbody>
                                     {members.map((m) => (
-                                        <tr key={m.clubMemberId} className="border-t border-border text-foreground">
+                                        <tr key={m.clubMemberId} className="border-t border-hairline text-foreground">
                                             <td className="px-3 py-2 font-medium">{m.displayName}</td>
                                             {purposes.map((p) => {
                                                 const cell = m.states[p.id] ?? { state: 'none' as const, needsGuardian: false };
@@ -195,11 +195,11 @@ export default function ConsentOverviewPanel({ clubId, permissions, onOpenAudit 
                                                 );
                                             })}
                                             <td className="space-x-3 whitespace-nowrap px-3 py-2 text-right">
-                                                <button type="button" onClick={() => setFile({ id: m.clubMemberId, name: m.displayName })} className="text-xs font-medium text-primary underline">
+                                                <button type="button" onClick={() => setFile({ id: m.clubMemberId, name: m.displayName })} className="text-xs font-medium text-primary-text underline">
                                                     {t('privacy.overview.openFile')}
                                                 </button>
                                                 {onOpenAudit && (
-                                                    <button type="button" onClick={() => onOpenAudit(m.clubMemberId, m.displayName)} className="text-xs font-medium text-primary underline">
+                                                    <button type="button" onClick={() => onOpenAudit(m.clubMemberId, m.displayName)} className="text-xs font-medium text-primary-text underline">
                                                         {t('privacy.overview.openAudit')}
                                                     </button>
                                                 )}

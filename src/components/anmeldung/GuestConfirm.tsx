@@ -43,23 +43,23 @@ export default function GuestConfirm({ code }: { code: string }) {
         return (
             <PublicShell status="ok" wide>
                 <div role="status" className="text-center">
-                    <h1 className="text-2xl font-medium leading-8 text-foreground">{t(d.status === 'angemeldet' ? 'guest.done.confirmed' : 'guest.done.waitlist')}</h1>
+                    <h1 className="text-2xl font-bold leading-8 text-foreground">{t(d.status === 'angemeldet' ? 'guest.done.confirmed' : 'guest.done.waitlist')}</h1>
                     <p className="mt-2 text-sm text-muted-foreground">{t(d.alreadyConfirmed ? 'guest.done.already' : d.status === 'angemeldet' ? 'guest.done.confirmed.body' : 'guest.done.waitlist.body', { count: d.partySize })}</p>
                 </div>
-                <div className="mt-6 border-t border-border pt-4">
+                <div className="mt-6 border-t border-hairline pt-4">
                     <PublicEventSummary event={d.event} />
                 </div>
                 {manageUrl && (
                     <div className="mt-6 space-y-2 rounded-lg bg-muted/50 p-3 text-sm">
                         <p className="font-semibold text-foreground">{t('guest.manage.title')}</p>
                         <p className="text-xs text-muted-foreground">{t('guest.manage.hint')}</p>
-                        <Link href={`/anmeldung/verwalten/${d.manageToken}`} className="block break-all text-primary hover:underline">
+                        <Link href={`/anmeldung/verwalten/${d.manageToken}`} className="block break-all text-primary-text hover:underline">
                             {manageUrl}
                         </Link>
                         <button
                             type="button"
                             onClick={() => void navigator.clipboard.writeText(manageUrl).then(() => setCopied(true), () => setCopied(false))}
-                            className="text-xs font-semibold text-primary underline"
+                            className="text-xs font-semibold text-primary-text underline"
                         >
                             {t(copied ? 'registration.link.copied' : 'registration.link.copy')}
                         </button>
@@ -72,7 +72,7 @@ export default function GuestConfirm({ code }: { code: string }) {
     return (
         <PublicShell>
             <div className="text-center">
-                <h1 className="text-2xl font-medium leading-8 text-foreground">{t('guest.confirm.title')}</h1>
+                <h1 className="text-2xl font-bold leading-8 text-foreground">{t('guest.confirm.title')}</h1>
                 <p className="mt-2 text-sm text-muted-foreground">{t('guest.confirm.body')}</p>
                 <button type="button" disabled={view.kind === 'busy'} onClick={() => void confirm()} className={`${publicButton} mt-6`}>
                     {t(view.kind === 'busy' ? 'guest.confirm.busy' : 'guest.confirm.button')}

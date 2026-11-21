@@ -154,7 +154,7 @@ export default function BrandingPanel({ clubId }: { clubId: string }) {
                                         aria-label={t(`docs.branding.${key}`)}
                                         value={/^#[0-9a-fA-F]{6}$/.test(form[key]) ? form[key] : branding.effective[key]}
                                         onChange={(e) => set(key, e.target.value)}
-                                        className="h-9 w-12 shrink-0 cursor-pointer rounded border border-border bg-background"
+                                        className="h-9 w-12 shrink-0 cursor-pointer rounded-lg border border-border bg-background"
                                     />
                                     <input id={`docs-${key}`} value={form[key]} placeholder={branding.effective[key]} maxLength={7} onChange={(e) => set(key, e.target.value)} className={inputClass} />
                                     {form[key] && (

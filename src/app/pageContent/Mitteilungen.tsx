@@ -108,7 +108,7 @@ export default function MitteilungenPageContent() {
     return (
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
             <div className="flex items-center gap-1">
-                <h1 className="text-[1.75rem] font-medium leading-9 text-foreground">{t('mitteilungen.page.title')}</h1>
+                <h1 className="text-[1.75rem] font-bold leading-9 text-foreground">{t('mitteilungen.page.title')}</h1>
                 <HelpLink topic="announcements" />
             </div>
             <p className="mt-1 text-sm text-muted-foreground">{t('mitteilungen.page.subtitle')}</p>
@@ -126,7 +126,7 @@ export default function MitteilungenPageContent() {
             ) : (
                 <>
                     {tabs.length > 1 && (
-                        <div role="tablist" className="mt-6 flex gap-2 overflow-x-auto border-b border-border">
+                        <div role="tablist" className="mt-6 flex gap-2 overflow-x-auto border-b border-hairline">
                             {tabs.map((value) => (
                                 <button
                                     key={value}
@@ -140,7 +140,7 @@ export default function MitteilungenPageContent() {
                                         setTab(value);
                                     }}
                                     className={`whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
-                                        currentTab === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
+                                        currentTab === value ? 'border-primary text-primary-text' : 'border-transparent text-muted-foreground hover:text-foreground'
                                     }`}
                                 >
                                     {t(`mitteilungen.tab.${value}`)}
@@ -149,7 +149,7 @@ export default function MitteilungenPageContent() {
                         </div>
                     )}
                     {notice && (
-                        <p role="status" className="mt-4 rounded-lg bg-success/10 px-3 py-2 text-sm text-success">
+                        <p role="status" className="mt-4 rounded-lg bg-success-soft px-3 py-2 text-sm text-success">
                             {notice}
                         </p>
                     )}

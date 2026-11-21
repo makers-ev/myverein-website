@@ -141,7 +141,7 @@ function LoginSignupFormInner() {
                             required
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="mt-1 block w-full min-h-11 rounded-lg border border-border bg-background px-3 py-2 text-foreground transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25"
+                            className="mt-1 block w-full min-h-11 rounded-lg border border-control bg-background px-3 py-2 text-foreground transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25"
                         />
                     </div>
                 )}
@@ -158,7 +158,7 @@ function LoginSignupFormInner() {
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="mt-1 block w-full min-h-11 rounded-lg border border-border bg-background px-3 py-2 text-foreground transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25"
+                        className="mt-1 block w-full min-h-11 rounded-lg border border-control bg-background px-3 py-2 text-foreground transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25"
                     />
                 </div>
 
@@ -175,7 +175,7 @@ function LoginSignupFormInner() {
                         minLength={8}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="mt-1 block w-full min-h-11 rounded-lg border border-border bg-background px-3 py-2 text-foreground transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25"
+                        className="mt-1 block w-full min-h-11 rounded-lg border border-control bg-background px-3 py-2 text-foreground transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25"
                     />
                 </div>
 
@@ -204,7 +204,7 @@ function LoginSignupFormInner() {
                                 setMode('sign-up');
                                 setError(null);
                             }}
-                            className="font-medium text-primary underline-offset-4 hover:underline"
+                            className="font-medium text-primary-text underline-offset-4 hover:underline"
                         >
                             {t('auth.toggle.signup')}
                         </button>
@@ -218,7 +218,7 @@ function LoginSignupFormInner() {
                                 setMode('sign-in');
                                 setError(null);
                             }}
-                            className="font-medium text-primary underline-offset-4 hover:underline"
+                            className="font-medium text-primary-text underline-offset-4 hover:underline"
                         >
                             {t('auth.toggle.signin')}
                         </button>
@@ -234,7 +234,7 @@ function LoginSignupFormInner() {
                             setShowForgotPassword(true);
                             setError(null);
                         }}
-                        className="text-xs font-medium text-muted-foreground underline hover:text-primary transition-colors"
+                        className="text-xs font-medium text-muted-foreground underline hover:text-primary-text transition-colors"
                     >
                         {t('auth.forgotPassword.link')}
                     </button>

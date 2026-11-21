@@ -61,7 +61,7 @@ function NotificationCard({ n, onChange }: { n: NotificationItem; onChange: () =
     }
 
     return (
-        <div className="rounded-xl border border-border bg-card p-3">
+        <div className="rounded-xl shadow-card bg-card p-3">
             <div className="flex items-start justify-between gap-3">
                 <p className="text-sm font-semibold text-foreground leading-snug">{title}</p>
                 <div className="flex shrink-0 items-center gap-1">
@@ -75,7 +75,7 @@ function NotificationCard({ n, onChange }: { n: NotificationItem; onChange: () =
                     {n.deletable && (
                         <button
                             onClick={() => void handleDelete()}
-                            className="rounded-md p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                            className="rounded-md p-1 text-muted-foreground hover:bg-destructive-soft hover:text-destructive transition-colors"
                             aria-label={t('notifications.action.delete')}
                         >
                             <Trash2 size={16} />
@@ -113,21 +113,21 @@ export default function NotificationsPageContent() {
     return (
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
             <div className="max-w-2xl">
-                <h1 className="text-[1.75rem] font-medium leading-9 text-foreground">{t('notifications.page.title')}</h1>
+                <h1 className="text-[1.75rem] font-bold leading-9 text-foreground">{t('notifications.page.title')}</h1>
                 <p className="mt-1 text-sm text-muted-foreground">
                     {t('notifications.page.scope')}{' '}
-                    <Link href="/mitteilungen" className="font-medium text-primary hover:underline">
+                    <Link href="/mitteilungen" className="font-medium text-primary-text hover:underline">
                         {t('notifications.page.toClub')}
                     </Link>
                 </p>
 
-                <div className="mt-6 flex gap-2 border-b border-border">
+                <div className="mt-6 flex gap-2 border-b border-hairline">
                     {(['unread', 'read'] as const).map((value) => (
                         <button
                             key={value}
                             onClick={() => setTab(value)}
                             className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
-                                tab === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
+                                tab === value ? 'border-primary text-primary-text' : 'border-transparent text-muted-foreground hover:text-foreground'
                             }`}
                         >
                             {t(`notifications.tab.${value}`)}

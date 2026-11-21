@@ -314,7 +314,7 @@ function LocationGrid({
                         <button
                             key={loc.id}
                             onClick={() => onSelect(loc.id)}
-                            className="overflow-hidden rounded-xl border border-border bg-card text-left transition-colors hover:border-primary"
+                            className="overflow-hidden rounded-xl shadow-card bg-card text-left transition-shadow hover:shadow-md"
                         >
                             <LocationPhoto url={loc.photoUrl} className="h-36 w-full" onExpired={photoExpired} />
                             <div className="space-y-1.5 p-4">
@@ -497,7 +497,7 @@ function WifiSection({ locationId, clubId, canWrite, t }: { locationId: string; 
                             <div className="flex items-start justify-between gap-2">
                                 <div className="min-w-0">
                                     <p className="flex items-center gap-2 font-medium text-foreground">
-                                        <Wifi className="h-4 w-4 shrink-0 text-primary" />
+                                        <Wifi className="h-4 w-4 shrink-0 text-primary-text" />
                                         <span className="truncate">{net.label}</span>
                                     </p>
                                     <div className="mt-1 flex flex-wrap gap-1">
@@ -656,13 +656,13 @@ function LinksSection({ locationId, clubId, canWrite, t }: { locationId: string;
             ) : links.length === 0 ? (
                 <EmptyState icon={<LinkIcon className="h-6 w-6" />} text={t('standorte.links.empty')} />
             ) : (
-                <ul className="divide-y divide-border">
+                <ul className="divide-y divide-hairline">
                     {links.map((link) => (
                         <li key={link.id} className="flex items-center justify-between gap-2 py-2">
                             <a href={link.url} target="_blank" rel="noreferrer" className="group flex min-w-0 items-center gap-2">
-                                <span className="shrink-0 text-lg leading-none">{link.icon || <ExternalLink className="h-4 w-4 text-primary" />}</span>
+                                <span className="shrink-0 text-lg leading-none">{link.icon || <ExternalLink className="h-4 w-4 text-primary-text" />}</span>
                                 <span className="min-w-0">
-                                    <span className="block truncate text-sm font-medium text-foreground group-hover:text-primary">{link.title}</span>
+                                    <span className="block truncate text-sm font-medium text-foreground group-hover:text-primary-text">{link.title}</span>
                                     <span className="block truncate text-xs text-muted-foreground">{link.url}</span>
                                 </span>
                             </a>
@@ -749,7 +749,7 @@ function LocationDetail({
     if (!location)
         return (
             <div className="space-y-4">
-                <button type="button" onClick={onBack} className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+                <button type="button" onClick={onBack} className="inline-flex items-center gap-1 text-sm font-medium text-primary-text hover:underline">
                     <ArrowLeft className="h-4 w-4" aria-hidden="true" />
                     {t('standorte.locations.back')}
                 </button>
@@ -759,12 +759,12 @@ function LocationDetail({
 
     return (
         <div className="space-y-4">
-            <button onClick={onBack} className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+            <button onClick={onBack} className="inline-flex items-center gap-1 text-sm font-medium text-primary-text hover:underline">
                 <ArrowLeft className="h-4 w-4" />
                 {t('standorte.locations.back')}
             </button>
 
-            <div className="overflow-hidden rounded-xl border border-border bg-card">
+            <div className="overflow-hidden rounded-xl shadow-card bg-card">
                 {location.photoUrl && <LocationPhoto url={location.photoUrl} className="h-48 w-full sm:h-64" onExpired={photoExpired} />}
                 <div className="space-y-3 p-4">
                     <div className="flex flex-wrap items-start justify-between gap-2">
@@ -777,7 +777,7 @@ function LocationDetail({
                                 </button>
                                 <button
                                     onClick={() => setDeleting(true)}
-                                    className={`${secondaryButtonClass} text-destructive hover:bg-destructive/10`}
+                                    className={`${secondaryButtonClass} text-destructive hover:bg-destructive-soft`}
                                 >
                                     <Trash2 className="h-4 w-4" />
                                     {t('standorte.locations.delete')}

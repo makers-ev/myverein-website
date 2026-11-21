@@ -29,7 +29,7 @@ export default function AbsenceList({ absences, canEdit, onWithdraw }: { absence
         <div>
             <ul className="space-y-2">
                 {absences.map((a) => (
-                    <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm">
+                    <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-control bg-card px-3 py-2 text-sm">
                         <span className="flex min-w-0 flex-wrap items-center gap-2 text-foreground">
                             <Chip tone={a.kind === 'krank' ? 'warning' : 'muted'}>{t(`absence.kind.${a.kind}`)}</Chip>
                             <span>{periodLabel(a.startsOn, a.endsOn, (d) => formatDate(d, language))}</span>

@@ -163,7 +163,7 @@ export default function WeekStage() {
             <div className={MK_SECTION}>
                 <SectionHead id="woche-title" title={`${t('mk.week.title.before')} ${t('mk.week.title.marked')}`} intro={t('mk.week.intro')} />
 
-                <nav aria-label={t('mk.week.nav')} className="sticky top-16 z-40 -mx-4 mt-10 border-b border-border bg-background px-4 py-3 sm:mx-0 sm:rounded-xl sm:border sm:px-3">
+                <nav aria-label={t('mk.week.nav')} className="sticky top-16 z-40 -mx-4 mt-10 border-b border-hairline bg-background px-4 py-3 sm:mx-0 sm:rounded-xl sm:border sm:px-3">
                     <ul className="grid grid-cols-7 gap-1.5">
                         {DAYS.map((day, index) => (
                             <li key={day.id}>
@@ -179,7 +179,7 @@ export default function WeekStage() {
                                         goTo(index);
                                     }}
                                     onKeyDown={(event) => onKeyDown(event, index)}
-                                    className={`flex min-h-11 items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+                                    className={`flex min-h-11 items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-text ${
                                         active === index ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                                     }`}
                                 >

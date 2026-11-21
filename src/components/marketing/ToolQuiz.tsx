@@ -32,7 +32,7 @@ export default function ToolQuiz() {
     const soonCount = picked.length - nowCount;
 
     return (
-        <section id="werkzeuge" className="border-t border-border" aria-labelledby="mk-quiz-title">
+        <section id="werkzeuge" className="border-t border-hairline" aria-labelledby="mk-quiz-title">
             <div className={MK_SECTION}>
                 <SectionHead id="mk-quiz-title" title={`${t('mk.quiz.title.pre')} ${t('mk.quiz.title.mark')}`} intro={t('mk.quiz.intro')} />
 
@@ -46,7 +46,7 @@ export default function ToolQuiz() {
                         {TOOLS.map((tool) => (
                             <label
                                 key={tool.id}
-                                className="flex min-h-12 cursor-pointer items-center gap-3 rounded-lg border border-border bg-card px-4 py-2 text-card-foreground transition-colors hover:bg-muted has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-primary"
+                                className="flex min-h-12 cursor-pointer items-center gap-3 rounded-lg border border-control bg-card px-4 py-2 text-card-foreground transition-colors hover:bg-muted has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-primary-text"
                             >
                                 <input
                                     type="checkbox"

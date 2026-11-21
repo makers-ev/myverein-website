@@ -83,7 +83,7 @@ export default function DocumentDetailDialog({ clubId, docId, folders, departmen
                             <span>· {folderPath(folders, doc.folderId).map((f) => f.name).join(' / ') || t('docs.archive.noFolder')}</span>
                             <span>· {formatDate(doc.updatedAt, language)}</span>
                             <RetentionChip state={retentionState(doc, todayIso())} />
-                            {trashed && <span className="rounded-full bg-warning/10 px-2 py-0.5 font-semibold text-warning">{t('docs.archive.inTrash')}</span>}
+                            {trashed && <span className="rounded-full bg-warning-soft px-2 py-0.5 font-semibold text-warning">{t('docs.archive.inTrash')}</span>}
                         </div>
 
                         {writable && !trashed && (
@@ -118,12 +118,12 @@ export default function DocumentDetailDialog({ clubId, docId, folders, departmen
 
                         <section aria-label={t('docs.archive.versions')}>
                             <h3 className="mb-2 text-base font-medium text-foreground">{t('docs.archive.versions')}</h3>
-                            <ul className="divide-y divide-border rounded-lg border border-border">
+                            <ul className="divide-y divide-hairline rounded-lg border border-border">
                                 {[...doc.versions].sort((a, b) => b.versionNo - a.versionNo).map((v) => (
                                     <li key={v.versionNo} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm">
                                         <span className="min-w-0">
                                             <span className="font-semibold text-foreground">{t('docs.info.version', { n: v.versionNo })}</span>
-                                            {v.versionNo === doc.currentVersion?.versionNo && <span className="ml-2 text-xs text-primary">{t('docs.info.version.current')}</span>}
+                                            {v.versionNo === doc.currentVersion?.versionNo && <span className="ml-2 text-xs text-primary-text">{t('docs.info.version.current')}</span>}
                                             <span className="block text-xs text-muted-foreground">
                                                 {v.originalFilename ?? '—'} · {formatBytes(v.sizeBytes, language)} · {formatDate(v.createdAt, language)}
                                                 {v.note ? ` · ${v.note}` : ''}
@@ -158,7 +158,7 @@ export default function DocumentDetailDialog({ clubId, docId, folders, departmen
                             </section>
                         )}
 
-                        <div className="flex flex-wrap gap-2 border-t border-border pt-3">
+                        <div className="flex flex-wrap gap-2 border-t border-hairline pt-3">
                             {writable && !trashed && (
                                 <button type="button" className={secondaryButtonClass} disabled={busy} onClick={() => setAsking(true)}>
                                     <ClipboardCheck className="h-4 w-4" aria-hidden="true" />

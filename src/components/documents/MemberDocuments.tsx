@@ -150,7 +150,7 @@ export default function MemberDocuments({ clubId, memberId, extra, canAcknowledg
             {res.data.length === 0 ? (
                 <EmptyState icon={<FileText className="h-6 w-6" aria-hidden="true" />} text={t('docs.person.empty')} />
             ) : (
-                <ul className="divide-y divide-border rounded-xl border border-border bg-card">
+                <ul className="divide-y divide-hairline rounded-xl shadow-card bg-card">
                     {res.data.map((d) => (
                         <li key={d.id} className={`flex flex-wrap items-center justify-between gap-2 px-3 py-2.5 ${d.hidden ? 'opacity-60' : ''}`}>
                             <div className="min-w-0 flex-1">
@@ -198,7 +198,7 @@ export default function MemberDocuments({ clubId, memberId, extra, canAcknowledg
                             ) : log.length === 0 ? (
                                 <p className="text-sm text-muted-foreground">{t('docs.person.log.empty')}</p>
                             ) : (
-                                <ul className="divide-y divide-border rounded-lg border border-border text-sm">
+                                <ul className="divide-y divide-hairline rounded-lg border border-border text-sm">
                                     {log.map((l, i) => (
                                         <li key={`${l.at}-${i}`} className="px-3 py-2 text-foreground">
                                             {formatDate(l.at, language)} · {l.byName ?? '—'} · {t(`docs.person.log.action.${l.action}`)}
@@ -262,7 +262,7 @@ function DeleteDialog({ doc, board, onClose, onConfirm }: { doc: PersonalDocumen
                     </button>
                     <button
                         type="button"
-                        className={`${primaryButtonClass} bg-destructive`}
+                        className={`${primaryButtonClass} bg-destructive-fill`}
                         disabled={busy}
                         onClick={async () => {
                             setBusy(true);

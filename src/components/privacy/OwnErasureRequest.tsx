@@ -73,14 +73,14 @@ export default function OwnErasureRequest({ clubId }: { clubId: string }) {
                     {t('privacy.own.erasure.pending', { date: formatDate(openErasure.dueAt, language) })}
                 </p>
             ) : (
-                <button type="button" disabled={busy} onClick={() => void request()} className="rounded-lg border border-destructive/50 px-4 py-2 text-sm font-semibold text-destructive hover:bg-destructive/5 disabled:opacity-50">
+                <button type="button" disabled={busy} onClick={() => void request()} className="rounded-lg border border-destructive/50 px-4 py-2 text-sm font-semibold text-destructive hover:bg-destructive-soft disabled:opacity-50">
                     {t('privacy.own.erasure.action')}
                 </button>
             )}
             {requests.length > 0 && (
                 <ul className="space-y-1.5 text-sm">
                     {requests.map((r) => (
-                        <li key={r.id} className="flex flex-wrap items-center gap-2 rounded-lg border border-border px-3 py-2 text-foreground">
+                        <li key={r.id} className="flex flex-wrap items-center gap-2 rounded-lg border border-control px-3 py-2 text-foreground">
                             <Chip tone={isOpenRequest(r) ? 'warning' : r.status === 'done' ? 'success' : 'muted'}>{t(`privacy.request.status.${r.status}`)}</Chip>
                             <span>{t(`privacy.request.kind.${r.kind}`)}</span>
                             <span className="text-muted-foreground">{t('privacy.own.request.received', { date: formatDate(r.receivedAt, language) })}</span>

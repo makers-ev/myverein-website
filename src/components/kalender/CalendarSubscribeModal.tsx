@@ -119,7 +119,7 @@ export default function CalendarSubscribeModal({ clubId, calendars, language, t,
                 <p className="text-muted-foreground">{t('kalender.feeds.intro')}</p>
 
                 {issued && (
-                    <div role="status" className="space-y-3 rounded-lg border border-warning/40 bg-warning/10 p-3">
+                    <div role="status" className="space-y-3 rounded-lg border border-warning/40 bg-warning-soft p-3">
                         <p className="font-semibold text-foreground">{t('kalender.feeds.issued.title')}</p>
                         <p className="text-foreground">{t('kalender.feeds.issued.warning')}</p>
                         {([
@@ -140,7 +140,7 @@ export default function CalendarSubscribeModal({ clubId, calendars, language, t,
                             </div>
                         ))}
                         <p className="text-xs text-muted-foreground">{t('kalender.feeds.issued.howto')}</p>
-                        <a href={issued.webcalUrl} className="inline-block text-sm font-semibold text-primary underline">
+                        <a href={issued.webcalUrl} className="inline-block text-sm font-semibold text-primary-text underline">
                             {t('kalender.feeds.issued.open')}
                         </a>
                     </div>
@@ -182,7 +182,7 @@ export default function CalendarSubscribeModal({ clubId, calendars, language, t,
                 </form>
 
                 {error && (
-                    <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-destructive">
+                    <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2 text-destructive">
                         {error}
                     </p>
                 )}

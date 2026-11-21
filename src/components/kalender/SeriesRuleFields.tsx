@@ -100,7 +100,7 @@ export default function SeriesRuleFields({ rule, onChange, startDate, clubId, la
                                     aria-pressed={on}
                                     aria-label={weekdayLong(d)}
                                     onClick={() => set({ byDay: on ? rule.byDay.filter((x) => x !== d) : [...rule.byDay, d] })}
-                                    className={`rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors ${on ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background text-foreground hover:bg-muted'}`}
+                                    className={`rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors ${on ? 'border-primary bg-primary text-primary-foreground' : 'border-control bg-background text-foreground hover:bg-muted'}`}
                                 >
                                     {weekdayLabel(d)}
                                 </button>
@@ -151,7 +151,7 @@ export default function SeriesRuleFields({ rule, onChange, startDate, clubId, la
                 {rule.skipHolidays && stateKnown === false && (
                     <p className="text-xs text-muted-foreground">
                         {t('kalender.series.holidays.no-state')}{' '}
-                        <Link href="/verein" className="font-semibold text-primary underline">
+                        <Link href="/verein" className="font-semibold text-primary-text underline">
                             {t('kalender.series.holidays.set-state')}
                         </Link>
                     </p>

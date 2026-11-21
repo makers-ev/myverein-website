@@ -23,7 +23,7 @@ interface ClubStats {
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
     return (
-        <section className="rounded-xl border border-border bg-card p-4">
+        <section className="rounded-xl shadow-card bg-card p-4">
             <h2 className="mb-3 text-base font-medium text-foreground">{title}</h2>
             {children}
         </section>
@@ -32,7 +32,7 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
 
 function Kpi({ label, value, hint }: { label: string; value: number; hint?: string }) {
     return (
-        <div className="rounded-xl border border-border bg-card p-4">
+        <div className="rounded-xl shadow-card bg-card p-4">
             <p className="text-xs font-semibold text-muted-foreground">{label}</p>
             <p className="mt-1 text-3xl font-bold text-foreground">{value}</p>
             {hint && <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>}
@@ -67,7 +67,7 @@ export default function ClubStatsPanel({ clubId }: { clubId: string }) {
 
     if (error) {
         return (
-            <div role="alert" className="rounded-xl border border-destructive/40 bg-destructive/5 p-4 text-sm">
+            <div role="alert" className="rounded-xl border border-destructive/40 bg-destructive-soft p-4 text-sm">
                 <p className="text-destructive">{error}</p>
                 <button type="button" onClick={() => void load()} className={`${secondaryButtonClass} mt-3`}>
                     {t('verein.create.retry')}
@@ -152,7 +152,7 @@ export default function ClubStatsPanel({ clubId }: { clubId: string }) {
                             data={stats.movement.map((m) => ({ label: monthLabel(m.month), values: { joined: m.joined, left: m.left } }))}
                             series={[
                                 { key: 'joined', label: t('verein.stats.joined'), fillClass: 'fill-success', textClass: 'text-success', bgClass: 'bg-success' },
-                                { key: 'left', label: t('verein.stats.left'), fillClass: 'fill-destructive', textClass: 'text-destructive', bgClass: 'bg-destructive' },
+                                { key: 'left', label: t('verein.stats.left'), fillClass: 'fill-destructive', textClass: 'text-destructive', bgClass: 'bg-destructive-fill' },
                             ]}
                         />
                         <p className="mt-2 text-xs text-muted-foreground">{t('verein.stats.movement.sum', { joined: joinedSum, left: leftSum })}</p>

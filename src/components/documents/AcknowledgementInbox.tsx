@@ -103,7 +103,7 @@ export default function AcknowledgementInbox({ clubId, onlyMemberId, onCount }: 
             ) : (
                 <section aria-label={t('docs.ack.open')}>
                     <h3 className="mb-2 text-base font-medium text-foreground">{t('docs.ack.openCount', { count: open.length })}</h3>
-                    <ul className="divide-y divide-border rounded-xl border border-border bg-card">{open.map(renderRow)}</ul>
+                    <ul className="divide-y divide-hairline rounded-xl shadow-card bg-card">{open.map(renderRow)}</ul>
                 </section>
             )}
             {done.length > 0 && (
@@ -111,7 +111,7 @@ export default function AcknowledgementInbox({ clubId, onlyMemberId, onCount }: 
                     <button type="button" aria-expanded={showDone} onClick={() => setShowDone((v) => !v)} className="text-sm font-bold text-foreground underline-offset-2 hover:underline">
                         {t(showDone ? 'docs.ack.hideDone' : 'docs.ack.showDone', { count: done.length })}
                     </button>
-                    {showDone && <ul className="mt-2 divide-y divide-border rounded-xl border border-border bg-card">{done.map(renderRow)}</ul>}
+                    {showDone && <ul className="mt-2 divide-y divide-hairline rounded-xl shadow-card bg-card">{done.map(renderRow)}</ul>}
                 </section>
             )}
             {answering && (

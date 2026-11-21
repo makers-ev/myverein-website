@@ -37,7 +37,7 @@ export function Footer() {
     ];
 
     return (
-        <footer className="border-t border-border bg-background">
+        <footer className="border-t border-hairline bg-background">
             <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
                 <div className="grid gap-12 lg:grid-cols-[1fr_2fr]">
                     <div className="space-y-4">
@@ -87,7 +87,7 @@ export function Footer() {
                     </div>
                 </div>
 
-                <div className="mt-12 border-t border-border pt-6">
+                <div className="mt-12 border-t border-hairline pt-6">
                     <p className="text-xs text-muted-foreground">
                         &copy; {currentYear} MyVerein, {t('footer.rights')}
                     </p>

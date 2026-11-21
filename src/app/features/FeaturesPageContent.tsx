@@ -46,7 +46,7 @@ export default function FeaturesPageContent() {
         <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-18 lg:px-8">
             <PageHeader title={t('features.title')} intro={t('features.intro')} />
 
-            <div role="tablist" className="mt-10 inline-flex gap-1 rounded-xl border border-border bg-card p-1">
+            <div role="tablist" className="mt-10 inline-flex gap-1 rounded-xl shadow-card bg-card p-1">
                 {FILTERS.map((f) => (
                     <button
                         key={f}
@@ -66,13 +66,13 @@ export default function FeaturesPageContent() {
             <div key={filter} className="mt-8 gap-4 sm:columns-2">
                 {areas.map((area, i) => (
                     <Reveal key={area.id} delay={(i % 2) * 60} className="mb-4 break-inside-avoid">
-                        <div className="rounded-2xl border border-border bg-card p-6 shadow-xs">
+                        <div className="rounded-2xl shadow-card bg-card p-6 ">
                             <div className="flex items-center gap-3">
-                                <area.icon className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.5} aria-hidden="true" />
+                                <area.icon className="h-5 w-5 shrink-0 text-primary-text" strokeWidth={1.5} aria-hidden="true" />
                                 <h2 className="flex-1 text-base font-semibold text-foreground">{localizeDeEn(area.title, language)}</h2>
                                 <span className="font-mono text-xs text-muted-foreground">{area.capabilities.length}</span>
                             </div>
-                            <ul className="mt-4 divide-y divide-border">
+                            <ul className="mt-4 divide-y divide-hairline">
                                 {area.capabilities.map((capability, index) => (
                                     <li key={index} className="flex items-center justify-between gap-4 py-2.5 first:pt-0 last:pb-0">
                                         <span className="text-sm text-foreground">{localizeDeEn(capability.label, language)}</span>
@@ -90,7 +90,7 @@ export default function FeaturesPageContent() {
                     <p className="text-sm text-muted-foreground">{t('features.roadmap-teaser')}</p>
                     <Link
                         href="/roadmap"
-                        className="inline-flex min-h-11 shrink-0 items-center gap-1.5 text-sm font-medium text-primary underline-offset-4 hover:underline"
+                        className="inline-flex min-h-11 shrink-0 items-center gap-1.5 text-sm font-medium text-primary-text underline-offset-4 hover:underline"
                     >
                         {t('features.roadmap-teaser-link')}
                         <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />

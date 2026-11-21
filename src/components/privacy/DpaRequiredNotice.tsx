@@ -44,13 +44,13 @@ export default function DpaRequiredNotice() {
                 ) : (
                     <>
                         <p className="mt-1 text-foreground">{t('privacy.err.dpaRequired')}</p>
-                        <Link href="/verein" className="mt-2 inline-block font-semibold text-primary underline" onClick={() => setVisible(false)}>
+                        <Link href="/verein" className="mt-2 inline-block font-semibold text-primary-text underline" onClick={() => setVisible(false)}>
                             {t('privacy.err.dpaRequired.link')}
                         </Link>
                     </>
                 )}
             </div>
-            <button type="button" onClick={() => setVisible(false)} aria-label={t('common.close')} className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground">
+            <button type="button" onClick={() => setVisible(false)} aria-label={t('common.close')} className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-foreground">
                 <X className="h-4 w-4" aria-hidden="true" />
             </button>
         </div>

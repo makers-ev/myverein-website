@@ -80,7 +80,7 @@ export default function StandortePageContent() {
     return (
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
             <div className="flex items-center gap-1">
-                <h1 className="text-[1.75rem] font-medium leading-9 text-foreground">{t('standorte.page.title')}</h1>
+                <h1 className="text-[1.75rem] font-bold leading-9 text-foreground">{t('standorte.page.title')}</h1>
                 <HelpLink topic="places" />
             </div>
 
@@ -89,13 +89,13 @@ export default function StandortePageContent() {
             ) : clubs === null ? (
                 <LoadingText className="mt-6" />
             ) : !activeClub ? (
-                <div className="mt-6 rounded-xl border border-border bg-card p-4">
+                <div className="mt-6 rounded-xl shadow-card bg-card p-4">
                     <p className="text-sm font-semibold text-foreground">{t('verein.no-club.title')}</p>
                     <p className="mt-1 text-sm text-muted-foreground">{t('verein.no-club.body')}</p>
                 </div>
             ) : (
                 <>
-                    <div className="mt-6 flex gap-2 border-b border-border">
+                    <div className="mt-6 flex gap-2 border-b border-hairline">
                         {(['standorte', 'material', 'belegung'] as const).map((value) => (
                             <button
                                 key={value}
@@ -103,7 +103,7 @@ export default function StandortePageContent() {
                                 aria-pressed={tab === value}
                                 onClick={() => setTab(value)}
                                 className={`border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
-                                    tab === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
+                                    tab === value ? 'border-primary text-primary-text' : 'border-transparent text-muted-foreground hover:text-foreground'
                                 }`}
                             >
                                 {t(`standorte.tab.${value}`)}

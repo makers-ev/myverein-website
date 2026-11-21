@@ -155,7 +155,7 @@ export default function ClubInfoDialog({ clubId, slug, canWrite, existingSlugs =
                         )}
                         {detail.externalUrl && isHttpUrl(detail.externalUrl) && (
                             <p className="mt-4 text-sm">
-                                <a href={detail.externalUrl} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex items-center gap-1 text-primary underline">
+                                <a href={detail.externalUrl} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex items-center gap-1 text-primary-text underline">
                                     <ExternalLink className="h-4 w-4" aria-hidden="true" />
                                     {t('docs.info.external')}
                                 </a>
@@ -262,7 +262,7 @@ function Editor({ clubId, existingSlugs, detail, waiting, onCancel, onSaved }: {
                     <label htmlFor="docs-info-md" className="text-xs font-medium text-muted-foreground">
                         {t('docs.info.field.content')}
                     </label>
-                    <div role="group" aria-label={t('docs.info.field.content')} className="inline-flex rounded-lg border border-border p-0.5">
+                    <div role="group" aria-label={t('docs.info.field.content')} className="inline-flex rounded-lg border border-control p-0.5">
                         {([false, true] as const).map((value) => (
                             <button key={String(value)} type="button" aria-pressed={preview === value} onClick={() => setPreview(value)} className={`rounded-md px-2.5 py-1 text-xs font-medium ${preview === value ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
                                 {t(value ? 'docs.info.preview' : 'docs.info.write')}
@@ -371,12 +371,12 @@ function VersionHistory({ clubId, detail, canWrite, onBack, onRestored }: { club
                     )}
                 </div>
             ) : (
-                <ul className="mt-3 divide-y divide-border rounded-lg border border-border">
+                <ul className="mt-3 divide-y divide-hairline rounded-lg border border-border">
                     {rows.map((v) => (
                         <li key={v.versionNo} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm">
                             <span className="min-w-0 text-foreground">
                                 <span className="font-semibold">{t('docs.info.version', { n: v.versionNo })}</span> · {v.title}
-                                {v.current && <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">{t('docs.info.version.current')}</span>}
+                                {v.current && <span className="ml-2 rounded-full bg-primary-soft px-2 py-0.5 text-xs font-semibold text-primary-soft-foreground">{t('docs.info.version.current')}</span>}
                                 <span className="block text-xs text-muted-foreground">
                                     {formatDate(v.createdAt, language)}
                                     {v.createdByName ? ` · ${v.createdByName}` : ''}

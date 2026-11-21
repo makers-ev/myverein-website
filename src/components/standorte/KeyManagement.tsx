@@ -101,7 +101,7 @@ function KeyHoldersSection({
             {location.keyHolders.length === 0 ? (
                 <EmptyState icon={<KeyRound className="h-6 w-6" />} text={t('standorte.keyholders.empty')} />
             ) : (
-                <ul className="divide-y divide-border">
+                <ul className="divide-y divide-hairline">
                     {location.keyHolders.map((kh) => (
                         <li key={kh.id} className="flex items-center justify-between gap-2 py-2">
                             <span className="flex min-w-0 items-center gap-2 text-sm text-foreground">
@@ -326,7 +326,7 @@ function KeyHistorySection({ locationId, clubId, version, t }: { locationId: str
                 <EmptyState icon={<History className="h-6 w-6" />} text={memberId ? t('standorte.keys.history.emptyFiltered') : t('standorte.keys.history.empty')} />
             ) : (
                 <div className={loading ? 'opacity-60' : ''} aria-busy={loading}>
-                    <ul className="divide-y divide-border">
+                    <ul className="divide-y divide-hairline">
                         {res.data.map((entry) => (
                             <li key={entry.id} className="space-y-0.5 py-2 text-sm">
                                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">

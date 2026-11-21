@@ -167,7 +167,7 @@ export default function ClubMailTemplatePanel({ clubId }: { clubId: string }) {
                 </div>
             </form>
 
-            <div className="mt-6 space-y-3 border-t border-border pt-4">
+            <div className="mt-6 space-y-3 border-t border-hairline pt-4">
                 <h3 className="text-sm font-semibold text-foreground">{t('verein.mail.preview.title')}</h3>
                 <p className="text-xs text-muted-foreground">{t('verein.mail.preview.hint')}</p>
                 <div className="flex flex-wrap items-center gap-2">

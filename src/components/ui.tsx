@@ -38,7 +38,7 @@ export function Skeleton({ lines = 3, className = '' }: { lines?: number; classN
 export function ErrorState({ error, onRetry, className = '' }: { error?: unknown; onRetry?: () => void; className?: string }) {
     const { t } = useLanguage();
     return (
-        <div role="alert" className={`flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 ${className}`.trim()}>
+        <div role="alert" className={`flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive-soft p-4 ${className}`.trim()}>
             <CircleAlert aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-destructive" strokeWidth={1.5} />
             <div className="min-w-0">
             <p className="text-sm text-destructive">{error === undefined ? t('common.error') : mapApiError(error, t)}</p>
@@ -46,7 +46,7 @@ export function ErrorState({ error, onRetry, className = '' }: { error?: unknown
                 <button
                     type="button"
                     onClick={onRetry}
-                    className="mt-3 min-h-11 rounded-lg border border-border bg-card px-4 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-muted active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+                    className="mt-3 min-h-11 rounded-lg border border-control bg-card px-4 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-muted active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-text"
                 >
                     {t('common.retry')}
                 </button>
@@ -58,6 +58,6 @@ export function ErrorState({ error, onRetry, className = '' }: { error?: unknown
 
 /** Small status tag. `tone` picks the color; always pair with text, never color alone. */
 export function Badge({ children, tone = 'neutral' }: { children: ReactNode; tone?: 'neutral' | 'primary' | 'danger' }) {
-    const cls = tone === 'primary' ? 'bg-primary text-primary-foreground' : tone === 'danger' ? 'bg-destructive text-destructive-foreground' : 'bg-muted text-foreground';
-    return <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${cls}`}>{children}</span>;
+    const cls = tone === 'primary' ? 'bg-primary text-primary-foreground' : tone === 'danger' ? 'bg-destructive-fill text-destructive-foreground' : 'bg-muted text-foreground';
+    return <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${cls}`}>{children}</span>;
 }

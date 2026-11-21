@@ -100,14 +100,14 @@ export default function NoClubSection({ onRefreshClubs }: { onRefreshClubs: () =
             {loadError && (
                 <div className="mt-6 flex flex-wrap items-center gap-3 rounded-lg border border-destructive/40 px-3 py-2" role="alert">
                     <p className="text-sm text-destructive">{t('verein.create.loadError')}</p>
-                    <button type="button" onClick={() => void handleRefresh()} disabled={refreshing} className="text-sm font-medium text-primary hover:underline disabled:opacity-50">
+                    <button type="button" onClick={() => void handleRefresh()} disabled={refreshing} className="text-sm font-medium text-primary-text hover:underline disabled:opacity-50">
                         {t('verein.create.retry')}
                     </button>
                 </div>
             )}
 
             {notice && (
-                <p className="mt-6 rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm text-foreground" role="status">
+                <p className="mt-6 rounded-lg border border-control bg-muted/50 px-3 py-2 text-sm text-foreground" role="status">
                     {t(`verein.create.notice.${notice}`)}
                 </p>
             )}
@@ -124,10 +124,10 @@ export default function NoClubSection({ onRefreshClubs }: { onRefreshClubs: () =
                         onOpenClub={handleOpenClub}
                     />
                 ) : (
-                    <div className="mt-6 rounded-xl border border-border bg-card p-5">
+                    <div className="mt-6 rounded-xl shadow-card bg-card p-5">
                         <div className="flex items-start gap-3">
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15">
-                                <Building2 className="h-5 w-5 text-primary" />
+                                <Building2 className="h-5 w-5 text-primary-text" />
                             </div>
                             <div>
                                 <p className="font-semibold text-foreground">{t('verein.create.card.title')}</p>

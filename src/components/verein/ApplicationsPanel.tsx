@@ -77,14 +77,14 @@ export default function ApplicationsPanel({ clubId, onDecided }: { clubId: strin
     };
 
     return (
-        <div className="mb-6 rounded-xl border border-border bg-card p-4">
+        <div className="mb-6 rounded-xl shadow-card bg-card p-4">
             <h2 className="mb-3 flex items-center gap-2 text-sm font-bold text-foreground">
                 {t('verein.applications.title')}
                 {data && data.total > 0 && <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">{data.total}</span>}
             </h2>
 
             {outcome && (
-                <p role="status" className="mb-3 rounded-lg border border-success/40 bg-success/10 p-3 text-sm text-foreground">
+                <p role="status" className="mb-3 rounded-lg border border-success/40 bg-success-soft p-3 text-sm text-foreground">
                     {t(
                         outcome.action === 'approved' ? (outcome.child ? 'forms.review.outcome.approvedChild' : 'forms.review.outcome.approved') : 'forms.review.outcome.rejected',
                         { name: outcome.name },
@@ -106,19 +106,19 @@ export default function ApplicationsPanel({ clubId, onDecided }: { clubId: strin
                             const child = a.onBehalfOf === 'guardian';
                             const category = categoryText(a.category);
                             return (
-                                <li key={a.id} className="rounded-lg border border-border px-3 py-2">
+                                <li key={a.id} className="rounded-lg border border-control px-3 py-2">
                                     <div className="flex flex-wrap items-start justify-between gap-2">
                                         <div className="min-w-0">
                                             <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-foreground">
                                                 <span className="break-words">{a.subjectName ?? a.name ?? '—'}</span>
                                                 {child && (
-                                                    <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                                                    <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary-soft-foreground">
                                                         <Baby className="h-3.5 w-3.5" aria-hidden="true" />
                                                         {t('forms.review.badge.child')}
                                                     </span>
                                                 )}
                                                 {a.legacy && <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">{t('forms.review.badge.legacy')}</span>}
-                                                {category && <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">{category}</span>}
+                                                {category && <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary-soft-foreground">{category}</span>}
                                             </p>
                                             <p className="break-words text-xs text-muted-foreground">
                                                 {child ? t('forms.review.list.by', { name: a.name ?? '—' }) : (a.email ?? '—')} · {t('verein.applications.submitted')} {formatDate(a.createdAt, language)}
@@ -132,7 +132,7 @@ export default function ApplicationsPanel({ clubId, onDecided }: { clubId: strin
                                             {a.summary.length > 0 && (
                                                 <ul className="mt-1.5 flex flex-wrap gap-1.5" aria-label={t('forms.review.list.summary')}>
                                                     {a.summary.map((s) => (
-                                                        <li key={s.key} className="max-w-full break-words rounded bg-muted px-2 py-0.5 text-xs text-foreground">
+                                                        <li key={s.key} className="max-w-full break-words rounded-lg bg-muted px-2 py-0.5 text-xs text-foreground">
                                                             <span className="text-muted-foreground">{s.label}:</span> {displayDate(s.display, language)}
                                                         </li>
                                                     ))}

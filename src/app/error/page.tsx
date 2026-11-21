@@ -21,13 +21,13 @@ export default async function ErrorPage(props: ErrorPageProps) {
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-            <div className="w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card p-8 shadow-md">
+            <div className="w-full max-w-md overflow-hidden rounded-2xl shadow-card bg-card p-8 ">
                 <div className="flex flex-col items-center text-center">
-                    <div className="mb-6 rounded-full bg-destructive/10 p-4">
+                    <div className="mb-6 rounded-full bg-destructive-soft p-4">
                         <ExclamationTriangleIcon className="h-12 w-12 text-destructive" />
                     </div>
 
-                    <h1 className="mb-2 text-3xl font-medium text-card-foreground">
+                    <h1 className="mb-2 text-3xl font-bold text-card-foreground">
                         Oops!
                     </h1>
 
@@ -45,7 +45,7 @@ export default async function ErrorPage(props: ErrorPageProps) {
 
                         <Link
                             href="/"
-                            className="block w-full rounded-lg border border-border bg-card px-5 py-3 text-center text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+                            className="block w-full rounded-lg border border-control bg-card px-5 py-3 text-center text-sm font-semibold text-foreground transition-colors hover:bg-muted"
                         >
                             Return Home
                         </Link>

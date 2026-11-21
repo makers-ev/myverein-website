@@ -120,7 +120,7 @@ export function AuthNav({ appLinks = [] }: { appLinks?: AuthNavAppLink[] }) {
                 </button>
 
                 {isOpen && (
-                    <div className="animate-menu absolute right-0 mt-2 w-52 origin-top-right rounded-xl border border-border bg-card p-1.5 shadow-lg">
+                    <div className="animate-menu absolute right-0 mt-2 w-52 origin-top-right rounded-xl bg-card p-1.5 shadow-lg">
                         {links.length > 0 && (
                             <>
                                 {links.map((link) => {
@@ -137,7 +137,7 @@ export function AuthNav({ appLinks = [] }: { appLinks?: AuthNavAppLink[] }) {
                                         </Link>
                                     );
                                 })}
-                                <div className="my-1 border-t border-border" />
+                                <div className="my-1 border-t border-hairline" />
                             </>
                         )}
                         <Link

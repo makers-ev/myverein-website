@@ -54,7 +54,7 @@ export default function GuestManage({ token }: { token: string }) {
         return (
             <PublicShell status="ok">
                 <div role="status" className="text-center">
-                    <h1 className="text-2xl font-medium leading-8 text-foreground">{t('guest.deleted.title')}</h1>
+                    <h1 className="text-2xl font-bold leading-8 text-foreground">{t('guest.deleted.title')}</h1>
                     <p className="mt-2 text-sm text-muted-foreground">{t('guest.deleted.body')}</p>
                 </div>
             </PublicShell>
@@ -111,7 +111,7 @@ export default function GuestManage({ token }: { token: string }) {
         <PublicShell wide>
             <PublicEventSummary event={event} />
             <p className="mt-4 text-sm text-foreground">
-                <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${status === 'angemeldet' ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning'}`}>{t(`participants.status.${status}`)}</span>{' '}
+                <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${status === 'angemeldet' ? 'bg-success-soft text-success' : 'bg-warning-soft text-warning'}`}>{t(`participants.status.${status}`)}</span>{' '}
                 <span className="text-muted-foreground">{t('guest.manage.persons', { count: view.data.partySize })}</span>
             </p>
             {canChange ? (
@@ -141,7 +141,7 @@ export default function GuestManage({ token }: { token: string }) {
                         <FormRenderer fields={form.fields} privacyNotice={null} answers={answers} onChange={(key, value) => setAnswers((a) => ({ ...a, [key]: value }))} errors={errors} idPrefix="guest-manage" disabled={busy} />
                     )}
                     {message && (
-                        <p role={message.tone === 'error' ? 'alert' : 'status'} className={`rounded-lg px-3 py-2 text-sm ${message.tone === 'error' ? 'bg-destructive/10 text-destructive' : 'bg-success/10 text-success'}`}>
+                        <p role={message.tone === 'error' ? 'alert' : 'status'} className={`rounded-lg px-3 py-2 text-sm ${message.tone === 'error' ? 'bg-destructive-soft text-destructive' : 'bg-success-soft text-success'}`}>
                             {message.text}
                         </p>
                     )}

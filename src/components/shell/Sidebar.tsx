@@ -52,9 +52,9 @@ export default function Sidebar({ groups, collapsed, onToggleCollapsed, onNaviga
                                         onClick={onNavigate}
                                         aria-current={active ? 'page' : undefined}
                                         title={collapsed ? t(e.labelKey) : undefined}
-                                        className={`flex min-h-11 items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${active ? 'bg-muted font-medium text-foreground shadow-[inset_0_0_0_1px_var(--border)]' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
+                                        className={`flex min-h-11 items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-text ${active ? 'bg-primary-soft font-semibold text-primary-soft-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
                                     >
-                                        <Icon aria-hidden="true" strokeWidth={1.5} className={`h-[18px] w-[18px] shrink-0 ${active ? 'text-primary' : ''}`} />
+                                        <Icon aria-hidden="true" strokeWidth={1.5} className={`h-[18px] w-[18px] shrink-0 ${active ? 'text-primary-text' : ''}`} />
                                         <span className={collapsed ? 'sr-only' : 'truncate'}>{t(e.labelKey)}</span>
                                     </Link>
                                 </li>
@@ -69,7 +69,7 @@ export default function Sidebar({ groups, collapsed, onToggleCollapsed, onNaviga
                 rel="noopener noreferrer"
                 aria-label={t('help.nav.label')}
                 title={collapsed ? t('help.sidebar') : undefined}
-                className="flex min-h-11 items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+                className="flex min-h-11 items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-text"
             >
                 <CircleHelp aria-hidden="true" strokeWidth={1.5} className="h-[18px] w-[18px] shrink-0" />
                 <span className={collapsed ? 'sr-only' : 'truncate'}>{t('help.sidebar')}</span>
@@ -79,7 +79,7 @@ export default function Sidebar({ groups, collapsed, onToggleCollapsed, onNaviga
                     type="button"
                     onClick={onToggleCollapsed}
                     aria-expanded={!collapsed}
-                    className="flex min-h-11 items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+                    className="flex min-h-11 items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-text"
                 >
                     {collapsed ? <PanelLeftOpen aria-hidden="true" strokeWidth={1.5} className="h-[18px] w-[18px]" /> : <PanelLeftClose aria-hidden="true" strokeWidth={1.5} className="h-[18px] w-[18px]" />}
                     <span className={collapsed ? 'sr-only' : ''}>{t(collapsed ? 'shell.sidebar.expand' : 'shell.sidebar.collapse')}</span>

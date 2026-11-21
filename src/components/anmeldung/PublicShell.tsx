@@ -10,7 +10,7 @@ import { formatCost } from '@/lib/eventRegistration';
 export const publicButton =
     'block min-h-11 w-full rounded-lg bg-primary px-5 py-3 text-center text-sm font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98] disabled:opacity-50';
 export const publicSecondaryButton =
-    'block w-full rounded-lg border border-border bg-background px-5 py-3 text-center text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50';
+    'block w-full rounded-lg border border-control bg-background px-5 py-3 text-center text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50';
 
 /** Card on an otherwise empty page, like the unsubscribe page; `status` adds a green or amber icon. */
 export function PublicShell({ children, status, wide = false }: { children: React.ReactNode; status?: 'ok' | 'warn'; wide?: boolean }) {
@@ -18,12 +18,12 @@ export function PublicShell({ children, status, wide = false }: { children: Reac
         <div className="flex flex-col items-center justify-center bg-background p-4 py-12">
             <div className={`w-full ${wide ? 'max-w-xl' : 'max-w-md'} overflow-hidden rounded-2xl bg-card p-6 shadow-xl sm:p-8`}>
                 {status === 'ok' && (
-                    <div className="mx-auto mb-6 w-fit rounded-full bg-success/10 p-4 dark:bg-green-950">
+                    <div className="mx-auto mb-6 w-fit rounded-full bg-success-soft p-4">
                         <CheckCircleIcon className="h-10 w-10 text-success" aria-hidden />
                     </div>
                 )}
                 {status === 'warn' && (
-                    <div className="mx-auto mb-6 w-fit rounded-full bg-warning/10 p-4 dark:bg-amber-950">
+                    <div className="mx-auto mb-6 w-fit rounded-full bg-warning-soft p-4">
                         <ExclamationTriangleIcon className="h-10 w-10 text-warning" aria-hidden />
                     </div>
                 )}
@@ -39,9 +39,9 @@ export function PublicMessage({ title, body }: { title: string; body: string }) 
     return (
         <PublicShell status="warn">
             <div className="text-center">
-                <h1 className="text-2xl font-medium leading-8 text-foreground">{title}</h1>
+                <h1 className="text-2xl font-bold leading-8 text-foreground">{title}</h1>
                 <p className="mt-2 text-sm text-muted-foreground">{body}</p>
-                <Link href="/" className="mt-6 inline-block text-sm font-medium text-primary hover:underline">
+                <Link href="/" className="mt-6 inline-block text-sm font-medium text-primary-text hover:underline">
                     {t('guest.home')}
                 </Link>
             </div>
@@ -72,8 +72,8 @@ export function PublicEventSummary({ event }: { event: PublicEvent }) {
     return (
         <div className="space-y-1 text-sm">
             <p className="text-xs font-semibold text-muted-foreground">{event.clubName}</p>
-            <h1 className="text-2xl font-medium leading-8 text-foreground">{event.title}</h1>
-            {event.cancelled && <p className="rounded-lg bg-destructive/10 px-3 py-2 font-semibold text-destructive">{t('guest.cancelled')}</p>}
+            <h1 className="text-2xl font-bold leading-8 text-foreground">{event.title}</h1>
+            {event.cancelled && <p className="rounded-lg bg-destructive-soft px-3 py-2 font-semibold text-destructive">{t('guest.cancelled')}</p>}
             <p className="text-foreground">
                 {start.toLocaleDateString(language, dateOpts)}
                 {end && !sameDay ? ` – ${end.toLocaleDateString(language, dateOpts)}` : ''}
