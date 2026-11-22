@@ -41,8 +41,8 @@ export function Footer() {
             <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
                 <div className="grid gap-12 lg:grid-cols-[1fr_2fr]">
                     <div className="space-y-4">
-                        <Link href="/" className="inline-flex items-center transition-opacity hover:opacity-80">
-                            <Logo />
+                        <Link href="/" aria-label="MyVerein" className="inline-flex items-center transition-opacity hover:opacity-80">
+                            <Logo decorative />
                         </Link>
                         <p className="max-w-xs text-sm leading-6 text-muted-foreground">{t('footer.tagline')}</p>
                     </div>
@@ -88,7 +88,7 @@ export function Footer() {
                 </div>
 
                 <div className="mt-12 border-t border-hairline pt-6">
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-center text-xs text-muted-foreground">
                         &copy; {currentYear} MyVerein, {t('footer.rights')}
                     </p>
                 </div>

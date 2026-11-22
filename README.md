@@ -78,6 +78,8 @@ as `/error`/`/verify-email`/`/reset-password` for a consistent family of
 "you landed on a dead link" pages. Not listed in the table above since it
 has no route of its own to list.
 
+`src/components/Footer.tsx` shows the brand exactly once (one relative link to `/` via `<Logo decorative />`, the image alt is empty because the wordmark names the brand), a one-line description (`footer.tagline`), the link groups and a centred copyright line with the current year.
+
 `POST /api/contact` (own route handler, own SMTP transport via `CONTACT_SMTP_*`
 env vars -- independent of anything `_template_better-auth-backend`'s
 `email.ts` does) sends two HTML mails: a notification to `CONTACT_TO_EMAIL`
