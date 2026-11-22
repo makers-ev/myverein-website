@@ -98,11 +98,12 @@ export const marketingItems: MarketingItem[] = defineItems([
     { id: 'acknowledgements', status: 'live', group: 'documents', wave: 13, featureRef: ['18.12'], icon: 'check' },
     { id: 'custom-forms', status: 'live', group: 'forms', wave: 8, featureRef: ['12.17', '12.18', '12.19'], icon: 'form' },
     { id: 'global-search', status: 'live', group: 'club', wave: 14, featureRef: ['19.4', '19.2'], icon: 'search' },
-    // ---- planned (Wave 15 plan, not started; no dates) ----
-    { id: 'sponsor-profiles', status: 'soon', group: 'public', wave: 15, icon: 'handshake' },
-    { id: 'public-page', status: 'soon', group: 'public', wave: 15, icon: 'globe' },
-    { id: 'lead-inbox', status: 'soon', group: 'public', wave: 15, icon: 'form' },
-    { id: 'association-export', status: 'soon', group: 'public', wave: 15, icon: 'sheet' },
+    // ---- outreach (shipped) ----
+    { id: 'sponsor-profiles', status: 'live', group: 'public', featureRef: ['23.1'], icon: 'handshake' },
+    { id: 'public-page', status: 'live', group: 'public', featureRef: ['23.2'], icon: 'globe' },
+    { id: 'lead-inbox', status: 'live', group: 'public', featureRef: ['23.3'], icon: 'form' },
+    { id: 'association-export', status: 'live', group: 'public', featureRef: ['23.4'], icon: 'sheet' },
+    { id: 'external-access', status: 'live', group: 'public', featureRef: ['23.5'], icon: 'key' },
 ]);
 
 /** Billing is out of scope by design; shown as a friendly boundary, never as a planned feature. */
@@ -151,6 +152,8 @@ export const heroCardLineCount = 4;
 export const rolePointCount = 4;
 export const clubIds = ['sport', 'chor', 'feuerwehr', 'schach', 'tanz', 'schuetzen', 'kleingarten', 'musik'] as const;
 export const clubListKeys = ['cat', 'dep', 'rol'] as const;
-/** Groups that still hold planned items (the rest has shipped); RoadmapSketches hides empty groups anyway. */
-export const roadmapGroups = ['public'] as const;
+/** Groups that may hold planned items; everything has shipped today, so the list is empty and RoadmapSketches only shows the billing boundary. */
+export const roadmapGroups = [] as const;
+/** Items of the "Außenwirkung" chapter, in display order. */
+export const outreachItemIds = ['public-page', 'lead-inbox', 'sponsor-profiles', 'association-export', 'external-access'] as const;
 export const quizToolIds = ['excel', 'whatsapp', 'doodle', 'attendance', 'notes'] as const;

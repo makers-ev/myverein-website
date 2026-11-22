@@ -7,6 +7,7 @@ import {
     ClipboardList,
     Clock,
     FileText,
+    Globe,
     LayoutDashboard,
     MapPin,
     Megaphone,
@@ -38,7 +39,7 @@ export interface BuiltFeatureArea {
  * capability tagged with the platform(s) it ships on. See /roadmap for
  * what's planned but not yet built.
  *
- * Updated 2026-10-31 for the delivered work up to the time-tracking report (Feature List §11-§21).
+ * Updated 2026-11-22 for the delivered work up to the outreach block (Feature List §11-§23).
  * Sourced 1:1 from the internal Feature List (`lpj-its-vault`, "Feature
  * List - MyVerein.md"), which is the verified source of truth for shipped
  * status. Only customer-visible ✅ rows are included here -- backend-only
@@ -583,8 +584,50 @@ export const BUILT_FEATURE_AREAS: BuiltFeatureArea[] = [
                 platform: 'app',
             },
             {
-                label: { de: 'Hilfe & Anleitungen mit Link zur passenden Seite', en: 'Help & guides with a link to the matching page' },
+                label: { de: 'Anmelden zum nächsten Termin mit einem Tap direkt auf „Heute“', en: 'Sign up for the next event with one tap right on "Heute"' },
+                platform: 'app',
+            },
+            {
+                label: { de: 'Hilfe-Portal mit Handbuch, Anleitungen, Glossar und FAQ, mit Link zur passenden Seite (nur Deutsch)', en: 'Help portal with manual, guides, glossary and FAQ, with a link to the matching page (German only)' },
                 platform: 'both',
+            },
+        ],
+    },
+    {
+        id: 'aussenwirkung',
+        icon: Globe,
+        title: {
+            de: 'Außenwirkung',
+            en: 'Public presence',
+        },
+        capabilities: [
+            {
+                label: { de: 'Öffentliche Vereinsseite mit Editor und Vorschau, standardmäßig aus und jederzeit zurücknehmbar', en: 'Public club page with editor and preview, off by default and withdrawable at any time' },
+                platform: 'web',
+            },
+            {
+                label: { de: 'Verein finden: Suche nach Name oder Ort, nur Vereine, die sich dafür freigegeben haben', en: 'Find a club: search by name or place, only clubs that opted in' },
+                platform: 'both',
+            },
+            {
+                label: { de: 'Anfragen und Probetraining über die Vereinsseite, Liste mit Status und Notizen, Wartelisten, Übernahme als Aufnahmeantrag', en: 'Enquiries and trial sessions via the club page, list with status and notes, waiting lists, conversion into a membership application' },
+                platform: 'web',
+            },
+            {
+                label: { de: 'Sponsoren und Partner verwalten, Logos auf Wunsch auf der Vereinsseite', en: 'Manage sponsors and partners, logos on the club page if wanted' },
+                platform: 'web',
+            },
+            {
+                label: { de: 'Sponsorenliste für den Vorstand in der App (nur lesen)', en: 'Sponsor list for the board in the app (read only)' },
+                platform: 'app',
+            },
+            {
+                label: { de: 'Verbandsmeldung als CSV mit Stichtag und wählbaren Spalten', en: 'Federation report as CSV with cut-off date and selectable columns' },
+                platform: 'web',
+            },
+            {
+                label: { de: 'Eingeschränkter App-Zugang für Sponsoren und Dienstleister ohne Mitgliederdaten', en: 'Restricted app access for sponsors and service providers without member data' },
+                platform: 'app',
             },
         ],
     },
