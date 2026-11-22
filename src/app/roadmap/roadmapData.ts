@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { Boxes, FileSpreadsheet, FileText, Globe, Handshake, IdCard, ScanLine, Search, Smartphone, Timer, UserPlus } from 'lucide-react';
+import { Boxes, FileText, IdCard, Languages, QrCode, ScanLine, Smartphone, Timer } from 'lucide-react';
 
 export type RoadmapStatus = 'planned' | 'in-progress' | 'done';
 
@@ -27,99 +27,18 @@ export interface RoadmapItem {
 }
 
 /**
- * The MyVerein roadmap, shown at /roadmap. Updated 2026-10-31: everything that
- * shipped (time tracking, member card, consent management, notice board and
- * broadcasts, votes, helper planning, reporting) moved to /features and
- * /changelog. What remains is the planned outreach block (sponsors, public club
- * page, enquiries, club search, federation report) and the honest leftovers
- * from the Feature List's "Weiterhin offen" sections. Nothing here has a target
- * date, so everything lives in the single undated "Später" bucket. Billing
- * (dues, dunning, cash book) is deliberately not on the roadmap.
+ * The MyVerein roadmap, shown at /roadmap. Updated 2026-11-22: everything that
+ * shipped (time tracking, member card, documents, public club page, club
+ * search, enquiries and trial sessions, sponsors, federation report, help
+ * portal) moved to /features and /changelog. What remains are the honest
+ * leftovers from the Feature List's "Weiterhin offen" sections. Nothing here
+ * has a target date, so everything lives in the single undated "Später"
+ * bucket. Billing (dues, dunning, cash book) is deliberately not on the roadmap.
  *
  * To add an entry: append it below. No other file needs to change -- the
  * page groups and sorts entries by `sortKey` automatically.
  */
 export const ROADMAP_ITEMS: RoadmapItem[] = [
-    {
-        id: 'sponsoren-profile',
-        icon: Handshake,
-        type: 'feature',
-        title: {
-            de: 'Sponsoren-/Partnerprofile',
-            en: 'Sponsor and partner profiles',
-        },
-        description: {
-            de: 'Eigene Profile für Sponsoren und Partner mit Laufzeit und Gegenleistung, sichtbar für eine eingeschränkte externe Rolle, ohne Zugriff auf Mitgliederdaten.',
-            en: 'Dedicated profiles for sponsors and partners with term and consideration, visible to a restricted external role, without access to member data.',
-        },
-        status: 'planned',
-        period: 'Später',
-        sortKey: 999001,
-    },
-    {
-        id: 'oeffentliche-vereinsseite',
-        icon: Globe,
-        type: 'feature',
-        title: {
-            de: 'Öffentliche Vereinsseite',
-            en: 'Public club page',
-        },
-        description: {
-            de: 'Eine freiwillige Seite, die zeigt, wer ihr seid und wie man mitmacht. Der Verein entscheidet, was darauf steht; Mitgliederdaten gehören nicht dazu.',
-            en: 'An optional page that shows who you are and how to join. The club decides what is on it; member data is not part of it.',
-        },
-        status: 'planned',
-        period: 'Später',
-        sortKey: 999002,
-    },
-    {
-        id: 'interessenten-probetraining',
-        icon: UserPlus,
-        type: 'feature',
-        title: {
-            de: 'Anfragen und Probetraining',
-            en: 'Enquiries and trial sessions',
-        },
-        description: {
-            de: 'Interessierte melden sich über die Vereinsseite, der Vorstand sieht die Anfragen in einer Liste und macht daraus einen Aufnahmeantrag. Dazu eine Warteliste je Abteilung.',
-            en: 'Interested people get in touch through the club page; the board sees the enquiries in a list and turns them into a membership application. Plus a waiting list per department.',
-        },
-        status: 'planned',
-        period: 'Später',
-        sortKey: 999003,
-    },
-    {
-        id: 'vereinssuche',
-        icon: Search,
-        type: 'feature',
-        title: {
-            de: 'Verein finden',
-            en: 'Find a club',
-        },
-        description: {
-            de: 'Vereine, die das ausdrücklich wollen, lassen sich per Suche finden. Der Beitritt läuft weiter über einen Aufnahmeantrag.',
-            en: 'Clubs that explicitly opt in can be found by search. Joining still goes through a membership application.',
-        },
-        status: 'planned',
-        period: 'Später',
-        sortKey: 999004,
-    },
-    {
-        id: 'verbandsmeldung',
-        icon: FileSpreadsheet,
-        type: 'feature',
-        title: {
-            de: 'Verbandsmeldung als Export',
-            en: 'Federation report as export',
-        },
-        description: {
-            de: 'Bestandsmeldung für Sportbund & Co. als CSV mit Stichtag und wählbaren Spalten, aus den Mitgliedsdaten, die ohnehin da sind.',
-            en: 'A membership return for sports federations and the like as CSV with a cut-off date and selectable columns, from the member data that is already there.',
-        },
-        status: 'planned',
-        period: 'Später',
-        sortKey: 999005,
-    },
     {
         id: 'selbst-check-in',
         icon: ScanLine,
@@ -134,7 +53,7 @@ export const ROADMAP_ITEMS: RoadmapItem[] = [
         },
         status: 'planned',
         period: 'Später',
-        sortKey: 999006,
+        sortKey: 999001,
     },
     {
         id: 'vereinsvorlagen',
@@ -150,7 +69,7 @@ export const ROADMAP_ITEMS: RoadmapItem[] = [
         },
         status: 'planned',
         period: 'Später',
-        sortKey: 999007,
+        sortKey: 999002,
     },
     {
         id: 'ausweis-offline-pruefung',
@@ -166,7 +85,7 @@ export const ROADMAP_ITEMS: RoadmapItem[] = [
         },
         status: 'planned',
         period: 'Später',
-        sortKey: 999008,
+        sortKey: 999003,
     },
     {
         id: 'app-verwaltung',
@@ -182,7 +101,7 @@ export const ROADMAP_ITEMS: RoadmapItem[] = [
         },
         status: 'planned',
         period: 'Später',
-        sortKey: 999009,
+        sortKey: 999004,
     },
     {
         id: 'website-ausleihe',
@@ -198,7 +117,7 @@ export const ROADMAP_ITEMS: RoadmapItem[] = [
         },
         status: 'planned',
         period: 'Später',
-        sortKey: 999010,
+        sortKey: 999005,
     },
     {
         id: 'stundensaetze-ausbau',
@@ -214,6 +133,38 @@ export const ROADMAP_ITEMS: RoadmapItem[] = [
         },
         status: 'planned',
         period: 'Später',
-        sortKey: 999011,
+        sortKey: 999006,
+    },
+    {
+        id: 'beitrittslink',
+        icon: QrCode,
+        type: 'feature',
+        title: {
+            de: 'Einladungslink und QR-Code für neue Mitglieder',
+            en: 'Invitation link and QR code for new members',
+        },
+        description: {
+            de: 'Ein Link oder QR-Code für den ganzen Verein, etwa für den Flyer oder das Vereinsheim, und Einladungen an viele Personen auf einmal. Heute treten Interessierte über den Vereinscode, die Vereinssuche oder die Vereinsseite bei und der Vorstand lädt einzeln ein.',
+            en: 'One link or QR code for the whole club, for example for a flyer or the clubhouse, and invitations to many people at once. Today interested people join with the club code, the club search or the club page, and the board invites one by one.',
+        },
+        status: 'planned',
+        period: 'Später',
+        sortKey: 999099,
+    },
+    {
+        id: 'hilfe-englisch',
+        icon: Languages,
+        type: 'feature',
+        title: {
+            de: 'Hilfe-Portal auf Englisch',
+            en: 'Help portal in English',
+        },
+        description: {
+            de: 'Handbuch und Anleitungen gibt es bisher nur auf Deutsch. Eine englische Fassung ist noch nicht gebaut.',
+            en: 'The manual and guides only exist in German so far. An English version is not built yet.',
+        },
+        status: 'planned',
+        period: 'Später',
+        sortKey: 999100,
     },
 ];
