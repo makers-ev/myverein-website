@@ -631,4 +631,122 @@ export const CHANGELOG_RELEASES: ChangelogRelease[] = [
             },
         ],
     },
+    {
+        id: '2026-11-21-neues-erscheinungsbild',
+        date: '2026-11-21',
+        title: { de: 'Neues Erscheinungsbild und einfachere Wege', en: 'New look and simpler paths' },
+        changes: [
+            {
+                type: 'improvement',
+                title: { de: 'Das neue Vereinsheim-Design', en: 'The new "Vereinsheim" design' },
+                description: {
+                    de: 'App und Website sehen jetzt gleich aus: warme Flächen, ruhige runde Karten, gut lesbare Schrift, ein verbesserter dunkler Modus und kräftigere Kontraste.',
+                    en: 'App and website now look the same: warm surfaces, calm rounded cards, easy-to-read type, an improved dark mode and stronger contrast.',
+                },
+            },
+            {
+                type: 'feature',
+                title: { de: 'Anmelden mit einem Tap auf „Heute“', en: 'Sign up with one tap on "Heute"' },
+                description: {
+                    de: 'Der nächste Termin steht oben, du sagst direkt zu. Hat der Termin ein Formular oder Begleitpersonen, öffnet sich dafür ein Blatt.',
+                    en: 'The next event is at the top and you accept right there. If the event has a form or companions, a sheet opens for it.',
+                },
+            },
+            {
+                type: 'improvement',
+                title: { de: 'Ein Blick auf das Wichtigste', en: 'The most important thing at a glance' },
+                description: {
+                    de: '„Heute“ zeigt zuerst, was dich jetzt braucht: offene Abstimmung, nächster Termin oder, für den Vorstand, offene Anträge. Die Einrichtungs-Checkliste klappt zusammen und lässt sich unter „Mehr“ wieder einblenden.',
+                    en: '"Heute" first shows what needs you now: an open vote, the next event or, for the board, open applications. The setup checklist collapses and can be shown again under "Mehr".',
+                },
+            },
+            {
+                type: 'improvement',
+                title: { de: 'App-Sperre und Ausweis-Kontrolle', en: 'App lock and card check' },
+                description: {
+                    de: 'Die App-Sperre hat eine große Zifferntastatur. Die Ausweis-Kontrolle zeigt klar „gültig“, „abgelaufen“, „ausgetreten“ oder „ungültig“ und prüft mit einem Tap den nächsten Ausweis.',
+                    en: 'The app lock has a large number pad. The card check clearly shows "valid", "expired", "left" or "invalid" and checks the next card with one tap.',
+                },
+            },
+            {
+                type: 'fix',
+                title: { de: 'Termine in der App wieder sichtbar', en: 'Events visible in the app again' },
+                description: {
+                    de: 'In einer Version waren Termine und die Karten auf „Heute“ leer. Das ist behoben. Auf der Website zeigen Rollen ohne Übersetzung jetzt einen lesbaren Namen.',
+                    en: 'In one version events and the cards on "Heute" were empty. This is fixed. On the website, roles without a translation now show a readable name.',
+                },
+            },
+        ],
+    },
+    {
+        id: '2026-11-22-aussenwirkung',
+        date: '2026-11-22',
+        title: { de: 'Außenwirkung: Vereinsseite, Verein finden, Interessenten & Sponsoren', en: 'Public presence: club page, find a club, enquiries & sponsors' },
+        changes: [
+            {
+                type: 'feature',
+                title: { de: 'Öffentliche Vereinsseite', en: 'Public club page' },
+                description: {
+                    de: 'Du kannst eine eigene Seite für deinen Verein veröffentlichen: Beschreibung, Bilder, Abteilungen, Termine und Sponsoren. Du entscheidest, was darauf steht; sie ist aus, bis ihr sie freigebt, und lässt sich jederzeit zurücknehmen. Mitgliederdaten erscheinen nie.',
+                    en: 'You can publish a page of your own for your club: description, images, departments, events and sponsors. You decide what is on it; it is off until you release it and can be withdrawn at any time. Member data never appears.',
+                },
+            },
+            {
+                type: 'feature',
+                title: { de: 'Verein finden', en: 'Find a club' },
+                description: {
+                    de: 'Wer einem Verein beitreten will, sucht ihn in App und Website nach Name oder Ort. Gefunden werden nur Vereine, die sich dafür freigegeben haben. Beitreten geht weiter über einen Aufnahmeantrag.',
+                    en: 'Anyone who wants to join a club searches for it by name or place in the app and on the website. Only clubs that opted in can be found. Joining still goes through a membership application.',
+                },
+            },
+            {
+                type: 'feature',
+                title: { de: 'Interessenten und Probetraining', en: 'Enquiries and trial sessions' },
+                description: {
+                    de: 'Auf der Vereinsseite können sich Interessierte melden, zum Beispiel für ein Probetraining. Der Vorstand führt die Anfragen in einer Liste mit Status und Notizen, pflegt eine Warteliste je Abteilung und macht aus einer Anfrage einen Aufnahmeantrag. Das Formular erscheint nur mit veröffentlichtem Datenschutzhinweis.',
+                    en: 'Interested people can get in touch on the club page, for example for a trial session. The board keeps the enquiries in a list with status and notes, maintains a waiting list per department and turns an enquiry into a membership application. The form only appears with a published privacy notice.',
+                },
+            },
+            {
+                type: 'feature',
+                title: { de: 'Sponsoren und Partner verwalten', en: 'Manage sponsors and partners' },
+                description: {
+                    de: 'Sponsoren und Partner mit Laufzeit und Gegenleistung an einem Ort, ihre Logos optional auf der Vereinsseite.',
+                    en: 'Sponsors and partners with term and consideration in one place, with their logos optionally on the club page.',
+                },
+            },
+            {
+                type: 'feature',
+                title: { de: 'Verbandsmeldung als CSV', en: 'Federation report as CSV' },
+                description: {
+                    de: 'Die Bestandsmeldung für Sportbund & Co. als CSV: Stichtag und Spalten wählst du selbst, die Daten kommen aus deiner Mitgliederverwaltung.',
+                    en: 'The membership return for sports federations and the like as CSV: you choose the cut-off date and columns, the data comes from your member management.',
+                },
+            },
+            {
+                type: 'feature',
+                title: { de: 'Eingeschränkte Zugänge für Sponsoren und Dienstleister', en: 'Restricted access for sponsors and service providers' },
+                description: {
+                    de: 'In der App sehen Sponsoren nur ihre Partnerschaft und Dienstleister nur die Einsätze, die der Verein freigegeben hat. Mitgliederdaten bleiben außen vor.',
+                    en: 'In the app sponsors only see their partnership and service providers only the assignments the club released. Member data stays out of reach.',
+                },
+            },
+            {
+                type: 'improvement',
+                title: { de: 'Hilfe-Portal online', en: 'Help portal online' },
+                description: {
+                    de: 'Handbuch, Anleitungen, Glossar und FAQ findest du unter docs.myverein.lpj.app. Auf Deutsch, mit Suche und ohne Tracking.',
+                    en: 'Manual, guides, glossary and FAQ are at docs.myverein.lpj.app. In German, with search and without tracking.',
+                },
+            },
+            {
+                type: 'improvement',
+                title: { de: 'Gesperrte Vereine', en: 'Suspended clubs' },
+                description: {
+                    de: 'Ist ein Verein vorübergehend gesperrt, erklärt dir das ein ruhiger Hinweis. In dieser Zeit gehen keine Mitteilungen raus.',
+                    en: 'If a club is temporarily suspended, a calm notice explains it. No messages are sent in the meantime.',
+                },
+            },
+        ],
+    },
 ];

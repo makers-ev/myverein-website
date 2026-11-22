@@ -113,9 +113,9 @@ const MarketingTranslation: Translation = {
         'mk.item.custom-forms.title': 'Eigene Formulare',
         'mk.item.custom-forms.body': 'Aufnahme- und Austrittsformular fragen genau das, was dein Verein wissen will, mit Zusatzfeldern am Mitglied.',
         'mk.item.sponsor-profiles.title': 'Sponsoren und Partner',
-        'mk.item.sponsor-profiles.body': 'Die, die den Verein unterstützen, sollen ein eigenes Profil bekommen, ohne Zugriff auf Mitgliederdaten. Geplant, ohne Termin.',
+        'mk.item.sponsor-profiles.body': 'Sponsoren und Partner mit Laufzeit und Gegenleistung an einem Ort, ihre Logos auf Wunsch auf der Vereinsseite. Kein Zugriff auf Mitgliederdaten.',
         'mk.item.public-page.title': 'Öffentliche Vereinsseite',
-        'mk.item.public-page.body': 'Eine Seite, die zeigt, wer ihr seid und wie man bei euch mitmacht. Geplant, ohne Termin.',
+        'mk.item.public-page.body': 'Eine Seite, die zeigt, wer ihr seid und wie man bei euch mitmacht. Ihr entscheidet, was darauf steht; Mitgliederdaten erscheinen nie. Standardmäßig aus und jederzeit zurücknehmbar.',
 
         // ---- out of scope on purpose ----
         'mk.item.billing-sepa.title': 'SEPA-Lastschrift',
@@ -147,9 +147,11 @@ const MarketingTranslation: Translation = {
         'mk.item.global-search.title': 'Alles finden, eine Suche',
         'mk.item.global-search.body': 'Mitglieder (nur mit Recht), Termine, Dokumente und Orte in einer Suche. Dazu eine Startseite „Heute“ mit dem, was ansteht.',
         'mk.item.lead-inbox.title': 'Anfragen und Probetraining',
-        'mk.item.lead-inbox.body': 'Interessierte melden sich über die Vereinsseite, der Vorstand sieht sie in einer Liste. Geplant, ohne Termin.',
+        'mk.item.lead-inbox.body': 'Interessierte melden sich über die Vereinsseite, auch fürs Probetraining. Der Vorstand führt die Anfragen in einer Liste, pflegt Wartelisten und macht daraus einen Aufnahmeantrag.',
         'mk.item.association-export.title': 'Verbandsmeldung als Export',
-        'mk.item.association-export.body': 'Bestandsmeldung für Sportbund & Co. als CSV mit Stichtag. Geplant, ohne Termin.',
+        'mk.item.external-access.title': 'Eingeschränkter Zugang für Sponsoren und Dienstleister',
+        'mk.item.external-access.body': 'In der App sehen Sponsoren nur ihre Partnerschaft und Dienstleister nur die freigegebenen Einsätze. Mitgliederdaten bleiben außen vor.',
+        'mk.item.association-export.body': 'Bestandsmeldung für Sportbund & Co. als CSV: Stichtag und Spalten wählst du selbst.',
     },
     en: {
         'mk.status.live': 'Available now',
@@ -257,9 +259,9 @@ const MarketingTranslation: Translation = {
         'mk.item.custom-forms.title': 'Your own forms',
         'mk.item.custom-forms.body': 'The application and exit forms ask exactly what your club wants to know, with extra fields on the member.',
         'mk.item.sponsor-profiles.title': 'Sponsors and partners',
-        'mk.item.sponsor-profiles.body': 'The people who support the club are meant to get a profile of their own, without access to member data. Planned, no date.',
+        'mk.item.sponsor-profiles.body': 'Sponsors and partners with term and consideration in one place, their logos on the club page if you want. No access to member data.',
         'mk.item.public-page.title': 'Public club page',
-        'mk.item.public-page.body': 'One page that shows who you are and how to join. Planned, no date.',
+        'mk.item.public-page.body': 'One page that shows who you are and how to join. You decide what is on it; member data never appears. Off by default and withdrawable at any time.',
 
         // ---- out of scope on purpose ----
         'mk.item.billing-sepa.title': 'SEPA direct debit',
@@ -291,9 +293,11 @@ const MarketingTranslation: Translation = {
         'mk.item.global-search.title': 'Find anything with one search',
         'mk.item.global-search.body': 'Members (only with permission), events, documents and places in one search. Plus a "Today" start page with what is coming up.',
         'mk.item.lead-inbox.title': 'Enquiries and trial sessions',
-        'mk.item.lead-inbox.body': 'Interested people get in touch through the club page, the board sees them in a list. Planned, no date.',
+        'mk.item.lead-inbox.body': 'Interested people get in touch through the club page, also for a trial session. The board keeps the enquiries in a list, maintains waiting lists and turns one into a membership application.',
         'mk.item.association-export.title': 'Federation report as export',
-        'mk.item.association-export.body': 'Membership return for sports federations and the like as CSV with a cut-off date. Planned, no date.',
+        'mk.item.external-access.title': 'Restricted access for sponsors and service providers',
+        'mk.item.external-access.body': 'In the app sponsors only see their partnership and service providers only the assignments the club released. Member data stays out of reach.',
+        'mk.item.association-export.body': 'Membership return for sports federations and the like as CSV: you choose the cut-off date and columns.',
     },
 };
 

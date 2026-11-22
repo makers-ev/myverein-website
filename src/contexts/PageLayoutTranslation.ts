@@ -16,7 +16,7 @@ const PageLayoutTranslation: Translation = {
         'nav.language_label': 'Sprache:',
 
         // Footer
-        'footer.tagline': 'Mitgliederverwaltung, Kalender, Verfügbarkeit, Lager und Standort-Infocenter für Vereine: an einem Ort statt in Excel, WhatsApp und Doodle verteilt.',
+        'footer.tagline': 'Mitgliederverwaltung, Kalender, Verfügbarkeit, Lager und Standort-Infocenter für Vereine: an einem Ort.',
         'footer.product.title': 'Produkt',
         'footer.product.features': 'Funktionen',
         'footer.product.pricing': 'Preise',
@@ -52,7 +52,7 @@ const PageLayoutTranslation: Translation = {
         'nav.language_label': 'Language:',
 
         // Footer
-        'footer.tagline': 'Member management, calendar, availability, inventory, and a locations info center for clubs: all in one place instead of spread across spreadsheets, WhatsApp, and Doodle.',
+        'footer.tagline': 'Member management, calendar, availability, inventory and location info center for clubs: in one place.',
         'footer.product.title': 'Product',
         'footer.product.features': 'Features',
         'footer.product.pricing': 'Pricing',
@@ -86,7 +86,7 @@ const PageLayoutTranslation: Translation = {
         'nav.contact': 'Contact',
         'nav.language_label': 'Langue :',
 
-        'footer.tagline': 'Gestion des membres, calendrier, disponibilités, matériel et centre d’information des sites pour les associations : tout au même endroit, plutôt qu’éparpillé entre Excel, WhatsApp et Doodle.',
+        'footer.tagline': 'Gestion des membres, calendrier, disponibilités, matériel et centre d’information des sites pour les associations : tout au même endroit.',
         'footer.product.title': 'Produit',
         'footer.product.features': 'Fonctionnalités',
         'footer.product.pricing': 'Tarifs',
@@ -118,7 +118,7 @@ const PageLayoutTranslation: Translation = {
         'nav.contact': 'Contacto',
         'nav.language_label': 'Idioma:',
 
-        'footer.tagline': 'Gestión de socios, calendario, disponibilidad, material y centro de información de sedes para asociaciones: todo en un solo lugar, en vez de repartido entre Excel, WhatsApp y Doodle.',
+        'footer.tagline': 'Gestión de socios, calendario, disponibilidad, material y centro de información de sedes para asociaciones: todo en un solo lugar.',
         'footer.product.title': 'Producto',
         'footer.product.features': 'Funciones',
         'footer.product.pricing': 'Precios',
@@ -150,7 +150,7 @@ const PageLayoutTranslation: Translation = {
         'nav.contact': 'Contacto',
         'nav.language_label': 'Idioma:',
 
-        'footer.tagline': 'Gestão de sócios, calendário, disponibilidade, material e centro de informação de locais para associações: tudo num só lugar, em vez de espalhado por Excel, WhatsApp e Doodle.',
+        'footer.tagline': 'Gestão de sócios, calendário, disponibilidade, material e centro de informação de locais para associações: tudo num só lugar.',
         'footer.product.title': 'Produto',
         'footer.product.features': 'Funcionalidades',
         'footer.product.pricing': 'Preços',
@@ -182,7 +182,7 @@ const PageLayoutTranslation: Translation = {
         'nav.contact': 'Contatti',
         'nav.language_label': 'Lingua:',
 
-        'footer.tagline': 'Gestione socie/i, calendario, disponibilità, materiale e centro informazioni sulle sedi per associazioni: tutto in un unico posto, invece che sparso tra Excel, WhatsApp e Doodle.',
+        'footer.tagline': 'Gestione socie/i, calendario, disponibilità, materiale e centro informazioni sulle sedi per associazioni: tutto in un unico posto.',
         'footer.product.title': 'Prodotto',
         'footer.product.features': 'Funzionalità',
         'footer.product.pricing': 'Prezzi',
@@ -214,7 +214,7 @@ const PageLayoutTranslation: Translation = {
         'nav.contact': 'Contact',
         'nav.language_label': 'Taal:',
 
-        'footer.tagline': 'Ledenbeheer, agenda, beschikbaarheid, materiaalbeheer en een locatie-infocentrum voor verenigingen: alles op één plek, in plaats van verspreid over Excel, WhatsApp en Doodle.',
+        'footer.tagline': 'Ledenbeheer, agenda, beschikbaarheid, materiaalbeheer en een locatie-infocentrum voor verenigingen: alles op één plek.',
         'footer.product.title': 'Product',
         'footer.product.features': 'Functies',
         'footer.product.pricing': 'Prijzen',
@@ -246,7 +246,7 @@ const PageLayoutTranslation: Translation = {
         'nav.contact': 'Kontakt',
         'nav.language_label': 'Język:',
 
-        'footer.tagline': 'Zarządzanie członkami, kalendarz, dostępność, zasoby oraz centrum informacji o lokalizacjach dla klubów: wszystko w jednym miejscu, a nie rozproszone między Excelem, WhatsAppem i Doodle.',
+        'footer.tagline': 'Zarządzanie członkami, kalendarz, dostępność, zasoby oraz centrum informacji o lokalizacjach dla klubów: wszystko w jednym miejscu.',
         'footer.product.title': 'Produkt',
         'footer.product.features': 'Funkcje',
         'footer.product.pricing': 'Cennik',
@@ -278,7 +278,7 @@ const PageLayoutTranslation: Translation = {
         'nav.contact': 'Контакты',
         'nav.language_label': 'Язык:',
 
-        'footer.tagline': 'Управление членами, календарь, доступность, инвентарь и информационный центр по локациям для клубов: всё в одном месте, а не разбросано по Excel, WhatsApp и Doodle.',
+        'footer.tagline': 'Управление членами, календарь, доступность, инвентарь и информационный центр по локациям для клубов: всё в одном месте.',
         'footer.product.title': 'Продукт',
         'footer.product.features': 'Возможности',
         'footer.product.pricing': 'Цены',
@@ -310,7 +310,7 @@ const PageLayoutTranslation: Translation = {
         'nav.contact': 'お問い合わせ',
         'nav.language_label': '言語:',
 
-        'footer.tagline': '会員管理、カレンダー、空き状況、備品管理、拠点インフォセンターを団体向けに一つにまとめました。Excel・WhatsApp・Doodleに分散させる必要はありません。',
+        'footer.tagline': '会員管理、カレンダー、空き状況、備品管理、拠点インフォセンターを団体向けに一つにまとめました。',
         'footer.product.title': 'プロダクト',
         'footer.product.features': '機能',
         'footer.product.pricing': '料金',
@@ -342,7 +342,7 @@ const PageLayoutTranslation: Translation = {
         'nav.contact': '联系我们',
         'nav.language_label': '语言：',
 
-        'footer.tagline': '为社团提供会员管理、日历、可用时间、物资管理与场地信息中心，集中在一处，无需再分散在 Excel、WhatsApp 和 Doodle 之间。',
+        'footer.tagline': '为社团提供会员管理、日历、可用时间、物资管理与场地信息中心，集中在一处。',
         'footer.product.title': '产品',
         'footer.product.features': '功能',
         'footer.product.pricing': '价格',
