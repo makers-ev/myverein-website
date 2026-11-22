@@ -5,6 +5,7 @@ import { authClient } from '@/lib/auth-client';
 import IntroModal from '@/components/IntroModal';
 import AppShell from '@/components/shell/AppShell';
 import DpaRequiredNotice from '@/components/privacy/DpaRequiredNotice';
+import ClubSuspendedNotice from '@/components/ClubSuspendedNotice';
 
 /**
  * Fail-safe server-side re-check for everything under the (protected) route
@@ -44,6 +45,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
             <AppShell>{children}</AppShell>
             <IntroModal />
             <DpaRequiredNotice />
+            <ClubSuspendedNotice />
         </div>
     );
 }

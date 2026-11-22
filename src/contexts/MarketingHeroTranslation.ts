@@ -35,7 +35,7 @@ const MarketingHeroTranslation: Translation = {
         'mk.hero.card.l3': 'Mitteilungen und Abstimmungen',
         'mk.hero.card.l4': 'Dokumente, Material und Orte',
         'mk.hero.card.note': 'Nur die Abrechnung bleibt bewusst draußen.',
-        'mk.hero.honest': 'Alles, was hier gezeigt wird, gibt es schon. Noch nicht dabei: öffentliche Vereinsseite und Sponsorenprofile. Verwalten geht meist am Computer, die App ist für den Alltag.',
+        'mk.hero.honest': 'Alles, was hier gezeigt wird, gibt es schon. Dazu gehören auch die öffentliche Vereinsseite und die Sponsorenverwaltung. Die Abrechnung von Beiträgen gehört bewusst nicht dazu. Verwalten geht meist am Computer, die App ist für den Alltag.',
 
         'mk.breaks.title': 'Fünf Tools für einen Verein',
         'mk.breaks.intro': 'Die Mitgliederliste liegt in Excel, Termine in Doodle, Neuigkeiten in WhatsApp, Aushänge am Zettel und die Anwesenheit auf Papier. MyVerein holt das an einen Ort. Ein Chat ist es nicht: Mitteilungen gehen vom Verein an Gruppen.',
@@ -74,7 +74,7 @@ const MarketingHeroTranslation: Translation = {
         'mk.hero.card.l3': 'Announcements and votes',
         'mk.hero.card.l4': 'Documents, equipment and places',
         'mk.hero.card.note': 'Only billing stays out, on purpose.',
-        'mk.hero.honest': 'Everything shown here exists today. Not included yet: a public club page and sponsor profiles. Managing is mostly done on a computer, the app is for everyday use.',
+        'mk.hero.honest': 'Everything shown here exists today. This includes the public club page and sponsor management. Billing of dues is deliberately not part of it. Managing is mostly done on a computer, the app is for everyday use.',
 
         'mk.breaks.title': 'Five tools for one club',
         'mk.breaks.intro': 'The member list lives in Excel, dates in Doodle, news in WhatsApp, notices on paper slips and attendance on a clipboard. MyVerein brings it into one place. It is not a chat: announcements go from the club to groups.',

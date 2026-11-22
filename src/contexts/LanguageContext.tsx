@@ -30,6 +30,8 @@ import TreffenTranslation from './TreffenTranslation';
 import AssemblyTranslation from './AssemblyTranslation';
 import VerfuegbarkeitTranslation from './VerfuegbarkeitTranslation';
 import UxTranslation from './UxTranslation';
+import PublicClubTranslation from './PublicClubTranslation';
+import ExternalAccessTranslation from './ExternalAccessTranslation';
 import StandorteTranslation from './StandorteTranslation';
 import RoadmapTranslation from './RoadmapTranslation';
 import ChangelogTranslation from './ChangelogTranslation';
@@ -39,6 +41,7 @@ import MarketingTranslation from './MarketingTranslation';
 import MarketingHeroTranslation from './MarketingHeroTranslation';
 import MarketingStoryTranslation from './MarketingStoryTranslation';
 import MarketingTrustTranslation from './MarketingTrustTranslation';
+import OutreachTranslation from './OutreachTranslation';
 
 interface LanguageContextType {
     language: Language;
@@ -79,6 +82,7 @@ export const translations: Record<Language, Record<string, string>> = supportedL
             ...(id === 'de' || id === 'en' ? AssemblyTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? VerfuegbarkeitTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? StandorteTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? OutreachTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? RoadmapTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? ChangelogTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? FeaturesTranslation[id] : {}),
@@ -88,6 +92,8 @@ export const translations: Record<Language, Record<string, string>> = supportedL
             ...(id === 'de' || id === 'en' ? MarketingStoryTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? MarketingTrustTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? UxTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? PublicClubTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? ExternalAccessTranslation[id] : {}),
         };
         return acc;
     },

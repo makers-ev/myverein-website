@@ -2,6 +2,12 @@ import { authClient, backendUrl } from '@/lib/auth-client';
 
 /** Fired on `window` when a write was refused with `403 DPA_REQUIRED` (processor agreement not accepted in time). */
 export const DPA_REQUIRED_EVENT = 'myverein:dpa-required';
+/** A club route answered `403 CLUB_SUSPENDED` (platform suspension); `detail.note` is the text the platform wants members to see. */
+export const CLUB_SUSPENDED_EVENT = 'myverein:club-suspended';
+
+export function isClubSuspended(err: unknown): boolean {
+    return err instanceof ApiError && err.status === 403 && (err.code === 'CLUB_SUSPENDED' || (err.details as { code?: unknown } | undefined)?.code === 'club_suspended');
+}
 
 /** Mirrors the backend's `AppError`/`ErrorCode` shape (src/lib/errors.ts). */
 export class ApiError extends Error {
@@ -52,7 +58,7 @@ export function parseJsonPlain(text: string): unknown {
  */
 export function cachePolicyFor(path: string): RequestCache | undefined {
     // Form definitions (drafts hold unpublished wording), custom field definitions/values, the module catalog (`/member-fields/catalog`) and the credential overview (`/club-members/credentials`) (may be sensitive) and exit requests with answers.
-    return /^\/(form-submissions|club-forms|club-applications|forms|member-fields|club-exit-requests|absences|calendar-feeds|my-wards|guardian|consent-purposes|consents|audit-log|data-subject-requests|retention-policies|club-privacy-notices|clubs\/[^/?]+\/privacy-notice|dpa|ballots|elections|club-roles|documents|member-documents|document-generation|acknowledgements|member-cards|club-storage|club-settings\/(assembly|branding)|admin\/(dpa-versions|dpa-acceptances|retention-runs))(\/|\?|$)/.test(path) || /^\/meetings\/[^/?]+\/(minutes|invitations|voting-roll|proxies|quorum|agenda-items|attendance|online|resolutions)(\/|\?|$)/.test(path) || /^\/meetings(\/[^/?]+)?(\?|$)/.test(path) || /^\/club-members\/[^/?]+\/(consents|guardians|visibility|data-export|data-requests|erasure|erasure-request|legal-hold|privacy-notice|privacy-notice-sent|card(\.pdf)?)(\/|\?|$)/.test(path) || /^\/club-members\/[^/?]+\/custom-fields(\/|\?|$)/.test(path) || /^\/club-members\/credentials(\/|\?|$)/.test(path) || /^\/club-members\/me\/children(\/|\?|$)/.test(path) || /^\/events\/[^/?]+\/(attendance|registrations?|rsvp|helpers|rides|public-link)(\.csv)?(\/|\?|$)/.test(path) || /^\/(attendance|time-entries|rate-cards|time-report|public)(\/|\?|$|\.)/.test(path)
+    return /^\/(form-submissions|club-forms|club-applications|forms|member-fields|club-exit-requests|absences|calendar-feeds|my-wards|guardian|consent-purposes|consents|audit-log|data-subject-requests|retention-policies|club-privacy-notices|clubs\/[^/?]+\/privacy-notice|dpa|ballots|elections|club-roles|documents|member-documents|document-generation|acknowledgements|member-cards|club-storage|sponsors|club-public-profile|club-leads|external-access|club-stats\/association-report|club-settings\/(assembly|branding)|admin\/(dpa-versions|dpa-acceptances|retention-runs))(\/|\?|$)/.test(path) || /^\/meetings\/[^/?]+\/(minutes|invitations|voting-roll|proxies|quorum|agenda-items|attendance|online|resolutions)(\/|\?|$)/.test(path) || /^\/meetings(\/[^/?]+)?(\?|$)/.test(path) || /^\/club-members\/[^/?]+\/(consents|guardians|visibility|data-export|data-requests|erasure|erasure-request|legal-hold|privacy-notice|privacy-notice-sent|card(\.pdf)?)(\/|\?|$)/.test(path) || /^\/club-members\/[^/?]+\/custom-fields(\/|\?|$)/.test(path) || /^\/club-members\/credentials(\/|\?|$)/.test(path) || /^\/club-members\/me\/children(\/|\?|$)/.test(path) || /^\/events\/[^/?]+\/(attendance|registrations?|rsvp|helpers|rides|public-link)(\.csv)?(\/|\?|$)/.test(path) || /^\/(attendance|time-entries|rate-cards|time-report|public)(\/|\?|$|\.)/.test(path)
         ? 'no-store'
         : undefined;
 }
@@ -84,6 +90,10 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
         );
         // Wave 10: the DPA gate locks writes of the whole club; every screen hears about it (see DpaRequiredNotice).
         if (apiError.status === 403 && apiError.code === 'DPA_REQUIRED' && typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(DPA_REQUIRED_EVENT));
+        if (isClubSuspended(apiError) && typeof window !== 'undefined') {
+            const note = (apiError.details as { note?: unknown } | undefined)?.note;
+            window.dispatchEvent(new CustomEvent(CLUB_SUSPENDED_EVENT, { detail: { note: typeof note === 'string' && note.trim() ? note : null } }));
+        }
         throw apiError;
     }
 

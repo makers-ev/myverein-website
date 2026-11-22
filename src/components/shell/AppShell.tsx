@@ -8,6 +8,7 @@ import { ChevronRight, Menu, X } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { breadcrumbsFor, buildNavGroups } from '@/lib/navigation';
 import { ActiveClubProvider, useActiveClub } from '@/components/shell/ActiveClubProvider';
+import ClubSuspensionBanner from '@/components/shell/ClubSuspensionBanner';
 import ClubSwitcher from '@/components/shell/ClubSwitcher';
 import GlobalSearch from '@/components/shell/GlobalSearch';
 import Sidebar from '@/components/shell/Sidebar';
@@ -165,6 +166,7 @@ function ShellBody({ switchKey, children }: { switchKey: number; children: React
                     </div>
                 )}
                 <div key={switchKey} className="bg-background">
+                    <ClubSuspensionBanner />
                     {children}
                 </div>
             </div>

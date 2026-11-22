@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 
 import { useLanguage } from '@/contexts/LanguageContext';
-import { ApiError, apiFetch } from '@/lib/api-client';
+import { ApiError, apiFetch, isClubSuspended } from '@/lib/api-client';
 import { authClient } from '@/lib/auth-client';
 import { formatDate, memberErrorKey } from '@/lib/clubMembers';
 import {
@@ -151,6 +151,9 @@ export default function InvitationContent() {
                     setResult({ kind: 'invalid' });
                 } else if (err instanceof ApiError && err.status === 429) {
                     setResult({ kind: 'error', textKey: 'verein.invite.err.rateLimit' });
+                } else if (isClubSuspended(err)) {
+                    // Platform suspension: the invitation stays valid, the club is just paused.
+                    setResult({ kind: 'error', textKey: 'err.clubSuspended' });
                 } else if (err instanceof ApiError && err.status === 403) {
                     // Typically an unverified e-mail address: the token stays, the visitor can come back after verifying.
                     setResult({ kind: 'error', textKey: 'verein.invite.err.unverified' });

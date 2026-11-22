@@ -42,6 +42,20 @@ describe('visible tabs', () => {
         expect(visibleTabs(['announcements:write_department'], mitglied.roles)).not.toContain('einstellungen');
     });
 
+    it('offers the sponsors tab with sponsors:read or sponsors:write only (Wave 15)', () => {
+        expect(visibleTabs([], mitglied.roles)).not.toContain('sponsoren');
+        expect(visibleTabs(['members:write'], mitglied.roles)).not.toContain('sponsoren');
+        expect(visibleTabs(['sponsors:read'], mitglied.roles)).toContain('sponsoren');
+        expect(visibleTabs(['sponsors:write'], mitglied.roles)).toContain('sponsoren');
+        expect(visibleTabs(guardian.permissions, guardian.roles)).not.toContain('sponsoren');
+    });
+
+    it('offers the prospects tab only with leads:write (Wave 15)', () => {
+        expect(visibleTabs(['members:write', 'sponsors:write'], mitglied.roles)).not.toContain('interessenten');
+        expect(visibleTabs(['leads:write'], mitglied.roles)).toContain('interessenten');
+        expect(visibleTabs(guardian.permissions, guardian.roles)).not.toContain('interessenten');
+    });
+
     it('offers "Wer fehlt" only with absences:read', () => {
         expect(visibleTabs([], mitglied.roles)).not.toContain('fehlt');
         expect(visibleTabs(['absences:read'], mitglied.roles)).toContain('fehlt');
@@ -80,5 +94,21 @@ describe('canSeeCredentialOverview', () => {
         expect(canSeeCredentialOverview([], [{ roleType: 'mitglied' }])).toBe(false);
         expect(canSeeCredentialOverview(['forms:write', 'club_stats:read'], [{ roleType: 'erziehungsberechtigt' }])).toBe(false);
         expect(canSeeCredentialOverview(null, undefined)).toBe(false);
+    });
+});
+
+describe('public club page editor (Wave 15 W2)', () => {
+    it('opens the settings tab for the public page permission only', async () => {
+        const { visibleTabs } = await import('./clubPermissions');
+        expect(visibleTabs([], [{ roleType: 'mitglied' }])).not.toContain('einstellungen');
+        expect(visibleTabs(['public_profile:write'], [{ roleType: 'schriftfuehrer' }])).toContain('einstellungen');
+    });
+});
+
+describe('external access tab (Wave 15)', () => {
+    it('is for roles:write only, deny-by-default', () => {
+        expect(visibleTabs([], [{ roleType: 'mitglied' }])).not.toContain('extern');
+        expect(visibleTabs(['members:write', 'sponsors:write', 'leads:write'], [{ roleType: 'schriftfuehrer' }])).not.toContain('extern');
+        expect(visibleTabs(['roles:write'], [{ roleType: 'vorsitz' }])).toContain('extern');
     });
 });

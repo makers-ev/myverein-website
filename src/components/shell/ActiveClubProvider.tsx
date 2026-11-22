@@ -3,11 +3,14 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { apiFetch } from '@/lib/api-client';
+import { type ClubSuspension, normalizeSuspension } from '@/lib/suspension';
 import { chooseClub, storeClubId, useStoredClubId } from '@/lib/activeClub';
 
 export interface ShellClub {
     clubId: string;
     clubName: string | null;
+    /** Set while the platform has suspended the club (known before any club route answers 403). */
+    suspension?: ClubSuspension | null;
 }
 
 interface ActiveClubValue {
@@ -50,7 +53,7 @@ export function ActiveClubProvider({ children }: { children: (key: number) => Re
         Promise.all([apiFetch<{ data: ShellClub[] }>('/my-clubs'), apiFetch<{ data: { wards: unknown[] }[] }>('/my-wards').catch(() => ({ data: [] as { wards: unknown[] }[] }))])
             .then(([c, w]) => {
                 if (cancelled) return;
-                setClubs(c.data);
+                setClubs(c.data.map((club) => ({ ...club, suspension: normalizeSuspension((club as { suspension?: unknown }).suspension) })));
                 setHasWards(w.data.some((x) => x.wards.length > 0));
                 setFailed(false);
             })

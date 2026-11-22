@@ -1,8 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { FileSpreadsheet } from 'lucide-react';
 
 import { AnnualReportAction } from '@/components/documents/ReportActions';
+import AssociationReportDialog from '@/components/verein/AssociationReportDialog';
 
 import { ColumnChart } from '@/components/charts/ColumnChart';
 import { HBarList } from '@/components/charts/HBarList';
@@ -44,10 +46,11 @@ function Kpi({ label, value, hint }: { label: string; value: number; hint?: stri
  * Board KPI dashboard (Wave 7 W8). Only mounted with the `club_stats:read` permission from /club-members/me; the
  * backend answers 403 for everybody else. Charts are hand-rolled SVG (src/components/charts), no dependency.
  */
-export default function ClubStatsPanel({ clubId }: { clubId: string }) {
+export default function ClubStatsPanel({ clubId, canSensitive = false }: { clubId: string; canSensitive?: boolean }) {
     const { t, language } = useLanguage();
     const [stats, setStats] = useState<ClubStats | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [reportOpen, setReportOpen] = useState(false);
 
     const load = useCallback(async () => {
         try {
@@ -101,7 +104,13 @@ export default function ClubStatsPanel({ clubId }: { clubId: string }) {
         <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-xs text-muted-foreground">{t('verein.stats.hint')}</p>
-                <AnnualReportAction clubId={clubId} />
+                <div className="flex flex-wrap gap-2">
+                    <button type="button" onClick={() => setReportOpen(true)} className={`${secondaryButtonClass} gap-1.5`}>
+                        <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />
+                        {t('assoc.open')}
+                    </button>
+                    <AnnualReportAction clubId={clubId} />
+                </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -159,6 +168,7 @@ export default function ClubStatsPanel({ clubId }: { clubId: string }) {
                     </>
                 )}
             </Card>
+            {reportOpen && <AssociationReportDialog clubId={clubId} canSensitive={canSensitive} onClose={() => setReportOpen(false)} />}
         </div>
     );
 }

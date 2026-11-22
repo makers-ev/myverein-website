@@ -6,6 +6,7 @@ import { Building2 } from 'lucide-react';
 import { apiFetch } from '@/lib/api-client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ClubRegistrationWizard from '@/components/verein/ClubRegistrationWizard';
+import ClubFinder from '@/components/publicClub/ClubFinder';
 import JoinClubCard from '@/components/verein/JoinClubCard';
 import RejectedApplicationNotice from '@/components/verein/RejectedApplicationNotice';
 import RegistrationStatusCard from '@/components/verein/RegistrationStatusCard';
@@ -26,6 +27,8 @@ export default function NoClubSection({ onRefreshClubs }: { onRefreshClubs: () =
     const [notice, setNotice] = useState<RegistrationNotice | null>(null);
     // `null` = overview; otherwise the wizard is open, with the registration to continue (or none).
     const [wizard, setWizard] = useState<{ initial: ClubRegistration | null } | null>(null);
+    // Club code picked in "Verein finden"; handed to the join card.
+    const [picked, setPicked] = useState<string | undefined>(undefined);
 
     async function loadMine(): Promise<ClubRegistration[] | null> {
         try {
@@ -112,8 +115,17 @@ export default function NoClubSection({ onRefreshClubs }: { onRefreshClubs: () =
                 </p>
             )}
 
+            <div className="mt-6">
+                <ClubFinder onPick={setPicked} />
+                {picked && (
+                    <p role="status" className="mt-3 rounded-lg border border-control bg-muted/50 px-3 py-2 text-sm text-foreground">
+                        {t('finder.picked', { slug: picked })}
+                    </p>
+                )}
+            </div>
+
             <div className="grid items-start gap-4 md:grid-cols-2">
-                <JoinClubCard onRefresh={onRefreshClubs} className="mt-6" />
+                <JoinClubCard onRefresh={onRefreshClubs} className="mt-6" suggestedSlug={picked} />
                 {statusView ? (
                     <RegistrationStatusCard
                         registration={statusView}
