@@ -10,6 +10,7 @@ const PageLayoutTranslation: Translation = {
         // Navbar
         'nav.settings': 'Einstellungen',
         'nav.features': 'Funktionen',
+        'nav.clubsearch': 'Vereinssuche',
         'nav.roadmap': 'Roadmap',
         'nav.changelog': 'Änderungsprotokoll',
         'nav.contact': 'Kontakt',
@@ -46,6 +47,7 @@ const PageLayoutTranslation: Translation = {
         // Navbar
         'nav.settings': 'Settings',
         'nav.features': 'Features',
+        'nav.clubsearch': 'Find a club',
         'nav.roadmap': 'Roadmap',
         'nav.changelog': 'Changelog',
         'nav.contact': 'Contact',
@@ -81,6 +83,7 @@ const PageLayoutTranslation: Translation = {
     fr: {
         'nav.settings': 'Paramètres',
         'nav.features': 'Fonctionnalités',
+        'nav.clubsearch': 'Trouver un club',
         'nav.roadmap': 'Feuille de route',
         'nav.changelog': 'Journal des modifications',
         'nav.contact': 'Contact',
@@ -113,6 +116,7 @@ const PageLayoutTranslation: Translation = {
     es: {
         'nav.settings': 'Ajustes',
         'nav.features': 'Funciones',
+        'nav.clubsearch': 'Buscar club',
         'nav.roadmap': 'Hoja de ruta',
         'nav.changelog': 'Registro de cambios',
         'nav.contact': 'Contacto',
@@ -145,6 +149,7 @@ const PageLayoutTranslation: Translation = {
     pt: {
         'nav.settings': 'Definições',
         'nav.features': 'Funcionalidades',
+        'nav.clubsearch': 'Encontrar clube',
         'nav.roadmap': 'Roteiro',
         'nav.changelog': 'Registo de alterações',
         'nav.contact': 'Contacto',
@@ -177,6 +182,7 @@ const PageLayoutTranslation: Translation = {
     it: {
         'nav.settings': 'Impostazioni',
         'nav.features': 'Funzionalità',
+        'nav.clubsearch': 'Trova un club',
         'nav.roadmap': 'Roadmap',
         'nav.changelog': 'Changelog',
         'nav.contact': 'Contatti',
@@ -209,6 +215,7 @@ const PageLayoutTranslation: Translation = {
     nl: {
         'nav.settings': 'Instellingen',
         'nav.features': 'Functies',
+        'nav.clubsearch': 'Club zoeken',
         'nav.roadmap': 'Roadmap',
         'nav.changelog': 'Wijzigingslogboek',
         'nav.contact': 'Contact',
@@ -241,6 +248,7 @@ const PageLayoutTranslation: Translation = {
     pl: {
         'nav.settings': 'Ustawienia',
         'nav.features': 'Funkcje',
+        'nav.clubsearch': 'Znajdź klub',
         'nav.roadmap': 'Plan rozwoju',
         'nav.changelog': 'Dziennik zmian',
         'nav.contact': 'Kontakt',
@@ -273,6 +281,7 @@ const PageLayoutTranslation: Translation = {
     ru: {
         'nav.settings': 'Настройки',
         'nav.features': 'Возможности',
+        'nav.clubsearch': 'Найти клуб',
         'nav.roadmap': 'Дорожная карта',
         'nav.changelog': 'Журнал изменений',
         'nav.contact': 'Контакты',
@@ -305,6 +314,7 @@ const PageLayoutTranslation: Translation = {
     ja: {
         'nav.settings': '設定',
         'nav.features': '機能',
+        'nav.clubsearch': 'クラブを探す',
         'nav.roadmap': 'ロードマップ',
         'nav.changelog': '更新履歴',
         'nav.contact': 'お問い合わせ',
@@ -337,6 +347,7 @@ const PageLayoutTranslation: Translation = {
     'zh-Hans': {
         'nav.settings': '设置',
         'nav.features': '功能',
+        'nav.clubsearch': '查找俱乐部',
         'nav.roadmap': '路线图',
         'nav.changelog': '更新日志',
         'nav.contact': '联系我们',

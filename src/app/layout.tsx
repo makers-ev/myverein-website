@@ -46,6 +46,7 @@ export default async function RootLayout({
   // instead of here.
   const mainLinks = [
     { name: "nav.features", href: "/features" },
+    { name: "nav.clubsearch", href: "/vereinssuche" },
     { name: "nav.roadmap", href: "/roadmap" },
     { name: "nav.changelog", href: "/changelog" },
     { name: "nav.contact", href: "/contact" },

@@ -84,7 +84,7 @@ export function Navbar({
                         {logo}
                     </Link>
 
-                    <div className="hidden md:flex md:gap-6">
+                    <div className="hidden lg:flex lg:gap-6">
                         {mainLinks.map((link) => {
                             const isActive = pathname === link.href;
                             return (
@@ -119,7 +119,7 @@ export function Navbar({
                     <ThemeToggle />
 
                     {/* 1. LANGUAGE DROPDOWN (Desktop) */}
-                    <div className="relative hidden md:block" ref={langRef}>
+                    <div className="relative hidden lg:block" ref={langRef}>
                         <button
                             onClick={() => setIsLangOpen(!isLangOpen)}
                             aria-expanded={isLangOpen}
@@ -165,11 +165,11 @@ export function Navbar({
                     </div>
 
                     {/* 2. GUEST NAV (Desktop) */}
-                    <div className="hidden md:block">{guestNav}</div>
+                    <div className="hidden lg:block">{guestNav}</div>
 
                     {/* Mobile Toggle Button */}
                     <button
-                        className="flex min-h-11 min-w-11 items-center justify-center rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:hidden"
+                        className="flex min-h-11 min-w-11 items-center justify-center rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:hidden"
                         aria-expanded={isMobileMenuOpen}
                         aria-label={t(isMobileMenuOpen ? 'shell.menu.close' : 'shell.menu.open')}
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -185,7 +185,7 @@ export function Navbar({
 
             {/* --- MOBILE NAVIGATION MENU --- */}
             {isMobileMenuOpen && (
-                <div className="animate-menu border-t border-hairline bg-background px-4 py-4 shadow-lg md:hidden">
+                <div className="animate-menu border-t border-hairline bg-background px-4 py-4 shadow-lg lg:hidden">
                     <div className="flex flex-col space-y-3">
                         {mainLinks.map((link) => (
                             <Link
