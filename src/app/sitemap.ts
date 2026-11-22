@@ -10,7 +10,7 @@ export const revalidate = 300;
 // createNoIndexMetadata) and excluded here; error/reset-password/verify-email
 // are transient auth-flow utility pages with no standalone SEO value.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-    const routes = ["", "/features", "/about", "/contact", "/roadmap", "/changelog", "/imprint", "/privacy", "/terms", "/login-signup"];
+    const routes = ["", "/features", "/vereinssuche", "/about", "/contact", "/roadmap", "/changelog", "/imprint", "/privacy", "/terms", "/login-signup"];
 
     const clubs = await fetchSitemapClubs();
     const clubEntries: MetadataRoute.Sitemap = clubs.map((c) => ({
