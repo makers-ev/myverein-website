@@ -31,6 +31,7 @@ import AssemblyTranslation from './AssemblyTranslation';
 import VerfuegbarkeitTranslation from './VerfuegbarkeitTranslation';
 import UxTranslation from './UxTranslation';
 import PublicClubTranslation from './PublicClubTranslation';
+import ExternalAccessTranslation from './ExternalAccessTranslation';
 import StandorteTranslation from './StandorteTranslation';
 import RoadmapTranslation from './RoadmapTranslation';
 import ChangelogTranslation from './ChangelogTranslation';
@@ -92,6 +93,7 @@ export const translations: Record<Language, Record<string, string>> = supportedL
             ...(id === 'de' || id === 'en' ? MarketingTrustTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? UxTranslation[id] : {}),
             ...(id === 'de' || id === 'en' ? PublicClubTranslation[id] : {}),
+            ...(id === 'de' || id === 'en' ? ExternalAccessTranslation[id] : {}),
         };
         return acc;
     },

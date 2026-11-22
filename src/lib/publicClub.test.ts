@@ -14,6 +14,7 @@ import {
     previewClub,
     publicClubJsonLd,
     safeHttpUrl,
+    fetchSitemapClubs,
     imageProblem,
     searchClubs,
     submitLead,
@@ -243,3 +244,37 @@ describe('fetch with token', () => {
         vi.unstubAllEnvs();
     });
 });
+
+describe('indexing and sitemap (E5)', () => {
+    it('reads the backend indexable flag, absent means no', () => {
+        expect(normalizePublicClub({ ...raw, indexable: true })!.indexable).toBe(true);
+        expect(normalizePublicClub({ ...raw, indexable: false })!.indexable).toBe(false);
+        expect(normalizePublicClub(raw)!.indexable).toBe(false);
+    });
+    it('reads the editor switch, on by default', () => {
+        const e = (settings: object) => normalizeEditorData({ slug: 'x', settings, draft: {}, published: null })!;
+        expect(e({}).publicIndexingEnabled).toBe(true);
+        expect(e({ publicIndexingEnabled: false }).publicIndexingEnabled).toBe(false);
+    });
+    const page = (data: unknown[], nextCursor: string | null) => new Response(JSON.stringify({ data, nextCursor }), { status: 200 });
+    it('follows the cursor and drops malformed entries', async () => {
+        const f = vi
+            .fn()
+            .mockResolvedValueOnce(page([{ slug: 'a-verein', updatedAt: '2026-11-01T00:00:00Z' }, { slug: 'Bad Slug' }], 'c1'))
+            .mockResolvedValueOnce(page([{ slug: 'b-verein', updatedAt: null }], null)) as unknown as typeof fetch;
+        const out = await fetchSitemapClubs(f);
+        expect(out.map((c) => c.slug)).toEqual(['a-verein', 'b-verein']);
+        expect(String((f as unknown as ReturnType<typeof vi.fn>).mock.calls[1][0])).toContain('cursor=c1');
+    });
+    it('is tolerant: errors end the read with what was collected', async () => {
+        const f = vi.fn().mockResolvedValueOnce(page([{ slug: 'a-verein' }], 'c1')).mockResolvedValueOnce(new Response('{}', { status: 429 })) as unknown as typeof fetch;
+        expect((await fetchSitemapClubs(f)).map((c) => c.slug)).toEqual(['a-verein']);
+        expect(await fetchSitemapClubs(vi.fn().mockRejectedValue(new Error('down')) as unknown as typeof fetch)).toEqual([]);
+    });
+    it('never loops forever on a cursor that does not end', async () => {
+        const f = vi.fn().mockImplementation(async () => page([{ slug: 'a-verein' }], 'again')) as unknown as typeof fetch;
+        await fetchSitemapClubs(f);
+        expect((f as unknown as ReturnType<typeof vi.fn>).mock.calls.length).toBeLessThanOrEqual(20);
+    });
+});
+

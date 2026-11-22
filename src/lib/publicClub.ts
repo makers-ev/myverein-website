@@ -63,9 +63,8 @@ export interface PublicClub {
     sponsors: PublicSponsor[];
     leadForm: { enabled: boolean; trialTraining: boolean; departments: PublicNamed[]; privacyNotice: PrivacyNotice | null };
     /**
-     * Whether search engines may index the page. NOT a contract field: the backend does not send it, so this stays `false` (the page
-     * carries `noindex`, see `src/app/v/[slug]/page.tsx`) and is only read in case the backend adds it. Open product decision:
-     * does "publish" imply "may be indexed"?
+     * Whether search engines may index the page (backend `indexable` = the club's `publicIndexingEnabled`, default on). Missing = no:
+     * the page then carries `noindex` (see `src/app/v/[slug]/page.tsx`).
      */
     indexable: boolean;
 }
@@ -308,6 +307,8 @@ export interface ProfileDraft {
 export interface EditorData {
     publicProfileEnabled: boolean;
     discoverable: boolean;
+    /** Search engines may index the page (default on in the backend); independent of `discoverable` (in-app search). */
+    publicIndexingEnabled: boolean;
     draft: ProfileDraft;
     /** `null` = never published (or withdrawn). */
     publishedAt: string | null;
@@ -328,6 +329,7 @@ export function normalizeEditorData(data: unknown): EditorData | null {
     return {
         publicProfileEnabled: s.publicProfileEnabled === true,
         discoverable: s.discoverable === true,
+        publicIndexingEnabled: s.publicIndexingEnabled !== false,
         publishedAt: published ? (str(published.publishedAt) ?? '') : null,
         hasUnpublishedChanges: d.hasUnpublishedChanges === true,
         slug,
@@ -408,4 +410,50 @@ export function imageProblem(file: Pick<File, 'type' | 'size'>): string | null {
     if (!IMAGE_TYPES.includes(file.type)) return 'media.err.type';
     if (file.size > PROFILE_IMAGE_MAX_BYTES) return 'pcEditor.image.tooLarge';
     return null;
+}
+
+// ----- Sitemap (backend `GET /public/club-sitemap`: live, indexable, not suspended clubs only) -----
+
+export interface SitemapClub {
+    slug: string;
+    updatedAt: string | null;
+}
+
+const SITEMAP_PAGE_SIZE = 500;
+/** Upper bound of pages read per sitemap build (500 x 20 = 10 000 clubs); a runaway cursor can never loop forever. */
+const SITEMAP_MAX_PAGES = 20;
+
+/**
+ * Public club pages for `app/sitemap.ts`. Paginated by the backend cursor, tolerant: any error (backend down, rate limit, odd answer)
+ * ends the read with what was collected so far, so the sitemap never fails because of this. Server-side only, short revalidation.
+ */
+export async function fetchSitemapClubs(fetchImpl: typeof fetch = fetch): Promise<SitemapClub[]> {
+    if (!backendUrl) return [];
+    const out: SitemapClub[] = [];
+    let cursor: string | null = null;
+    try {
+        for (let page = 0; page < SITEMAP_MAX_PAGES; page++) {
+            const params = new URLSearchParams({ limit: String(SITEMAP_PAGE_SIZE) });
+            if (cursor) params.set('cursor', cursor);
+            const res: Response = await fetchImpl(`${backendUrl}/public/club-sitemap?${params}`, {
+                headers: { Accept: 'application/json', ...trustedHeaders(null) },
+                credentials: 'omit',
+                next: { revalidate: 300 },
+                // A slow or unreachable backend must not hold up the sitemap (or a build).
+                signal: AbortSignal.timeout(5000),
+            });
+            if (!res.ok) break;
+            const body = (await res.json()) as { data?: unknown; nextCursor?: unknown };
+            for (const x of arr(body.data)) {
+                const o = rec(x);
+                const slug = str(o.slug);
+                if (slug && CLUB_SLUG_FORMAT.test(slug)) out.push({ slug, updatedAt: str(o.updatedAt) });
+            }
+            cursor = typeof body.nextCursor === 'string' && body.nextCursor ? body.nextCursor : null;
+            if (!cursor) break;
+        }
+    } catch {
+        // keep what was collected
+    }
+    return out;
 }

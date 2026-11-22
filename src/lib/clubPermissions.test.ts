@@ -104,3 +104,11 @@ describe('public club page editor (Wave 15 W2)', () => {
         expect(visibleTabs(['public_profile:write'], [{ roleType: 'schriftfuehrer' }])).toContain('einstellungen');
     });
 });
+
+describe('external access tab (Wave 15)', () => {
+    it('is for roles:write only, deny-by-default', () => {
+        expect(visibleTabs([], [{ roleType: 'mitglied' }])).not.toContain('extern');
+        expect(visibleTabs(['members:write', 'sponsors:write', 'leads:write'], [{ roleType: 'schriftfuehrer' }])).not.toContain('extern');
+        expect(visibleTabs(['roles:write'], [{ roleType: 'vorsitz' }])).toContain('extern');
+    });
+});

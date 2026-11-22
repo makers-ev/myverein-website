@@ -310,8 +310,8 @@ export default function PublicProfilePanel({ clubId, clubName, departments, onDi
     }
 
     // The visibility switch is a club setting of its own (applies at once, independent of the draft).
-    async function setDiscoverable(value: boolean) {
-        await run(() => request('PUT', '/settings', { discoverable: value }), 'pcEditor.discoverable.saved', true);
+    async function setSetting(key: 'discoverable' | 'publicIndexingEnabled', value: boolean) {
+        await run(() => request('PUT', '/settings', { [key]: value }), 'pcEditor.discoverable.saved', true);
     }
 
     const publishLabel = live ? 'pcEditor.publish.update' : 'pcEditor.publish';
@@ -485,10 +485,16 @@ export default function PublicProfilePanel({ clubId, clubName, departments, onDi
             </form>
 
             <div className="mt-6 border-t border-hairline pt-4">
-                <Toggle checked={data.discoverable} onChange={(v) => void setDiscoverable(v)} disabled={busy} label={t('pcEditor.discoverable')} describedBy="pce-discoverable-hint" />
+                <Toggle checked={data.discoverable} onChange={(v) => void setSetting('discoverable', v)} disabled={busy} label={t('pcEditor.discoverable')} describedBy="pce-discoverable-hint" />
                 <p id="pce-discoverable-hint" className="ml-14 mt-1 text-xs text-muted-foreground">
                     {t('pcEditor.discoverable.hint')}
                 </p>
+                <div className="mt-4">
+                    <Toggle checked={data.publicIndexingEnabled} onChange={(v) => void setSetting('publicIndexingEnabled', v)} disabled={busy} label={t('pcEditor.indexing')} describedBy="pce-indexing-hint" />
+                    <p id="pce-indexing-hint" className="ml-14 mt-1 text-xs text-muted-foreground">
+                        {t('pcEditor.indexing.hint')}
+                    </p>
+                </div>
             </div>
 
             <div className="mt-6 border-t border-hairline pt-4">

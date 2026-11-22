@@ -6,7 +6,7 @@ import { PUBLIC_PROFILE_PERMISSION } from './publicClub';
  * a missing or unknown permission grants nothing. Pure, so the gating rules are unit-tested.
  */
 
-export type ClubTab = 'info' | 'profil' | 'mitglieder' | 'abteilungen' | 'austritte' | 'kennzahlen' | 'formulare' | 'zusatzfelder' | 'einstellungen' | 'fehlt' | 'datenschutz' | 'sponsoren' | 'interessenten';
+export type ClubTab = 'info' | 'profil' | 'mitglieder' | 'abteilungen' | 'austritte' | 'kennzahlen' | 'formulare' | 'zusatzfelder' | 'einstellungen' | 'fehlt' | 'datenschutz' | 'sponsoren' | 'interessenten' | 'extern';
 
 export const can = (permissions: readonly string[] | null | undefined, permission: string): boolean => !!permissions && permissions.includes(permission);
 
@@ -25,6 +25,8 @@ export function visibleTabs(permissions: readonly string[], roles: ReadonlyArray
     if (can(permissions, 'sponsors:read') || can(permissions, 'sponsors:write')) tabs.push('sponsoren');
     // Wave 15: prospect pipeline of the club (`leads:write`: board, Abteilungsleitung).
     if (can(permissions, 'leads:write')) tabs.push('interessenten');
+    // Wave 15: external logins (sponsors, service providers) are managed with the right to manage roles.
+    if (can(permissions, 'roles:write')) tabs.push('extern');
     // Club rules and reminders hang on members:write, the club's mail template on announcements:write (Wave 9 W6).
     // Wave 11: the statute parameters of the general assembly (`assembly:manage`) live there as well.
     // Wave 13: branding (`branding:write`) and the storage overview (`storage:read`) live there too.
