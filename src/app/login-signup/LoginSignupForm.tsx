@@ -11,6 +11,8 @@ import { ForgotPasswordPrompt } from '@/features/auth/components/ForgotPasswordP
 import { resolveCallbackUrl, verifyEmailCallback } from '@/lib/resolveCallbackUrl';
 import { postLoginTarget } from '@/lib/familie';
 
+import { PasswordInput } from './PasswordInput';
+
 type Mode = 'sign-in' | 'sign-up';
 
 function LoginSignupFormInner() {
@@ -31,10 +33,14 @@ function LoginSignupFormInner() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [needsTwoFactor, setNeedsTwoFactor] = useState(false);
     const [needsEmailVerification, setNeedsEmailVerification] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const passwordsMismatch = confirmPassword !== '' && password !== confirmPassword;
+    const signUpBlocked = mode === 'sign-up' && password !== confirmPassword;
 
     async function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -63,6 +69,11 @@ function LoginSignupFormInner() {
             }
 
             await goAfterLogin();
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            setIsSubmitting(false);
             return;
         }
 
@@ -100,6 +111,7 @@ function LoginSignupFormInner() {
                 onBackToLogin={() => {
                     setNeedsEmailVerification(false);
                     setMode('sign-in');
+                    setConfirmPassword('');
                 }}
             />
         );
@@ -166,24 +178,45 @@ function LoginSignupFormInner() {
                     <label htmlFor="password" className="block text-sm font-medium text-foreground">
                         {t('auth.field.password')}
                     </label>
-                    <input
+                    <PasswordInput
                         id="password"
                         name="password"
-                        type="password"
                         autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'}
                         required
                         minLength={8}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="mt-1 block w-full min-h-11 rounded-lg border border-control bg-background px-3 py-2 text-foreground transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25"
                     />
                 </div>
+
+                {mode === 'sign-up' && (
+                    <div>
+                        <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground">
+                            {t('auth.field.confirmPassword')}
+                        </label>
+                        <PasswordInput
+                            id="confirmPassword"
+                            name="confirmPassword"
+                            autoComplete="new-password"
+                            required
+                            minLength={8}
+                            aria-invalid={passwordsMismatch}
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                        />
+                        {passwordsMismatch && (
+                            <p className="mt-1 text-sm text-destructive" role="alert">
+                                {t('auth.password.mismatch')}
+                            </p>
+                        )}
+                    </div>
+                )}
 
                 {error && <p className="text-sm text-destructive">{error}</p>}
 
                 <button
                     type="submit"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || signUpBlocked}
                     className="w-full min-h-11 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
                 >
                     {isSubmitting
@@ -202,6 +235,7 @@ function LoginSignupFormInner() {
                             type="button"
                             onClick={() => {
                                 setMode('sign-up');
+                                setConfirmPassword('');
                                 setError(null);
                             }}
                             className="font-medium text-primary-text underline-offset-4 hover:underline"
@@ -216,6 +250,7 @@ function LoginSignupFormInner() {
                             type="button"
                             onClick={() => {
                                 setMode('sign-in');
+                                setConfirmPassword('');
                                 setError(null);
                             }}
                             className="font-medium text-primary-text underline-offset-4 hover:underline"
