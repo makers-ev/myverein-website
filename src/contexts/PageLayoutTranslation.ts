@@ -33,6 +33,7 @@ const PageLayoutTranslation: Translation = {
         'footer.legal.terms': 'Nutzungsbedingungen',
         'footer.legal.imprint': 'Impressum',
         'footer.cookie_settings': 'Cookie-Einstellungen',
+        'footer.status': 'Systemstatus',
         'footer.rights': 'Alle Rechte vorbehalten.',
 
         // 404 page
@@ -70,6 +71,7 @@ const PageLayoutTranslation: Translation = {
         'footer.legal.terms': 'Terms of Service',
         'footer.legal.imprint': 'Imprint',
         'footer.cookie_settings': 'Cookie Settings',
+        'footer.status': 'System status',
         'footer.rights': 'All rights reserved.',
 
         // 404 page
@@ -105,6 +107,7 @@ const PageLayoutTranslation: Translation = {
         'footer.legal.terms': "Conditions d'utilisation",
         'footer.legal.imprint': 'Mentions légales',
         'footer.cookie_settings': 'Paramètres des cookies',
+        'footer.status': 'État du système',
         'footer.rights': 'Tous droits réservés.',
 
         'notFound.title': 'Page non trouvée',
@@ -138,6 +141,7 @@ const PageLayoutTranslation: Translation = {
         'footer.legal.terms': 'Términos de servicio',
         'footer.legal.imprint': 'Aviso legal',
         'footer.cookie_settings': 'Configuración de cookies',
+        'footer.status': 'Estado del sistema',
         'footer.rights': 'Todos los derechos reservados.',
 
         'notFound.title': 'Página no encontrada',
@@ -171,6 +175,7 @@ const PageLayoutTranslation: Translation = {
         'footer.legal.terms': 'Termos de serviço',
         'footer.legal.imprint': 'Ficha técnica',
         'footer.cookie_settings': 'Definições de cookies',
+        'footer.status': 'Estado do sistema',
         'footer.rights': 'Todos os direitos reservados.',
 
         'notFound.title': 'Página não encontrada',
@@ -204,6 +209,7 @@ const PageLayoutTranslation: Translation = {
         'footer.legal.terms': 'Termini di servizio',
         'footer.legal.imprint': 'Note legali',
         'footer.cookie_settings': 'Impostazioni cookie',
+        'footer.status': 'Stato del sistema',
         'footer.rights': 'Tutti i diritti riservati.',
 
         'notFound.title': 'Pagina non trovata',
@@ -237,6 +243,7 @@ const PageLayoutTranslation: Translation = {
         'footer.legal.terms': 'Gebruiksvoorwaarden',
         'footer.legal.imprint': 'Colofon',
         'footer.cookie_settings': 'Cookie-instellingen',
+        'footer.status': 'Systeemstatus',
         'footer.rights': 'Alle rechten voorbehouden.',
 
         'notFound.title': 'Pagina niet gevonden',
@@ -270,6 +277,7 @@ const PageLayoutTranslation: Translation = {
         'footer.legal.terms': 'Warunki korzystania z usługi',
         'footer.legal.imprint': 'Nota prawna',
         'footer.cookie_settings': 'Ustawienia plików cookie',
+        'footer.status': 'Status systemu',
         'footer.rights': 'Wszelkie prawa zastrzeżone.',
 
         'notFound.title': 'Nie znaleziono strony',
@@ -303,6 +311,7 @@ const PageLayoutTranslation: Translation = {
         'footer.legal.terms': 'Условия использования',
         'footer.legal.imprint': 'Реквизиты',
         'footer.cookie_settings': 'Настройки файлов cookie',
+        'footer.status': 'Статус системы',
         'footer.rights': 'Все права защищены.',
 
         'notFound.title': 'Страница не найдена',
@@ -336,6 +345,7 @@ const PageLayoutTranslation: Translation = {
         'footer.legal.terms': '利用規約',
         'footer.legal.imprint': '運営者情報',
         'footer.cookie_settings': 'Cookie設定',
+        'footer.status': 'システムステータス',
         'footer.rights': '全著作権所有。',
 
         'notFound.title': 'ページが見つかりません',
@@ -369,6 +379,7 @@ const PageLayoutTranslation: Translation = {
         'footer.legal.terms': '服务条款',
         'footer.legal.imprint': '网站备案信息',
         'footer.cookie_settings': 'Cookie 设置',
+        'footer.status': '系统状态',
         'footer.rights': '保留所有权利。',
 
         'notFound.title': '页面未找到',

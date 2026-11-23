@@ -5,6 +5,9 @@ import Logo from './Logo';
 import { docsUrl } from '@/lib/docs';
 import { useLanguage } from '@/contexts/LanguageContext';
 
+/** Public system status page (Uptime Kuma). */
+export const STATUS_PAGE_URL = 'https://status.lpj.app/status/myverein';
+
 export function Footer() {
     const { t } = useLanguage();
     const currentYear = new Date().getFullYear();
@@ -18,6 +21,7 @@ export function Footer() {
             { name: t('footer.product.features'), href: '/features' },
             { name: t('footer.product.roadmap'), href: '/roadmap' },
             { name: t('footer.product.changelog'), href: '/changelog' },
+            { name: t('nav.clubsearch'), href: '/vereinssuche' },
         ],
         company: [
             { name: t('footer.company.about'), href: '/about' },
@@ -59,6 +63,20 @@ export function Footer() {
                                             </Link>
                                         </li>
                                     ))}
+                                    {group.title === t('footer.company.title') && (
+                                        <li>
+                                            <a href={docsUrl()} target="_blank" rel="noopener noreferrer" aria-label={t('help.nav.label')} className={linkClass}>
+                                                {t('help.nav')}
+                                            </a>
+                                        </li>
+                                    )}
+                                    {group.title === t('footer.product.title') && (
+                                        <li>
+                                            <a href={STATUS_PAGE_URL} target="_blank" rel="noopener noreferrer" className={linkClass}>
+                                                {t('footer.status')}
+                                            </a>
+                                        </li>
+                                    )}
                                 </ul>
                             </div>
                         ))}
@@ -72,11 +90,6 @@ export function Footer() {
                                         </Link>
                                     </li>
                                 ))}
-                                <li>
-                                    <a href={docsUrl()} target="_blank" rel="noopener noreferrer" aria-label={t('help.nav.label')} className={linkClass}>
-                                        {t('help.nav')}
-                                    </a>
-                                </li>
                                 <li>
                                     <button type="button" onClick={openCookieSettings} className={linkClass}>
                                         {t('footer.cookie_settings')}
