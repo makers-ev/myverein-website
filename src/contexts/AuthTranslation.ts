@@ -7,16 +7,21 @@ type Translation = Record<Language, Record<string, string>>;
 // native-speaker review.
 const AuthTranslation: Translation = {
     de: {
-        'auth.signin.title': 'Willkommen zurück',
+        'auth.backHome': 'Zur Startseite',
+        'auth.signin.title': 'Anmelden',
         'auth.signup.title': 'Konto erstellen',
-        'auth.signin.subtitle': 'Melden Sie sich an, um fortzufahren',
-        'auth.signup.subtitle': 'Registrieren Sie sich, um loszulegen',
+        'auth.signin.subtitle': 'Melde dich an, um fortzufahren',
+        'auth.signup.subtitle': 'Registriere dich, um loszulegen',
 
         'auth.field.name': 'Name',
         'auth.field.email': 'E-Mail',
         'auth.field.password': 'Passwort',
+        'auth.password.show': 'Passwort anzeigen',
+        'auth.password.hide': 'Passwort verbergen',
+        'auth.field.confirmPassword': 'Passwort bestätigen',
+        'auth.password.mismatch': 'Die Passwörter stimmen nicht überein.',
 
-        'auth.error.signin': 'Anmeldung fehlgeschlagen. Bitte überprüfen Sie Ihre Zugangsdaten.',
+        'auth.error.signin': 'Anmeldung fehlgeschlagen. Bitte prüfe deine Zugangsdaten.',
         'auth.error.signup': 'Konto konnte nicht erstellt werden.',
 
         'auth.submit.pending': 'Einen Moment...',
@@ -31,10 +36,10 @@ const AuthTranslation: Translation = {
         'auth.forgotPassword.link': 'Passwort vergessen?',
         'auth.forgotPassword.title': 'Passwort zurücksetzen',
         'auth.forgotPassword.subtitle':
-            'Geben Sie Ihre E-Mail-Adresse ein, wir senden Ihnen einen Link zum Zurücksetzen des Passworts.',
+            'Gib deine E-Mail-Adresse ein, wir senden dir einen Link zum Zurücksetzen des Passworts.',
         'auth.forgotPassword.submit': 'Link senden',
         'auth.forgotPassword.error':
-            'Der Link konnte nicht gesendet werden. Bitte überprüfen Sie Ihre E-Mail-Adresse.',
+            'Der Link konnte nicht gesendet werden. Bitte prüfe deine E-Mail-Adresse.',
         'auth.forgotPassword.backToLogin': 'Zurück zum Login',
         'auth.forgotPassword.sent.title': 'E-Mail gesendet',
         'auth.forgotPassword.sent.subtitle':
@@ -42,14 +47,14 @@ const AuthTranslation: Translation = {
         'auth.forgotPassword.sent.cta': 'Zurück zum Login',
 
         'auth.2fa.title': 'Zwei-Faktor-Verifizierung',
-        'auth.2fa.subtitle': 'Geben Sie den 6-stelligen Code aus Ihrer Authenticator-App ein.',
+        'auth.2fa.subtitle': 'Gib den 6-stelligen Code aus deiner Authenticator-App ein.',
         'auth.2fa.codeLabel': 'Verifizierungscode',
-        'auth.2fa.error': 'Ungültiger Code. Bitte versuchen Sie es erneut.',
+        'auth.2fa.error': 'Ungültiger Code. Bitte versuche es erneut.',
         'auth.2fa.cancel': 'Abbrechen',
         'auth.2fa.verifying': 'Wird geprüft...',
         'auth.2fa.verify': 'Bestätigen',
 
-        'auth.verifyEmail.title': 'Fast geschafft!',
+        'auth.verifyEmail.title': 'Fast geschafft',
         'auth.verifyEmail.subtitle': 'Wir haben eine Bestätigungs-E-Mail gesendet an:',
         'auth.verifyEmail.resend': 'E-Mail erneut senden',
         'auth.verifyEmail.resending': 'Wird gesendet...',
@@ -58,25 +63,25 @@ const AuthTranslation: Translation = {
         'auth.verifyEmail.backToLogin': 'Zurück zum Login',
         'auth.verifyEmail.page.successTitle': 'E-Mail bestätigt',
         'auth.verifyEmail.page.successSubtitle':
-            'Ihre E-Mail-Adresse wurde bestätigt. Sie können sich jetzt anmelden.',
+            'Deine E-Mail-Adresse wurde bestätigt. Du kannst dich jetzt anmelden.',
         'auth.verifyEmail.page.errorTitle': 'Link ungültig',
         'auth.verifyEmail.page.errorSubtitle':
-            'Dieser Bestätigungslink ist ungültig oder abgelaufen. Bitte fordern Sie eine neue E-Mail an.',
+            'Dieser Bestätigungslink ist ungültig oder abgelaufen. Bitte fordere eine neue E-Mail an.',
         'auth.verifyEmail.page.cta': 'Zum Login',
 
         'auth.resetPassword.page.title': 'Neues Passwort festlegen',
-        'auth.resetPassword.page.subtitle': 'Geben Sie Ihr neues Passwort ein.',
+        'auth.resetPassword.page.subtitle': 'Gib dein neues Passwort ein.',
         'auth.resetPassword.field.newPassword': 'Neues Passwort',
         'auth.resetPassword.field.confirmPassword': 'Passwort bestätigen',
         'auth.resetPassword.submit': 'Passwort zurücksetzen',
         'auth.resetPassword.mismatchError': 'Die Passwörter stimmen nicht überein.',
         'auth.resetPassword.error': 'Passwort konnte nicht zurückgesetzt werden.',
         'auth.resetPassword.success.title': 'Passwort geändert',
-        'auth.resetPassword.success.subtitle': 'Ihr Passwort wurde erfolgreich geändert. Sie können sich jetzt anmelden.',
+        'auth.resetPassword.success.subtitle': 'Dein Passwort wurde geändert. Du kannst dich jetzt anmelden.',
         'auth.resetPassword.success.cta': 'Zum Login',
         'auth.resetPassword.invalidLink.title': 'Link ungültig',
         'auth.resetPassword.invalidLink.subtitle':
-            'Dieser Link zum Zurücksetzen des Passworts ist ungültig oder abgelaufen. Bitte fordern Sie eine neue E-Mail an.',
+            'Dieser Link zum Zurücksetzen des Passworts ist ungültig oder abgelaufen. Bitte fordere eine neue E-Mail an.',
         'auth.resetPassword.invalidLink.cta': 'Zum Login',
 
         'auth.nav.signin': 'Anmelden',
@@ -84,14 +89,19 @@ const AuthTranslation: Translation = {
         'auth.nav.signout': 'Abmelden',
     },
     en: {
-        'auth.signin.title': 'Welcome back',
+        'auth.backHome': 'Back to home',
+        'auth.signin.title': 'Sign in',
         'auth.signup.title': 'Create your account',
-        'auth.signin.subtitle': 'Sign in to continue to your account',
+        'auth.signin.subtitle': 'Sign in to continue',
         'auth.signup.subtitle': 'Sign up to get started',
 
         'auth.field.name': 'Name',
         'auth.field.email': 'Email',
         'auth.field.password': 'Password',
+        'auth.password.show': 'Show password',
+        'auth.password.hide': 'Hide password',
+        'auth.field.confirmPassword': 'Confirm password',
+        'auth.password.mismatch': 'Passwords do not match.',
 
         'auth.error.signin': 'Unable to sign in. Check your credentials.',
         'auth.error.signup': 'Unable to create your account.',
@@ -125,7 +135,7 @@ const AuthTranslation: Translation = {
         'auth.2fa.verifying': 'Verifying...',
         'auth.2fa.verify': 'Verify',
 
-        'auth.verifyEmail.title': 'Almost there!',
+        'auth.verifyEmail.title': 'Almost there',
         'auth.verifyEmail.subtitle': "We've sent a confirmation email to:",
         'auth.verifyEmail.resend': 'Resend email',
         'auth.verifyEmail.resending': 'Sending...',
@@ -160,6 +170,7 @@ const AuthTranslation: Translation = {
         'auth.nav.signout': 'Sign out',
     },
     fr: {
+        'auth.backHome': "Retour à l'accueil",
         'auth.signin.title': 'Content de vous revoir',
         'auth.signup.title': 'Créer votre compte',
         'auth.signin.subtitle': 'Connectez-vous pour continuer',
@@ -168,6 +179,10 @@ const AuthTranslation: Translation = {
         'auth.field.name': 'Nom',
         'auth.field.email': 'E-mail',
         'auth.field.password': 'Mot de passe',
+        'auth.password.show': 'Afficher le mot de passe',
+        'auth.password.hide': 'Masquer le mot de passe',
+        'auth.field.confirmPassword': 'Confirmer le mot de passe',
+        'auth.password.mismatch': 'Les mots de passe ne correspondent pas.',
 
         'auth.error.signin': 'Connexion impossible. Vérifiez vos identifiants.',
         'auth.error.signup': 'Impossible de créer votre compte.',
@@ -201,7 +216,7 @@ const AuthTranslation: Translation = {
         'auth.2fa.verifying': 'Vérification en cours...',
         'auth.2fa.verify': 'Vérifier',
 
-        'auth.verifyEmail.title': 'Presque terminé !',
+        'auth.verifyEmail.title': 'Presque terminé ',
         'auth.verifyEmail.subtitle': 'Nous avons envoyé un e-mail de confirmation à :',
         'auth.verifyEmail.resend': "Renvoyer l'e-mail",
         'auth.verifyEmail.resending': 'Envoi en cours...',
@@ -236,6 +251,7 @@ const AuthTranslation: Translation = {
         'auth.nav.signout': 'Se déconnecter',
     },
     es: {
+        'auth.backHome': "Volver al inicio",
         'auth.signin.title': 'Bienvenido de nuevo',
         'auth.signup.title': 'Crea tu cuenta',
         'auth.signin.subtitle': 'Inicia sesión para continuar',
@@ -244,6 +260,10 @@ const AuthTranslation: Translation = {
         'auth.field.name': 'Nombre',
         'auth.field.email': 'Correo electrónico',
         'auth.field.password': 'Contraseña',
+        'auth.password.show': 'Mostrar contraseña',
+        'auth.password.hide': 'Ocultar contraseña',
+        'auth.field.confirmPassword': 'Confirmar contraseña',
+        'auth.password.mismatch': 'Las contraseñas no coinciden.',
 
         'auth.error.signin': 'No se pudo iniciar sesión. Comprueba tus credenciales.',
         'auth.error.signup': 'No se pudo crear tu cuenta.',
@@ -277,7 +297,7 @@ const AuthTranslation: Translation = {
         'auth.2fa.verifying': 'Verificando...',
         'auth.2fa.verify': 'Verificar',
 
-        'auth.verifyEmail.title': '¡Ya casi está!',
+        'auth.verifyEmail.title': '¡Ya casi está',
         'auth.verifyEmail.subtitle': 'Hemos enviado un correo de confirmación a:',
         'auth.verifyEmail.resend': 'Reenviar correo',
         'auth.verifyEmail.resending': 'Enviando...',
@@ -312,6 +332,7 @@ const AuthTranslation: Translation = {
         'auth.nav.signout': 'Cerrar sesión',
     },
     pt: {
+        'auth.backHome': "Voltar ao início",
         'auth.signin.title': 'Bem-vindo de volta',
         'auth.signup.title': 'Crie a sua conta',
         'auth.signin.subtitle': 'Inicie sessão para continuar',
@@ -320,6 +341,10 @@ const AuthTranslation: Translation = {
         'auth.field.name': 'Nome',
         'auth.field.email': 'E-mail',
         'auth.field.password': 'Palavra-passe',
+        'auth.password.show': 'Mostrar palavra-passe',
+        'auth.password.hide': 'Ocultar palavra-passe',
+        'auth.field.confirmPassword': 'Confirmar palavra-passe',
+        'auth.password.mismatch': 'As palavras-passe não coincidem.',
 
         'auth.error.signin': 'Não foi possível iniciar sessão. Verifique as suas credenciais.',
         'auth.error.signup': 'Não foi possível criar a sua conta.',
@@ -353,7 +378,7 @@ const AuthTranslation: Translation = {
         'auth.2fa.verifying': 'A verificar...',
         'auth.2fa.verify': 'Verificar',
 
-        'auth.verifyEmail.title': 'Está quase!',
+        'auth.verifyEmail.title': 'Está quase',
         'auth.verifyEmail.subtitle': 'Enviámos um e-mail de confirmação para:',
         'auth.verifyEmail.resend': 'Reenviar e-mail',
         'auth.verifyEmail.resending': 'A enviar...',
@@ -388,6 +413,7 @@ const AuthTranslation: Translation = {
         'auth.nav.signout': 'Terminar sessão',
     },
     it: {
+        'auth.backHome': "Torna alla home",
         'auth.signin.title': 'Bentornato',
         'auth.signup.title': 'Crea il tuo account',
         'auth.signin.subtitle': 'Accedi per continuare',
@@ -396,6 +422,10 @@ const AuthTranslation: Translation = {
         'auth.field.name': 'Nome',
         'auth.field.email': 'Email',
         'auth.field.password': 'Password',
+        'auth.password.show': 'Mostra password',
+        'auth.password.hide': 'Nascondi password',
+        'auth.field.confirmPassword': 'Conferma password',
+        'auth.password.mismatch': 'Le password non corrispondono.',
 
         'auth.error.signin': 'Accesso non riuscito. Controlla le tue credenziali.',
         'auth.error.signup': 'Impossibile creare il tuo account.',
@@ -429,7 +459,7 @@ const AuthTranslation: Translation = {
         'auth.2fa.verifying': 'Verifica in corso...',
         'auth.2fa.verify': 'Verifica',
 
-        'auth.verifyEmail.title': 'Ci siamo quasi!',
+        'auth.verifyEmail.title': 'Ci siamo quasi',
         'auth.verifyEmail.subtitle': 'Abbiamo inviato un’email di conferma a:',
         'auth.verifyEmail.resend': 'Invia di nuovo l’email',
         'auth.verifyEmail.resending': 'Invio in corso...',
@@ -464,6 +494,7 @@ const AuthTranslation: Translation = {
         'auth.nav.signout': 'Esci',
     },
     nl: {
+        'auth.backHome': "Terug naar home",
         'auth.signin.title': 'Welkom terug',
         'auth.signup.title': 'Maak je account aan',
         'auth.signin.subtitle': 'Log in om verder te gaan',
@@ -472,6 +503,10 @@ const AuthTranslation: Translation = {
         'auth.field.name': 'Naam',
         'auth.field.email': 'E-mail',
         'auth.field.password': 'Wachtwoord',
+        'auth.password.show': 'Wachtwoord tonen',
+        'auth.password.hide': 'Wachtwoord verbergen',
+        'auth.field.confirmPassword': 'Bevestig wachtwoord',
+        'auth.password.mismatch': 'De wachtwoorden komen niet overeen.',
 
         'auth.error.signin': 'Inloggen mislukt. Controleer je gegevens.',
         'auth.error.signup': 'Je account kon niet worden aangemaakt.',
@@ -505,7 +540,7 @@ const AuthTranslation: Translation = {
         'auth.2fa.verifying': 'Controleren...',
         'auth.2fa.verify': 'Bevestigen',
 
-        'auth.verifyEmail.title': 'Bijna klaar!',
+        'auth.verifyEmail.title': 'Bijna klaar',
         'auth.verifyEmail.subtitle': 'We hebben een bevestigingsmail gestuurd naar:',
         'auth.verifyEmail.resend': 'E-mail opnieuw versturen',
         'auth.verifyEmail.resending': 'Versturen...',
@@ -540,6 +575,7 @@ const AuthTranslation: Translation = {
         'auth.nav.signout': 'Uitloggen',
     },
     pl: {
+        'auth.backHome': "Wróć na stronę główną",
         'auth.signin.title': 'Witamy ponownie',
         'auth.signup.title': 'Utwórz konto',
         'auth.signin.subtitle': 'Zaloguj się, aby kontynuować',
@@ -548,6 +584,10 @@ const AuthTranslation: Translation = {
         'auth.field.name': 'Imię',
         'auth.field.email': 'E-mail',
         'auth.field.password': 'Hasło',
+        'auth.password.show': 'Pokaż hasło',
+        'auth.password.hide': 'Ukryj hasło',
+        'auth.field.confirmPassword': 'Potwierdź hasło',
+        'auth.password.mismatch': 'Hasła nie są zgodne.',
 
         'auth.error.signin': 'Nie udało się zalogować. Sprawdź swoje dane logowania.',
         'auth.error.signup': 'Nie udało się utworzyć konta.',
@@ -581,7 +621,7 @@ const AuthTranslation: Translation = {
         'auth.2fa.verifying': 'Weryfikowanie...',
         'auth.2fa.verify': 'Potwierdź',
 
-        'auth.verifyEmail.title': 'Już prawie!',
+        'auth.verifyEmail.title': 'Już prawie',
         'auth.verifyEmail.subtitle': 'Wysłaliśmy e-mail potwierdzający na adres:',
         'auth.verifyEmail.resend': 'Wyślij e-mail ponownie',
         'auth.verifyEmail.resending': 'Wysyłanie...',
@@ -616,6 +656,7 @@ const AuthTranslation: Translation = {
         'auth.nav.signout': 'Wyloguj się',
     },
     ru: {
+        'auth.backHome': "На главную",
         'auth.signin.title': 'С возвращением',
         'auth.signup.title': 'Создайте аккаунт',
         'auth.signin.subtitle': 'Войдите, чтобы продолжить',
@@ -624,6 +665,10 @@ const AuthTranslation: Translation = {
         'auth.field.name': 'Имя',
         'auth.field.email': 'Email',
         'auth.field.password': 'Пароль',
+        'auth.password.show': 'Показать пароль',
+        'auth.password.hide': 'Скрыть пароль',
+        'auth.field.confirmPassword': 'Подтвердите пароль',
+        'auth.password.mismatch': 'Пароли не совпадают.',
 
         'auth.error.signin': 'Не удалось войти. Проверьте свои данные.',
         'auth.error.signup': 'Не удалось создать аккаунт.',
@@ -657,7 +702,7 @@ const AuthTranslation: Translation = {
         'auth.2fa.verifying': 'Проверка...',
         'auth.2fa.verify': 'Подтвердить',
 
-        'auth.verifyEmail.title': 'Почти готово!',
+        'auth.verifyEmail.title': 'Почти готово',
         'auth.verifyEmail.subtitle': 'Мы отправили письмо с подтверждением на:',
         'auth.verifyEmail.resend': 'Отправить письмо повторно',
         'auth.verifyEmail.resending': 'Отправка...',
@@ -692,6 +737,7 @@ const AuthTranslation: Translation = {
         'auth.nav.signout': 'Выйти',
     },
     ja: {
+        'auth.backHome': "ホームに戻る",
         'auth.signin.title': 'おかえりなさい',
         'auth.signup.title': 'アカウントを作成',
         'auth.signin.subtitle': 'ログインして続ける',
@@ -700,6 +746,10 @@ const AuthTranslation: Translation = {
         'auth.field.name': '名前',
         'auth.field.email': 'メールアドレス',
         'auth.field.password': 'パスワード',
+        'auth.password.show': 'パスワードを表示',
+        'auth.password.hide': 'パスワードを非表示',
+        'auth.field.confirmPassword': 'パスワードを確認',
+        'auth.password.mismatch': 'パスワードが一致しません。',
 
         'auth.error.signin': 'ログインできませんでした。認証情報を確認してください。',
         'auth.error.signup': 'アカウントを作成できませんでした。',
@@ -768,6 +818,7 @@ const AuthTranslation: Translation = {
         'auth.nav.signout': 'ログアウト',
     },
     'zh-Hans': {
+        'auth.backHome': "返回首页",
         'auth.signin.title': '欢迎回来',
         'auth.signup.title': '创建账户',
         'auth.signin.subtitle': '登录以继续',
@@ -776,6 +827,10 @@ const AuthTranslation: Translation = {
         'auth.field.name': '姓名',
         'auth.field.email': '电子邮箱',
         'auth.field.password': '密码',
+        'auth.password.show': '显示密码',
+        'auth.password.hide': '隐藏密码',
+        'auth.field.confirmPassword': '确认密码',
+        'auth.password.mismatch': '两次输入的密码不一致。',
 
         'auth.error.signin': '登录失败，请检查你的账号信息。',
         'auth.error.signup': '无法创建账户。',

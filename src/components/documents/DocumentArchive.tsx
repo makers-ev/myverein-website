@@ -37,7 +37,7 @@ function TreeNode({ node, selected, onSelect, depth }: { node: FolderNode; selec
                 aria-current={selected === node.id ? 'true' : undefined}
                 onClick={() => onSelect(node.id)}
                 style={{ paddingLeft: `${0.5 + depth * 0.9}rem` }}
-                className={`flex w-full items-center gap-1.5 rounded-lg py-1.5 pr-2 text-left text-sm ${selected === node.id ? 'bg-primary/10 font-semibold text-primary' : 'text-foreground hover:bg-muted'}`}
+                className={`flex w-full items-center gap-1.5 rounded-lg py-1.5 pr-2 text-left text-sm ${selected === node.id ? 'bg-primary-soft font-semibold text-primary-soft-foreground' : 'text-foreground hover:bg-muted'}`}
             >
                 <FolderIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
                 <span className="truncate">{node.name}</span>
@@ -147,14 +147,14 @@ export default function DocumentArchive({ clubId, gate, departments, initial }: 
 
     return (
         <div className="grid gap-4 lg:grid-cols-[16rem_1fr]">
-            <aside aria-label={t('docs.archive.folders')} className="rounded-xl border border-border bg-card p-3">
+            <aside aria-label={t('docs.archive.folders')} className="rounded-xl shadow-card bg-card p-3">
                 <div className="mb-2 flex items-center justify-between">
-                    <h2 className="text-sm font-bold text-foreground">{t('docs.archive.folders')}</h2>
+                    <h2 className="text-base font-medium text-foreground">{t('docs.archive.folders')}</h2>
                 </div>
                 <ul>
                     {rootLevel && (
                         <li>
-                            <button type="button" aria-current={selected === null ? 'true' : undefined} onClick={() => setSelected(null)} className={`flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-sm ${selected === null ? 'bg-primary/10 font-semibold text-primary' : 'text-foreground hover:bg-muted'}`}>
+                            <button type="button" aria-current={selected === null ? 'true' : undefined} onClick={() => setSelected(null)} className={`flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-sm ${selected === null ? 'bg-primary-soft font-semibold text-primary-soft-foreground' : 'text-foreground hover:bg-muted'}`}>
                                 <FileText className="h-4 w-4 shrink-0" aria-hidden="true" />
                                 {t('docs.archive.noFolder')}
                             </button>
@@ -179,7 +179,7 @@ export default function DocumentArchive({ clubId, gate, departments, initial }: 
                         <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('docs.archive.search')} aria-label={t('docs.archive.search')} className={`${inputClass} pl-9`} />
                     </div>
                     {atLeast(level, 'schreiben') && (
-                        <button type="button" aria-pressed={trash} onClick={() => { setTrash((v) => !v); setPage(1); }} className={`${secondaryButtonClass} ${trash ? 'border-primary text-primary' : ''}`}>
+                        <button type="button" aria-pressed={trash} onClick={() => { setTrash((v) => !v); setPage(1); }} className={`${secondaryButtonClass} ${trash ? 'border-primary text-primary-text' : ''}`}>
                             <Trash2 className="h-4 w-4" aria-hidden="true" />
                             {t('docs.archive.trash')}
                         </button>
@@ -259,7 +259,7 @@ export default function DocumentArchive({ clubId, gate, departments, initial }: 
                     <EmptyState icon={<FileText className="h-6 w-6" aria-hidden="true" />} text={t(search ? 'docs.archive.empty.search' : trash ? 'docs.archive.empty.trash' : atLeast(level, 'schreiben') ? 'docs.archive.empty.write' : 'docs.archive.empty')} />
                 ) : (
                     <>
-                        <ul className="divide-y divide-border rounded-xl border border-border bg-card">
+                        <ul className="divide-y divide-hairline rounded-xl shadow-card bg-card">
                             {docs.data.map((d) => (
                                 <li key={d.id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5">
                                     <button type="button" onClick={() => setOpenDoc(d.id)} className="min-w-0 flex-1 text-left">

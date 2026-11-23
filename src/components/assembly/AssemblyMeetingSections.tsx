@@ -138,7 +138,7 @@ function MemberView({ clubId, meetingId, ownClubMemberId, status, mode, onlineUr
     );
 }
 
-type ManageTab = 'planen' | 'durchfuehrung' | 'protokoll';
+export type ManageTab = 'planen' | 'durchfuehrung' | 'protokoll';
 
 /**
  * Everything the general assembly adds to a meeting (Wave 11): planning + invitation, the running assembly (cockpit) and the minutes for
@@ -153,6 +153,7 @@ export default function AssemblyMeetingSections({
     ownClubMemberId,
     onChanged,
     onOpenRules,
+    initialTab = 'planen',
 }: {
     clubId: string;
     meeting: { id: string; status: string; scheduledAt: string | null; participationMode?: ParticipationMode; onlineUrl?: string | null };
@@ -162,9 +163,10 @@ export default function AssemblyMeetingSections({
     ownClubMemberId: string | null;
     onChanged: () => void;
     onOpenRules?: () => void;
+    initialTab?: ManageTab;
 }) {
     const { t } = useLanguage();
-    const [tab, setTab] = useState<ManageTab>('planen');
+    const [tab, setTab] = useState<ManageTab>(initialTab);
     const mode = meeting.participationMode ?? 'praesenz';
 
     if (!canManage) {
@@ -174,7 +176,7 @@ export default function AssemblyMeetingSections({
     const tabs: ManageTab[] = ['planen', 'durchfuehrung', 'protokoll'];
     return (
         <div className="space-y-4">
-            <div role="tablist" aria-label={t('assembly.manage.title')} className="flex gap-2 overflow-x-auto border-b border-border">
+            <div role="tablist" aria-label={t('assembly.manage.title')} className="flex gap-2 overflow-x-auto border-b border-hairline">
                 {tabs.map((value) => (
                     <button
                         key={value}
@@ -184,7 +186,7 @@ export default function AssemblyMeetingSections({
                         aria-selected={tab === value}
                         aria-controls="am-panel"
                         onClick={() => setTab(value)}
-                        className={`whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium transition-colors ${tab === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                        className={`whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium transition-colors ${tab === value ? 'border-primary text-primary-text' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
                     >
                         {t(`assembly.manage.tab.${value}`)}
                     </button>

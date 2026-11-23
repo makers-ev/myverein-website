@@ -15,12 +15,12 @@ export default function DiffView({ before, after }: { before: string; after: str
                     p.type === 'same' ? (
                         <span key={i}>{p.text} </span>
                     ) : p.type === 'add' ? (
-                        <ins key={i} className="rounded bg-success/15 px-0.5 text-foreground no-underline">
+                        <ins key={i} className="rounded-lg bg-success-soft px-0.5 text-foreground no-underline">
                             <span className="sr-only">{t('privacy.diff.added')}: </span>
                             {p.text}{' '}
                         </ins>
                     ) : (
-                        <del key={i} className="rounded bg-destructive/15 px-0.5 text-muted-foreground">
+                        <del key={i} className="rounded-lg bg-destructive-soft px-0.5 text-muted-foreground">
                             <span className="sr-only">{t('privacy.diff.removed')}: </span>
                             {p.text}{' '}
                         </del>

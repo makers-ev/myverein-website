@@ -117,12 +117,12 @@ export default function CredentialsPanel({ clubId, canIncludeFormer, onUnavailab
     return (
         <section aria-label={t('forms.cred.overview.title')} className="space-y-4">
             <div>
-                <h2 className="text-sm font-bold text-foreground">{t('forms.cred.overview.title')}</h2>
+                <h2 className="text-base font-medium text-foreground">{t('forms.cred.overview.title')}</h2>
                 <p className="mt-1 max-w-2xl text-xs text-muted-foreground">{t('forms.cred.overview.hint')}</p>
                 <p className="mt-1 max-w-2xl text-xs text-muted-foreground">{t('forms.cred.overview.noReminders')}</p>
             </div>
 
-            <div className="grid gap-3 rounded-xl border border-border bg-card p-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-3 rounded-xl shadow-card bg-card p-3 sm:grid-cols-2 lg:grid-cols-4">
                 <div>
                     <label htmlFor="cred-field" className="block text-xs font-semibold text-muted-foreground">
                         {t('forms.cred.overview.field')}
@@ -188,7 +188,7 @@ export default function CredentialsPanel({ clubId, canIncludeFormer, onUnavailab
             </div>
 
             {current?.error !== undefined ? (
-                <div role="alert" className="rounded-xl border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
+                <div role="alert" className="rounded-xl border border-destructive/40 bg-destructive-soft p-4 text-sm text-destructive">
                     <p>{t(overviewErrorKey(current.error))}</p>
                     <div className="mt-2 flex flex-wrap gap-2">
                         {current.error instanceof ApiError && current.error.status === 404 ? (
@@ -263,7 +263,7 @@ export function CredentialsTable({ rows, fields, labels = {}, loading, onOpen }:
                             </th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-border">
+                    <tbody className="divide-y divide-hairline">
                         {rows.map((row) => {
                             const name = rowName(row);
                             return (
@@ -274,7 +274,7 @@ export function CredentialsTable({ rows, fields, labels = {}, loading, onOpen }:
                                     <td className="px-3 py-2 text-foreground">
                                         <span className="break-words">{labels[row.fieldKey] ?? row.fieldLabel}</span>
                                         {row.sensitive && (
-                                            <span className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-warning/15 px-1.5 py-0.5 text-[11px] font-medium text-warning">
+                                            <span className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-warning-soft px-1.5 py-0.5 text-[11px] font-medium text-warning">
                                                 <Lock className="h-3 w-3" aria-hidden="true" />
                                                 {t('forms.cred.overview.confidential')}
                                             </span>
@@ -293,7 +293,7 @@ export function CredentialsTable({ rows, fields, labels = {}, loading, onOpen }:
                                             type="button"
                                             onClick={() => onOpen(row.clubMemberId, name)}
                                             aria-label={t('forms.cf.detail.open', { name: name ?? '—' })}
-                                            className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                                            className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                                         >
                                             <Eye className="h-4 w-4" aria-hidden="true" />
                                         </button>

@@ -24,7 +24,7 @@ export function ThemeToggle() {
     }, []);
 
     if (!mounted) {
-        return <div className="h-9 w-9 rounded-md" aria-hidden="true" />;
+        return <div className="h-11 w-11" aria-hidden="true" />;
     }
 
     const isDark = resolvedTheme === 'dark';
@@ -34,9 +34,9 @@ export function ThemeToggle() {
             type="button"
             onClick={() => setTheme(isDark ? 'light' : 'dark')}
             aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
-            className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            className="flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
-            {isDark ? <Sun size={18} /> : <Moon size={18} />}
+            {isDark ? <Sun size={18} strokeWidth={1.5} /> : <Moon size={18} strokeWidth={1.5} />}
         </button>
     );
 }

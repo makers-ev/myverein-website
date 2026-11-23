@@ -1,4 +1,5 @@
 import { memberErrorKey } from '@/lib/clubMembers';
+import { UI_BTN_DANGER_OUTLINE, UI_BTN_PRIMARY, UI_BTN_SECONDARY, UI_INPUT, UI_LABEL } from '@/lib/uiClasses';
 
 export interface Department {
     id: string;
@@ -55,15 +56,11 @@ export interface CalendarEvent {
 export type RsvpStatus = 'angemeldet' | 'warteliste';
 export type TFn = (key: string, params?: Record<string, string | number>) => string;
 
-export const inputClass =
-    'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 [color-scheme:light] dark:[color-scheme:dark]';
-export const labelClass = 'mb-1 block text-xs font-semibold text-muted-foreground';
-export const primaryBtn =
-    'rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50';
-export const secondaryBtn =
-    'rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50';
-export const dangerBtn =
-    'rounded-lg border border-destructive/40 px-4 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50';
+export const inputClass = UI_INPUT;
+export const labelClass = UI_LABEL;
+export const primaryBtn = UI_BTN_PRIMARY;
+export const secondaryBtn = UI_BTN_SECONDARY;
+export const dangerBtn = UI_BTN_DANGER_OUTLINE;
 
 /** Local-time YYYY-MM-DD, used as a stable per-day grouping key. */
 export function dayKey(d: Date): string {

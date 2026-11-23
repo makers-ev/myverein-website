@@ -120,7 +120,7 @@ function MaintenanceOverview({ items, t, onSelect }: { items: InventoryItem[]; t
                         <li key={item.id}>
                             <button
                                 onClick={() => onSelect(item.id)}
-                                className="flex items-center gap-2 rounded-lg border border-warning/40 bg-warning/5 px-3 py-1.5 text-sm hover:bg-warning/10"
+                                className="flex items-center gap-2 rounded-lg border border-warning/40 bg-warning-soft px-3 py-1.5 text-sm hover:bg-warning-soft"
                             >
                                 <Wrench className="h-4 w-4 text-warning" />
                                 <span className="font-medium text-foreground">{item.name}</span>
@@ -284,7 +284,7 @@ function ItemList({
 
     const chipClass = (active: boolean) =>
         `rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-            active ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background text-muted-foreground hover:text-foreground'
+            active ? 'border-primary bg-primary text-primary-foreground' : 'border-control bg-background text-muted-foreground hover:text-foreground'
         }`;
 
     return (
@@ -331,7 +331,7 @@ function ItemList({
                         <button
                             key={item.id}
                             onClick={() => onSelect(item.id)}
-                            className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4 text-left transition-colors hover:border-primary"
+                            className="flex flex-col gap-2 rounded-xl shadow-card bg-card p-4 text-left transition-shadow hover:shadow-md"
                         >
                             <div className="min-w-0">
                                 <h3 className="truncate font-semibold text-foreground">{item.name}</h3>
@@ -466,7 +466,7 @@ function LoansSection({
                 <div className="overflow-x-auto rounded-lg border border-border">
                     <table className="w-full text-sm">
                         <thead>
-                            <tr className="border-b border-border bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
+                            <tr className="border-b border-hairline bg-muted/50 text-left text-xs text-muted-foreground">
                                 <th className="px-3 py-2">{t('standorte.loans.table.member')}</th>
                                 <th className="px-3 py-2">{t('standorte.loans.table.borrowedAt')}</th>
                                 <th className="px-3 py-2">{t('standorte.loans.table.dueAt')}</th>
@@ -477,7 +477,7 @@ function LoansSection({
                         </thead>
                         <tbody>
                             {loans.map((loan) => (
-                                <tr key={loan.id} className={`border-b border-border last:border-b-0 ${loan.status === 'ueberfaellig' ? 'bg-destructive/5' : ''}`}>
+                                <tr key={loan.id} className={`border-b border-hairline last:border-b-0 ${loan.status === 'ueberfaellig' ? 'bg-destructive-soft' : ''}`}>
                                     <td className="whitespace-nowrap px-3 py-2 text-foreground">{nameFor(loan.memberId)}</td>
                                     <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">{formatDate(loan.borrowedAt, language)}</td>
                                     <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">{formatDate(loan.dueAt, language)}</td>
@@ -585,7 +585,7 @@ function DamageReportsSection({ itemId, clubId, canWrite, t }: { itemId: string;
                                         {report.resolvedAt && ` → ${formatDate(report.resolvedAt, language)}`}
                                     </p>
                                     {report.photoUrl && (
-                                        <a href={report.photoUrl} target="_blank" rel="noreferrer" className="mt-1 inline-block text-xs text-primary hover:underline">
+                                        <a href={report.photoUrl} target="_blank" rel="noreferrer" className="mt-1 inline-block text-xs text-primary-text hover:underline">
                                             {t('standorte.damage-reports.photo')}
                                         </a>
                                     )}
@@ -678,12 +678,12 @@ function ItemDetail({
 
     return (
         <div className="space-y-4">
-            <button onClick={onBack} className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+            <button onClick={onBack} className="inline-flex items-center gap-1 text-sm font-medium text-primary-text hover:underline">
                 <ArrowLeft className="h-4 w-4" />
                 {t('standorte.items.back')}
             </button>
 
-            <div className="space-y-4 rounded-xl border border-border bg-card p-4">
+            <div className="space-y-4 rounded-xl shadow-card bg-card p-4">
                 <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="space-y-2">
                         <h2 className="text-xl font-bold text-foreground">{item.name}</h2>
@@ -695,7 +695,7 @@ function ItemDetail({
                                 <Pencil className="h-4 w-4" />
                                 {t('standorte.items.edit')}
                             </button>
-                            <button onClick={() => setDeleting(true)} className={`${secondaryButtonClass} text-destructive hover:bg-destructive/10`}>
+                            <button onClick={() => setDeleting(true)} className={`${secondaryButtonClass} text-destructive hover:bg-destructive-soft`}>
                                 <Trash2 className="h-4 w-4" />
                                 {t('standorte.items.delete')}
                             </button>

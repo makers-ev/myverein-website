@@ -1,5 +1,6 @@
 'use client';
 
+import { roleLabel } from '@/lib/roleLabel';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Download } from 'lucide-react';
 
@@ -83,11 +84,6 @@ export default function StundenBericht({ clubId, range: initialRange, department
         }
     }
 
-    const roleLabel = (r: string) => {
-        const key = `verein.role.${r}`;
-        const label = t(key);
-        return label === key ? r : label;
-    };
     const people = useMemo(() => options?.people ?? [], [options]);
     const names = useMemo(() => new Map(people.map((p) => [p.clubMemberId, p.displayName])), [people]);
     const hits = people.filter((p) => !search.trim() || p.displayName.toLowerCase().includes(search.trim().toLowerCase())).slice(0, 50);
@@ -120,7 +116,7 @@ export default function StundenBericht({ clubId, range: initialRange, department
                 </p>
             )}
 
-            <div className="grid gap-3 rounded-xl border border-border bg-card p-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-3 rounded-xl shadow-card bg-card p-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div>
                     <label htmlFor="sb-from" className={labelClass}>{t('time.filter.from')}</label>
                     <input id="sb-from" type="date" value={range.from} onChange={(e) => setRange({ ...range, from: e.target.value })} className={inputClass} />
@@ -157,7 +153,7 @@ export default function StundenBericht({ clubId, range: initialRange, department
                             {options.roleTypes.map((r) => (
                                 <label key={r} className="inline-flex items-center gap-1.5 text-sm text-foreground">
                                     <input type="checkbox" checked={roleTypes.includes(r)} onChange={() => setRoleTypes(roleTypes.includes(r) ? roleTypes.filter((x) => x !== r) : [...roleTypes, r])} />
-                                    {roleLabel(r)}
+                                    {roleLabel(t, r)}
                                 </label>
                             ))}
                         </div>
@@ -171,7 +167,7 @@ export default function StundenBericht({ clubId, range: initialRange, department
                         <ul className="mt-2 flex flex-wrap gap-1.5" aria-label={t('time.report.people.selected')}>
                             {memberIds.map((id) => (
                                 <li key={id}>
-                                    <button type="button" onClick={() => setMemberIds(toggleId(memberIds, id))} className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary" aria-label={t('time.report.people.remove', { name: names.get(id) ?? id })}>
+                                    <button type="button" onClick={() => setMemberIds(toggleId(memberIds, id))} className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-medium text-primary-soft-foreground" aria-label={t('time.report.people.remove', { name: names.get(id) ?? id })}>
                                         {names.get(id) ?? id} ×
                                     </button>
                                 </li>
@@ -181,7 +177,7 @@ export default function StundenBericht({ clubId, range: initialRange, department
                     {memberIds.length >= MAX_REPORT_PEOPLE && <p className="mt-1 text-xs text-warning">{t('time.report.people.max', { max: MAX_REPORT_PEOPLE })}</p>}
                     {options?.truncated && <p className="mt-1 text-xs text-warning">{t('time.report.people.truncated')}</p>}
                     {options && (
-                        <ul className="mt-2 max-h-40 divide-y divide-border overflow-y-auto rounded-lg border border-border" aria-label={t('time.report.people')}>
+                        <ul className="mt-2 max-h-40 divide-y divide-hairline overflow-y-auto rounded-lg border border-border" aria-label={t('time.report.people')}>
                             {hits.length === 0 ? (
                                 <li className="px-3 py-2 text-xs text-muted-foreground">{t('time.report.people.empty')}</li>
                             ) : (
@@ -199,7 +195,7 @@ export default function StundenBericht({ clubId, range: initialRange, department
                 </div>
 
                 <div className="sm:col-span-2 lg:col-span-4">
-                    <div role="group" aria-label={t('time.report.groupBy')} className="inline-flex flex-wrap rounded-lg border border-border bg-background p-0.5">
+                    <div role="group" aria-label={t('time.report.groupBy')} className="inline-flex flex-wrap rounded-lg border border-control bg-background p-0.5">
                         {GROUPS.map((g) => (
                             <button key={g} type="button" aria-pressed={groupBy === g} onClick={() => setGroupBy(g)} className={`rounded-md px-3 py-1.5 text-sm font-medium ${groupBy === g ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
                                 {t(`time.report.groupBy.${g}`)}
@@ -233,11 +229,11 @@ export default function StundenBericht({ clubId, range: initialRange, department
                                 {report.includesRates && <th scope="col" className="px-3 py-2">{t('time.report.amount')}</th>}
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-border">
+                        <tbody className="divide-y divide-hairline">
                             {rows.map((p, i) => (
                                 <tr key={`${p.clubMemberId ?? ''}|${p.eventId ?? ''}|${i}`} className="text-foreground">
                                     {showPerson && <th scope="row" className="px-3 py-2 font-medium">{p.displayName}</th>}
-                                    {showPerson && <td className="px-3 py-2">{(p.roleTypes ?? []).map(roleLabel).join(', ')}</td>}
+                                    {showPerson && <td className="px-3 py-2">{(p.roleTypes ?? []).map((r) => roleLabel(t, r)).join(', ')}</td>}
                                     {showEvent && (
                                         <th scope={showPerson ? undefined : 'row'} className="px-3 py-2 font-medium">
                                             {p.eventTitle ?? t('time.report.noEvent')}
@@ -252,7 +248,7 @@ export default function StundenBericht({ clubId, range: initialRange, department
                             ))}
                         </tbody>
                         <tfoot className="sticky bottom-0 bg-muted">
-                            <tr className="border-t border-border font-semibold text-foreground">
+                            <tr className="border-t border-hairline font-semibold text-foreground">
                                 <th scope="row" colSpan={(showPerson ? 2 : 0) + (showEvent ? 2 : 0) + 1} className="px-3 py-2">
                                     {t('time.report.total')}
                                 </th>

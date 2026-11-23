@@ -38,7 +38,7 @@ export default function PrivacyPanel({ clubId, permissions, startView, onDpaAcce
     return (
         <div className="space-y-4">
             {views.length > 1 && (
-                <div role="group" aria-label={t('privacy.title')} className="inline-flex flex-wrap rounded-lg border border-border p-0.5">
+                <div role="group" aria-label={t('privacy.title')} className="inline-flex flex-wrap rounded-lg border border-control p-0.5">
                     {views.map((value) => (
                         <button
                             key={value}

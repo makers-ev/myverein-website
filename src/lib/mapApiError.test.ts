@@ -30,3 +30,13 @@ describe('mapApiError', () => {
         expect(mapApiError(new ApiError(409, 'CONFLICT', 'x'), t, { CONFLICT: 'my.key' })).toBe('my.key');
     });
 });
+
+describe('club suspension', () => {
+    const t = (k: string) => k;
+    it('maps CLUB_SUSPENDED to the calm club text, by code or details code', () => {
+        expect(mapApiError(new ApiError(403, 'CLUB_SUSPENDED', 'x', { code: 'club_suspended', note: null }), t)).toBe('err.clubSuspended');
+        expect(mapApiError(new ApiError(403, 'FORBIDDEN', 'x', { code: 'club_suspended' }), t)).toBe('err.clubSuspended');
+        expect(mapApiError(new ApiError(403, 'FORBIDDEN', 'x'), t)).toBe('err.forbidden');
+    });
+});
+

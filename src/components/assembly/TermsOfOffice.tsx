@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { AlertTriangle, CheckCircle2, Clock } from 'lucide-react';
 import Link from 'next/link';
+import { roleLabel } from '@/lib/roleLabel';
 
 import { apiFetch } from '@/lib/api-client';
 import { type ExpiringRole, type TermStatus, termDaysLeft, termStatusOf } from '@/lib/assembly';
@@ -15,9 +16,9 @@ export function todayBerlin(): string {
 }
 
 const TONE: Record<TermStatus, string> = {
-    aktiv: 'bg-success/10 text-success',
-    laeuft_bald_ab: 'bg-warning/15 text-warning',
-    abgelaufen: 'bg-destructive/10 text-destructive',
+    aktiv: 'bg-success-soft text-success',
+    laeuft_bald_ab: 'bg-warning-soft text-warning',
+    abgelaufen: 'bg-destructive-soft text-destructive',
 };
 const ICON: Record<TermStatus, typeof Clock> = { aktiv: CheckCircle2, laeuft_bald_ab: Clock, abgelaufen: AlertTriangle };
 
@@ -63,17 +64,17 @@ export function ExpiringRolesCard({ clubId }: { clubId: string }) {
 
     if (!rows || rows.length === 0) return null;
     return (
-        <div role="note" className="rounded-xl border border-warning/40 bg-warning/10 p-4">
-            <h2 className="text-sm font-bold text-foreground">{t('assembly.term.card.title')}</h2>
+        <div role="note" className="rounded-xl border border-warning/40 bg-warning-soft p-4">
+            <h2 className="text-base font-medium text-foreground">{t('assembly.term.card.title')}</h2>
             <ul className="mt-2 space-y-2">
                 {rows.map((r) => (
                     <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 text-sm text-foreground">
                         <span className="flex flex-wrap items-center gap-2">
                             <span className="font-medium">{r.name ?? '—'}</span>
-                            <span className="text-muted-foreground">{t(`verein.role.${r.roleType}`)}</span>
+                            <span className="text-muted-foreground">{roleLabel(t, r.roleType)}</span>
                             <TermBadge termEndsAt={r.termEndsAt} status={r.termStatus} daysLeft={r.termDaysLeft} />
                         </span>
-                        <Link href={`/abstimmungen?tab=wahlen&role=${encodeURIComponent(r.roleType)}${r.departmentId ? `&department=${encodeURIComponent(r.departmentId)}` : ''}`} className="text-sm font-medium text-primary underline">
+                        <Link href={`/abstimmungen?tab=wahlen&role=${encodeURIComponent(r.roleType)}${r.departmentId ? `&department=${encodeURIComponent(r.departmentId)}` : ''}`} className="text-sm font-medium text-primary-text underline">
                             {t('assembly.term.plan')}
                         </Link>
                     </li>

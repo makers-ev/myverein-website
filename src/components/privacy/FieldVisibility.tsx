@@ -74,7 +74,7 @@ export default function FieldVisibility({ clubId, clubMemberId }: { clubId: stri
                             value={levels[field]}
                             disabled={saving === field}
                             onChange={(e) => void change(field, e.target.value as VisibilityLevel)}
-                            className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+                            className="rounded-lg border border-control bg-background px-3 py-2 text-sm text-foreground"
                         >
                             {VISIBILITY_LEVELS.map((level) => (
                                 <option key={level} value={level}>

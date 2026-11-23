@@ -2,6 +2,9 @@
 // backend's club-registrations contract (POST/PATCH/GET /club-registrations, documents sub-routes)
 // -- kept in sync by hand, same as CLUB_ROLE_TYPES in Verein.tsx.
 
+
+import { UI_INPUT } from '@/lib/uiClasses';
+
 export const LEGAL_FORMS = ['e_v', 'nicht_eingetragen', 'sonstige'] as const;
 export type LegalForm = (typeof LEGAL_FORMS)[number];
 
@@ -54,8 +57,7 @@ export const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;
 export const MAX_DOCUMENTS = 5;
 
 /** Shared input styling, same classes as the existing forms. */
-export const inputClass =
-    'mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none';
+export const inputClass = `mt-1 ${UI_INPUT}`;
 
 /**
  * Proofs that count per legal form -- mirrors QUALIFYING_KINDS in the backend's

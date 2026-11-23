@@ -122,6 +122,8 @@ export interface SeriesTemplate {
     description?: string | null;
     category?: string | null;
     capacity?: number | null;
+    /** Optional location (`locations.id`); omitted from the body when empty. */
+    locationId?: string | null;
     allDay: boolean;
     /** Local `YYYY-MM-DD` of the first day. */
     startDate: string;
@@ -147,6 +149,7 @@ export function createSeriesBody(tpl: SeriesTemplate, rule: RuleState): Record<s
         ...(tpl.description ? { description: tpl.description } : {}),
         ...(tpl.category ? { category: tpl.category } : {}),
         ...(tpl.capacity ? { capacity: tpl.capacity } : {}),
+        ...(tpl.locationId ? { locationId: tpl.locationId } : {}),
         allDay: tpl.allDay,
         startDate: tpl.startDate,
         ...(tpl.allDay ? {} : { startTime: tpl.startTime }),

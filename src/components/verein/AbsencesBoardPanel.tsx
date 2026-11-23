@@ -86,7 +86,7 @@ export default function AbsencesBoardPanel({ clubId, departments }: { clubId: st
             ) : (
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                        <thead className="text-xs uppercase text-muted-foreground">
+                        <thead className="text-xs text-muted-foreground">
                             <tr>
                                 <th className="px-3 py-2">{t('absence.board.name')}</th>
                                 <th className="px-3 py-2">{t('absence.board.kind')}</th>
@@ -96,7 +96,7 @@ export default function AbsencesBoardPanel({ clubId, departments }: { clubId: st
                         </thead>
                         <tbody>
                             {rows.map((r) => (
-                                <tr key={r.id} className="border-t border-border text-foreground">
+                                <tr key={r.id} className="border-t border-hairline text-foreground">
                                     <td className="px-3 py-2 font-medium">{r.displayName}</td>
                                     <td className="px-3 py-2">
                                         <Chip tone={r.kind === 'krank' ? 'warning' : 'muted'}>{t(`absence.kind.${r.kind}`)}</Chip>

@@ -67,7 +67,7 @@ function Actions({ clubId, request, onChanged }: { clubId: string; request: Data
                         <input value={reason} maxLength={500} onChange={(e) => setReason(e.target.value)} className={inputClass} />
                     </label>
                     <p className="text-xs text-muted-foreground">{t('privacy.requests.reasonHint')}</p>
-                    <button type="button" disabled={busy} onClick={() => void patch('rejected')} className="rounded-lg bg-destructive px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50">
+                    <button type="button" disabled={busy} onClick={() => void patch('rejected')} className="rounded-lg bg-destructive-fill px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50">
                         {t('privacy.requests.rejectConfirm')}
                     </button>
                 </div>
@@ -182,7 +182,7 @@ export default function DataRequestsPanel({ clubId, permissions }: { clubId: str
                             {r.result && <p className="mt-1 text-sm text-foreground">{r.result}</p>}
                             <div className="mt-2 space-y-2">
                                 {r.memberName && (
-                                    <button type="button" onClick={() => setFile(r)} className="text-sm font-medium text-primary underline">
+                                    <button type="button" onClick={() => setFile(r)} className="text-sm font-medium text-primary-text underline">
                                         {t('privacy.requests.openFile')}
                                     </button>
                                 )}

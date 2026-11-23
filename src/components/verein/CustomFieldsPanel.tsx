@@ -82,7 +82,7 @@ export default function CustomFieldsPanel({ clubId, permissions }: { clubId: str
         <div>
             <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
                 <div>
-                    <h2 className="text-sm font-bold text-foreground">{t('forms.cf.title')}</h2>
+                    <h2 className="text-base font-medium text-foreground">{t('forms.cf.title')}</h2>
                     <p className="mt-1 max-w-2xl text-xs text-muted-foreground">{t('forms.cf.hint')}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -98,7 +98,7 @@ export default function CustomFieldsPanel({ clubId, permissions }: { clubId: str
             </div>
 
             {flash && (
-                <p role={flash.ok ? 'status' : 'alert'} className={`mb-3 rounded-lg px-3 py-2 text-sm ${flash.ok ? 'bg-success/10 text-foreground' : 'border border-destructive/40 bg-destructive/5 text-destructive'}`}>
+                <p role={flash.ok ? 'status' : 'alert'} className={`mb-3 rounded-lg px-3 py-2 text-sm ${flash.ok ? 'bg-success-soft text-foreground' : 'border border-destructive/40 bg-destructive-soft text-destructive'}`}>
                     {flash.text}
                 </p>
             )}
@@ -120,7 +120,7 @@ export default function CustomFieldsPanel({ clubId, permissions }: { clubId: str
                     ) : (
                         <ul className="space-y-2">
                             {visible.map((d) => (
-                                <li key={d.id} className={`rounded-xl border border-border bg-card p-3 ${d.archived ? 'opacity-70' : ''}`}>
+                                <li key={d.id} className={`rounded-xl shadow-card bg-card p-3 ${d.archived ? 'opacity-70' : ''}`}>
                                     <div className="flex flex-wrap items-start justify-between gap-2">
                                         <div className="min-w-0">
                                             <p className="break-words text-sm font-semibold text-foreground">{labelOf(d)}</p>
@@ -148,7 +148,7 @@ export default function CustomFieldsPanel({ clubId, permissions }: { clubId: str
                                                 </button>
                                             ) : (
                                                 <>
-                                                    <button type="button" onClick={() => setEditing(d)} aria-label={t('forms.cf.editNamed', { label: labelOf(d) })} className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
+                                                    <button type="button" onClick={() => setEditing(d)} aria-label={t('forms.cf.editNamed', { label: labelOf(d) })} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
                                                         <Pencil className="h-4 w-4" aria-hidden="true" />
                                                     </button>
                                                     <button
@@ -157,7 +157,7 @@ export default function CustomFieldsPanel({ clubId, permissions }: { clubId: str
                                                         disabled={d.valueCount === null}
                                                         title={d.valueCount === null ? t('forms.cf.remove.needsSensitive') : undefined}
                                                         aria-label={t('forms.cf.removeNamed', { label: labelOf(d) })}
-                                                        className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive disabled:opacity-40"
+                                                        className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive disabled:opacity-40"
                                                     >
                                                         {(d.valueCount ?? 0) > 0 ? <Archive className="h-4 w-4" aria-hidden="true" /> : <Trash2 className="h-4 w-4" aria-hidden="true" />}
                                                     </button>
@@ -234,7 +234,7 @@ function RemoveDialog({ clubId, definition, onClose, onDone }: { clubId: string;
                     <button type="button" onClick={onClose} disabled={busy} className={secondaryButtonClass}>
                         {t('forms.editor.publish.cancel')}
                     </button>
-                    <button type="button" onClick={() => void remove()} disabled={busy} className="rounded-lg bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground disabled:opacity-50">
+                    <button type="button" onClick={() => void remove()} disabled={busy} className="rounded-lg bg-destructive-fill px-4 py-2 text-sm font-semibold text-destructive-foreground disabled:opacity-50">
                         {hasValues ? t('forms.cf.remove.confirmArchive') : t('forms.cf.remove.confirmDelete')}
                     </button>
                 </div>

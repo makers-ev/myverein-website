@@ -13,6 +13,7 @@ import { documentsGate } from '@/lib/documentAccess';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ApplicationsPanel from '@/components/verein/ApplicationsPanel';
 import NoClubSection from '@/components/verein/NoClubSection';
+import MoreClubsSection from '@/components/verein/MoreClubsSection';
 import CategoriesPanel from '@/components/verein/CategoriesPanel';
 import AssemblyRulesPanel from '@/components/assembly/AssemblyRulesPanel';
 import { ExpiringRolesCard, TermBadge } from '@/components/assembly/TermsOfOffice';
@@ -20,6 +21,8 @@ import BrandingPanel from '@/components/documents/BrandingPanel';
 import StoragePanel from '@/components/documents/StoragePanel';
 import ClubInfoDialog from '@/components/documents/ClubInfoDialog';
 import ClubSettingsPanel from '@/components/verein/ClubSettingsPanel';
+import PublicProfilePanel from '@/components/verein/PublicProfilePanel';
+import { PUBLIC_PROFILE_PERMISSION } from '@/lib/publicClub';
 import ClubRemindersPanel from '@/components/verein/ClubRemindersPanel';
 import ClubMailTemplatePanel from '@/components/verein/ClubMailTemplatePanel';
 import CredentialsPanel from '@/components/verein/CredentialsPanel';
@@ -37,6 +40,10 @@ import MyPrivacyPanel from '@/components/privacy/MyPrivacyPanel';
 import MemberList from '@/components/verein/MemberList';
 import MemberAvatar from '@/components/verein/MemberAvatar';
 import RoleBadge from '@/components/verein/RoleBadge';
+import LeadsPanel from '@/components/leads/LeadsPanel';
+import ExternalAccessPanel from '@/components/verein/ExternalAccessPanel';
+import { canConvertLeads } from '@/lib/leads';
+import SponsorsPanel from '@/components/sponsors/SponsorsPanel';
 import ProfilTab, { type OwnMembership } from '@/components/verein/ProfilTab';
 import LoadingText from '@/components/LoadingText';
 import { useConfirm } from '@/components/useConfirm';
@@ -89,8 +96,8 @@ type Tab = ClubTab;
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
     return (
-        <div className="rounded-xl border border-border bg-card p-4">
-            <h2 className="mb-3 text-sm font-bold text-foreground">{title}</h2>
+        <div className="rounded-xl shadow-card bg-card p-4">
+            <h2 className="mb-3 text-base font-medium text-foreground">{title}</h2>
             {children}
         </div>
     );
@@ -134,7 +141,7 @@ function VereinsinfoTab({ info, t, onPhotoExpired, termsClubId, clubId, canWrite
                     <ul className="space-y-2">
                         {info.pages.map((p) => (
                             <li key={p.id} className="text-sm text-foreground">
-                                <button type="button" onClick={() => setOpenSlug(p.slug)} className="text-left font-medium text-primary underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
+                                <button type="button" onClick={() => setOpenSlug(p.slug)} className="text-left font-medium text-primary-text underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-text">
                                     {p.title}
                                 </button>
                                 {p.hasAttachment && <span className="ml-2 text-xs text-muted-foreground">PDF</span>}
@@ -143,7 +150,7 @@ function VereinsinfoTab({ info, t, onPhotoExpired, termsClubId, clubId, canWrite
                     </ul>
                 )}
                 {canWriteInfo && (
-                    <button type="button" onClick={() => setOpenSlug('')} className="mt-3 rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted">
+                    <button type="button" onClick={() => setOpenSlug('')} className="mt-3 rounded-lg border border-control px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted">
                         {t('docs.info.new')}
                     </button>
                 )}
@@ -198,12 +205,12 @@ function AbteilungenTab({
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder={t('verein.departments.new.placeholder')}
-                        className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                        className="flex-1 rounded-lg border border-control bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
                     />
                     <button
                         type="submit"
                         disabled={submitting || !name.trim()}
-                        className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+                        className="min-h-11 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
                     >
                         {t('verein.departments.new.submit')}
                     </button>
@@ -216,7 +223,7 @@ function AbteilungenTab({
             ) : (
                 <ul className="space-y-2">
                     {departments.map((d) => (
-                        <li key={d.id} className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground">
+                        <li key={d.id} className="rounded-lg border border-control bg-card px-3 py-2 text-sm text-foreground">
                             {d.name}
                         </li>
                     ))}
@@ -242,6 +249,8 @@ export default function VereinPageContent() {
     const [formsDirty, setFormsDirty] = useState(false);
     const onFormsDirty = useCallback((dirty: boolean) => setFormsDirty(dirty), []);
     // Own custom field edits in "Mein Profil" (separate save button).
+    const [publicDirty, setPublicDirty] = useState(false);
+    const onPublicDirty = useCallback((dirty: boolean) => setPublicDirty(dirty), []);
     const [profilDirty, setProfilDirty] = useState(false);
     const onProfilDirty = useCallback((dirty: boolean) => setProfilDirty(dirty), []);
     // "Qualifikationen" next to the member list: offered by role, hidden once the endpoint says 403/404.
@@ -311,15 +320,15 @@ export default function VereinPageContent() {
 
     async function selectTab(next: Tab) {
         // Unsaved edits (form editor, own custom fields) survive only inside their tab: leaving it needs a confirmation.
-        const unsaved = next !== currentTab && ((currentTab === 'formulare' && formsDirty) || (currentTab === 'profil' && profilDirty));
-        if (unsaved && !(await confirm({ title: t('forms.editor.leave.title'), body: t(currentTab === 'formulare' ? 'forms.editor.leaveConfirm' : 'verein.profil.leaveConfirm'), confirmLabel: t('forms.editor.leave.confirm'), danger: true }))) return;
+        const unsaved = next !== currentTab && ((currentTab === 'formulare' && formsDirty) || (currentTab === 'profil' && profilDirty) || (currentTab === 'einstellungen' && publicDirty));
+        if (unsaved && !(await confirm({ title: t('forms.editor.leave.title'), body: t(currentTab === 'formulare' ? 'forms.editor.leaveConfirm' : currentTab === 'einstellungen' ? 'forms.editor.discardChanges.body' : 'verein.profil.leaveConfirm'), confirmLabel: t('forms.editor.leave.confirm'), danger: true }))) return;
         setTab(next);
     }
 
     return (
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
             <div className="flex items-center gap-1">
-                <h1 className="text-2xl font-bold text-foreground">
+                <h1 className="text-[1.75rem] font-bold leading-9 text-foreground">
                     {activeClub?.clubName ?? t('verein.page.title')}
                 </h1>
                 <HelpLink topic={currentTab === 'datenschutz' ? 'privacy' : 'members'} />
@@ -343,6 +352,7 @@ export default function VereinPageContent() {
 
                     <div className="mt-4">
                         {currentTab === 'info' && (info ? <VereinsinfoTab info={info} t={t} onPhotoExpired={refetchBoardPhotos} termsClubId={permissions.includes('assembly:manage') || permissions.includes('roles:write') ? activeClub.clubId : null} clubId={activeClub.clubId} canWriteInfo={docsGate.editClubInfo} onInfoChanged={() => void refreshClubData(activeClub.clubId)} /> : <LoadingText />)}
+                        {currentTab === 'info' && <MoreClubsSection onRefreshClubs={loadClubs} />}
                         {currentTab === 'profil' &&
                             (me ? (
                                 <div className="space-y-6">
@@ -355,7 +365,7 @@ export default function VereinPageContent() {
                                 <LoadingText />
                             ))}
                         {currentTab === 'mitglieder' && credentialsAvailable && (
-                            <div role="group" aria-label={t('verein.members.view.label')} className="mb-4 inline-flex rounded-lg border border-border p-0.5">
+                            <div role="group" aria-label={t('verein.members.view.label')} className="mb-4 inline-flex rounded-lg border border-control p-0.5">
                                 {(['list', 'credentials'] as const).map((value) => (
                                     <button
                                         key={value}
@@ -410,9 +420,12 @@ export default function VereinPageContent() {
                             ) : (
                                 <LoadingText />
                             ))}
-                        {currentTab === 'kennzahlen' && <ClubStatsPanel clubId={activeClub.clubId} />}
+                        {currentTab === 'kennzahlen' && <ClubStatsPanel clubId={activeClub.clubId} canSensitive={permissions.includes('members:read_sensitive')} />}
                         {currentTab === 'formulare' && gate.manage && <FormsPanel clubId={activeClub.clubId} permissions={permissions} onDirtyChange={onFormsDirty} onOpenCategorySettings={tabs.includes('einstellungen') ? () => void selectTab('einstellungen') : undefined} />}
                         {currentTab === 'zusatzfelder' && gate.manage && <CustomFieldsPanel clubId={activeClub.clubId} permissions={permissions} />}
+                        {currentTab === 'sponsoren' && (permissions.includes('sponsors:read') || permissions.includes('sponsors:write')) && <SponsorsPanel clubId={activeClub.clubId} canWrite={permissions.includes('sponsors:write')} />}
+                        {currentTab === 'extern' && permissions.includes('roles:write') && <ExternalAccessPanel clubId={activeClub.clubId} />}
+                        {currentTab === 'interessenten' && permissions.includes('leads:write') && <LeadsPanel clubId={activeClub.clubId} canConvertMember={canConvertLeads(permissions)} departments={(info?.departments ?? []).map((d) => ({ id: d.id, name: d.name }))} />}
                         {currentTab === 'fehlt' && permissions.includes('absences:read') && (
                             <AbsencesBoardPanel clubId={activeClub.clubId} departments={(info?.departments ?? []).map((d) => ({ id: d.id, name: d.name }))} />
                         )}
@@ -424,6 +437,7 @@ export default function VereinPageContent() {
                                 {permissions.includes('members:write') && <ClubRemindersPanel clubId={activeClub.clubId} />}
                                 {permissions.includes('announcements:write') && <ClubMailTemplatePanel clubId={activeClub.clubId} />}
                                 {docsGate.branding && <BrandingPanel clubId={activeClub.clubId} />}
+                                {permissions.includes(PUBLIC_PROFILE_PERMISSION) && <PublicProfilePanel onDirtyChange={onPublicDirty} clubId={activeClub.clubId} clubName={activeClub.clubName ?? ''} departments={(info?.departments ?? []).map((d) => ({ id: d.id, name: d.name }))} />}
                                 {docsGate.storage && <StoragePanel clubId={activeClub.clubId} canEmptyTrash={docsGate.manage} />}
                                 {permissions.includes('members:write') && <CategoriesPanel clubId={activeClub.clubId} onChanged={() => setMembersReload((n) => n + 1)} />}
                             </div>

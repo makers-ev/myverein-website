@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 
 import { useLanguage } from '@/contexts/LanguageContext';
-import { ApiError, apiFetch } from '@/lib/api-client';
+import { ApiError, apiFetch, isClubSuspended } from '@/lib/api-client';
 import { authClient } from '@/lib/auth-client';
 import { formatDate, memberErrorKey } from '@/lib/clubMembers';
 import {
@@ -37,8 +37,8 @@ function inviteStores(): TokenStore[] {
 }
 
 const buttonClass =
-    'block w-full rounded-lg bg-primary px-5 py-3 text-center text-sm font-semibold text-primary-foreground transition-transform duration-200 hover:brightness-110 active:scale-95 disabled:opacity-50';
-const secondaryClass = 'block w-full rounded-lg border border-border px-5 py-3 text-center text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50';
+    'block min-h-11 w-full rounded-lg bg-primary px-5 py-3 text-center text-sm font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98] disabled:opacity-50';
+const secondaryClass = 'block w-full rounded-lg border border-control px-5 py-3 text-center text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50';
 
 type View =
     | { kind: 'init' }
@@ -57,13 +57,13 @@ function Shell({ children, status }: { children: React.ReactNode; status?: 'ok' 
             <div className="w-full max-w-md overflow-hidden rounded-2xl bg-card p-8 shadow-xl">
                 <div className="flex flex-col items-center text-center">
                     {status === 'ok' && (
-                        <div className="mb-6 rounded-full bg-green-100 p-4 dark:bg-green-950">
-                            <CheckCircleIcon className="h-12 w-12 text-green-600 dark:text-green-400" aria-hidden="true" />
+                        <div className="mb-6 rounded-full bg-success-soft p-4">
+                            <CheckCircleIcon className="h-12 w-12 text-success" aria-hidden="true" />
                         </div>
                     )}
                     {status === 'warn' && (
-                        <div className="mb-6 rounded-full bg-red-100 p-4 dark:bg-red-950">
-                            <ExclamationTriangleIcon className="h-12 w-12 text-red-600 dark:text-red-400" aria-hidden="true" />
+                        <div className="mb-6 rounded-full bg-destructive-soft p-4">
+                            <ExclamationTriangleIcon className="h-12 w-12 text-destructive" aria-hidden="true" />
                         </div>
                     )}
                     {children}
@@ -151,6 +151,9 @@ export default function InvitationContent() {
                     setResult({ kind: 'invalid' });
                 } else if (err instanceof ApiError && err.status === 429) {
                     setResult({ kind: 'error', textKey: 'verein.invite.err.rateLimit' });
+                } else if (isClubSuspended(err)) {
+                    // Platform suspension: the invitation stays valid, the club is just paused.
+                    setResult({ kind: 'error', textKey: 'err.clubSuspended' });
                 } else if (err instanceof ApiError && err.status === 403) {
                     // Typically an unverified e-mail address: the token stays, the visitor can come back after verifying.
                     setResult({ kind: 'error', textKey: 'verein.invite.err.unverified' });
@@ -311,7 +314,7 @@ export default function InvitationContent() {
                         </>
                     ) : (
                         <div role="alert" className="w-full space-y-3 text-left">
-                            <p className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm text-foreground">
+                            <p className="rounded-lg border border-warning/40 bg-warning-soft p-3 text-sm text-foreground">
                                 {t('verein.invite.mismatch', { email: accountEmail, invited: preview.invitedEmail })}
                             </p>
                             <button type="button" onClick={() => void switchAccount()} className={buttonClass}>

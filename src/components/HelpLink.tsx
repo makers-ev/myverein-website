@@ -15,7 +15,7 @@ export default function HelpLink({ topic, className = '' }: { topic: DocsTopic; 
             rel="noopener noreferrer"
             aria-label={t('help.page.label')}
             title={t('help.page.label')}
-            className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${className}`}
+            className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-text ${className}`}
         >
             <CircleHelp aria-hidden="true" className="h-5 w-5" />
         </a>

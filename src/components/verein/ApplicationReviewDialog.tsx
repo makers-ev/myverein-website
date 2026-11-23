@@ -43,7 +43,7 @@ export interface DecisionOutcome {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
     return (
         <section className="mt-5">
-            <h3 className="text-sm font-bold text-foreground">{title}</h3>
+            <h3 className="text-base font-medium text-foreground">{title}</h3>
             <div className="mt-2">{children}</div>
         </section>
     );
@@ -207,7 +207,7 @@ export default function ApplicationReviewDialog({
                     <button type="button" onClick={() => setRejecting(false)} disabled={busy} className={secondaryButtonClass}>
                         {t('forms.review.reject.back')}
                     </button>
-                    <button type="button" onClick={() => void decide('reject')} disabled={busy} className="rounded-lg bg-destructive px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+                    <button type="button" onClick={() => void decide('reject')} disabled={busy} className="rounded-lg bg-destructive-fill px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
                         {busy ? t('forms.review.working') : t('forms.review.reject.confirm')}
                     </button>
                 </div>
@@ -239,7 +239,7 @@ export default function ApplicationReviewDialog({
                 <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                         {child && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary-soft-foreground">
                                 <Baby className="h-3.5 w-3.5" aria-hidden="true" />
                                 {t('forms.review.badge.child')}
                             </span>
@@ -291,14 +291,14 @@ export default function ApplicationReviewDialog({
                             {review.warnings.map((w) => {
                                 const key = reviewWarningKey(w);
                                 return key ? (
-                                    <p key={w} className="flex gap-2 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm text-foreground">
+                                    <p key={w} className="flex gap-2 rounded-lg border border-warning/40 bg-warning-soft p-3 text-sm text-foreground">
                                         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden="true" />
                                         {t(key)}
                                     </p>
                                 ) : null;
                             })}
                             {review.duplicates.map((d) => (
-                                <p key={d.clubMemberId} className="flex gap-2 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm text-foreground">
+                                <p key={d.clubMemberId} className="flex gap-2 rounded-lg border border-warning/40 bg-warning-soft p-3 text-sm text-foreground">
                                     <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden="true" />
                                     <span className="min-w-0 break-words">{t('forms.review.duplicate', { name: d.displayName, reason: t(duplicateKindKey(d.matches)) })}</span>
                                 </p>
@@ -332,7 +332,7 @@ export default function ApplicationReviewDialog({
                             ) : (
                                 <ul className="space-y-2">
                                     {review.files.map((f) => (
-                                        <li key={f.id} className="rounded-lg border border-border px-3 py-2">
+                                        <li key={f.id} className="rounded-lg border border-control px-3 py-2">
                                             <div className="flex flex-wrap items-center justify-between gap-2">
                                                 <div className="flex min-w-0 items-center gap-2">
                                                     <FileText className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
@@ -387,7 +387,7 @@ export default function ApplicationReviewDialog({
                         {review.consent ? (
                             <div className="rounded-lg border border-border p-3 text-sm text-foreground">
                                 <p className="flex items-center gap-2 font-medium">
-                                    <ShieldCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                                    <ShieldCheck className="h-4 w-4 shrink-0 text-primary-text" aria-hidden="true" />
                                     {review.consent.consentFieldKeys.length > 0 ? t('forms.review.consent.given') : t('forms.review.consent.notGiven')}
                                 </p>
                                 <ul className="mt-2 space-y-1">

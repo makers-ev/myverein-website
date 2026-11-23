@@ -79,7 +79,7 @@ export default function OccupancyTab({ clubId, locations, canWrite }: { clubId: 
                     )}
                 </div>
             </div>
-            <h2 className="text-sm font-bold text-foreground" aria-live="polite">
+            <h2 className="text-base font-medium text-foreground" aria-live="polite">
                 {days[0]!.toLocaleDateString(language, { day: 'numeric', month: 'short' })} – {days[6]!.toLocaleDateString(language, { day: 'numeric', month: 'short', year: 'numeric' })}
             </h2>
             {data && !data.bookable && <p className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">{t('occupancy.notBookable')}</p>}
@@ -91,32 +91,32 @@ export default function OccupancyTab({ clubId, locations, canWrite }: { clubId: 
             ) : (
                 <>
                     {items.length === 0 && <p className="text-sm text-muted-foreground">{t('occupancy.free')}</p>}
-                    <div className="relative overflow-x-auto rounded-xl border border-border bg-card">
+                    <div className="relative overflow-x-auto rounded-xl shadow-card bg-card">
                         <div className="grid min-w-[640px] grid-cols-[3rem_repeat(7,1fr)]">
                             <div />
                             {days.map((d) => (
-                                <div key={d.toISOString()} className="border-l border-border px-1 py-1.5 text-center text-xs font-semibold text-foreground">
+                                <div key={d.toISOString()} className="border-l border-hairline px-1 py-1.5 text-center text-xs font-semibold text-foreground">
                                     {d.toLocaleDateString(language, { weekday: 'short', day: '2-digit' })}
                                 </div>
                             ))}
                             <div aria-hidden>
                                 {HOURS.map((h) => (
-                                    <div key={h} style={{ height: ROW_PX }} className="pr-1 text-right text-[10px] text-muted-foreground">
+                                    <div key={h} style={{ height: ROW_PX }} className="pr-1 text-right text-[11px] text-muted-foreground">
                                         {String(h).padStart(2, '0')}
                                     </div>
                                 ))}
                             </div>
                             {days.map((d) => (
-                                <div key={d.toISOString()} className="relative border-l border-border" style={{ height: ROW_PX * HOURS.length }}>
+                                <div key={d.toISOString()} className="relative border-l border-hairline" style={{ height: ROW_PX * HOURS.length }}>
                                     {HOURS.map((h) => (
-                                        <div key={h} style={{ height: ROW_PX }} className="border-t border-border/50" aria-hidden />
+                                        <div key={h} style={{ height: ROW_PX }} className="border-t border-hairline/50" aria-hidden />
                                     ))}
                                     {items.map((it) => {
                                         const b = blockOnDay(it, d);
                                         if (!b) return null;
                                         const label = it.title ?? t('occupancy.busy');
                                         const editable = canWrite && it.type === 'booking';
-                                        const cls = `absolute inset-x-0.5 overflow-hidden rounded-md px-1 py-0.5 text-left text-[11px] leading-tight ${it.type === 'booking' ? 'bg-primary/20 text-foreground' : 'bg-warning/20 text-foreground'}`;
+                                        const cls = `absolute inset-x-0.5 overflow-hidden rounded-full px-1 py-0.5 text-left text-[11px] leading-tight ${it.type === 'booking' ? 'bg-primary/20 text-foreground' : 'bg-warning-soft text-foreground'}`;
                                         const style = { top: `${b.top}%`, height: `${b.height}%` };
                                         const title = `${label} (${t(`occupancy.kind.${it.type}`)})`;
                                         return editable ? (
@@ -224,7 +224,7 @@ function BookingModal({ clubId, locationId, item, week, onClose, onSaved }: { cl
                 <div className="flex justify-between gap-2">
                     <div>
                         {item && (
-                            <button type="button" onClick={() => void remove()} className="rounded-lg border border-destructive/40 px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10">
+                            <button type="button" onClick={() => void remove()} className="rounded-lg border border-destructive/40 px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive-soft">
                                 {t('occupancy.booking.delete')}
                             </button>
                         )}
@@ -267,7 +267,7 @@ function BookingModal({ clubId, locationId, item, week, onClose, onSaved }: { cl
                     {check && check !== 'loading' && check !== 'error' && (check.free ? (
                         <p className="text-success">{t('occupancy.booking.free')}</p>
                     ) : (
-                        <div className="rounded-lg bg-warning/10 p-3 text-foreground">
+                        <div className="rounded-lg bg-warning-soft p-3 text-foreground">
                             <p className="font-medium">{t('occupancy.booking.conflict')}</p>
                             <ul className="mt-1 list-disc pl-5">
                                 {check.conflicts.map((c) => (
@@ -279,7 +279,7 @@ function BookingModal({ clubId, locationId, item, week, onClose, onSaved }: { cl
                         </div>
                     ))}
                 </div>
-                {error && <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
+                {error && <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2 text-sm text-destructive">{error}</p>}
             </form>
             {dialog}
         </Modal>

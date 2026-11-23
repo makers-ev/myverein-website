@@ -8,9 +8,9 @@ import type { EnteredBy } from '@/lib/customFields';
 import { type CredentialExpiry, type ExpiryIcon, type ExpiryTone, expiryView } from '@/lib/credentials';
 
 const TONE_CLASS: Record<ExpiryTone, string> = {
-    success: 'bg-success/10 text-success',
-    warning: 'bg-warning/10 text-warning',
-    destructive: 'bg-destructive/10 text-destructive',
+    success: 'bg-success-soft text-success',
+    warning: 'bg-warning-soft text-warning',
+    destructive: 'bg-destructive-soft text-destructive',
     muted: 'bg-muted text-muted-foreground',
 };
 

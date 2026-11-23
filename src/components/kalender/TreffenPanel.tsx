@@ -28,7 +28,7 @@ import { inputClass, labelClass, primaryBtn, secondaryBtn } from '@/components/k
 import LoadingText from '@/components/LoadingText';
 import LoadError from '@/components/LoadError';
 import { Toggle } from '@/components/standorte/ui';
-import AssemblyMeetingSections from '@/components/assembly/AssemblyMeetingSections';
+import AssemblyMeetingSections, { type ManageTab } from '@/components/assembly/AssemblyMeetingSections';
 import type { ParticipationMode } from '@/lib/assembly';
 
 interface Meeting {
@@ -75,16 +75,16 @@ type TFn = (key: string, p?: Record<string, string | number>) => string;
 const MEETING_STATUSES = ['terminfindung', 'geplant', 'abgehalten', 'protokolliert', 'abgesagt'] as const;
 
 const STATUS_STYLES: Record<Meeting['status'], string> = {
-    terminfindung: 'bg-warning/15 text-warning',
-    geplant: 'bg-primary/10 text-primary',
-    abgehalten: 'bg-success/15 text-success',
+    terminfindung: 'bg-warning-soft text-warning',
+    geplant: 'bg-primary-soft text-primary-soft-foreground',
+    abgehalten: 'bg-success-soft text-success',
     protokolliert: 'bg-muted text-muted-foreground',
-    abgesagt: 'bg-destructive/15 text-destructive',
+    abgesagt: 'bg-destructive-soft text-destructive',
 };
 
 const RESPONSE_STYLES: Record<string, string> = {
-    zugesagt: 'bg-success/15 text-success',
-    abgesagt: 'bg-destructive/15 text-destructive',
+    zugesagt: 'bg-success-soft text-success',
+    abgesagt: 'bg-destructive-soft text-destructive',
 };
 
 function typeLabel(type: string, t: TFn): string {
@@ -94,9 +94,9 @@ function typeLabel(type: string, t: TFn): string {
 
 function SectionCard({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) {
     return (
-        <section className="rounded-xl border border-border bg-card p-4">
+        <section className="rounded-xl shadow-card bg-card p-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-sm font-bold text-foreground">{title}</h2>
+                <h2 className="text-base font-medium text-foreground">{title}</h2>
                 {action}
             </div>
             {children}
@@ -110,7 +110,7 @@ function StatusBadge({ status, t }: { status: Meeting['status']; t: (key: string
 
 function ErrorText({ children }: { children: React.ReactNode }) {
     return (
-        <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2 text-sm text-destructive">
             {children}
         </p>
     );
@@ -284,7 +284,7 @@ function MeetingList({ clubId, t, canWrite, onSelect }: { clubId: string; t: TFn
     );
 }
 
-function MeetingDetail({ clubId, meetingId, t, canWrite, canManageAssembly, canReadSensitive, onOpenRules, onBack }: { clubId: string; meetingId: string; t: TFn; canWrite: boolean; canManageAssembly: boolean; canReadSensitive: boolean; onOpenRules?: () => void; onBack: () => void }) {
+function MeetingDetail({ clubId, meetingId, t, canWrite, canManageAssembly, canReadSensitive, onOpenRules, onBack, initialSection }: { clubId: string; meetingId: string; initialSection?: ManageTab; t: TFn; canWrite: boolean; canManageAssembly: boolean; canReadSensitive: boolean; onOpenRules?: () => void; onBack: () => void }) {
     const { language } = useLanguage();
     const [meeting, setMeeting] = useState<Meeting | null>(null);
     const [invitees, setInvitees] = useState<MeetingInvitee[]>([]);
@@ -676,14 +676,14 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, canManageAssembly, canR
 
     return (
         <div className="space-y-4">
-            <button type="button" onClick={onBack} className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
+            <button type="button" onClick={onBack} className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-text hover:underline">
                 <ArrowLeft className="h-4 w-4" aria-hidden />
                 {t('treffen.back')}
             </button>
 
             {detailLoadFailed && <LoadError onRetry={() => void load()} />}
 
-            <div className="flex items-start justify-between gap-3 rounded-xl border border-border bg-card p-4">
+            <div className="flex items-start justify-between gap-3 rounded-xl shadow-card bg-card p-4">
                 <div className="min-w-0">
                     <h2 className="text-xl font-bold text-foreground">{meeting.title}</h2>
                     <p className="mt-0.5 text-sm text-muted-foreground">
@@ -728,6 +728,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, canManageAssembly, canR
                     ownClubMemberId={ownClubMemberId}
                     onChanged={() => void load()}
                     onOpenRules={onOpenRules}
+                    {...(initialSection ? { initialTab: initialSection } : {})}
                 />
             )}
 
@@ -977,7 +978,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, canManageAssembly, canR
                                                 <span
                                                     key={a.memberId}
                                                     className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                                                        a.available ? 'bg-success/15 text-success' : 'bg-destructive/15 text-destructive'
+                                                        a.available ? 'bg-success-soft text-success' : 'bg-destructive-soft text-destructive'
                                                     }`}
                                                 >
                                                     {a.available ? '✓' : '✕'} {nameFor(a.memberId)}
@@ -1001,7 +1002,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, canManageAssembly, canR
                     <div className="overflow-x-auto rounded-lg border border-border">
                         <table className="w-full text-sm">
                             <thead>
-                                <tr className="border-b border-border bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
+                                <tr className="border-b border-hairline bg-muted/50 text-left text-xs text-muted-foreground">
                                     <th className="px-3 py-2">{t('treffen.attendance.name')}</th>
                                     <th className="px-3 py-2 text-center">{t('treffen.attendance.present')}</th>
                                     <th className="px-3 py-2 text-center">{t('treffen.attendance.voting-right')}</th>
@@ -1015,7 +1016,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, canManageAssembly, canR
                                         attendanceEdits[inv.memberId],
                                     );
                                     return (
-                                        <tr key={inv.id} className="border-b border-border last:border-b-0">
+                                        <tr key={inv.id} className="border-b border-hairline last:border-b-0">
                                             <td className="px-3 py-2 text-foreground">{nameFor(inv.memberId)}</td>
                                             <td className="px-3 py-2 text-center">
                                                 <input
@@ -1043,7 +1044,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, canManageAssembly, canR
                                                     value={row.proxyForMemberId ?? ''}
                                                     disabled={!canWrite}
                                                     onChange={(e) => editAttendance(inv.memberId, { proxyForMemberId: e.target.value || null })}
-                                                    className="w-full min-w-32 rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground focus:border-primary focus:outline-none disabled:opacity-60"
+                                                    className="w-full min-w-32 rounded-md border border-control bg-background px-2 py-1 text-xs text-foreground focus:border-primary focus:outline-none disabled:opacity-60"
                                                 >
                                                     <option value="">{t('treffen.attendance.proxy.none')}</option>
                                                     {members
@@ -1059,7 +1060,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, canManageAssembly, canR
                                     );
                                 })}
                                 {erasedAttendance.map((row, index) => (
-                                    <tr key={`erased-${index}`} className="border-b border-border text-muted-foreground last:border-b-0">
+                                    <tr key={`erased-${index}`} className="border-b border-hairline text-muted-foreground last:border-b-0">
                                         <td className="px-3 py-2 italic">{t('privacy.erased.member')}</td>
                                         <td className="px-3 py-2 text-center">{row.present ? '✓' : '✕'}</td>
                                         <td className="px-3 py-2 text-center">{row.hasVotingRight ? '✓' : '✕'}</td>
@@ -1106,10 +1107,10 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, canManageAssembly, canR
                             <li key={r.id} className="rounded-lg border border-border bg-background p-3 text-sm">
                                 <div className="flex items-start justify-between gap-2">
                                     <p className="text-foreground">{r.description}</p>
-                                    <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">{r.result}</span>
+                                    <span className="shrink-0 rounded-full bg-primary-soft px-2 py-0.5 text-xs font-semibold text-primary-soft-foreground">{r.result}</span>
                                 </div>
                                 {r.correctionNote && (
-                                    <p className="mt-2 rounded-md bg-warning/10 px-2 py-1.5 text-xs text-foreground">
+                                    <p className="mt-2 rounded-md bg-warning-soft px-2 py-1.5 text-xs text-foreground">
                                         <span className="font-semibold">
                                             {r.correctedAt ? t('treffen.resolutions.corrected-on', { date: formatDate(r.correctedAt, language) }) : t('treffen.resolutions.corrected')}
                                         </span>{' '}
@@ -1117,10 +1118,10 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, canManageAssembly, canR
                                     </p>
                                 )}
                                 <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] font-medium">
-                                    <span className="rounded-full bg-success/15 px-2 py-0.5 text-success">
+                                    <span className="rounded-full bg-success-soft px-2 py-0.5 text-success">
                                         {t('treffen.resolutions.votes-for')}: {r.votesFor}
                                     </span>
-                                    <span className="rounded-full bg-destructive/15 px-2 py-0.5 text-destructive">
+                                    <span className="rounded-full bg-destructive-soft px-2 py-0.5 text-destructive">
                                         {t('treffen.resolutions.votes-against')}: {r.votesAgainst}
                                     </span>
                                     <span className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
@@ -1131,7 +1132,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, canManageAssembly, canR
                                     <button
                                         type="button"
                                         onClick={() => openCorrection(r)}
-                                        className="mt-2 inline-flex items-center gap-1 rounded text-xs font-medium text-primary hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+                                        className="mt-2 inline-flex items-center gap-1 rounded-lg text-xs font-medium text-primary-text hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-text"
                                     >
                                         <Pencil className="h-3.5 w-3.5" aria-hidden />
                                         {t('treffen.resolutions.correct')}
@@ -1321,7 +1322,7 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, canManageAssembly, canR
                             <button type="button" onClick={() => setDeleteOpen(false)} disabled={deleting} className={secondaryBtn}>
                                 {t('treffen.cancel')}
                             </button>
-                            <button type="button" onClick={() => void handleDeleteMeeting()} disabled={deleting} className="rounded-lg bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground disabled:opacity-60">
+                            <button type="button" onClick={() => void handleDeleteMeeting()} disabled={deleting} className="rounded-lg bg-destructive-fill px-4 py-2 text-sm font-semibold text-destructive-foreground disabled:opacity-60">
                                 {t('treffen.delete')}
                             </button>
                         </div>
@@ -1337,12 +1338,13 @@ function MeetingDetail({ clubId, meetingId, t, canWrite, canManageAssembly, canR
     );
 }
 
-export default function TreffenPanel({ clubId, canWrite, canManageAssembly = false, canReadSensitive = false, onOpenRules }: { clubId: string; canWrite: boolean; canManageAssembly?: boolean; canReadSensitive?: boolean; onOpenRules?: () => void }) {
+export default function TreffenPanel({ clubId, canWrite, canManageAssembly = false, canReadSensitive = false, onOpenRules, deepLink }: { clubId: string; canWrite: boolean; canManageAssembly?: boolean; canReadSensitive?: boolean; onOpenRules?: () => void; deepLink?: { meetingId: string; section: ManageTab } | null }) {
     const { t } = useLanguage();
-    const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null);
+    // `deepLink`: e.g. "Anwesenheit erfassen" from an election round opens the check-in list of that assembly directly.
+    const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(deepLink?.meetingId ?? null);
 
     return selectedMeetingId ? (
-        <MeetingDetail clubId={clubId} meetingId={selectedMeetingId} t={t} canWrite={canWrite} canManageAssembly={canManageAssembly} canReadSensitive={canReadSensitive} onOpenRules={onOpenRules} onBack={() => setSelectedMeetingId(null)} />
+        <MeetingDetail clubId={clubId} meetingId={selectedMeetingId} t={t} canWrite={canWrite} canManageAssembly={canManageAssembly} canReadSensitive={canReadSensitive} onOpenRules={onOpenRules} onBack={() => setSelectedMeetingId(null)} {...(deepLink && deepLink.meetingId === selectedMeetingId ? { initialSection: deepLink.section } : {})} />
     ) : (
         <MeetingList clubId={clubId} t={t} canWrite={canWrite} onSelect={setSelectedMeetingId} />
     );

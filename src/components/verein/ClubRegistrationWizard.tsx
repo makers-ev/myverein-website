@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { FileText, Loader2, Trash2 } from 'lucide-react';
+import { roleLabel } from '@/lib/roleLabel';
 
 import { apiFetch, ApiError } from '@/lib/api-client';
 import { memberErrorKey } from '@/lib/clubMembers';
@@ -36,8 +37,8 @@ interface QueuedFile {
     error?: string;
 }
 
-const primaryButton = 'rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50';
-const secondaryButton = 'rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-muted disabled:opacity-50';
+const primaryButton = 'min-h-11 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98] disabled:opacity-50';
+const secondaryButton = 'rounded-lg border border-control px-4 py-2 text-sm text-foreground hover:bg-muted disabled:opacity-50';
 
 function formatSize(bytes: number): string {
     return bytes >= 1024 * 1024 ? `${(bytes / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
@@ -331,9 +332,9 @@ export default function ClubRegistrationWizard({
     };
 
     return (
-        <div className="mt-6 rounded-xl border border-border bg-card p-5">
+        <div className="mt-6 rounded-xl shadow-card bg-card p-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-lg font-bold text-foreground">{t('verein.create.card.title')}</h2>
+                <h2 className="text-lg font-medium text-foreground">{t('verein.create.card.title')}</h2>
                 <button type="button" onClick={onCancel} disabled={busy || uploading} className="text-sm text-muted-foreground hover:text-foreground disabled:opacity-50">
                     {t('verein.create.cancel')}
                 </button>
@@ -345,7 +346,7 @@ export default function ClubRegistrationWizard({
                         key={n}
                         aria-current={step === n ? 'step' : undefined}
                         className={`rounded-full border px-3 py-1 text-xs font-semibold ${
-                            step === n ? 'border-primary bg-primary text-primary-foreground' : n < step ? 'border-primary text-primary' : 'border-border text-muted-foreground'
+                            step === n ? 'border-primary bg-primary text-primary-foreground' : n < step ? 'border-primary text-primary-text' : 'border-border text-muted-foreground'
                         }`}
                     >
                         {n}. {stepLabels[n]}
@@ -354,7 +355,7 @@ export default function ClubRegistrationWizard({
             </ol>
 
             {initial?.status === 'needs_info' && initial.reviewNote && (
-                <div className="mt-4 rounded-lg border border-border bg-muted/50 px-3 py-2">
+                <div className="mt-4 rounded-lg border border-control bg-muted/50 px-3 py-2">
                     <p className="text-xs font-semibold text-muted-foreground">{t('verein.create.status.note')}</p>
                     <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">{initial.reviewNote}</p>
                 </div>
@@ -378,7 +379,7 @@ export default function ClubRegistrationWizard({
                                     aria-checked={legalForm === f}
                                     onClick={() => setLegalForm(f)}
                                     className={`rounded-full border px-3 py-1 text-sm transition-colors ${
-                                        legalForm === f ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-foreground hover:border-primary'
+                                        legalForm === f ? 'border-primary bg-primary text-primary-foreground' : 'border-control text-foreground hover:border-primary'
                                     }`}
                                 >
                                     {t(`verein.create.legalForm.${f}`)}
@@ -450,7 +451,7 @@ export default function ClubRegistrationWizard({
 
             {step === 2 && (
                 <div className="mt-5">
-                    <h3 className="text-sm font-bold text-foreground">{t('verein.create.docs.title')}</h3>
+                    <h3 className="text-base font-medium text-foreground">{t('verein.create.docs.title')}</h3>
                     <p className="mt-1 text-sm text-muted-foreground">{t('verein.create.docs.hint', { max: MAX_DOCUMENTS })}</p>
                     <p className="mt-1 text-sm text-foreground">{t('verein.create.docs.qualifying', { kinds: qualifyingText })}</p>
                     <p className="mt-1 text-xs text-muted-foreground">{t('verein.create.docs.private')}</p>
@@ -460,9 +461,9 @@ export default function ClubRegistrationWizard({
                     ) : (
                         <ul className="mt-4 space-y-2">
                             {documents.map((d) => (
-                                <li key={d.id} className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2">
+                                <li key={d.id} className="flex items-center justify-between gap-2 rounded-lg border border-control px-3 py-2">
                                     <div className="flex min-w-0 items-center gap-2">
-                                        <FileText className="h-4 w-4 shrink-0 text-primary" />
+                                        <FileText className="h-4 w-4 shrink-0 text-primary-text" />
                                         <div className="min-w-0">
                                             <p className="truncate text-sm text-foreground">{d.filename}</p>
                                             <p className="text-xs text-muted-foreground">
@@ -474,7 +475,7 @@ export default function ClubRegistrationWizard({
                                         type="button"
                                         onClick={() => void handleDeleteDocument(d.id)}
                                         disabled={deletingId === d.id || uploading}
-                                        className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-destructive disabled:opacity-50"
+                                        className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-destructive disabled:opacity-50"
                                         aria-label={t('verein.create.docs.delete')}
                                     >
                                         {deletingId === d.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
@@ -499,7 +500,7 @@ export default function ClubRegistrationWizard({
                                                 onChange={(e) => patchQueueItem(q.id, { kind: e.target.value as DocumentKind })}
                                                 disabled={q.status === 'uploading'}
                                                 aria-label={t('verein.create.docs.kindLabel')}
-                                                className="rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground focus:border-primary focus:outline-none"
+                                                className="rounded-md border border-control bg-background px-2 py-1 text-xs text-foreground focus:border-primary focus:outline-none"
                                             >
                                                 {DOCUMENT_KINDS.map((k) => (
                                                     <option key={k} value={k}>
@@ -574,7 +575,7 @@ export default function ClubRegistrationWizard({
 
             {step === 3 && (
                 <div className="mt-5">
-                    <h3 className="text-sm font-bold text-foreground">{t('verein.create.summary.title')}</h3>
+                    <h3 className="text-base font-medium text-foreground">{t('verein.create.summary.title')}</h3>
                     <dl className="mt-3 grid gap-x-4 gap-y-2 text-sm sm:grid-cols-[auto_1fr]">
                         <dt className="text-muted-foreground">{t('verein.create.field.name')}</dt>
                         <dd className="text-foreground">{clubName.trim()}</dd>
@@ -620,10 +621,10 @@ export default function ClubRegistrationWizard({
                                 aria-checked={claimedRole === r}
                                 onClick={() => setClaimedRole(r)}
                                 className={`rounded-full border px-3 py-1 text-sm transition-colors ${
-                                    claimedRole === r ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-foreground hover:border-primary'
+                                    claimedRole === r ? 'border-primary bg-primary text-primary-foreground' : 'border-control text-foreground hover:border-primary'
                                 }`}
                             >
-                                {t(`verein.role.${r}`)}
+                                {roleLabel(t, r)}
                             </button>
                         ))}
                     </div>

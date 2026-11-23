@@ -10,13 +10,14 @@ const PageLayoutTranslation: Translation = {
         // Navbar
         'nav.settings': 'Einstellungen',
         'nav.features': 'Funktionen',
+        'nav.clubsearch': 'Vereinssuche',
         'nav.roadmap': 'Roadmap',
         'nav.changelog': 'Änderungsprotokoll',
         'nav.contact': 'Kontakt',
         'nav.language_label': 'Sprache:',
 
         // Footer
-        'footer.tagline': 'Mitgliederverwaltung, Kalender, Verfügbarkeit, Lager und Standort-Infocenter für Vereine: an einem Ort statt in Excel, WhatsApp und Doodle verteilt.',
+        'footer.tagline': 'Mitgliederverwaltung, Kalender, Verfügbarkeit, Lager und Standort-Infocenter für Vereine: an einem Ort.',
         'footer.product.title': 'Produkt',
         'footer.product.features': 'Funktionen',
         'footer.product.pricing': 'Preise',
@@ -32,6 +33,7 @@ const PageLayoutTranslation: Translation = {
         'footer.legal.terms': 'Nutzungsbedingungen',
         'footer.legal.imprint': 'Impressum',
         'footer.cookie_settings': 'Cookie-Einstellungen',
+        'footer.status': 'Systemstatus',
         'footer.rights': 'Alle Rechte vorbehalten.',
 
         // 404 page
@@ -46,13 +48,14 @@ const PageLayoutTranslation: Translation = {
         // Navbar
         'nav.settings': 'Settings',
         'nav.features': 'Features',
+        'nav.clubsearch': 'Find a club',
         'nav.roadmap': 'Roadmap',
         'nav.changelog': 'Changelog',
         'nav.contact': 'Contact',
         'nav.language_label': 'Language:',
 
         // Footer
-        'footer.tagline': 'Member management, calendar, availability, inventory, and a locations info center for clubs: all in one place instead of spread across spreadsheets, WhatsApp, and Doodle.',
+        'footer.tagline': 'Member management, calendar, availability, inventory and location info center for clubs: in one place.',
         'footer.product.title': 'Product',
         'footer.product.features': 'Features',
         'footer.product.pricing': 'Pricing',
@@ -68,6 +71,7 @@ const PageLayoutTranslation: Translation = {
         'footer.legal.terms': 'Terms of Service',
         'footer.legal.imprint': 'Imprint',
         'footer.cookie_settings': 'Cookie Settings',
+        'footer.status': 'System status',
         'footer.rights': 'All rights reserved.',
 
         // 404 page
@@ -81,12 +85,13 @@ const PageLayoutTranslation: Translation = {
     fr: {
         'nav.settings': 'Paramètres',
         'nav.features': 'Fonctionnalités',
+        'nav.clubsearch': 'Trouver un club',
         'nav.roadmap': 'Feuille de route',
         'nav.changelog': 'Journal des modifications',
         'nav.contact': 'Contact',
         'nav.language_label': 'Langue :',
 
-        'footer.tagline': 'Gestion des membres, calendrier, disponibilités, matériel et centre d’information des sites pour les associations : tout au même endroit, plutôt qu’éparpillé entre Excel, WhatsApp et Doodle.',
+        'footer.tagline': 'Gestion des membres, calendrier, disponibilités, matériel et centre d’information des sites pour les associations : tout au même endroit.',
         'footer.product.title': 'Produit',
         'footer.product.features': 'Fonctionnalités',
         'footer.product.pricing': 'Tarifs',
@@ -102,6 +107,7 @@ const PageLayoutTranslation: Translation = {
         'footer.legal.terms': "Conditions d'utilisation",
         'footer.legal.imprint': 'Mentions légales',
         'footer.cookie_settings': 'Paramètres des cookies',
+        'footer.status': 'État du système',
         'footer.rights': 'Tous droits réservés.',
 
         'notFound.title': 'Page non trouvée',
@@ -113,12 +119,13 @@ const PageLayoutTranslation: Translation = {
     es: {
         'nav.settings': 'Ajustes',
         'nav.features': 'Funciones',
+        'nav.clubsearch': 'Buscar club',
         'nav.roadmap': 'Hoja de ruta',
         'nav.changelog': 'Registro de cambios',
         'nav.contact': 'Contacto',
         'nav.language_label': 'Idioma:',
 
-        'footer.tagline': 'Gestión de socios, calendario, disponibilidad, material y centro de información de sedes para asociaciones: todo en un solo lugar, en vez de repartido entre Excel, WhatsApp y Doodle.',
+        'footer.tagline': 'Gestión de socios, calendario, disponibilidad, material y centro de información de sedes para asociaciones: todo en un solo lugar.',
         'footer.product.title': 'Producto',
         'footer.product.features': 'Funciones',
         'footer.product.pricing': 'Precios',
@@ -134,6 +141,7 @@ const PageLayoutTranslation: Translation = {
         'footer.legal.terms': 'Términos de servicio',
         'footer.legal.imprint': 'Aviso legal',
         'footer.cookie_settings': 'Configuración de cookies',
+        'footer.status': 'Estado del sistema',
         'footer.rights': 'Todos los derechos reservados.',
 
         'notFound.title': 'Página no encontrada',
@@ -145,12 +153,13 @@ const PageLayoutTranslation: Translation = {
     pt: {
         'nav.settings': 'Definições',
         'nav.features': 'Funcionalidades',
+        'nav.clubsearch': 'Encontrar clube',
         'nav.roadmap': 'Roteiro',
         'nav.changelog': 'Registo de alterações',
         'nav.contact': 'Contacto',
         'nav.language_label': 'Idioma:',
 
-        'footer.tagline': 'Gestão de sócios, calendário, disponibilidade, material e centro de informação de locais para associações: tudo num só lugar, em vez de espalhado por Excel, WhatsApp e Doodle.',
+        'footer.tagline': 'Gestão de sócios, calendário, disponibilidade, material e centro de informação de locais para associações: tudo num só lugar.',
         'footer.product.title': 'Produto',
         'footer.product.features': 'Funcionalidades',
         'footer.product.pricing': 'Preços',
@@ -166,6 +175,7 @@ const PageLayoutTranslation: Translation = {
         'footer.legal.terms': 'Termos de serviço',
         'footer.legal.imprint': 'Ficha técnica',
         'footer.cookie_settings': 'Definições de cookies',
+        'footer.status': 'Estado do sistema',
         'footer.rights': 'Todos os direitos reservados.',
 
         'notFound.title': 'Página não encontrada',
@@ -177,12 +187,13 @@ const PageLayoutTranslation: Translation = {
     it: {
         'nav.settings': 'Impostazioni',
         'nav.features': 'Funzionalità',
+        'nav.clubsearch': 'Trova un club',
         'nav.roadmap': 'Roadmap',
         'nav.changelog': 'Changelog',
         'nav.contact': 'Contatti',
         'nav.language_label': 'Lingua:',
 
-        'footer.tagline': 'Gestione socie/i, calendario, disponibilità, materiale e centro informazioni sulle sedi per associazioni: tutto in un unico posto, invece che sparso tra Excel, WhatsApp e Doodle.',
+        'footer.tagline': 'Gestione socie/i, calendario, disponibilità, materiale e centro informazioni sulle sedi per associazioni: tutto in un unico posto.',
         'footer.product.title': 'Prodotto',
         'footer.product.features': 'Funzionalità',
         'footer.product.pricing': 'Prezzi',
@@ -198,6 +209,7 @@ const PageLayoutTranslation: Translation = {
         'footer.legal.terms': 'Termini di servizio',
         'footer.legal.imprint': 'Note legali',
         'footer.cookie_settings': 'Impostazioni cookie',
+        'footer.status': 'Stato del sistema',
         'footer.rights': 'Tutti i diritti riservati.',
 
         'notFound.title': 'Pagina non trovata',
@@ -209,12 +221,13 @@ const PageLayoutTranslation: Translation = {
     nl: {
         'nav.settings': 'Instellingen',
         'nav.features': 'Functies',
+        'nav.clubsearch': 'Club zoeken',
         'nav.roadmap': 'Roadmap',
         'nav.changelog': 'Wijzigingslogboek',
         'nav.contact': 'Contact',
         'nav.language_label': 'Taal:',
 
-        'footer.tagline': 'Ledenbeheer, agenda, beschikbaarheid, materiaalbeheer en een locatie-infocentrum voor verenigingen: alles op één plek, in plaats van verspreid over Excel, WhatsApp en Doodle.',
+        'footer.tagline': 'Ledenbeheer, agenda, beschikbaarheid, materiaalbeheer en een locatie-infocentrum voor verenigingen: alles op één plek.',
         'footer.product.title': 'Product',
         'footer.product.features': 'Functies',
         'footer.product.pricing': 'Prijzen',
@@ -230,6 +243,7 @@ const PageLayoutTranslation: Translation = {
         'footer.legal.terms': 'Gebruiksvoorwaarden',
         'footer.legal.imprint': 'Colofon',
         'footer.cookie_settings': 'Cookie-instellingen',
+        'footer.status': 'Systeemstatus',
         'footer.rights': 'Alle rechten voorbehouden.',
 
         'notFound.title': 'Pagina niet gevonden',
@@ -241,12 +255,13 @@ const PageLayoutTranslation: Translation = {
     pl: {
         'nav.settings': 'Ustawienia',
         'nav.features': 'Funkcje',
+        'nav.clubsearch': 'Znajdź klub',
         'nav.roadmap': 'Plan rozwoju',
         'nav.changelog': 'Dziennik zmian',
         'nav.contact': 'Kontakt',
         'nav.language_label': 'Język:',
 
-        'footer.tagline': 'Zarządzanie członkami, kalendarz, dostępność, zasoby oraz centrum informacji o lokalizacjach dla klubów: wszystko w jednym miejscu, a nie rozproszone między Excelem, WhatsAppem i Doodle.',
+        'footer.tagline': 'Zarządzanie członkami, kalendarz, dostępność, zasoby oraz centrum informacji o lokalizacjach dla klubów: wszystko w jednym miejscu.',
         'footer.product.title': 'Produkt',
         'footer.product.features': 'Funkcje',
         'footer.product.pricing': 'Cennik',
@@ -262,6 +277,7 @@ const PageLayoutTranslation: Translation = {
         'footer.legal.terms': 'Warunki korzystania z usługi',
         'footer.legal.imprint': 'Nota prawna',
         'footer.cookie_settings': 'Ustawienia plików cookie',
+        'footer.status': 'Status systemu',
         'footer.rights': 'Wszelkie prawa zastrzeżone.',
 
         'notFound.title': 'Nie znaleziono strony',
@@ -273,12 +289,13 @@ const PageLayoutTranslation: Translation = {
     ru: {
         'nav.settings': 'Настройки',
         'nav.features': 'Возможности',
+        'nav.clubsearch': 'Найти клуб',
         'nav.roadmap': 'Дорожная карта',
         'nav.changelog': 'Журнал изменений',
         'nav.contact': 'Контакты',
         'nav.language_label': 'Язык:',
 
-        'footer.tagline': 'Управление членами, календарь, доступность, инвентарь и информационный центр по локациям для клубов: всё в одном месте, а не разбросано по Excel, WhatsApp и Doodle.',
+        'footer.tagline': 'Управление членами, календарь, доступность, инвентарь и информационный центр по локациям для клубов: всё в одном месте.',
         'footer.product.title': 'Продукт',
         'footer.product.features': 'Возможности',
         'footer.product.pricing': 'Цены',
@@ -294,6 +311,7 @@ const PageLayoutTranslation: Translation = {
         'footer.legal.terms': 'Условия использования',
         'footer.legal.imprint': 'Реквизиты',
         'footer.cookie_settings': 'Настройки файлов cookie',
+        'footer.status': 'Статус системы',
         'footer.rights': 'Все права защищены.',
 
         'notFound.title': 'Страница не найдена',
@@ -305,12 +323,13 @@ const PageLayoutTranslation: Translation = {
     ja: {
         'nav.settings': '設定',
         'nav.features': '機能',
+        'nav.clubsearch': 'クラブを探す',
         'nav.roadmap': 'ロードマップ',
         'nav.changelog': '更新履歴',
         'nav.contact': 'お問い合わせ',
         'nav.language_label': '言語:',
 
-        'footer.tagline': '会員管理、カレンダー、空き状況、備品管理、拠点インフォセンターを団体向けに一つにまとめました。Excel・WhatsApp・Doodleに分散させる必要はありません。',
+        'footer.tagline': '会員管理、カレンダー、空き状況、備品管理、拠点インフォセンターを団体向けに一つにまとめました。',
         'footer.product.title': 'プロダクト',
         'footer.product.features': '機能',
         'footer.product.pricing': '料金',
@@ -326,6 +345,7 @@ const PageLayoutTranslation: Translation = {
         'footer.legal.terms': '利用規約',
         'footer.legal.imprint': '運営者情報',
         'footer.cookie_settings': 'Cookie設定',
+        'footer.status': 'システムステータス',
         'footer.rights': '全著作権所有。',
 
         'notFound.title': 'ページが見つかりません',
@@ -337,12 +357,13 @@ const PageLayoutTranslation: Translation = {
     'zh-Hans': {
         'nav.settings': '设置',
         'nav.features': '功能',
+        'nav.clubsearch': '查找俱乐部',
         'nav.roadmap': '路线图',
         'nav.changelog': '更新日志',
         'nav.contact': '联系我们',
         'nav.language_label': '语言：',
 
-        'footer.tagline': '为社团提供会员管理、日历、可用时间、物资管理与场地信息中心，集中在一处，无需再分散在 Excel、WhatsApp 和 Doodle 之间。',
+        'footer.tagline': '为社团提供会员管理、日历、可用时间、物资管理与场地信息中心，集中在一处。',
         'footer.product.title': '产品',
         'footer.product.features': '功能',
         'footer.product.pricing': '价格',
@@ -358,6 +379,7 @@ const PageLayoutTranslation: Translation = {
         'footer.legal.terms': '服务条款',
         'footer.legal.imprint': '网站备案信息',
         'footer.cookie_settings': 'Cookie 设置',
+        'footer.status': '系统状态',
         'footer.rights': '保留所有权利。',
 
         'notFound.title': '页面未找到',

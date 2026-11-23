@@ -120,7 +120,7 @@ export default function DpaPanel({ clubId, onAccepted }: { clubId: string; onAcc
                         )}
 
                         <details className="rounded-lg border border-border p-3 text-sm">
-                            <summary className="cursor-pointer font-medium text-primary">{t('privacy.dpa.readText')}</summary>
+                            <summary className="cursor-pointer font-medium text-primary-text">{t('privacy.dpa.readText')}</summary>
                             <p className="mt-3 whitespace-pre-line text-foreground">{v.body}</p>
                         </details>
 
@@ -131,7 +131,7 @@ export default function DpaPanel({ clubId, onAccepted }: { clubId: string; onAcc
                             ) : (
                                 <div className="mt-2 overflow-x-auto">
                                     <table className="w-full text-left text-sm">
-                                        <thead className="text-xs uppercase text-muted-foreground">
+                                        <thead className="text-xs text-muted-foreground">
                                             <tr>
                                                 <th className="px-3 py-2">{t('privacy.dpa.sub.name')}</th>
                                                 <th className="px-3 py-2">{t('privacy.dpa.sub.purpose')}</th>
@@ -140,7 +140,7 @@ export default function DpaPanel({ clubId, onAccepted }: { clubId: string; onAcc
                                         </thead>
                                         <tbody>
                                             {v.subprocessors.map((s, i) => (
-                                                <tr key={`${s.name}-${i}`} className="border-t border-border text-foreground">
+                                                <tr key={`${s.name}-${i}`} className="border-t border-hairline text-foreground">
                                                     <td className="px-3 py-2 font-medium">{s.name}</td>
                                                     <td className="px-3 py-2">{s.purpose}</td>
                                                     <td className="px-3 py-2">{s.location}</td>
@@ -154,7 +154,7 @@ export default function DpaPanel({ clubId, onAccepted }: { clubId: string; onAcc
 
                         {v.tomAnnex && (
                             <details className="rounded-lg border border-border p-3 text-sm">
-                                <summary className="cursor-pointer font-medium text-primary">{t('privacy.dpa.tom')}</summary>
+                                <summary className="cursor-pointer font-medium text-primary-text">{t('privacy.dpa.tom')}</summary>
                                 <p className="mt-3 whitespace-pre-line text-foreground">{v.tomAnnex}</p>
                             </details>
                         )}

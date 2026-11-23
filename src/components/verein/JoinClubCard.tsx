@@ -41,7 +41,7 @@ interface ClubState {
  * form supports it, a parent can apply for a child (separate draft and application). `onRefresh` lets the user re-check
  * their membership (e.g. after the board approved in the meantime).
  */
-export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefresh: () => void; className?: string }) {
+export default function JoinClubCard({ onRefresh, className = 'mt-6', suggestedSlug }: { onRefresh: () => void; className?: string; suggestedSlug?: string }) {
     const { t, language } = useLanguage();
     const [slug, setSlug] = useState('');
     const [phase, setPhase] = useState<'slug' | 'loading' | 'ready'>('slug');
@@ -84,6 +84,12 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
             alive.current = false;
         };
     }, []);
+
+    // A club picked in "Verein finden" fills the code field (the person still presses "load", nothing is submitted for them).
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        if (suggestedSlug) setSlug(suggestedSlug);
+    }, [suggestedSlug]);
 
     /** Loads the club's form and the person's own submissions; resumes the newest draft of the chosen mode. */
     async function load(clubSlug: string, preferred?: OnBehalfOf, keepForm = false): Promise<boolean> {
@@ -221,10 +227,10 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
             other: 'verein.join.pending.title',
         }[conflict];
         return (
-            <div className={`${className} rounded-xl border border-border bg-card p-5`} role="status">
+            <div className={`${className} rounded-xl shadow-card bg-card p-5`} role="status">
                 <div className="flex items-start gap-3">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15">
-                        {member ? <CheckCircle2 className="h-5 w-5 text-primary" /> : <Clock className="h-5 w-5 text-primary" />}
+                        {member ? <CheckCircle2 className="h-5 w-5 text-primary-text" /> : <Clock className="h-5 w-5 text-primary-text" />}
                     </div>
                     <div>
                         <p className="font-semibold text-foreground">{t(titleKey)}</p>
@@ -251,10 +257,10 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
     }
 
     return (
-        <div className={`${className} rounded-xl border border-border bg-card p-5`}>
+        <div className={`${className} rounded-xl shadow-card bg-card p-5`}>
             <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15">
-                    <UserPlus className="h-5 w-5 text-primary" />
+                    <UserPlus className="h-5 w-5 text-primary-text" />
                 </div>
                 <div>
                     <p className="font-semibold text-foreground">{t('verein.no-club.title')}</p>
@@ -296,10 +302,10 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
                     )}
                     {openApps !== null && openApps.length > 0 && (
                         <section className="mt-5" aria-label={t('forms.apply.mine.title')}>
-                            <h3 className="text-sm font-bold text-foreground">{t('forms.apply.mine.title')}</h3>
+                            <h3 className="text-base font-medium text-foreground">{t('forms.apply.mine.title')}</h3>
                             <ul className="mt-2 space-y-2">
                                 {openApps.map((a) => (
-                                    <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border px-3 py-2">
+                                    <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-control px-3 py-2">
                                         <div className="min-w-0">
                                             <p className="break-words text-sm font-medium text-foreground">{t('forms.apply.mine.club', { name: a.club.name || a.club.slug, slug: a.club.slug })}</p>
                                             <p className="text-xs text-muted-foreground">
@@ -323,7 +329,7 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
                         <p className="text-sm text-foreground">
                             {t('verein.join.slug')}: <span className="font-mono font-semibold">{club.slug}</span>
                         </p>
-                        <button type="button" onClick={() => void backToSlug()} className="text-xs font-semibold text-primary underline">
+                        <button type="button" onClick={() => void backToSlug()} className="text-xs font-semibold text-primary-text underline">
                             {t('forms.apply.otherClub')}
                         </button>
                     </div>
@@ -339,7 +345,7 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
                     )}
 
                     {banner && (
-                        <div ref={bannerRef} tabIndex={-1} role="status" className="mt-4 rounded-lg border border-success/40 bg-success/10 p-3 text-sm text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                        <div ref={bannerRef} tabIndex={-1} role="status" className="mt-4 rounded-lg border border-success/40 bg-success-soft p-3 text-sm text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                             <p className="flex items-center gap-2 font-semibold">
                                 <CheckCircle2 className="h-4 w-4 shrink-0 text-success" aria-hidden="true" />
                                 {t('verein.join.pending.title')}
@@ -357,15 +363,15 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
 
                     {(club.submitted.length > 0 || club.decided.length > 0) && (
                         <section className="mt-4" aria-label={t('forms.apply.open.title')}>
-                            <h3 className="text-sm font-bold text-foreground">{t('forms.apply.open.title')}</h3>
+                            <h3 className="text-base font-medium text-foreground">{t('forms.apply.open.title')}</h3>
                             <ul className="mt-2 space-y-2">
                                 {club.submitted.map((s) => (
-                                    <li key={s.id} className="rounded-lg border border-border px-3 py-2">
+                                    <li key={s.id} className="rounded-lg border border-control px-3 py-2">
                                         <div className="flex flex-wrap items-center justify-between gap-2">
                                             <div className="min-w-0">
                                                 <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-foreground">
                                                     {t(s.onBehalfOf === 'guardian' ? 'forms.apply.open.forChild' : 'forms.apply.open.forSelf')}
-                                                    <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                                                    <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary-soft-foreground">
                                                         <Clock className="h-3 w-3" aria-hidden="true" />
                                                         {t('forms.apply.open.waiting')}
                                                     </span>
@@ -377,7 +383,7 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
                                             {withdrawId === s.id ? (
                                                 <div className="flex flex-wrap items-center gap-2 text-xs text-foreground">
                                                     {t('forms.apply.withdraw.confirm')}
-                                                    <button type="button" disabled={withdrawBusy} onClick={() => void withdraw(s.id)} className="rounded-md bg-destructive px-2.5 py-1 text-xs font-semibold text-white disabled:opacity-50">
+                                                    <button type="button" disabled={withdrawBusy} onClick={() => void withdraw(s.id)} className="rounded-md bg-destructive-fill px-2.5 py-1 text-xs font-semibold text-white disabled:opacity-50">
                                                         {t('forms.apply.withdraw.yes')}
                                                     </button>
                                                     <button type="button" disabled={withdrawBusy} onClick={() => setWithdrawId(null)} className="text-xs text-muted-foreground hover:text-foreground">
@@ -430,7 +436,7 @@ export default function JoinClubCard({ onRefresh, className = 'mt-6' }: { onRefr
                                                 aria-checked={club.mode === m}
                                                 onClick={() => void changeMode(m)}
                                                 className={`rounded-full border px-3 py-1 text-sm transition-colors ${
-                                                    club.mode === m ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-foreground hover:border-primary'
+                                                    club.mode === m ? 'border-primary bg-primary text-primary-foreground' : 'border-control text-foreground hover:border-primary'
                                                 }`}
                                             >
                                                 {t(m === 'guardian' ? 'forms.apply.mode.child' : 'forms.apply.mode.self')}
@@ -486,12 +492,12 @@ export function DecidedItem({
     const accepted = s.status === 'accepted';
     const rejected = s.status === 'rejected';
     return (
-        <li className="rounded-lg border border-border px-3 py-2">
+        <li className="rounded-lg border border-control px-3 py-2">
             <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-foreground">
                 {t(s.onBehalfOf === 'guardian' ? 'forms.apply.open.forChild' : 'forms.apply.open.forSelf')}
                 <span
                     className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                        accepted ? 'bg-success/15 text-success' : rejected ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground'
+                        accepted ? 'bg-success-soft text-success' : rejected ? 'bg-destructive-soft text-destructive' : 'bg-muted text-muted-foreground'
                     }`}
                 >
                     {accepted ? <CheckCircle2 className="h-3 w-3" aria-hidden="true" /> : <XCircle className="h-3 w-3" aria-hidden="true" />}

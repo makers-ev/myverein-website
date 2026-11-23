@@ -11,6 +11,8 @@ import { ForgotPasswordPrompt } from '@/features/auth/components/ForgotPasswordP
 import { resolveCallbackUrl, verifyEmailCallback } from '@/lib/resolveCallbackUrl';
 import { postLoginTarget } from '@/lib/familie';
 
+import { PasswordInput } from './PasswordInput';
+
 type Mode = 'sign-in' | 'sign-up';
 
 function LoginSignupFormInner() {
@@ -31,10 +33,14 @@ function LoginSignupFormInner() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [needsTwoFactor, setNeedsTwoFactor] = useState(false);
     const [needsEmailVerification, setNeedsEmailVerification] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const passwordsMismatch = confirmPassword !== '' && password !== confirmPassword;
+    const signUpBlocked = mode === 'sign-up' && password !== confirmPassword;
 
     async function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -63,6 +69,11 @@ function LoginSignupFormInner() {
             }
 
             await goAfterLogin();
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            setIsSubmitting(false);
             return;
         }
 
@@ -100,6 +111,7 @@ function LoginSignupFormInner() {
                 onBackToLogin={() => {
                     setNeedsEmailVerification(false);
                     setMode('sign-in');
+                    setConfirmPassword('');
                 }}
             />
         );
@@ -119,7 +131,7 @@ function LoginSignupFormInner() {
     return (
         <>
             <div className="text-center mb-8">
-                <h2 className="text-3xl font-black tracking-tight text-foreground">
+                <h2 className="text-3xl font-semibold text-foreground">
                     {mode === 'sign-in' ? t('auth.signin.title') : t('auth.signup.title')}
                 </h2>
                 <p className="mt-2 text-sm text-muted-foreground">
@@ -141,7 +153,7 @@ function LoginSignupFormInner() {
                             required
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                            className="mt-1 block w-full min-h-11 rounded-lg border border-control bg-background px-3 py-2 text-foreground transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25"
                         />
                     </div>
                 )}
@@ -158,7 +170,7 @@ function LoginSignupFormInner() {
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                        className="mt-1 block w-full min-h-11 rounded-lg border border-control bg-background px-3 py-2 text-foreground transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25"
                     />
                 </div>
 
@@ -166,25 +178,46 @@ function LoginSignupFormInner() {
                     <label htmlFor="password" className="block text-sm font-medium text-foreground">
                         {t('auth.field.password')}
                     </label>
-                    <input
+                    <PasswordInput
                         id="password"
                         name="password"
-                        type="password"
                         autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'}
                         required
                         minLength={8}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                     />
                 </div>
 
-                {error && <p className="text-sm text-red-600">{error}</p>}
+                {mode === 'sign-up' && (
+                    <div>
+                        <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground">
+                            {t('auth.field.confirmPassword')}
+                        </label>
+                        <PasswordInput
+                            id="confirmPassword"
+                            name="confirmPassword"
+                            autoComplete="new-password"
+                            required
+                            minLength={8}
+                            aria-invalid={passwordsMismatch}
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                        />
+                        {passwordsMismatch && (
+                            <p className="mt-1 text-sm text-destructive" role="alert">
+                                {t('auth.password.mismatch')}
+                            </p>
+                        )}
+                    </div>
+                )}
+
+                {error && <p className="text-sm text-destructive">{error}</p>}
 
                 <button
                     type="submit"
-                    disabled={isSubmitting}
-                    className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:brightness-110 disabled:opacity-50 transition-colors"
+                    disabled={isSubmitting || signUpBlocked}
+                    className="w-full min-h-11 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
                 >
                     {isSubmitting
                         ? t('auth.submit.pending')
@@ -202,9 +235,10 @@ function LoginSignupFormInner() {
                             type="button"
                             onClick={() => {
                                 setMode('sign-up');
+                                setConfirmPassword('');
                                 setError(null);
                             }}
-                            className="font-semibold text-primary hover:brightness-110"
+                            className="font-medium text-primary-text underline-offset-4 hover:underline"
                         >
                             {t('auth.toggle.signup')}
                         </button>
@@ -216,9 +250,10 @@ function LoginSignupFormInner() {
                             type="button"
                             onClick={() => {
                                 setMode('sign-in');
+                                setConfirmPassword('');
                                 setError(null);
                             }}
-                            className="font-semibold text-primary hover:brightness-110"
+                            className="font-medium text-primary-text underline-offset-4 hover:underline"
                         >
                             {t('auth.toggle.signin')}
                         </button>
@@ -234,7 +269,7 @@ function LoginSignupFormInner() {
                             setShowForgotPassword(true);
                             setError(null);
                         }}
-                        className="text-xs font-medium text-muted-foreground underline hover:text-primary transition-colors"
+                        className="text-xs font-medium text-muted-foreground underline hover:text-primary-text transition-colors"
                     >
                         {t('auth.forgotPassword.link')}
                     </button>

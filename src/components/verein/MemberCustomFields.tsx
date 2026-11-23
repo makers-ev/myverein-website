@@ -124,7 +124,7 @@ export default function MemberCustomFields({ clubId, target, title, showSensitiv
     if (fields && fields.length === 0 && !showSensitiveNote && emptyHint) {
         return (
             <section className="rounded-lg border border-border p-3" aria-label={title ?? t('forms.cf.values.title')}>
-                <h3 className="text-sm font-bold text-foreground">{title ?? t('forms.cf.values.title')}</h3>
+                <h3 className="text-base font-medium text-foreground">{title ?? t('forms.cf.values.title')}</h3>
                 {emptyHint}
             </section>
         );
@@ -171,7 +171,7 @@ export default function MemberCustomFields({ clubId, target, title, showSensitiv
 
     return (
         <section className="rounded-lg border border-border p-3" aria-label={title ?? t('forms.cf.values.title')}>
-            <h3 className="text-sm font-bold text-foreground">{title ?? t('forms.cf.values.title')}</h3>
+            <h3 className="text-base font-medium text-foreground">{title ?? t('forms.cf.values.title')}</h3>
             <p className="mt-0.5 text-xs text-muted-foreground">{own ? t('forms.cf.values.hintOwn') : t('forms.cf.values.hint')}</p>
 
             {fields.length === 0 && <p className="mt-2 text-sm text-muted-foreground">{t('forms.cf.values.none')}</p>}
@@ -181,11 +181,11 @@ export default function MemberCustomFields({ clubId, target, title, showSensitiv
                     {readOnly.map((f) => {
                         const text = displayValue(f, texts);
                         return (
-                            <div key={f.id} className="rounded-lg border border-border px-3 py-2">
+                            <div key={f.id} className="rounded-lg border border-control px-3 py-2">
                                 <dt className="flex flex-wrap items-center gap-1.5 break-words text-xs font-semibold text-muted-foreground">
                                     {f.label}
                                     {f.sensitive && (
-                                        <span className="inline-flex items-center gap-1 rounded-full bg-warning/15 px-1.5 py-0.5 text-[11px] font-medium text-warning">
+                                        <span className="inline-flex items-center gap-1 rounded-full bg-warning-soft px-1.5 py-0.5 text-[11px] font-medium text-warning">
                                             <Lock className="h-3 w-3" aria-hidden="true" />
                                             {t('forms.cf.list.sensitive')}
                                         </span>

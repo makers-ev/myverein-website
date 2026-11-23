@@ -43,10 +43,10 @@ export default function MonthCalendar({ month, events, selectedDay, language, t,
     const todayKey = dayKey(new Date());
 
     return (
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
-            <div className="grid grid-cols-7 border-b border-border bg-muted/50">
+        <div className="overflow-hidden rounded-xl shadow-card bg-card">
+            <div className="grid grid-cols-7 border-b border-hairline bg-muted/50">
                 {weekdays.map((wd) => (
-                    <div key={wd} className="px-1 py-2 text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground sm:px-2 sm:text-left">
+                    <div key={wd} className="px-1 py-2 text-center text-[11px] font-semibold text-muted-foreground sm:px-2 sm:text-left">
                         {wd}
                     </div>
                 ))}
@@ -109,7 +109,7 @@ export default function MonthCalendar({ month, events, selectedDay, language, t,
                                             onSelectEvent(ev);
                                         }}
                                         title={ev.cancelled ? `${ev.title} (${t('kalender.events.cancelled')})` : ev.title}
-                                        className={`block w-full truncate rounded px-1.5 py-0.5 text-left text-[11px] font-medium text-white hover:opacity-90 ${ev.cancelled ? 'italic line-through decoration-2 opacity-80' : ''}`}
+                                        className={`block w-full truncate rounded-lg px-1.5 py-0.5 text-left text-[11px] font-medium text-white hover:opacity-90 ${ev.cancelled ? 'italic line-through decoration-2 opacity-80' : ''}`}
                                         style={{ backgroundColor: colorFor(ev.calendarId) }}
                                     >
                                         {isContinuation(ev, key) ? (
@@ -131,7 +131,7 @@ export default function MonthCalendar({ month, events, selectedDay, language, t,
                                             e.stopPropagation();
                                             onSelectDay(day);
                                         }}
-                                        className="block w-full rounded px-1.5 text-left text-[11px] font-semibold text-muted-foreground hover:text-foreground"
+                                        className="block w-full rounded-lg px-1.5 text-left text-[11px] font-semibold text-muted-foreground hover:text-foreground"
                                     >
                                         {t('kalender.month.more', { count: overflow })}
                                     </button>

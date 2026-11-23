@@ -1,4 +1,5 @@
 import { ApiError, apiFetch } from './api-client';
+import { UI_BTN_PRIMARY, UI_BTN_SECONDARY, UI_INPUT } from './uiClasses';
 
 /** Stored/effective member statuses (backend `MEMBER_STATUSES`, Wave 7 B5). */
 export const MEMBER_STATUSES = ['interessent', 'probe', 'aktiv', 'ruhend', 'ausgetreten', 'ausgeschlossen', 'verstorben'] as const;
@@ -205,14 +206,14 @@ export function formatDate(value: string | Date | null | undefined, language: st
 export function statusChipClass(status: string): string {
     switch (status) {
         case 'aktiv':
-            return 'bg-success/15 text-success';
+            return 'bg-success-soft text-success';
         case 'probe':
         case 'interessent':
-            return 'bg-primary/10 text-primary';
+            return 'bg-primary-soft text-primary-soft-foreground';
         case 'ruhend':
-            return 'bg-warning/15 text-warning';
+            return 'bg-warning-soft text-warning';
         case 'ausgeschlossen':
-            return 'bg-destructive/10 text-destructive';
+            return 'bg-destructive-soft text-destructive';
         default:
             return 'bg-muted text-muted-foreground';
     }
@@ -246,6 +247,8 @@ export function memberErrorKey(err: unknown): string {
     if (!(err instanceof ApiError)) return 'verein.err.network';
     // Wave 10: the processor agreement is not accepted yet and the grace period is over -- every write says so in plain words.
     if (err.status === 403 && (err.code === 'DPA_REQUIRED' || (err.details as { code?: unknown } | undefined)?.code === 'dpa_required')) return 'privacy.err.dpaRequired';
+    // Wave 15: the platform suspended the club -- every club route answers 403 CLUB_SUSPENDED.
+    if (err.status === 403 && (err.code === 'CLUB_SUSPENDED' || (err.details as { code?: unknown } | undefined)?.code === 'club_suspended')) return 'err.clubSuspended';
     const m = err.message;
     // Wave 7 B4/B6 conflicts carry a machine-readable `details.code`; it wins over the message text.
     const detailsCode = (err.details as { code?: unknown } | undefined)?.code;
@@ -374,14 +377,11 @@ export function memberCountFromError(err: unknown): number | null {
     return typeof details?.memberCount === 'number' ? details.memberCount : null;
 }
 
-export const inputClass =
-    'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none';
+export const inputClass = UI_INPUT;
 
-export const primaryButtonClass =
-    'rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50';
+export const primaryButtonClass = UI_BTN_PRIMARY;
 
-export const secondaryButtonClass =
-    'rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-muted disabled:opacity-50';
+export const secondaryButtonClass = UI_BTN_SECONDARY;
 
 /** A club member who has a login account, keyed by the Better Auth `member.id` (what loans, key holders, invitees use). */
 export interface AccountMember {

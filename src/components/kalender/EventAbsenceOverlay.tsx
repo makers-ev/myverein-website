@@ -29,7 +29,7 @@ export default function EventAbsenceOverlay({ clubId, eventId }: { clubId: strin
 
     if (!rows || rows.length === 0) return null;
     return (
-        <div role="status" className="rounded-lg bg-warning/10 p-3 text-foreground">
+        <div role="status" className="rounded-lg bg-warning-soft p-3 text-foreground">
             <p className="flex items-center gap-2 text-sm font-semibold">
                 <UserX className="h-4 w-4 shrink-0 text-warning" aria-hidden />
                 {t('absence.overlay.title', { count: rows.length })}

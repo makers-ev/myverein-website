@@ -96,7 +96,7 @@ export default function TransitionSuggestions({
         return (
             <p className="mb-4 text-xs text-muted-foreground">
                 {t('verein.suggestions.loadError')}{' '}
-                <button type="button" onClick={() => void load()} className="font-medium text-primary hover:underline">
+                <button type="button" onClick={() => void load()} className="font-medium text-primary-text hover:underline">
                     {t('verein.create.retry')}
                 </button>
             </p>
@@ -107,7 +107,7 @@ export default function TransitionSuggestions({
     if (!hasItems && !result) return null;
 
     return (
-        <div className="mb-4 rounded-xl border border-warning/40 bg-warning/10 p-4">
+        <div className="mb-4 rounded-xl border border-warning/40 bg-warning-soft p-4">
             {result && (
                 <p role="status" className="mb-2 text-sm font-medium text-foreground">
                     {t('verein.suggestions.result', { applied: result.applied.length })}
@@ -125,7 +125,7 @@ export default function TransitionSuggestions({
                             type="button"
                             onClick={() => setOpen((o) => !o)}
                             aria-expanded={open}
-                            className="rounded-md border border-border bg-background px-3 py-1 text-xs font-semibold text-foreground hover:bg-muted"
+                            className="rounded-md border border-control bg-background px-3 py-1 text-xs font-semibold text-foreground hover:bg-muted"
                         >
                             {open ? t('verein.suggestions.hide') : t('verein.suggestions.review')}
                         </button>
@@ -152,7 +152,7 @@ export default function TransitionSuggestions({
                                     type="button"
                                     onClick={() => void apply()}
                                     disabled={busy || selected.size === 0}
-                                    className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+                                    className="min-h-11 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
                                 >
                                     {t('verein.suggestions.apply', { count: selected.size })}
                                 </button>

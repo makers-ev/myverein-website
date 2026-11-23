@@ -40,6 +40,10 @@ describe('createSeriesBody', () => {
         expect(body).toMatchObject({ calendarId: 'c1', title: 'Training', startTime: '18:00', durationMinutes: 90, freq: 'weekly' });
         expect(body).not.toHaveProperty('description');
     });
+    it('sends the location only when one is chosen', () => {
+        expect(createSeriesBody({ ...base, locationId: 'loc-1' }, defaultRule(base.startDate))).toMatchObject({ locationId: 'loc-1' });
+        expect(createSeriesBody({ ...base, locationId: '' }, defaultRule(base.startDate))).not.toHaveProperty('locationId');
+    });
     it('uses durationDays and no time for all-day series', () => {
         const body = createSeriesBody({ ...base, allDay: true, endDate: '2030-05-08' }, defaultRule(base.startDate));
         expect(body).toMatchObject({ allDay: true, durationDays: 3 });

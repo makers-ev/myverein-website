@@ -32,11 +32,11 @@ export function usePalette(): PaletteContextValue {
 /**
  * Applies the selected palette's tokens as inline CSS custom properties on
  * <html>, overriding globals.css's `:root`/`.dark` defaults (which stay the
- * "ink-navy" palette, so a first paint before this effect runs is always
+ * "vereinsblau" palette, so a first paint before this effect runs is always
  * correct for the default palette).
  *
  * ponytail: no pre-hydration script here (unlike next-themes' own FOUC
- * script), so switching to a *non-default* palette flashes ink-navy for one
+ * script), so switching to a *non-default* palette flashes vereinsblau for one
  * frame on reload. Fixing that needs a nonce'd blocking script mirroring
  * next-themes' approach -- add if this flash is reported as an actual
  * annoyance, not preemptively.
@@ -92,6 +92,7 @@ export function PaletteProvider({ children }: { children: ReactNode }) {
         for (const [key, cssVar] of Object.entries(TOKEN_CSS_VARS)) {
             root.style.setProperty(cssVar, tokens[key as keyof typeof tokens]);
         }
+        root.style.setProperty('--card-foreground', tokens.foreground);
     }, [paletteId, customAnchors, isDark]);
 
     const value = useMemo(

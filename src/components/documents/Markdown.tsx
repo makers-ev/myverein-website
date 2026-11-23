@@ -18,13 +18,13 @@ function renderInline(nodes: Inline[]): ReactNode[] {
                 return <br key={i} />;
             case 'code':
                 return (
-                    <code key={i} className="rounded bg-muted px-1 py-0.5 text-[0.85em]">
+                    <code key={i} className="rounded-lg bg-muted px-1 py-0.5 text-[0.85em]">
                         {n.text}
                     </code>
                 );
             case 'link':
                 return (
-                    <a key={i} href={n.href} target="_blank" rel="noopener noreferrer nofollow" className="text-primary underline">
+                    <a key={i} href={n.href} target="_blank" rel="noopener noreferrer nofollow" className="text-primary-text underline">
                         {renderInline(n.children)}
                     </a>
                 );
@@ -81,7 +81,7 @@ function renderBlock(b: Block, i: number, tableLabel: string): ReactNode {
                         <thead className="bg-muted">
                             <tr>
                                 {b.head.map((cell, c) => (
-                                    <th key={c} scope="col" className={`border-b border-border px-3 py-2 font-semibold ${alignClass(b.align[c] ?? null)}`}>
+                                    <th key={c} scope="col" className={`border-b border-hairline px-3 py-2 font-semibold ${alignClass(b.align[c] ?? null)}`}>
                                         {renderInline(cell)}
                                     </th>
                                 ))}
@@ -89,7 +89,7 @@ function renderBlock(b: Block, i: number, tableLabel: string): ReactNode {
                         </thead>
                         <tbody>
                             {b.rows.map((row, r) => (
-                                <tr key={r} className="border-b border-border last:border-b-0">
+                                <tr key={r} className="border-b border-hairline last:border-b-0">
                                     {row.map((cell, c) => (
                                         <td key={c} className={`px-3 py-2 align-top ${alignClass(b.align[c] ?? null)}`}>
                                             {renderInline(cell)}

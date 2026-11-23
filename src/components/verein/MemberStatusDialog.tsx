@@ -122,7 +122,7 @@ export default function MemberStatusDialog({
                         type="button"
                         onClick={handleSave}
                         disabled={busy || target === ''}
-                        className={leaving ? 'rounded-lg bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground disabled:opacity-50' : primaryButtonClass}
+                        className={leaving ? 'rounded-lg bg-destructive-fill px-4 py-2 text-sm font-semibold text-destructive-foreground disabled:opacity-50' : primaryButtonClass}
                     >
                         {future ? t('verein.status.submit.schedule') : t('verein.status.submit')}
                     </button>
@@ -131,17 +131,17 @@ export default function MemberStatusDialog({
         >
             <p className="text-sm text-muted-foreground">
                 {t('verein.status.current')}{' '}
-                <span className={`ml-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusChipClass(from)}`}>{t(`verein.status.${from}`)}</span>
+                <span className={`ml-1 rounded-full px-2 py-0.5 text-xs font-medium ${statusChipClass(from)}`}>{t(`verein.status.${from}`)}</span>
             </p>
 
             {pendingExit && (
-                <div className="mt-3 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm text-foreground">
+                <div className="mt-3 rounded-lg border border-warning/40 bg-warning-soft p-3 text-sm text-foreground">
                     <p>{t('verein.status.pendingExit', { date: formatDate(member.leftAt, language) })}</p>
                     <button
                         type="button"
                         disabled={busy}
                         onClick={() => void submit({ toStatus: member.status })}
-                        className="mt-2 rounded-md border border-border bg-background px-3 py-1 text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-50"
+                        className="mt-2 rounded-md border border-control bg-background px-3 py-1 text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-50"
                     >
                         {t('verein.status.cancelExit')}
                     </button>
@@ -163,7 +163,7 @@ export default function MemberStatusDialog({
                                 aria-pressed={target === s}
                                 onClick={() => setTarget(s)}
                                 className={`rounded-full border px-3 py-1 text-sm ${
-                                    target === s ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-foreground hover:border-primary'
+                                    target === s ? 'border-primary bg-primary text-primary-foreground' : 'border-control text-foreground hover:border-primary'
                                 }`}
                             >
                                 {t(`verein.status.${s}`)}

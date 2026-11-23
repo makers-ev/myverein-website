@@ -6,16 +6,14 @@ import { useState } from 'react';
 import { Modal } from '@/components/Modal';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { formatDate as formatClubDate, memberErrorKey } from '@/lib/clubMembers';
+import { UI_BTN_ICON, UI_BTN_PRIMARY, UI_BTN_SECONDARY, UI_INPUT } from '@/lib/uiClasses';
 
 export type T = (key: string, params?: Record<string, string | number>) => string;
 
-export const inputClass =
-    'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none';
-export const primaryButtonClass =
-    'inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50';
-export const secondaryButtonClass =
-    'inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50';
-export const iconButtonClass = 'rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground';
+export const inputClass = UI_INPUT;
+export const primaryButtonClass = UI_BTN_PRIMARY;
+export const secondaryButtonClass = UI_BTN_SECONDARY;
+export const iconButtonClass = UI_BTN_ICON;
 
 /** Plain-language (translated) text for a failed API call; never the raw English server message. */
 export function errorMessage(err: unknown, t: T): string {
@@ -29,9 +27,9 @@ export function formatDate(value: string | Date | null | undefined, language = '
 
 export function SectionCard({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
     return (
-        <section className="rounded-xl border border-border bg-card p-4">
+        <section className="rounded-xl shadow-card bg-card p-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-sm font-bold text-foreground">{title}</h2>
+                <h2 className="text-base font-medium text-foreground">{title}</h2>
                 {action}
             </div>
             {children}
@@ -51,10 +49,10 @@ export function EmptyState({ icon, text }: { icon: ReactNode; text: string }) {
 export type Tone = 'success' | 'warning' | 'destructive' | 'primary' | 'muted';
 
 const toneClass: Record<Tone, string> = {
-    success: 'bg-success/10 text-success',
-    warning: 'bg-warning/10 text-warning',
-    destructive: 'bg-destructive/10 text-destructive',
-    primary: 'bg-primary/10 text-primary',
+    success: 'bg-success-soft text-success',
+    warning: 'bg-warning-soft text-warning',
+    destructive: 'bg-destructive-soft text-destructive',
+    primary: 'bg-primary-soft text-primary-soft-foreground',
     muted: 'bg-muted text-muted-foreground',
 };
 
@@ -203,7 +201,7 @@ export function ConfirmModal({
                         type="button"
                         onClick={() => void confirm()}
                         disabled={busy}
-                        className="rounded-lg bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground hover:opacity-90 disabled:opacity-50"
+                        className="rounded-lg bg-destructive-fill px-4 py-2 text-sm font-semibold text-destructive-foreground hover:opacity-90 disabled:opacity-50"
                     >
                         {confirmLabel}
                     </button>

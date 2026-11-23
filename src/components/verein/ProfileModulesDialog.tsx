@@ -114,7 +114,7 @@ export default function ProfileModulesDialog({ clubId, canReadSensitive, onClose
                 </ul>
 
                 {flash && (
-                    <p role={flash.ok ? 'status' : 'alert'} className={`rounded-lg px-3 py-2 text-sm ${flash.ok ? 'bg-success/10 text-foreground' : 'border border-destructive/40 bg-destructive/5 text-destructive'}`}>
+                    <p role={flash.ok ? 'status' : 'alert'} className={`rounded-lg px-3 py-2 text-sm ${flash.ok ? 'bg-success-soft text-foreground' : 'border border-destructive/40 bg-destructive-soft text-destructive'}`}>
                         {flash.text}
                     </p>
                 )}
@@ -155,7 +155,7 @@ export default function ProfileModulesDialog({ clubId, canReadSensitive, onClose
                                             const descId = `mod-${m.id}-desc`;
                                             const blockId = `mod-${m.id}-block`;
                                             return (
-                                                <li key={m.id} className="rounded-xl border border-border bg-card p-3">
+                                                <li key={m.id} className="rounded-xl shadow-card bg-card p-3">
                                                     <div className="flex flex-wrap items-start justify-between gap-3">
                                                         <div className="min-w-0 flex-1">
                                                             <p className="break-words text-sm font-semibold text-foreground">{tx.label}</p>
@@ -178,7 +178,7 @@ export default function ProfileModulesDialog({ clubId, canReadSensitive, onClose
                                                             {m.state === 'archived' && <p className="mt-1 text-xs text-muted-foreground">{t('forms.mod.archived.hint')}</p>}
                                                             {privacy && (
                                                                 <p className="mt-1.5 flex items-start gap-1.5 text-xs text-foreground">
-                                                                    <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
+                                                                    <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary-text" aria-hidden="true" />
                                                                     {t(privacy)}
                                                                 </p>
                                                             )}

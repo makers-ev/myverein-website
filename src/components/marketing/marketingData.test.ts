@@ -14,6 +14,7 @@ import {
     heroWordCount,
     marketingItems,
     outOfScopeItems,
+    outreachItemIds,
     quizToolIds,
     roadmapGroups,
     rolePointCount,
@@ -90,6 +91,7 @@ describe('marketingData', () => {
         for (const g of roadmapGroups) keys.push(`mk.road.group.${g}`);
         for (const id of ['setup', 'handbook', 'guides']) keys.push(`mk.help.${id}.title`, `mk.help.${id}.body`, `mk.help.${id}.cta`, `mk.help.${id}.label`);
         keys.push('mk.help.title.pre', 'mk.help.title.mark', 'mk.help.intro', 'mk.help.note', 'mk.help.hero');
+        keys.push('mk.out.title.pre', 'mk.out.title.mark', 'mk.out.intro', 'mk.out.note');
         keys.push('mk.hero.cta', 'mk.finale.cta', 'mk.finale.title.pre', 'mk.finale.title.mark', 'mk.finale.body', 'mk.finale.honest', 'mk.quiz.none');
         const missing = keys.filter((k) => !MarketingTranslation[lang][k] && !allKeys(lang)[k]);
         expect(missing).toEqual([]);
@@ -100,10 +102,9 @@ describe('marketingData', () => {
         for (const g of groups) expect(roadmapGroups).toContain(g);
     });
 
-    it('keeps only the outreach block (Wave 15) planned', () => {
-        const planned = marketingItems.filter((i) => i.status === 'soon');
-        expect(planned.length).toBeGreaterThan(0);
-        expect(planned.every((i) => i.wave === 15 && i.group === 'public')).toBe(true);
+    it('lists the shipped outreach block as live', () => {
+        for (const id of ['public-page', 'lead-inbox', 'sponsor-profiles', 'association-export', 'external-access']) expect(getItem(id).status).toBe('live');
+        expect(outreachItemIds.every((id) => getItem(id).group === 'public')).toBe(true);
     });
 
     it('treats the parent role as available once parent access is live', () => {

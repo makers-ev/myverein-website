@@ -51,7 +51,7 @@ export default function GuestRegistration({ token }: { token: string }) {
         return (
             <PublicShell status="ok">
                 <div className="text-center" role="status">
-                    <h1 className="text-xl font-bold text-foreground">{t('guest.pending.title')}</h1>
+                    <h1 className="text-2xl font-bold leading-8 text-foreground">{t('guest.pending.title')}</h1>
                     <p className="mt-2 text-sm text-muted-foreground">{t('guest.pending.body', { email: email.trim() })}</p>
                     <p className="mt-3 text-xs text-muted-foreground">{t('guest.pending.hint')}</p>
                 </div>
@@ -119,7 +119,7 @@ export default function GuestRegistration({ token }: { token: string }) {
             ) : (
                 <form onSubmit={(e) => void submit(e)} className="mt-6 space-y-4" noValidate>
                     <h2 className="text-base font-bold text-foreground">{t('guest.form.title')}</h2>
-                    {registration.full && <p className="rounded-lg bg-warning/10 px-3 py-2 text-sm text-foreground">{t('guest.full')}</p>}
+                    {registration.full && <p className="rounded-lg bg-warning-soft px-3 py-2 text-sm text-foreground">{t('guest.full')}</p>}
                     <div>
                         <label htmlFor="guest-name" className="block text-sm font-medium text-foreground">
                             {t('guest.name')} <span aria-hidden className="text-destructive">*</span>
@@ -168,7 +168,7 @@ export default function GuestRegistration({ token }: { token: string }) {
                         {!form?.privacyNotice && (
                             <p className="mb-2 rounded-lg bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
                                 {t('guest.privacy.generic', { club: event.clubName })}{' '}
-                                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="font-medium text-primary underline">
+                                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="font-medium text-primary-text underline">
                                     {t('guest.privacy.link')}
                                 </a>
                             </p>
@@ -180,7 +180,7 @@ export default function GuestRegistration({ token }: { token: string }) {
                         <p className="mt-1 text-xs text-muted-foreground">{t('guest.privacy.hint')}</p>
                     </div>
                     {message && (
-                        <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                        <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2 text-sm text-destructive">
                             {message}
                         </p>
                     )}

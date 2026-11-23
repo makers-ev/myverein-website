@@ -112,6 +112,7 @@ const UxTranslation: Translation = {
         'err.formOutdated': 'Das Formular wurde inzwischen geändert. Lade die Seite neu.',
         'err.recipientConfirmation': 'Bitte bestätige zuerst die Empfänger.',
         'err.queryTooShort': 'Gib mindestens 2 Zeichen ein.',
+        'err.invalidWindow': 'Der Abstimmungszeitraum passt nicht: Das Ende muss in der Zukunft und nach dem Beginn liegen.',
     },
     en: {
         'help.nav': 'Help',
@@ -213,6 +214,7 @@ const UxTranslation: Translation = {
         'err.formOutdated': 'The form has been changed in the meantime. Reload the page.',
         'err.recipientConfirmation': 'Please confirm the recipients first.',
         'err.queryTooShort': 'Type at least 2 characters.',
+        'err.invalidWindow': 'The voting window does not fit: the end must be in the future and after the start.',
     },
 };
 

@@ -15,10 +15,11 @@ import { exitDialogTouched, exitFormFields, exitRequestBody, plainExitBody, repi
 import { useConfirm } from '@/components/useConfirm';
 import { type Answers, type FieldErrorCode, fieldErrorsFromError, type FormDefinition, formErrorKey, validateAnswers } from '@/lib/formSchema';
 import { selfExitErrorKey, canWithdraw, type ExitRequest, isOwnerOrgRole, type NoticePreview, noticeRuleText } from '@/lib/memberLifecycle';
+import { UI_BTN_DANGER } from '@/lib/uiClasses';
 
 const statusTone: Record<ExitRequest['status'], Tone> = { pending: 'warning', approved: 'primary', rejected: 'destructive', withdrawn: 'muted' };
 
-const dangerButtonClass = 'rounded-lg bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground disabled:opacity-50';
+const dangerButtonClass = UI_BTN_DANGER;
 
 /**
  * "Mitgliedschaft kündigen" in Mein Profil (Wave 7 W4): shows the club's notice rule (`GET /club-exit-requests/preview`),
@@ -93,7 +94,7 @@ export default function ExitSection({
             ) : (
                 <div className="space-y-4">
                     {flash && (
-                        <p role="status" className="rounded-lg border border-success/40 bg-success/10 p-3 text-sm text-foreground">
+                        <p role="status" className="rounded-lg border border-success/40 bg-success-soft p-3 text-sm text-foreground">
                             {flash}
                         </p>
                     )}
@@ -320,14 +321,14 @@ function CancelDialog({
                 <span className="mt-1 block text-xs font-normal">{t('verein.exit.dialog.desiredHint')}</span>
             </label>
             {notice && (
-                <p role="status" className="mt-4 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm text-foreground">
+                <p role="status" className="mt-4 rounded-lg border border-warning/40 bg-warning-soft p-3 text-sm text-foreground">
                     {notice}
                 </p>
             )}
             <div className="mt-4">
                 {withoutForm ? (
                     <div>
-                        <p role="status" className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm text-foreground">
+                        <p role="status" className="rounded-lg border border-warning/40 bg-warning-soft p-3 text-sm text-foreground">
                             {t('forms.exit.withoutForm')}
                         </p>
                         <label className="mt-3 block text-xs font-semibold text-muted-foreground">
@@ -396,7 +397,7 @@ function WithdrawDialog({ clubId, request, onClose, onDone }: { clubId: string; 
                     <button type="button" onClick={onClose} disabled={busy} className={secondaryButtonClass}>
                         {t('verein.roles.add.cancel')}
                     </button>
-                    <button type="button" onClick={() => void submit()} disabled={busy} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+                    <button type="button" onClick={() => void submit()} disabled={busy} className="min-h-11 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98] disabled:opacity-50">
                         {t('verein.exit.withdraw.submit')}
                     </button>
                 </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { roleLabel } from '@/lib/roleLabel';
 
 import RoleBadge from '@/components/verein/RoleBadge';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -100,14 +101,14 @@ export default function MemberRoleCell({
                         value={selectedRole}
                         onChange={(e) => setNewRole(e.target.value as RoleType)}
                         aria-label={t('verein.roles.add')}
-                        className="rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground focus:border-primary focus:outline-none"
+                        className="rounded-md border border-control bg-background px-2 py-1 text-xs text-foreground focus:border-primary focus:outline-none"
                     >
                         <option value="" disabled>
                             {t('verein.roles.base.option')}
                         </option>
                         {availableRoles.map((rt) => (
                             <option key={rt} value={rt}>
-                                {t(`verein.role.${rt}`)}
+                                {roleLabel(t, rt)}
                             </option>
                         ))}
                     </select>
@@ -124,7 +125,7 @@ export default function MemberRoleCell({
                 </div>
             ) : (
                 availableRoles.length > 0 && (
-                    <button onClick={() => setAdding(true)} className="mt-1.5 text-xs font-medium text-primary hover:underline">
+                    <button onClick={() => setAdding(true)} className="mt-1.5 text-xs font-medium text-primary-text hover:underline">
                         {t('verein.roles.add')}
                     </button>
                 )

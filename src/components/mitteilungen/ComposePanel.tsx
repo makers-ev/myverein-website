@@ -241,13 +241,13 @@ export default function ComposePanel({
                     </p>
                 </div>
 
-                <section className="space-y-3 rounded-xl border border-border bg-card p-4">
-                    <h3 className="text-sm font-bold text-foreground">{t('mitteilungen.section.audience')}</h3>
+                <section className="space-y-3 rounded-xl shadow-card bg-card p-4">
+                    <h3 className="text-base font-medium text-foreground">{t('mitteilungen.section.audience')}</h3>
                     <AudiencePicker clubId={clubId} gate={gate} departments={departments} value={audience} pickedMembers={picked} onChange={setAudience} onPickedMembersChange={setPicked} />
                 </section>
 
-                <section className="space-y-3 rounded-xl border border-border bg-card p-4">
-                    <h3 className="text-sm font-bold text-foreground">{t('mitteilungen.section.channels')}</h3>
+                <section className="space-y-3 rounded-xl shadow-card bg-card p-4">
+                    <h3 className="text-base font-medium text-foreground">{t('mitteilungen.section.channels')}</h3>
                     <p className="text-xs text-muted-foreground">{t('mitteilungen.channels.inapp')}</p>
                     <div className="flex flex-wrap gap-4">
                         {OPTIONAL_CHANNELS.map((c) => (
@@ -264,8 +264,8 @@ export default function ComposePanel({
                     </div>
                 </section>
 
-                <section className="space-y-4 rounded-xl border border-border bg-card p-4">
-                    <h3 className="text-sm font-bold text-foreground">{t('mitteilungen.section.options')}</h3>
+                <section className="space-y-4 rounded-xl shadow-card bg-card p-4">
+                    <h3 className="text-base font-medium text-foreground">{t('mitteilungen.section.options')}</h3>
                     {gate.canUrgent && (
                         <div className="space-y-1">
                             <Toggle checked={urgent} onChange={setUrgent} label={t('mitteilungen.option.urgent')} />
@@ -301,12 +301,12 @@ export default function ComposePanel({
             </div>
 
             <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-                <section className="space-y-2 rounded-xl border border-border bg-card p-4">
-                    <h3 className="text-sm font-bold text-foreground">{t('mitteilungen.preview.title')}</h3>
+                <section className="space-y-2 rounded-xl shadow-card bg-card p-4">
+                    <h3 className="text-base font-medium text-foreground">{t('mitteilungen.preview.title')}</h3>
                     <PreviewBox state={previewState} channels={channels} />
                 </section>
                 {error && (
-                    <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                    <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2 text-sm text-destructive">
                         {error}
                     </p>
                 )}

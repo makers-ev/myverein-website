@@ -23,8 +23,8 @@ interface Props {
 }
 
 const STATUS_TONE: Record<Participant['status'], string> = {
-    angemeldet: 'bg-success/15 text-success',
-    warteliste: 'bg-warning/15 text-warning',
+    angemeldet: 'bg-success-soft text-success',
+    warteliste: 'bg-warning-soft text-warning',
     unbestaetigt: 'bg-muted text-muted-foreground',
 };
 
@@ -106,7 +106,7 @@ export default function ParticipantsPanel({ clubId, event, canManage }: Props) {
             </div>
             {hiddenSensitive && <p className="rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">{t('participants.sensitive.hidden')}</p>}
             {error && (
-                <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-destructive">
+                <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2 text-destructive">
                     {error}
                 </p>
             )}
@@ -137,7 +137,7 @@ export default function ParticipantsPanel({ clubId, event, canManage }: Props) {
                                 )}
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-border">
+                        <tbody className="divide-y divide-hairline">
                             {data.registrations.map((p) => (
                                 <tr key={p.id} className="align-top text-foreground">
                                     <th scope="row" className="px-3 py-2 font-medium">
@@ -170,7 +170,7 @@ export default function ParticipantsPanel({ clubId, event, canManage }: Props) {
                                                     const v = e.target.value as 'angemeldet' | 'warteliste' | 'abgesagt';
                                                     if (v) void changeStatus(p, v);
                                                 }}
-                                                className="rounded-lg border border-border bg-background px-2 py-1 text-xs text-foreground"
+                                                className="rounded-lg border border-control bg-background px-2 py-1 text-xs text-foreground"
                                             >
                                                 <option value="">{t('participants.change.placeholder')}</option>
                                                 {statusChoices(p.status).map((s) => (

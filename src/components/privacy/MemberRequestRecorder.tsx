@@ -39,7 +39,7 @@ export default function MemberRequestRecorder({ clubId, clubMemberId, onRecorded
             <div className="flex flex-wrap items-end gap-3">
                 <label className="block">
                     <span className="mb-1 block text-xs font-medium text-muted-foreground">{t('privacy.record.kind')}</span>
-                    <select value={kind} onChange={(e) => setKind(e.target.value as RequestKind)} className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground">
+                    <select value={kind} onChange={(e) => setKind(e.target.value as RequestKind)} className="rounded-lg border border-control bg-background px-3 py-2 text-sm text-foreground">
                         {REQUEST_KINDS.map((k) => (
                             <option key={k} value={k}>
                                 {t(`privacy.request.kind.${k}`)}

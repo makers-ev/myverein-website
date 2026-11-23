@@ -4,7 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 import { ToolIcon, type ToolId } from './HeroScene';
 import { getItem } from './marketingData';
-import { Marker, PaperCard, StatusSketch } from './Sketch';
+import { MK_SECTION, SectionHead, StatusSketch } from './Sketch';
 import { useInView } from './useInView';
 
 // Which MyVerein feature takes over from which classic tool. Status and wave come from marketingData, so flipping an
@@ -23,39 +23,36 @@ export default function MediaBreaks() {
     const { ref, stateClass } = useInView<HTMLDivElement>({ threshold: 0.25 });
 
     return (
-        <section aria-labelledby="mk-breaks-title" className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
-            <h2 id="mk-breaks-title" className="text-center text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-                <Marker>{t('mk.breaks.title')}</Marker>
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-center text-lg leading-relaxed text-muted-foreground">{t('mk.breaks.intro')}</p>
+        <section aria-labelledby="mk-breaks-title" className={MK_SECTION}>
+            <SectionHead id="mk-breaks-title" title={t('mk.breaks.title')} intro={t('mk.breaks.intro')} />
 
-            <div ref={ref} className={`${stateClass} mt-10 overflow-x-clip px-1 py-3`}>
-                <PaperCard className="mx-auto max-w-3xl p-4 sm:p-6">
-                    <p className="mb-4 text-xl font-extrabold text-foreground">{t('mk.breaks.app')}</p>
-                    <ul className="grid gap-4 sm:grid-cols-2">
+            <div ref={ref} className={`${stateClass} mt-12 overflow-x-clip`}>
+                <div className="rounded-3xl border border-border bg-muted/50 p-4 sm:p-6">
+                    <p className="mb-4 px-1 text-lg font-semibold text-foreground">{t('mk.breaks.app')}</p>
+                    <ul className="grid gap-4 md:grid-cols-6">
                         {BREAKS.map(({ tool, item }, i) => {
                             const entry = getItem(item);
                             return (
-                                <li key={tool} className={`mk-b1-fly mk-b1-fly-${i + 1} mk-d${i + 1} sm:last:col-span-2`}>
+                                <li key={tool} className={`mk-b1-fly mk-b1-fly-${i + 1} mk-d${i + 1} ${i < 3 ? 'md:col-span-2' : 'md:col-span-3'}`}>
                                     <StatusSketch status={entry.status} className="h-full">
                                         <p className="flex items-center gap-2 text-sm text-muted-foreground">
                                             <ToolIcon tool={tool} className="size-6" />
                                             <span>
-                                                {t('mk.breaks.from')} <span className="font-semibold">{t(`mk.hero.obj.${tool}`)}</span>
+                                                {t('mk.breaks.from')} <span className="font-medium">{t(`mk.hero.obj.${tool}`)}</span>
                                             </span>
                                         </p>
-                                        <h3 className="mt-3 text-base font-bold">
+                                        <h3 className="mt-4 text-lg font-semibold leading-snug">
                                             <span className="sr-only">{t('mk.breaks.to')} </span>
                                             {t(`${entry.i18nKey}.title`)}
                                         </h3>
-                                        <p className="mt-1 text-sm leading-relaxed">{t(`${entry.i18nKey}.body`)}</p>
+                                        <p className="mt-2 text-[0.9375rem] leading-relaxed text-muted-foreground">{t(`${entry.i18nKey}.body`)}</p>
                                     </StatusSketch>
                                 </li>
                             );
                         })}
                     </ul>
-                </PaperCard>
-                <p className="mk-note mx-auto mt-4 max-w-2xl text-center text-sm text-muted-foreground">{t('mk.breaks.legend')}</p>
+                </div>
+                <p className="mt-4 max-w-2xl text-sm text-muted-foreground">{t('mk.breaks.legend')}</p>
             </div>
         </section>
     );

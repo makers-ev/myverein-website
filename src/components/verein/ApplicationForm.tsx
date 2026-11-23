@@ -499,13 +499,13 @@ export default function ApplicationForm({ slug, mode, current, resume, registerF
             }}
             className="mt-4"
         >
-            <h3 className="text-sm font-bold text-foreground">{definition.name}</h3>
+            <h3 className="text-base font-medium text-foreground">{definition.name}</h3>
             <p className="mt-1 text-xs text-muted-foreground">{t('forms.apply.requiredLegend')}</p>
 
             {notice && (
                 <div ref={noticeRef} tabIndex={-1} role="status" className="mt-3 rounded-lg border border-primary/40 bg-primary/5 p-3 text-sm text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                     <p className="flex items-center gap-2 font-semibold">
-                        <RefreshCw className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                        <RefreshCw className="h-4 w-4 shrink-0 text-primary-text" aria-hidden="true" />
                         {t('forms.apply.updated.title')}
                     </p>
                     <p className="mt-1">{t('forms.apply.updated.body')}</p>
@@ -519,7 +519,7 @@ export default function ApplicationForm({ slug, mode, current, resume, registerF
                             </ul>
                         </>
                     )}
-                    <button type="button" onClick={() => setNotice(null)} className="mt-2 text-xs font-semibold text-primary underline">
+                    <button type="button" onClick={() => setNotice(null)} className="mt-2 text-xs font-semibold text-primary-text underline">
                         {t('forms.apply.updated.dismiss')}
                     </button>
                 </div>
@@ -583,7 +583,7 @@ export default function ApplicationForm({ slug, mode, current, resume, registerF
                     (confirmDiscard ? (
                         <span className="flex flex-wrap items-center gap-2 text-xs text-foreground">
                             {t('forms.apply.discard.confirm')}
-                            <button type="button" disabled={discarding || submitting} onClick={() => void discard()} className="rounded-md bg-destructive px-2.5 py-1 text-xs font-semibold text-white disabled:opacity-50">
+                            <button type="button" disabled={discarding || submitting} onClick={() => void discard()} className="rounded-md bg-destructive-fill px-2.5 py-1 text-xs font-semibold text-white disabled:opacity-50">
                                 {t('forms.apply.discard.yes')}
                             </button>
                             <button type="button" disabled={discarding} onClick={() => setConfirmDiscard(false)} className="text-xs text-muted-foreground hover:text-foreground">

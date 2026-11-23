@@ -5,6 +5,7 @@ type Translate = (key: string, params?: Record<string, string | number>) => stri
 /** Text key per stable backend error code (compared case-insensitively, the backend sends `QUOTA_EXCEEDED` and `query_too_short` style codes). */
 const CODE_KEYS: Record<string, string> = {
     DPA_REQUIRED: 'err.dpaRequired',
+    CLUB_SUSPENDED: 'err.clubSuspended',
     QUOTA_EXCEEDED: 'err.quota',
     ALREADY_MEMBER: 'err.alreadyMember',
     APPLICATION_PENDING: 'err.applicationPending',
@@ -12,6 +13,7 @@ const CODE_KEYS: Record<string, string> = {
     RECIPIENT_CONFIRMATION_REQUIRED: 'err.recipientConfirmation',
     QUERY_TOO_SHORT: 'err.queryTooShort',
     TOO_MANY_REQUESTS: 'err.tooMany',
+    INVALID_WINDOW: 'err.invalidWindow',
 };
 
 /**

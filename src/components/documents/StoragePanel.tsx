@@ -65,7 +65,7 @@ export default function StoragePanel({ clubId, canEmptyTrash }: { clubId: string
                     {t(tone === 'full' ? 'docs.storage.full' : 'docs.storage.warn')}
                 </p>
             )}
-            <ul className="mt-3 divide-y divide-border rounded-lg border border-border text-sm">
+            <ul className="mt-3 divide-y divide-hairline rounded-lg border border-border text-sm">
                 {AREAS.map((area) => (
                     <li key={area} className="flex justify-between px-3 py-2">
                         <span className="text-foreground">{t(`docs.storage.area.${area}`)}</span>

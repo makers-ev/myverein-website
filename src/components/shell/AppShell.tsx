@@ -3,11 +3,12 @@
 import Link from 'next/link';
 import { Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { Menu, X } from 'lucide-react';
+import { ChevronRight, Menu, X } from 'lucide-react';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 import { breadcrumbsFor, buildNavGroups } from '@/lib/navigation';
 import { ActiveClubProvider, useActiveClub } from '@/components/shell/ActiveClubProvider';
+import ClubSuspensionBanner from '@/components/shell/ClubSuspensionBanner';
 import ClubSwitcher from '@/components/shell/ClubSwitcher';
 import GlobalSearch from '@/components/shell/GlobalSearch';
 import Sidebar from '@/components/shell/Sidebar';
@@ -40,16 +41,16 @@ function Breadcrumbs() {
     const crumbs = breadcrumbsFor(pathname, tab);
     return (
         <nav aria-label={t('shell.breadcrumb')} className="min-w-0">
-            <ol className="flex items-center gap-1.5 truncate text-sm text-muted-foreground">
+            <ol className="flex items-center gap-1 truncate text-sm text-muted-foreground">
                 {crumbs.map((c, i) => (
-                    <li key={c.labelKey} className="flex items-center gap-1.5">
-                        {i > 0 && <span aria-hidden="true">/</span>}
+                    <li key={c.labelKey} className="flex items-center gap-1">
+                        {i > 0 && <ChevronRight aria-hidden="true" strokeWidth={1.5} className="h-3.5 w-3.5" />}
                         {c.href ? (
-                            <Link href={c.href} className="hover:text-foreground hover:underline">
+                            <Link href={c.href} className="rounded transition-colors hover:text-foreground">
                                 {t(c.labelKey)}
                             </Link>
                         ) : (
-                            <span aria-current="page" className="font-medium text-foreground">
+                            <span aria-current="page" className="text-foreground">
                                 {t(c.labelKey)}
                             </span>
                         )}
@@ -127,12 +128,12 @@ function ShellBody({ switchKey, children }: { switchKey: number; children: React
     return (
         <div className="flex min-h-[calc(100vh-4rem)]">
             {ready && (
-                <aside className={`sticky top-16 hidden h-[calc(100vh-4rem)] shrink-0 border-r border-border bg-card md:block ${collapsed ? 'w-16' : 'w-60'}`}>
+                <aside className={`sticky top-16 hidden h-[calc(100vh-4rem)] shrink-0 border-r border-hairline bg-card md:block ${collapsed ? 'w-16' : 'w-60'}`}>
                     <Sidebar groups={groups} collapsed={collapsed} onToggleCollapsed={toggleCollapsed} />
                 </aside>
             )}
             <div className="min-w-0 flex-1">
-                <div className="sticky top-16 z-30 flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border bg-background/90 px-4 py-2 backdrop-blur sm:px-6">
+                <div className="sticky top-16 z-30 flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-hairline bg-background px-4 py-2 sm:px-6">
                     {ready && (
                         <button
                             ref={menuButton}
@@ -141,9 +142,9 @@ function ShellBody({ switchKey, children }: { switchKey: number; children: React
                             aria-expanded={drawer}
                             aria-controls="mobile-sidebar"
                             aria-label={t(drawer ? 'shell.menu.close' : 'shell.menu.open')}
-                            className="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-foreground hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary md:hidden"
+                            className="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-text md:hidden"
                         >
-                            {drawer ? <X aria-hidden="true" className="h-5 w-5" /> : <Menu aria-hidden="true" className="h-5 w-5" />}
+                            {drawer ? <X aria-hidden="true" strokeWidth={1.5} className="h-5 w-5" /> : <Menu aria-hidden="true" strokeWidth={1.5} className="h-5 w-5" />}
                         </button>
                     )}
                     <ClubSwitcher />
@@ -158,13 +159,14 @@ function ShellBody({ switchKey, children }: { switchKey: number; children: React
                 </div>
                 {ready && drawer && (
                     <div className="fixed inset-0 top-16 z-20 md:hidden" role="presentation">
-                        <button type="button" aria-label={t('shell.menu.close')} tabIndex={-1} className="absolute inset-0 bg-black/40" onClick={() => setDrawer(false)} />
-                        <div id="mobile-sidebar" ref={drawerRef} className="absolute inset-y-0 left-0 w-72 pt-16 max-w-[85vw] overflow-y-auto border-r border-border bg-card shadow-xl">
+                        <button type="button" aria-label={t('shell.menu.close')} tabIndex={-1} className="absolute inset-0 bg-scrim/40" onClick={() => setDrawer(false)} />
+                        <div id="mobile-sidebar" ref={drawerRef} className="absolute inset-y-0 left-0 w-72 pt-16 max-w-[85vw] overflow-y-auto border-r border-hairline bg-card shadow-xl">
                             <Sidebar groups={groups} collapsed={false} onNavigate={() => setDrawer(false)} />
                         </div>
                     </div>
                 )}
                 <div key={switchKey} className="bg-background">
+                    <ClubSuspensionBanner />
                     {children}
                 </div>
             </div>

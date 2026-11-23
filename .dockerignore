@@ -1,0 +1,9 @@
+node_modules
+.next
+.git
+graphify-out
+.claude
+.env
+.env.*
+!.env.example
+*.log

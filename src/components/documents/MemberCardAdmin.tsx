@@ -72,7 +72,7 @@ export default function MemberCardAdmin({ clubId, clubMemberId }: { clubId: stri
 
     const issued = !!card?.issued;
     return (
-        <section aria-label={t('docs.card.admin.title')} className="space-y-3 rounded-xl border border-border bg-card p-3">
+        <section aria-label={t('docs.card.admin.title')} className="space-y-3 rounded-xl shadow-card bg-card p-3">
             <h3 className="flex items-center gap-2 text-sm font-bold text-foreground">
                 <IdCard className="h-4 w-4" aria-hidden="true" />
                 {t('docs.card.admin.title')}

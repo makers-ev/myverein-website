@@ -17,7 +17,7 @@ function EventRow({ event, busy, onRespond, onClear }: { event: WardEvent; busy:
     const start = new Date(event.startsAt);
     const cancelled = event.cancelledAt !== null;
     return (
-        <li className="rounded-lg border border-border bg-card p-3">
+        <li className="rounded-xl shadow-card bg-card p-3">
             <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0">
                     <p className="text-sm font-semibold text-foreground">{event.title}</p>
@@ -58,7 +58,7 @@ function Group({ title, events, busyId, onRespond, onClear }: { title: string; e
     if (events.length === 0) return null;
     return (
         <div>
-            <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">{title}</h3>
+            <h3 className="mb-2 text-xs font-bold text-muted-foreground">{title}</h3>
             <ul className="space-y-2">
                 {events.map((e) => (
                     <EventRow key={e.id} event={e} busy={busyId === e.id} onRespond={(s) => onRespond(e, s)} onClear={() => onClear(e)} />

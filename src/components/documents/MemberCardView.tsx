@@ -20,11 +20,11 @@ export default function MemberCardView({ card, offline = false }: { card: Member
     const valid = card.state === 'gueltig';
 
     return (
-        <article aria-label={t('docs.card.aria', { name: card.member.displayName })} className="w-full max-w-sm overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+        <article aria-label={t('docs.card.aria', { name: card.member.displayName })} className="w-full max-w-sm overflow-hidden rounded-2xl shadow-card bg-card ">
             <header className="flex items-center gap-3 px-4 py-3" style={{ backgroundColor: primary, color: ink }}>
                 {card.club.logo && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={card.club.logo.url} alt="" className="h-9 w-9 rounded bg-white object-contain p-0.5" />
+                    <img src={card.club.logo.url} alt="" className="h-9 w-9 rounded-lg bg-white object-contain p-0.5" />
                 )}
                 <p className="min-w-0 flex-1 truncate text-sm font-bold">{card.club.name}</p>
                 <span className="h-6 w-1.5 rounded-full" style={{ backgroundColor: accent }} aria-hidden="true" />
@@ -44,7 +44,7 @@ export default function MemberCardView({ card, offline = false }: { card: Member
                     {card.member.category && <p className="text-sm text-muted-foreground">{card.member.category}</p>}
                 </div>
             </div>
-            <div className="space-y-3 border-t border-border px-4 py-4">
+            <div className="space-y-3 border-t border-hairline px-4 py-4">
                 <div className="flex flex-wrap items-center gap-2">
                     <Chip tone={CARD_STATE_TONE[card.state]}>{t(`docs.card.state.${card.state}`)}</Chip>
                     {card.hint && <span className="text-xs text-muted-foreground">{t(`docs.card.hint.${card.hint}`)}</span>}

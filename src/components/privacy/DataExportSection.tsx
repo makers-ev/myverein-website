@@ -51,7 +51,7 @@ export default function DataExportSection({ clubId, target }: { clubId: string; 
             <div className="flex flex-wrap items-end gap-3">
                 <label className="block">
                     <span className="mb-1 block text-xs font-medium text-muted-foreground">{t('privacy.export.format')}</span>
-                    <select value={format} onChange={(e) => setFormat(e.target.value as Format)} className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground">
+                    <select value={format} onChange={(e) => setFormat(e.target.value as Format)} className="rounded-lg border border-control bg-background px-3 py-2 text-sm text-foreground">
                         <option value="html">{t('privacy.export.format.html')}</option>
                         <option value="json">{t('privacy.export.format.json')}</option>
                     </select>

@@ -44,7 +44,7 @@ export default function CardVerify({ clubId }: { clubId: string }) {
     return (
         <section aria-label={t('docs.card.verify.title')} className="space-y-4">
             <div>
-                <h2 className="text-lg font-bold text-foreground">{t('docs.card.verify.title')}</h2>
+                <h2 className="text-lg font-medium text-foreground">{t('docs.card.verify.title')}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{t('docs.card.verify.intro')}</p>
             </div>
             <form
@@ -72,7 +72,7 @@ export default function CardVerify({ clubId }: { clubId: string }) {
                 </p>
             )}
             {answer && (
-                <div role="status" className="max-w-lg rounded-xl border border-border bg-card p-4">
+                <div role="status" className="max-w-lg rounded-xl shadow-card bg-card p-4">
                     <Chip tone={RESULT_TONE[answer.result]}>{t(`docs.card.verify.result.${answer.result}`)}</Chip>
                     {answer.result === 'gueltig' && answer.member ? (
                         <div className="mt-3 flex items-center gap-3">

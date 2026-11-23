@@ -72,7 +72,7 @@ export default function UploadControl({
                 setOver(false);
                 if (!disabled) void handle(multiple ? e.dataTransfer.files : Array.from(e.dataTransfer.files).slice(0, 1));
             }}
-            className={`rounded-lg border border-dashed p-3 ${over ? 'border-primary bg-primary/5' : 'border-border'}`}
+            className={`rounded-lg border border-dashed p-3 ${over ? 'border-primary bg-primary/5' : 'border-control'}`}
         >
             <div className="flex flex-wrap items-center gap-3">
                 <input

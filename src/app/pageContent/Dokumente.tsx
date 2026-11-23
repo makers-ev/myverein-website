@@ -74,7 +74,7 @@ export default function DokumentePageContent() {
     return (
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
             <div className="flex items-center gap-1">
-                <h1 className="text-2xl font-bold text-foreground">{t('docs.archive.title')}</h1>
+                <h1 className="text-[1.75rem] font-bold leading-9 text-foreground">{t('docs.archive.title')}</h1>
                 <HelpLink topic="documents" />
             </div>
             <p className="mt-1 text-sm text-muted-foreground">{t('docs.archive.intro')}</p>
@@ -87,7 +87,7 @@ export default function DokumentePageContent() {
                     <p className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">{t('docs.archive.noClub')}</p>
                 ) : (
                     <>
-                        <div role="tablist" aria-label={t('docs.archive.title')} className="mb-4 flex gap-2 overflow-x-auto border-b border-border">
+                        <div role="tablist" aria-label={t('docs.archive.title')} className="mb-4 flex gap-2 overflow-x-auto border-b border-hairline">
                             {tabs.map((value) => (
                                 <button
                                     key={value}
@@ -97,7 +97,7 @@ export default function DokumentePageContent() {
                                     aria-selected={current === value}
                                     aria-controls="doc-panel"
                                     onClick={() => setTab(value)}
-                                    className={`whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium transition-colors ${current === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                                    className={`whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium transition-colors ${current === value ? 'border-primary text-primary-text' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
                                 >
                                     {t(`docs.tab.${value}`)}
                                     {value === 'bestaetigungen' && state.openAcks > 0 && (

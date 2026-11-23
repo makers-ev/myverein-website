@@ -1,8 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { FileSpreadsheet } from 'lucide-react';
 
 import { AnnualReportAction } from '@/components/documents/ReportActions';
+import AssociationReportDialog from '@/components/verein/AssociationReportDialog';
 
 import { ColumnChart } from '@/components/charts/ColumnChart';
 import { HBarList } from '@/components/charts/HBarList';
@@ -23,8 +25,8 @@ interface ClubStats {
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
     return (
-        <section className="rounded-xl border border-border bg-card p-4">
-            <h2 className="mb-3 text-sm font-bold text-foreground">{title}</h2>
+        <section className="rounded-xl shadow-card bg-card p-4">
+            <h2 className="mb-3 text-base font-medium text-foreground">{title}</h2>
             {children}
         </section>
     );
@@ -32,7 +34,7 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
 
 function Kpi({ label, value, hint }: { label: string; value: number; hint?: string }) {
     return (
-        <div className="rounded-xl border border-border bg-card p-4">
+        <div className="rounded-xl shadow-card bg-card p-4">
             <p className="text-xs font-semibold text-muted-foreground">{label}</p>
             <p className="mt-1 text-3xl font-bold text-foreground">{value}</p>
             {hint && <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>}
@@ -44,10 +46,11 @@ function Kpi({ label, value, hint }: { label: string; value: number; hint?: stri
  * Board KPI dashboard (Wave 7 W8). Only mounted with the `club_stats:read` permission from /club-members/me; the
  * backend answers 403 for everybody else. Charts are hand-rolled SVG (src/components/charts), no dependency.
  */
-export default function ClubStatsPanel({ clubId }: { clubId: string }) {
+export default function ClubStatsPanel({ clubId, canSensitive = false }: { clubId: string; canSensitive?: boolean }) {
     const { t, language } = useLanguage();
     const [stats, setStats] = useState<ClubStats | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [reportOpen, setReportOpen] = useState(false);
 
     const load = useCallback(async () => {
         try {
@@ -67,7 +70,7 @@ export default function ClubStatsPanel({ clubId }: { clubId: string }) {
 
     if (error) {
         return (
-            <div role="alert" className="rounded-xl border border-destructive/40 bg-destructive/5 p-4 text-sm">
+            <div role="alert" className="rounded-xl border border-destructive/40 bg-destructive-soft p-4 text-sm">
                 <p className="text-destructive">{error}</p>
                 <button type="button" onClick={() => void load()} className={`${secondaryButtonClass} mt-3`}>
                     {t('verein.create.retry')}
@@ -101,7 +104,13 @@ export default function ClubStatsPanel({ clubId }: { clubId: string }) {
         <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-xs text-muted-foreground">{t('verein.stats.hint')}</p>
-                <AnnualReportAction clubId={clubId} />
+                <div className="flex flex-wrap gap-2">
+                    <button type="button" onClick={() => setReportOpen(true)} className={`${secondaryButtonClass} gap-1.5`}>
+                        <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />
+                        {t('assoc.open')}
+                    </button>
+                    <AnnualReportAction clubId={clubId} />
+                </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -152,13 +161,14 @@ export default function ClubStatsPanel({ clubId }: { clubId: string }) {
                             data={stats.movement.map((m) => ({ label: monthLabel(m.month), values: { joined: m.joined, left: m.left } }))}
                             series={[
                                 { key: 'joined', label: t('verein.stats.joined'), fillClass: 'fill-success', textClass: 'text-success', bgClass: 'bg-success' },
-                                { key: 'left', label: t('verein.stats.left'), fillClass: 'fill-destructive', textClass: 'text-destructive', bgClass: 'bg-destructive' },
+                                { key: 'left', label: t('verein.stats.left'), fillClass: 'fill-destructive', textClass: 'text-destructive', bgClass: 'bg-destructive-fill' },
                             ]}
                         />
                         <p className="mt-2 text-xs text-muted-foreground">{t('verein.stats.movement.sum', { joined: joinedSum, left: leftSum })}</p>
                     </>
                 )}
             </Card>
+            {reportOpen && <AssociationReportDialog clubId={clubId} canSensitive={canSensitive} onClose={() => setReportOpen(false)} />}
         </div>
     );
 }

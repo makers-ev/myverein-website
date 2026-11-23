@@ -161,6 +161,13 @@ export default function AssemblyCockpit({ clubId, meetingId, canManage }: { club
         }
     }
 
+    // The vote dialog's "Anwesenheit erfassen": jump to the check-in list on this very page.
+    function focusCheckIn() {
+        const search = document.getElementById('ck-search');
+        search?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        search?.focus({ preventScroll: true });
+    }
+
     const bigBtn = 'min-h-12 rounded-xl px-5 py-3 text-base font-semibold disabled:opacity-50';
 
     return (
@@ -194,7 +201,7 @@ export default function AssemblyCockpit({ clubId, meetingId, canManage }: { club
                     {entries.length === 0 ? (
                         <p className="text-sm text-muted-foreground">{t('assembly.checkin.empty')}</p>
                     ) : (
-                        <ul className="divide-y divide-border rounded-lg border border-border">
+                        <ul className="divide-y divide-hairline rounded-lg border border-border">
                             {entries.map((e) => {
                                 const present = presentIds.has(e.clubMemberId);
                                 const gaveProxy = proxyGrantors.has(e.clubMemberId);
@@ -215,7 +222,7 @@ export default function AssemblyCockpit({ clubId, meetingId, canManage }: { club
                                                 </button>
                                             )}
                                             {present ? (
-                                                <button type="button" disabled={busy} aria-pressed onClick={() => void setPresent(e.clubMemberId, false)} className={`${bigBtn} inline-flex items-center gap-2 bg-success/15 text-success`}>
+                                                <button type="button" disabled={busy} aria-pressed onClick={() => void setPresent(e.clubMemberId, false)} className={`${bigBtn} inline-flex items-center gap-2 bg-success-soft text-success`}>
                                                     <LogOut className="h-5 w-5" aria-hidden />
                                                     {t('assembly.checkin.leave')}
                                                     <span className="sr-only">{e.displayName}</span>
@@ -243,7 +250,7 @@ export default function AssemblyCockpit({ clubId, meetingId, canManage }: { club
                     ) : (
                         <ul className="space-y-2">
                             {proxies.map((p) => (
-                                <li key={p.id} className="flex items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground">
+                                <li key={p.id} className="flex items-center justify-between gap-2 rounded-lg border border-control bg-background px-3 py-2 text-sm text-foreground">
                                     <span>{t('assembly.proxy.line', { grantor: p.grantorName ?? '—', holder: p.holderName ?? '—' })}</span>
                                     {canManage && p.grantorClubMemberId && (
                                         <button type="button" disabled={busy} onClick={() => void run(() => apiFetch(`/meetings/${meetingId}/proxies/${p.grantorClubMemberId}?clubId=${clubId}`, { method: 'DELETE' }))} className={`${dangerBtn} !px-3 !py-1.5`}>
@@ -255,7 +262,7 @@ export default function AssemblyCockpit({ clubId, meetingId, canManage }: { club
                         </ul>
                     )}
                     {canManage && (
-                        <div className="space-y-3 border-t border-border pt-3">
+                        <div className="space-y-3 border-t border-hairline pt-3">
                             <p className="text-sm font-semibold text-foreground">{t('assembly.proxy.record')}</p>
                             <div className="grid gap-3 sm:grid-cols-2">
                                 <div>
@@ -287,7 +294,7 @@ export default function AssemblyCockpit({ clubId, meetingId, canManage }: { club
                 </div>
             </SectionCard>
 
-            {canManage && <BallotsManager clubId={clubId} mode="in_session" meetingId={meetingId} agendaItems={agenda} />}
+            {canManage && <BallotsManager clubId={clubId} mode="in_session" meetingId={meetingId} agendaItems={agenda} onCheckIn={focusCheckIn} />}
 
             {overrideFor && (
                 <SectionCard title={t('assembly.roll.override')}>

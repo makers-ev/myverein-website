@@ -98,7 +98,7 @@ export default function AcknowledgementManager({ clubId, departments }: { clubId
         <section aria-label={t('docs.ack.mgr.title')} className="space-y-4">
             <div className="flex flex-wrap items-end justify-between gap-2">
                 <div>
-                    <h2 className="text-lg font-bold text-foreground">{t('docs.ack.mgr.title')}</h2>
+                    <h2 className="text-lg font-medium text-foreground">{t('docs.ack.mgr.title')}</h2>
                     <p className="mt-1 text-sm text-muted-foreground">{t('docs.ack.mgr.intro')}</p>
                 </div>
                 <button type="button" className={primaryButtonClass} onClick={() => setRequesting(true)}>
@@ -163,7 +163,7 @@ export default function AcknowledgementManager({ clubId, departments }: { clubId
                 <EmptyState icon={<ListChecks className="h-6 w-6" aria-hidden="true" />} text={t('docs.ack.mgr.empty')} />
             ) : (
                 <>
-                    <div className="rounded-xl border border-border bg-card p-3">
+                    <div className="rounded-xl shadow-card bg-card p-3">
                         <div className="flex flex-wrap gap-2">
                             {STATUSES.map((s) => (
                                 <Chip key={s} tone={ACK_TONE[s]}>
@@ -192,7 +192,7 @@ export default function AcknowledgementManager({ clubId, departments }: { clubId
                     {view.data.length === 0 ? (
                         <EmptyState icon={<ListChecks className="h-6 w-6" aria-hidden="true" />} text={t('docs.ack.mgr.noRows')} />
                     ) : (
-                        <ul className="divide-y divide-border rounded-xl border border-border bg-card">
+                        <ul className="divide-y divide-hairline rounded-xl shadow-card bg-card">
                             {view.data.map((r) => (
                                 <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5">
                                     <div className="min-w-0 flex-1">

@@ -2,7 +2,7 @@
  * Links into the docs portal (Nextra, German pages under `/de/...`). The base origin comes from `NEXT_PUBLIC_DOCS_URL`
  * (inlined at build time), falling back to the production portal.
  */
-export const DEFAULT_DOCS_URL = 'https://docs.myverein.de';
+export const DEFAULT_DOCS_URL = 'https://docs.myverein.lpj.app';
 
 /** Contextual help topics -> docs path (relative to `/de/`). Every value must exist as a directory in the docs repo (docs.test.ts). */
 export const DOCS_TOPICS = {

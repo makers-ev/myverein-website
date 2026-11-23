@@ -36,7 +36,7 @@ export default function RejectedApplicationNotice() {
     if (!rejected || dismissed) return null;
     const message = decisionMessage(rejected);
     return (
-        <div role="status" className="mt-6 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
+        <div role="status" className="mt-6 rounded-xl border border-destructive/30 bg-destructive-soft p-4">
             <p className="flex items-start gap-2 text-sm font-semibold text-foreground">
                 <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" aria-hidden="true" />
                 <span className="min-w-0 break-words">{t('forms.apply.rejectedNotice.title', { club: rejected.club.name || rejected.club.slug })}</span>
@@ -47,7 +47,7 @@ export default function RejectedApplicationNotice() {
                 <p className={`mt-0.5 whitespace-pre-line break-words ${message ? 'text-foreground' : 'text-muted-foreground'}`}>{message ?? t('forms.apply.decided.noMessage')}</p>
             </div>
             <p className="mt-2 text-xs text-muted-foreground">{t('forms.apply.rejectedNotice.hint')}</p>
-            <button type="button" onClick={() => setDismissed(true)} className="mt-2 text-xs font-semibold text-primary underline">
+            <button type="button" onClick={() => setDismissed(true)} className="mt-2 text-xs font-semibold text-primary-text underline">
                 {t('forms.apply.rejectedNotice.dismiss')}
             </button>
         </div>

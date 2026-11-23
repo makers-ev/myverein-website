@@ -120,7 +120,7 @@ function HistoryList({ entries, categories, loading, error }: { entries: StatusH
                 const reasonKey = h.reason ? historyReasonKey(h.reason) : null;
                 const categoryChanged = h.fromCategoryId !== h.toCategoryId;
                 return (
-                    <li key={h.id} className="rounded-lg border border-border px-3 py-2 text-sm">
+                    <li key={h.id} className="rounded-lg border border-control px-3 py-2 text-sm">
                         <p className="text-xs text-muted-foreground">{formatDate(h.effectiveOn, language)}</p>
                         {statusChanged && (
                             <p className="text-foreground">
@@ -393,7 +393,7 @@ export default function MemberFormModal({
                 }
             >
                 {!isCreate && member && canDocuments && (
-                    <div role="tablist" aria-label={title} className="mb-4 flex gap-2 border-b border-border">
+                    <div role="tablist" aria-label={title} className="mb-4 flex gap-2 border-b border-hairline">
                         {(['data', 'docs'] as const).map((value) => (
                             <button
                                 key={value}
@@ -401,7 +401,7 @@ export default function MemberFormModal({
                                 role="tab"
                                 aria-selected={panel === value}
                                 onClick={() => setPanel(value)}
-                                className={`whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium ${panel === value ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                                className={`whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium ${panel === value ? 'border-primary text-primary-text' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
                             >
                                 {t(value === 'data' ? 'docs.member.tab.data' : 'docs.member.tab.docs')}
                             </button>
@@ -412,7 +412,7 @@ export default function MemberFormModal({
                 <div hidden={!isCreate && !!member && canDocuments && panel === 'docs'}>
                 {isCreate && (
                     <div className="mb-4 flex gap-2 rounded-lg border border-border bg-muted/50 p-3 text-xs text-foreground">
-                        <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                        <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary-text" aria-hidden="true" />
                         <div className="space-y-1">
                             <p>{t('verein.form.create.noAccountHint')}</p>
                             <p>{t('verein.form.create.minorsHint')}</p>
@@ -423,7 +423,7 @@ export default function MemberFormModal({
 
                 {!isCreate && member && (
                     <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-border p-3">
-                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusChipClass(member.effectiveStatus)}`}>
+                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusChipClass(member.effectiveStatus)}`}>
                             {t(`verein.status.${member.effectiveStatus}`)}
                         </span>
                         {pendingExit && <span className="text-xs text-muted-foreground">{t('verein.status.pendingExit.short', { date: formatDate(member.leftAt, language) })}</span>}
@@ -434,7 +434,7 @@ export default function MemberFormModal({
                         <button
                             type="button"
                             onClick={() => setStatusOpen(true)}
-                            className="ml-auto rounded-md border border-border px-3 py-1 text-xs font-semibold text-foreground hover:bg-muted"
+                            className="ml-auto rounded-md border border-control px-3 py-1 text-xs font-semibold text-foreground hover:bg-muted"
                         >
                             {t('verein.status.change')}
                         </button>
@@ -521,7 +521,7 @@ export default function MemberFormModal({
 
                 {showSensitiveBlock ? (
                     <div className="mt-5">
-                        <h3 className="text-sm font-bold text-foreground">{t('verein.form.contact.title')}</h3>
+                        <h3 className="text-base font-medium text-foreground">{t('verein.form.contact.title')}</h3>
                         <div className="mt-2 grid gap-4 sm:grid-cols-2">
                             {has('birthDate') && (
                                 <Field label={t('verein.profil.birthDate')}>
@@ -559,7 +559,7 @@ export default function MemberFormModal({
                             )}
                         </div>
 
-                        <h3 className="mt-5 text-sm font-bold text-foreground">{t('verein.profil.emergency')}</h3>
+                        <h3 className="mt-5 text-base font-medium text-foreground">{t('verein.profil.emergency')}</h3>
                         <div className="mt-2 grid gap-4 sm:grid-cols-2">
                             {has('emergencyContactName') && (
                                 <Field label={t('verein.profil.emergencyName')}>
@@ -596,14 +596,14 @@ export default function MemberFormModal({
 
                 {!isCreate && member && (
                     <div className="mt-5">
-                        <h3 className="text-sm font-bold text-foreground">{t('verein.form.departments.title')}</h3>
+                        <h3 className="text-base font-medium text-foreground">{t('verein.form.departments.title')}</h3>
                         <p className="text-xs text-muted-foreground">{t('verein.form.departments.hint')}</p>
                         {current.length === 0 ? (
                             <p className="mt-2 text-sm text-muted-foreground">{t('verein.form.departments.empty')}</p>
                         ) : (
                             <ul className="mt-2 space-y-1">
                                 {current.map((d) => (
-                                    <li key={d.id} className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-1.5 text-sm">
+                                    <li key={d.id} className="flex items-center justify-between gap-2 rounded-lg border border-control px-3 py-1.5 text-sm">
                                         <span className="text-foreground">
                                             {d.name} <span className="text-xs text-muted-foreground">· {t('verein.form.departments.since', { date: formatDate(d.since, language) })}</span>
                                         </span>

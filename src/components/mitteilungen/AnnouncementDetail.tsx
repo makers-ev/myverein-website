@@ -91,7 +91,7 @@ function DeliveryStatus({ clubId, announcement, gate, onResent }: { clubId: stri
 
     return (
         <div className="space-y-3">
-            <h3 className="text-sm font-bold text-foreground">{t('mitteilungen.delivery.title')}</h3>
+            <h3 className="text-base font-medium text-foreground">{t('mitteilungen.delivery.title')}</h3>
             {summary.recipients === 0 ? (
                 <p className="text-sm text-muted-foreground">{t('mitteilungen.delivery.empty')}</p>
             ) : (
@@ -160,7 +160,7 @@ function DeliveryStatus({ clubId, announcement, gate, onResent }: { clubId: stri
                                         <th className="px-3 py-2 font-semibold">{t('mitteilungen.delivery.col.read')}</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-border">
+                                <tbody className="divide-y divide-hairline">
                                     {recipients.map((r) => (
                                         <tr key={r.id}>
                                             <td className="px-3 py-2 text-foreground">{r.name ?? '—'}</td>
@@ -337,7 +337,7 @@ export default function AnnouncementDetail({
                 {announcement.status === 'scheduled' && <p className="text-xs text-muted-foreground">{t('mitteilungen.detail.scheduled.hint')}</p>}
                 {actions.showDeliveries && <DeliveryStatus clubId={clubId} announcement={announcement} gate={gate} onResent={() => undefined} />}
                 {error && (
-                    <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                    <p role="alert" className="rounded-lg bg-destructive-soft px-3 py-2 text-sm text-destructive">
                         {error}
                     </p>
                 )}

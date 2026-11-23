@@ -292,7 +292,7 @@ export default function MemberImportDialog({
                 )}
 
                 {error && (
-                    <p role="alert" className="flex items-start gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+                    <p role="alert" className="flex items-start gap-2 rounded-lg bg-destructive-soft p-3 text-sm text-destructive">
                         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
                         <span>
                             {error}
@@ -337,7 +337,7 @@ export default function MemberImportDialog({
                         <p className="flex items-center gap-2 text-sm text-foreground">
                             <FileUp className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
                             <span className="truncate font-medium">{fileName}</span>
-                            <button type="button" onClick={reset} disabled={busy} className="ml-auto shrink-0 text-xs font-medium text-primary hover:underline">
+                            <button type="button" onClick={reset} disabled={busy} className="ml-auto shrink-0 text-xs font-medium text-primary-text hover:underline">
                                 {t('verein.import.otherFile')}
                             </button>
                         </p>
@@ -350,15 +350,15 @@ export default function MemberImportDialog({
                         </dl>
 
                         {report.summary.errors > 0 ? (
-                            <p role="status" className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+                            <p role="status" className="rounded-lg bg-destructive-soft p-3 text-sm text-destructive">
                                 {t('verein.import.blocked')}
                             </p>
                         ) : report.summary.ok === 0 ? (
-                            <p role="status" className="rounded-lg bg-warning/10 p-3 text-sm text-warning">
+                            <p role="status" className="rounded-lg bg-warning-soft p-3 text-sm text-warning">
                                 {t('verein.import.nothingNew')}
                             </p>
                         ) : (
-                            <p role="status" className="rounded-lg bg-success/10 p-3 text-sm text-success">
+                            <p role="status" className="rounded-lg bg-success-soft p-3 text-sm text-success">
                                 {report.summary.duplicates > 0
                                     ? t('verein.import.ready.withDuplicates', { count: report.summary.ok, duplicates: report.summary.duplicates })
                                     : t('verein.import.ready', { count: report.summary.ok })}
@@ -428,7 +428,7 @@ export default function MemberImportDialog({
 
                         <div>
                             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                                <h3 className="text-sm font-bold text-foreground">{t('verein.import.rows.title')}</h3>
+                                <h3 className="text-base font-medium text-foreground">{t('verein.import.rows.title')}</h3>
                                 <label className="flex items-center gap-2 text-xs text-muted-foreground">
                                     <input type="checkbox" checked={onlyProblems} onChange={(e) => { setOnlyProblems(e.target.checked); setShowAll(false); }} className="h-4 w-4 accent-[var(--primary)]" />
                                     {t('verein.import.rows.onlyProblems')}
@@ -444,14 +444,14 @@ export default function MemberImportDialog({
                                 <div className={`relative overflow-x-auto rounded-lg border border-border ${stale ? 'opacity-60' : ''}`}>
                                     <table className="w-full text-left text-sm">
                                         <caption className="sr-only">{t('verein.import.rows.title')}</caption>
-                                        <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
+                                        <thead className="bg-muted/50 text-xs text-muted-foreground">
                                             <tr>
                                                 <th scope="col" className="px-3 py-2">{t('verein.import.rows.line')}</th>
                                                 <th scope="col" className="px-3 py-2">{t('verein.import.rows.status')}</th>
                                                 <th scope="col" className="px-3 py-2">{t('verein.import.rows.details')}</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-border">
+                                        <tbody className="divide-y divide-hairline">
                                             {visibleRows.map((row) => (
                                                 <tr key={row.line} className="align-top">
                                                     <th scope="row" className="px-3 py-2 font-medium text-foreground">{row.line}</th>
@@ -505,7 +505,7 @@ function SummaryTile({ label, value, tone }: { label: string; value: number; ton
 }
 
 function StatusChip({ row, t }: { row: ImportRow; t: (key: string) => string }) {
-    const cls = row.status === 'ok' ? 'bg-success/15 text-success' : row.status === 'duplicate' ? 'bg-warning/15 text-warning' : 'bg-destructive/10 text-destructive';
+    const cls = row.status === 'ok' ? 'bg-success-soft text-success' : row.status === 'duplicate' ? 'bg-warning-soft text-warning' : 'bg-destructive-soft text-destructive';
     return <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${cls}`}>{t(`verein.import.status.${row.status}`)}</span>;
 }
 
@@ -549,7 +549,7 @@ function IssueOverview({ rows, t }: { rows: ImportRow[]; t: (key: string) => str
     return (
         <ul className="mb-2 flex flex-wrap gap-1.5" aria-label={t('verein.import.issues.title')}>
             {counts.map((c) => (
-                <li key={c.code} className="rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs text-destructive">
+                <li key={c.code} className="rounded-full bg-destructive-soft px-2.5 py-0.5 text-xs text-destructive">
                     {c.count} × {issueText(c.code, t)}
                 </li>
             ))}

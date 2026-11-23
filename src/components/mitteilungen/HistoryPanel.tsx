@@ -104,7 +104,7 @@ export default function HistoryPanel({
                                 <button
                                     type="button"
                                     onClick={() => setOpen(a)}
-                                    className="flex w-full flex-col gap-1 rounded-xl border border-border bg-card p-3 text-left transition-colors hover:bg-muted/50"
+                                    className="flex w-full flex-col gap-1 rounded-xl shadow-card bg-card p-3 text-left transition-colors hover:bg-muted/50"
                                 >
                                     <span className="flex flex-wrap items-center gap-2">
                                         <span className="text-sm font-semibold text-foreground">{a.title}</span>

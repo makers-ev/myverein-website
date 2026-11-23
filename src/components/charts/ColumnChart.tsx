@@ -3,7 +3,7 @@ export interface ColumnSeries {
     label: string;
     /** Tailwind fill class for the SVG bars, e.g. "fill-primary". */
     fillClass: string;
-    /** Tailwind text class for the value under the bar, e.g. "text-primary". */
+    /** Tailwind text class for the value under the bar, e.g. "text-primary-text". */
     textClass: string;
     /** Tailwind background class for the legend swatch (fill-* only works on SVG). */
     bgClass: string;
@@ -65,7 +65,7 @@ export function ColumnChart({ data, series, ariaLabel }: { data: ColumnDatum[]; 
             <div className="mt-1 flex">
                 {data.map((d, i) => (
                     <div key={i} className="flex min-w-0 flex-1 flex-col items-center text-center">
-                        <span className="w-full truncate text-[10px] text-muted-foreground">{d.label}</span>
+                        <span className="w-full truncate text-[11px] text-muted-foreground">{d.label}</span>
                         <span className="flex gap-1 text-[11px] font-semibold">
                             {series.map((s) => (
                                 <span key={s.key} className={s.textClass}>

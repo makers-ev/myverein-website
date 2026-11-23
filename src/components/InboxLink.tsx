@@ -70,7 +70,7 @@ export function InboxLink() {
         >
             <Megaphone size={18} />
             {count > 0 && (
-                <span aria-hidden className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+                <span aria-hidden className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[11px] font-bold text-primary-foreground">
                     {badgeText(count)}
                 </span>
             )}

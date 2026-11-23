@@ -113,7 +113,7 @@ export default function MemberErasureSection({ clubId, clubMemberId, displayName
             </button>
 
             {plan && blocked && (
-                <div role="alert" className="rounded-lg border border-destructive/40 bg-destructive/5 p-3">
+                <div role="alert" className="rounded-lg border border-destructive/40 bg-destructive-soft p-3">
                     <p className="flex items-center gap-2 text-sm font-semibold text-destructive">
                         <ShieldAlert className="h-4 w-4" aria-hidden="true" />
                         {t('privacy.erasure.blocked')}
@@ -131,7 +131,7 @@ export default function MemberErasureSection({ clubId, clubMemberId, displayName
                     <p className="text-sm text-foreground">{t('privacy.erasure.planIntro')}</p>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
-                            <thead className="text-xs uppercase text-muted-foreground">
+                            <thead className="text-xs text-muted-foreground">
                                 <tr>
                                     <th className="px-3 py-2">{t('privacy.erasure.col.area')}</th>
                                     <th className="px-3 py-2">{t('privacy.erasure.col.deleted')}</th>
@@ -141,7 +141,7 @@ export default function MemberErasureSection({ clubId, clubMemberId, displayName
                             </thead>
                             <tbody>
                                 {plan.steps.map((s) => (
-                                    <tr key={s.key} className="border-t border-border align-top text-foreground">
+                                    <tr key={s.key} className="border-t border-hairline align-top text-foreground">
                                         <td className="px-3 py-2 font-medium">{stepLabel(t, s.key)}</td>
                                         <td className="px-3 py-2">{s.deleted}</td>
                                         <td className="px-3 py-2">{s.anonymized}</td>
@@ -159,7 +159,7 @@ export default function MemberErasureSection({ clubId, clubMemberId, displayName
                         <span className="mb-1 block text-xs font-medium text-muted-foreground">{t('privacy.erasure.typeName', { name: displayName })}</span>
                         <input value={typed} onChange={(e) => setTyped(e.target.value)} className={inputClass} autoComplete="off" />
                     </label>
-                    <button type="button" disabled={busy || !nameMatches} onClick={() => void execute()} className="rounded-lg bg-destructive px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+                    <button type="button" disabled={busy || !nameMatches} onClick={() => void execute()} className="rounded-lg bg-destructive-fill px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
                         {t('privacy.erasure.execute')}
                     </button>
                 </div>

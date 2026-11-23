@@ -48,7 +48,7 @@ export default function GroupPhoto({ activeRole = null, className = '' }: { acti
                         return (
                             <g
                                 key={i}
-                                className={`transition-all duration-300 motion-reduce:transition-none ${
+                                className={`transition-[opacity,transform] duration-300 motion-reduce:transition-none ${
                                     active ? '-translate-y-2' : ''
                                 } ${dimmed ? 'opacity-35' : 'opacity-100'}`}
                             >
