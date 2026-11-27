@@ -14,9 +14,14 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
 
-ARG NEXT_PUBLIC_BACKEND_URL
-ARG NEXT_PUBLIC_SITE_URL
-ARG NEXT_PUBLIC_DOCS_URL
+# NEXT_PUBLIC_* are inlined into the client bundle at build time, and .env is
+# excluded by .dockerignore -- so they are set here, with the production values
+# as defaults (keep in sync with .env.example). Override one with
+# `--build-arg NAME=value` (the Jenkinsfile does this for the staging backend).
+# Never pass an empty value: "" would override the in-code fallbacks.
+ARG NEXT_PUBLIC_BACKEND_URL=https://api.myverein.lpj.app
+ARG NEXT_PUBLIC_SITE_URL=https://myverein.lpj.app
+ARG NEXT_PUBLIC_DOCS_URL=https://docs.myverein.lpj.app
 ENV NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL \
     NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL \
     NEXT_PUBLIC_DOCS_URL=$NEXT_PUBLIC_DOCS_URL

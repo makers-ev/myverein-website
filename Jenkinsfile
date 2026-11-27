@@ -42,7 +42,7 @@ pipeline {
         sh 'podman build -t website-base -f Dockerfile.base .'
         sh '''
           podman build \
-            --build-arg NEXT_PUBLIC_API_URL="$API_URL" \
+            --build-arg NEXT_PUBLIC_BACKEND_URL="$API_URL" \
             -t "$IMAGE:$TAG" -f Dockerfile.website .
         '''
       }
