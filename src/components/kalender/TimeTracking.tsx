@@ -1,19 +1,20 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Play, Square, Trash2, TriangleAlert } from 'lucide-react';
+import { PenLine, Play, Square, Trash2, TriangleAlert } from 'lucide-react';
 
 import LoadError from '@/components/LoadError';
 import LoadingText from '@/components/LoadingText';
 import { useConfirm } from '@/components/useConfirm';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api-client';
-import { eventErrorKey } from '@/lib/eventErrors';
+import { eventErrorCode, eventErrorKey } from '@/lib/eventErrors';
 import { parseEuroInput, formatCost } from '@/lib/eventRegistration';
-import { type RateCard, type TimeEntry, type TimeSuggestion, RATE_ROLES, clockOutErrorKey, defaultRange, groupRateCards, manualProblem, rateBody, rateErrorKey, ratePatchBody, rateRangeProblem, rateRoleKey, runningState, splitMinutes } from '@/lib/timeTracking';
+import { type RateCard, type TimeEntry, type TimeSuggestion, RATE_ROLES, clockOutErrorKey, defaultRange, entryMarks, isOverdue, groupRateCards, manualProblem, rateBody, rateErrorKey, ratePatchBody, rateRangeProblem, rateRoleKey, runningState, splitMinutes } from '@/lib/timeTracking';
 
 import { type CalendarEvent, type Department, inputClass, labelClass, primaryBtn, secondaryBtn } from './calendarTypes';
 import MemberPicker from './MemberPicker';
+import TimeEndForm from './TimeEndForm';
 import StundenBericht from './StundenBericht';
 
 interface Props {
@@ -52,6 +53,8 @@ export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, o
     const [failed, setFailed] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
+    // Entry whose end is being entered: the own running entry (card) or someone else's stuck entry (team list).
+    const [endingId, setEndingId] = useState<string | null>(null);
     const [clockEvent, setClockEvent] = useState('');
     const [mStart, setMStart] = useState('');
     const [mEnd, setMEnd] = useState('');
@@ -87,14 +90,16 @@ export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, o
         load();
     }, [load]);
 
-    async function act(doIt: () => Promise<unknown>, errorKey: (err: unknown) => string = eventErrorKey) {
+    async function act(doIt: () => Promise<unknown>, errorKey: (err: unknown) => string = eventErrorKey, onFail?: (err: unknown) => void) {
         setBusy(true);
         setError(null);
         try {
             await doIt();
+            setEndingId(null);
             load();
         } catch (err) {
             setError(t(errorKey(err)));
+            onFail?.(err);
         } finally {
             setBusy(false);
         }
@@ -102,6 +107,10 @@ export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, o
 
     const run = current ? runningState(current.startedAt, now) : null;
     const runningDuration = (r: NonNullable<typeof run>) => (r.days > 0 ? t('time.elapsed.days', { days: r.days, hours: r.hours }) : t('time.minutes', { hours: r.hours, minutes: r.rest }));
+
+    async function rejectEntry(e: TimeEntry) {
+        if (await confirm({ title: t('time.reject'), body: t('time.reject.body', { name: e.displayName }), confirmLabel: t('time.reject'), danger: true })) await act(() => apiFetch(`/time-entries/${e.id}/reject?${q}`, { method: 'POST' }));
+    }
 
     async function discard(entry: TimeEntry) {
         if (await confirm({ title: t('time.discard'), body: t('time.discard.body'), confirmLabel: t('time.discard'), danger: true })) await act(() => apiFetch(`/time-entries/${entry.id}?${q}`, { method: 'DELETE' }));
@@ -127,7 +136,7 @@ export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, o
             <section className="space-y-3 rounded-xl shadow-card bg-card p-4">
                 <h3 className="font-semibold text-foreground">{t('time.clock.title')}</h3>
                 {current ? (
-                    <div className="space-y-3">
+                    <div id="time-running-card" className="space-y-3">
                         <p className="text-foreground">
                             {t('time.clock.running', { since: new Date(current.startedAt).toLocaleTimeString(language, { hour: '2-digit', minute: '2-digit' }) })}
                             {current.eventTitle ? ` · ${current.eventTitle}` : ''}
@@ -141,18 +150,28 @@ export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, o
                                 </span>
                             </p>
                         )}
-                        <div className="flex flex-wrap items-center gap-3">
-                            {run?.level !== 'stuck' && (
-                                <button type="button" disabled={busy} onClick={() => void act(() => apiFetch(`/time-entries/clock-out?${q}`, { method: 'POST' }), clockOutErrorKey)} className={`${primaryBtn} inline-flex items-center gap-1.5`}>
-                                    <Square className="h-4 w-4" aria-hidden />
-                                    {t('time.clock.out')}
+                        {endingId === current.id ? (
+                            <TimeEndForm entry={current} endpoint={`/time-entries/clock-out?${q}`} submitLabel={t('time.end.submit')} onDone={() => { setEndingId(null); setError(null); load(); }} onCancel={() => setEndingId(null)} />
+                        ) : (
+                            <div className="flex flex-wrap items-center gap-3">
+                                {run?.level !== 'stuck' && (
+                                    <button type="button" disabled={busy} onClick={() => void act(() => apiFetch(`/time-entries/clock-out?${q}`, { method: 'POST' }), clockOutErrorKey, (err) => eventErrorCode(err) === 'needs_end_time' && setEndingId(current.id))} className={`${primaryBtn} inline-flex items-center gap-1.5`}>
+                                        <Square className="h-4 w-4" aria-hidden />
+                                        {t('time.clock.out')}
+                                    </button>
+                                )}
+                                {run && run.level !== 'ok' && (
+                                    <button type="button" disabled={busy} onClick={() => setEndingId(current.id)} className={`${run.level === 'stuck' ? primaryBtn : secondaryBtn} inline-flex items-center gap-1.5`}>
+                                        <PenLine className="h-4 w-4" aria-hidden />
+                                        {t('time.end.open')}
+                                    </button>
+                                )}
+                                <button type="button" disabled={busy} onClick={() => void discard(current)} className={`${secondaryBtn} inline-flex items-center gap-1.5`}>
+                                    <Trash2 className="h-4 w-4" aria-hidden />
+                                    {t('time.discard')}
                                 </button>
-                            )}
-                            <button type="button" disabled={busy} onClick={() => void discard(current)} className={`${run?.level === 'stuck' ? primaryBtn : secondaryBtn} inline-flex items-center gap-1.5`}>
-                                <Trash2 className="h-4 w-4" aria-hidden />
-                                {t('time.discard')}
-                            </button>
-                        </div>
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <div className="flex flex-wrap items-end gap-3">
@@ -287,8 +306,12 @@ export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, o
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-hairline">
-                                {entries.map((e) => (
-                                    <tr key={e.id} className="align-top text-foreground">
+                                {entries.map((e) => {
+                                    const own = e.clubMemberId === ownClubMemberId;
+                                    const stuck = isOverdue(e, now);
+                                    const marks = entryMarks(e);
+                                    return (
+                                    <tr key={e.id} className={`align-top text-foreground ${stuck ? 'bg-destructive-soft/40' : ''}`}>
                                         <th scope="row" className="px-3 py-2 font-medium">
                                             {e.displayName}
                                             <span className="block text-xs font-normal text-muted-foreground">
@@ -304,29 +327,58 @@ export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, o
                                             <Duration minutes={e.minutes} />
                                         </td>
                                         <td className="px-3 py-2">
-                                            <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_TONE[e.status]}`}>{t(`time.status.${e.status}`)}</span>
+                                            <div className="flex flex-wrap gap-1">
+                                                <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_TONE[e.status]}`}>{t(`time.status.${e.status}`)}</span>
+                                                {stuck && <span className="rounded-full bg-destructive-soft px-2.5 py-0.5 text-xs font-semibold text-destructive">{t('time.mark.stuck', { duration: runningDuration(runningState(e.startedAt, now)) })}</span>}
+                                                {marks.map((m) => (
+                                                    <span key={m} className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-foreground">
+                                                        {t(`time.mark.${m}`)}
+                                                    </span>
+                                                ))}
+                                            </div>
                                         </td>
                                         <td className="px-3 py-2">
                                             <div className="flex flex-wrap gap-1.5">
-                                                {canConfirm && e.status === 'offen' && !e.running && e.clubMemberId !== ownClubMemberId && (
+                                                {canConfirm && e.status === 'offen' && !e.running && !own && (
                                                     <>
                                                         <button type="button" disabled={busy} onClick={() => void act(() => apiFetch(`/time-entries/${e.id}/confirm?${q}`, { method: 'POST' }))} className={`${primaryBtn} !px-2.5 !py-1 text-xs`}>
                                                             {t('time.confirm')}
                                                         </button>
-                                                        <button type="button" disabled={busy} onClick={() => void (async () => { if (await confirm({ title: t('time.reject'), body: t('time.reject.body', { name: e.displayName }), confirmLabel: t('time.reject'), danger: true })) await act(() => apiFetch(`/time-entries/${e.id}/reject?${q}`, { method: 'POST' })); })()} className={`${secondaryBtn} !px-2.5 !py-1 text-xs`}>
+                                                        <button type="button" disabled={busy} onClick={() => void rejectEntry(e)} className={`${secondaryBtn} !px-2.5 !py-1 text-xs`}>
                                                             {t('time.reject')}
                                                         </button>
                                                     </>
                                                 )}
-                                                {e.clubMemberId === ownClubMemberId && e.status === 'offen' && (
+                                                {canConfirm && stuck && !own && (
+                                                    <>
+                                                        <button type="button" disabled={busy} aria-expanded={endingId === e.id} onClick={() => setEndingId(endingId === e.id ? null : e.id)} className={`${primaryBtn} !px-2.5 !py-1 text-xs`}>
+                                                            {t('time.close.open')}
+                                                        </button>
+                                                        <button type="button" disabled={busy} onClick={() => void rejectEntry(e)} className={`${secondaryBtn} !px-2.5 !py-1 text-xs`}>
+                                                            {t('time.reject')}
+                                                        </button>
+                                                    </>
+                                                )}
+                                                {own && e.running && (
+                                                    <button type="button" disabled={busy} onClick={() => { setEndingId(e.id); document.getElementById('time-running-card')?.scrollIntoView({ block: 'center' }); }} className={`${secondaryBtn} !px-2.5 !py-1 text-xs`}>
+                                                        {t('time.end.open')}
+                                                    </button>
+                                                )}
+                                                {own && e.status === 'offen' && (
                                                     <button type="button" disabled={busy} onClick={() => void (e.running ? discard(e) : (async () => { if (await confirm({ title: t('time.delete'), body: t('time.delete.body'), confirmLabel: t('time.delete'), danger: true })) await act(() => apiFetch(`/time-entries/${e.id}?${q}`, { method: 'DELETE' })); })())} className={`${secondaryBtn} !px-2.5 !py-1 text-xs`}>
                                                         {e.running ? t('time.discard') : t('time.delete')}
                                                     </button>
                                                 )}
                                             </div>
+                                            {canConfirm && stuck && !own && endingId === e.id && (
+                                                <div className="mt-2 min-w-64">
+                                                    <TimeEndForm entry={e} endpoint={`/time-entries/${e.id}/close?${q}`} submitLabel={t('time.close.submit')} onDone={() => { setEndingId(null); setError(null); load(); }} onCancel={() => setEndingId(null)} />
+                                                </div>
+                                            )}
                                         </td>
                                     </tr>
-                                ))}
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>

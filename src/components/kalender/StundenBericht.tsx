@@ -90,6 +90,10 @@ export default function StundenBericht({ clubId, range: initialRange, department
     const rangeEvents = options?.events ?? [];
     const rows = report ? reportRows(report) : [];
     const showPerson = groupBy !== 'event';
+    // Wave 16: confirmed entries whose end was entered afterwards or set by the system stay visible in the report.
+    const showMarks = Boolean(report && (report.totals.correctedEntries || report.totals.autoClosedEntries || rows.some((r) => r.correctedEntries || r.autoClosedEntries)));
+    const marksText = (corrected?: number, auto?: number) =>
+        [corrected ? t('time.report.marks.corrected', { count: corrected }) : '', auto ? t('time.report.marks.auto', { count: auto }) : ''].filter(Boolean).join(' · ');
     const showEvent = groupBy !== 'person';
     const fmtHours = (h: number | undefined) => (h ?? 0).toLocaleString(language, { maximumFractionDigits: 2 });
     const fmtDate = (iso: string | null | undefined) => (iso ? new Date(iso).toLocaleDateString(language, { dateStyle: 'short' }) : '');
@@ -225,6 +229,7 @@ export default function StundenBericht({ clubId, range: initialRange, department
                                 {showEvent && <th scope="col" className="px-3 py-2">{t('time.report.date')}</th>}
                                 <th scope="col" className="px-3 py-2">{t('time.report.entries')}</th>
                                 <th scope="col" className="px-3 py-2">{t('time.report.hours')}</th>
+                                {showMarks && <th scope="col" className="px-3 py-2">{t('time.report.marks')}</th>}
                                 {report.includesRates && <th scope="col" className="px-3 py-2">{t('time.report.rate')}</th>}
                                 {report.includesRates && <th scope="col" className="px-3 py-2">{t('time.report.amount')}</th>}
                             </tr>
@@ -242,6 +247,7 @@ export default function StundenBericht({ clubId, range: initialRange, department
                                     {showEvent && <td className="px-3 py-2 tabular-nums">{fmtDate(p.eventDate)}</td>}
                                     <td className="px-3 py-2 tabular-nums">{p.entries ?? ''}</td>
                                     <td className="px-3 py-2 tabular-nums">{fmtHours(p.hours ?? (p.minutes ?? 0) / 60)}</td>
+                                    {showMarks && <td className="px-3 py-2 text-xs">{marksText(p.correctedEntries, p.autoClosedEntries)}</td>}
                                     {report.includesRates && <td className="px-3 py-2 tabular-nums">{p.rateMissing ? <span className="text-warning">{t('time.report.rateMissing')}</span> : (formatCost(p.rateCents, language) ?? '–')}</td>}
                                     {report.includesRates && <td className="px-3 py-2 tabular-nums">{formatCost(p.amountCents, language) ?? '–'}</td>}
                                 </tr>
@@ -253,6 +259,7 @@ export default function StundenBericht({ clubId, range: initialRange, department
                                     {t('time.report.total')}
                                 </th>
                                 <td className="px-3 py-2 tabular-nums">{fmtHours(totalHours(report))}</td>
+                                {showMarks && <td className="px-3 py-2 text-xs font-normal">{marksText(report.totals.correctedEntries, report.totals.autoClosedEntries)}</td>}
                                 {report.includesRates && <td />}
                                 {report.includesRates && <td className="px-3 py-2 tabular-nums">{formatCost(report.totals.amountCents, language) ?? '–'}</td>}
                             </tr>

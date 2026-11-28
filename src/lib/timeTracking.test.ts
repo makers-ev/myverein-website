@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { ApiError } from './api-client';
-import { MAX_REPORT_PEOPLE, clockOutErrorKey, runningState, RATE_ROLES, groupRateCards, rateErrorKey, ratePatchBody, rateRangeProblem, rateRoleKey, defaultRange, manualProblem, rateBody, reportQuery, reportRows, splitMinutes, toggleId, totalHours } from './timeTracking';
+import { MAX_REPORT_PEOPLE, toLocalValue, clockOutErrorKey, endTimeErrorKey, endTimeProblem, entryMarks, isOverdue, latestEnd, runningState, RATE_ROLES, groupRateCards, rateErrorKey, ratePatchBody, rateRangeProblem, rateRoleKey, defaultRange, manualProblem, rateBody, reportQuery, reportRows, splitMinutes, toggleId, totalHours } from './timeTracking';
 
 describe('time tracking helpers', () => {
     it('splits minutes', () => {
@@ -112,5 +112,45 @@ describe('running entry (clock-out recovery)', () => {
     it('explains too_long on clock-out instead of the generic 16 h text', () => {
         expect(clockOutErrorKey(new ApiError(422, 'UNPROCESSABLE_ENTITY', 'x', { code: 'too_long' }))).toBe('time.err.clockOutTooLong');
         expect(clockOutErrorKey(new ApiError(409, 'CONFLICT', 'x', { code: 'none_running' }))).toBe('events.err.none_running');
+    });
+});
+
+describe('setting the end afterwards', () => {
+    const start = '2026-05-10T08:00:00Z';
+    const now = new Date('2026-05-12T08:00:00Z').getTime();
+
+    it('bounds the end by start + 16 h and never beyond now', () => {
+        expect(latestEnd({ startedAt: start }, now)).toBe(new Date('2026-05-11T00:00:00Z').getTime());
+        expect(latestEnd({ startedAt: start }, new Date('2026-05-10T10:00:00Z').getTime())).toBe(new Date('2026-05-10T10:00:00Z').getTime());
+        expect(latestEnd({ startedAt: start, maxEndedAt: '2026-05-10T20:00:00Z' }, now)).toBe(new Date('2026-05-10T20:00:00Z').getTime());
+    });
+
+    it('mirrors the server checks', () => {
+        expect(endTimeProblem(start, '', now)).toBe('invalid');
+        expect(endTimeProblem(start, toLocalValue(new Date('2026-05-10T07:00:00Z').getTime()), now)).toBe('order');
+        expect(endTimeProblem(start, toLocalValue(new Date('2026-05-10T12:00:00Z').getTime()), now)).toBeNull();
+        expect(endTimeProblem(start, toLocalValue(new Date('2026-05-11T01:00:00Z').getTime()), now)).toBe('long');
+        expect(endTimeProblem(start, toLocalValue(new Date('2026-05-10T12:00:00Z').getTime()), new Date('2026-05-10T10:00:00Z').getTime())).toBe('future');
+    });
+
+    it('detects stuck entries from the flag or the age', () => {
+        expect(isOverdue({ running: true, overdue: true, startedAt: start }, now)).toBe(true);
+        expect(isOverdue({ running: true, startedAt: start }, now)).toBe(true);
+        expect(isOverdue({ running: true, overdue: false, startedAt: start }, now)).toBe(false);
+        expect(isOverdue({ running: false, startedAt: start }, now)).toBe(false);
+    });
+
+    it('marks how an end came about', () => {
+        expect(entryMarks({})).toEqual([]);
+        expect(entryMarks({ corrected: true })).toEqual(['corrected']);
+        expect(entryMarks({ corrected: true, autoClosed: true })).toEqual(['autoClosed']);
+        expect(entryMarks({ corrected: true, closedByOther: true })).toEqual(['closedByOther']);
+    });
+
+    it('maps end-time errors', () => {
+        const e = (code: string, status = 422) => new ApiError(status, 'X', 'x', { code });
+        expect(endTimeErrorKey(e('too_long'))).toBe('time.err.endTooLong');
+        for (const code of ['needs_end_time', 'invalid_time', 'in_future', 'entry_overlap']) expect(endTimeErrorKey(e(code))).toBe(`events.err.${code}`);
+        expect(clockOutErrorKey(e('needs_end_time', 409))).toBe('events.err.needs_end_time');
     });
 });

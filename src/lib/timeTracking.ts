@@ -21,6 +21,16 @@ export interface TimeEntry {
     source: 'stempeln' | 'aus_termin' | 'manuell';
     status: EntryStatus;
     confirmedAt: string | null;
+    /** Wave 16 (older backends omit them): the end was entered afterwards. */
+    corrected?: boolean;
+    /** Ended by the system after a day; needs checking. */
+    autoClosed?: boolean;
+    /** Ended (or rejected while running) by the board instead of the person. */
+    closedByOther?: boolean;
+    /** Still running for more than 16 h. */
+    overdue?: boolean;
+    /** Running entries: latest allowed end (min of now and start + 16 h). */
+    maxEndedAt?: string | null;
 }
 
 export interface TimeSuggestion {
@@ -40,6 +50,9 @@ export interface ReportPerson {
     rateCents: number | null;
     amountCents: number | null;
     rateMissing: boolean;
+    /** Wave 16: confirmed entries with an end entered afterwards / ended by the system. */
+    correctedEntries?: number;
+    autoClosedEntries?: number;
 }
 
 export type ReportGroupBy = 'person' | 'event' | 'person_event';
@@ -60,7 +73,7 @@ export interface TimeReport {
     /** Older backends only send `people`. */
     people?: ReportPerson[];
     rows?: ReportRow[];
-    totals: { minutes: number; hours?: number; amountCents: number | null };
+    totals: { minutes: number; hours?: number; amountCents: number | null; correctedEntries?: number; autoClosedEntries?: number };
 }
 
 export interface ReportPeopleOptions {
@@ -207,6 +220,58 @@ export function runningState(startedAt: string, now = Date.now()): RunningState 
 /** Text key for a failed clock-out: `too_long` explains the way out instead of the generic 16 h message. */
 export function clockOutErrorKey(err: unknown): string {
     return eventErrorCode(err) === 'too_long' ? 'time.err.clockOutTooLong' : eventErrorKey(err);
+}
+
+/** The entry is stuck: server flag, or (older backends) running for more than 16 h. */
+export function isOverdue(e: Pick<TimeEntry, 'running' | 'overdue' | 'startedAt'>, now = Date.now()): boolean {
+    return e.running && (e.overdue ?? runningState(e.startedAt, now).level === 'stuck');
+}
+
+/** Latest end a running entry may get: the server value, else min(now, start + 16 h). */
+export function latestEnd(e: Pick<TimeEntry, 'startedAt' | 'maxEndedAt'>, now = Date.now()): number {
+    if (e.maxEndedAt) return new Date(e.maxEndedAt).getTime();
+    return Math.min(now, new Date(e.startedAt).getTime() + MAX_ENTRY_HOURS * 3600_000);
+}
+
+export type EndProblem = 'invalid' | 'order' | 'future' | 'long';
+
+/** Client mirror of the end-time rules (start < end <= min(now, start + 16 h)); the server decides. `endLocal` is a datetime-local value. */
+export function endTimeProblem(startedAt: string, endLocal: string, now = Date.now(), maxEndedAt?: string | null): EndProblem | null {
+    const end = new Date(endLocal).getTime();
+    const start = new Date(startedAt).getTime();
+    if (!endLocal || Number.isNaN(end)) return 'invalid';
+    if (end <= start) return 'order';
+    if (end > start + MAX_ENTRY_HOURS * 3600_000) return 'long';
+    if (end > latestEnd({ startedAt, maxEndedAt }, now) + 60_000) return 'future';
+    return null;
+}
+
+export const END_PROBLEM_KEY: Record<EndProblem, string> = {
+    invalid: 'time.end.invalid',
+    order: 'events.err.invalid_time',
+    future: 'events.err.in_future',
+    long: 'time.err.endTooLong',
+};
+
+/** datetime-local value (local time, minutes) of a timestamp. */
+export function toLocalValue(ms: number): string {
+    const d = new Date(ms);
+    const p = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+/** Text key for a failed "set the end" request (clock-out with `endedAt`, PATCH, close). */
+export function endTimeErrorKey(err: unknown): string {
+    return eventErrorCode(err) === 'too_long' ? 'time.err.endTooLong' : eventErrorKey(err);
+}
+
+/** Pills shown next to an entry: how its end came about. */
+export function entryMarks(e: Pick<TimeEntry, 'corrected' | 'autoClosed' | 'closedByOther'>): Array<'autoClosed' | 'closedByOther' | 'corrected'> {
+    const marks: Array<'autoClosed' | 'closedByOther' | 'corrected'> = [];
+    if (e.autoClosed) marks.push('autoClosed');
+    if (e.closedByOther) marks.push('closedByOther');
+    else if (e.corrected && !e.autoClosed) marks.push('corrected');
+    return marks;
 }
 
 export type ManualProblem = 'order' | 'future' | 'long';
