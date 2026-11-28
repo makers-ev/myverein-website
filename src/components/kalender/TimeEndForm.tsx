@@ -4,7 +4,7 @@ import { useId, useState } from 'react';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api-client';
-import { END_PROBLEM_KEY, type TimeEntry, endTimeErrorKey, endTimeProblem, latestEnd, toLocalValue } from '@/lib/timeTracking';
+import { END_PROBLEM_KEY, type TimeEntry, endTimeErrorKey, endTimeProblem, isAmbiguousLocal, isStaleEndError, latestEnd, toLocalValue } from '@/lib/timeTracking';
 
 import { inputClass, labelClass, primaryBtn, secondaryBtn } from './calendarTypes';
 
@@ -16,10 +16,16 @@ interface Props {
     submitLabel: string;
     onDone: () => void;
     onCancel: () => void;
+    /** The entry changed under the form (no longer running / stuck, overlap): the parent reloads and shows the text key. */
+    onStale: (errorKey: string) => void;
+    /** Parent is busy with another request: the buttons wait. */
+    disabled?: boolean;
+    /** Shares the pending state with the parent so that nothing else can be fired meanwhile. */
+    onBusy?: (busy: boolean) => void;
 }
 
 /** Sets the end of a running entry afterwards. The picker is bounded by the start and the latest allowed end; the server re-checks. */
-export default function TimeEndForm({ entry, endpoint, submitLabel, onDone, onCancel }: Props) {
+export default function TimeEndForm({ entry, endpoint, submitLabel, onDone, onCancel, onStale, disabled = false, onBusy }: Props) {
     const { t, language } = useLanguage();
     const id = useId();
     // Fixed when the form opens: keeps render pure; the server re-checks "in the future" anyway.
@@ -30,20 +36,27 @@ export default function TimeEndForm({ entry, endpoint, submitLabel, onDone, onCa
 
     const min = toLocalValue(new Date(entry.startedAt).getTime());
     const max = toLocalValue(latestEnd(entry, openedAt));
-    const problem = value ? endTimeProblem(entry.startedAt, value, openedAt, entry.maxEndedAt) : null;
+    const problem = value ? endTimeProblem(entry.startedAt, value, openedAt) : null;
+    const ambiguous = value !== '' && isAmbiguousLocal(value);
     const fmt = (local: string) => new Date(local).toLocaleString(language, { dateStyle: 'short', timeStyle: 'short' });
 
     async function submit(e: React.FormEvent) {
         e.preventDefault();
-        if (!value || problem) return;
+        if (!value || disabled) return;
+        // The tab may have been open for hours: check against the clock of this moment, not of the moment the form opened.
+        if (endTimeProblem(entry.startedAt, value, Date.now())) return;
         setBusy(true);
+        onBusy?.(true);
         setError(null);
         try {
             await apiFetch(endpoint, { method: 'POST', body: { endedAt: new Date(value).toISOString() } });
             onDone();
         } catch (err) {
-            setError(t(endTimeErrorKey(err)));
+            if (isStaleEndError(err)) onStale(endTimeErrorKey(err));
+            else setError(t(endTimeErrorKey(err)));
+        } finally {
             setBusy(false);
+            onBusy?.(false);
         }
     }
 
@@ -58,16 +71,17 @@ export default function TimeEndForm({ entry, endpoint, submitLabel, onDone, onCa
             <p id={`${id}-hint`} className={`text-xs ${problem ? 'text-destructive' : 'text-muted-foreground'}`} role={problem ? 'alert' : undefined}>
                 {problem ? t(END_PROBLEM_KEY[problem]) : t('time.end.hint', { from: fmt(min), to: fmt(max) })}
             </p>
+            {ambiguous && !problem && <p className="text-xs text-muted-foreground">{t('time.end.ambiguous')}</p>}
             {error && (
                 <p role="alert" className="text-xs text-destructive">
                     {error}
                 </p>
             )}
             <div className="flex flex-wrap gap-2">
-                <button type="submit" disabled={busy || !value || problem !== null} className={`${primaryBtn} !px-3 !py-1.5 text-xs`}>
+                <button type="submit" disabled={busy || disabled || !value || problem !== null} className={`${primaryBtn} min-h-[44px] !px-4 text-sm`}>
                     {submitLabel}
                 </button>
-                <button type="button" disabled={busy} onClick={onCancel} className={`${secondaryBtn} !px-3 !py-1.5 text-xs`}>
+                <button type="button" disabled={busy} onClick={onCancel} className={`${secondaryBtn} min-h-[44px] !px-4 text-sm`}>
                     {t('time.rates.cancel')}
                 </button>
             </div>

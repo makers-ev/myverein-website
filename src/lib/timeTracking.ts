@@ -227,22 +227,21 @@ export function isOverdue(e: Pick<TimeEntry, 'running' | 'overdue' | 'startedAt'
     return e.running && (e.overdue ?? runningState(e.startedAt, now).level === 'stuck');
 }
 
-/** Latest end a running entry may get: the server value, else min(now, start + 16 h). */
-export function latestEnd(e: Pick<TimeEntry, 'startedAt' | 'maxEndedAt'>, now = Date.now()): number {
-    if (e.maxEndedAt) return new Date(e.maxEndedAt).getTime();
+/** Latest end a running entry may get: min(now, start + 16 h). Always rebuilt from the clock (a tab can stay open for hours); the server's `maxEndedAt` is only a snapshot. */
+export function latestEnd(e: Pick<TimeEntry, 'startedAt'>, now = Date.now()): number {
     return Math.min(now, new Date(e.startedAt).getTime() + MAX_ENTRY_HOURS * 3600_000);
 }
 
 export type EndProblem = 'invalid' | 'order' | 'future' | 'long';
 
 /** Client mirror of the end-time rules (start < end <= min(now, start + 16 h)); the server decides. `endLocal` is a datetime-local value. */
-export function endTimeProblem(startedAt: string, endLocal: string, now = Date.now(), maxEndedAt?: string | null): EndProblem | null {
+export function endTimeProblem(startedAt: string, endLocal: string, now = Date.now()): EndProblem | null {
     const end = new Date(endLocal).getTime();
     const start = new Date(startedAt).getTime();
     if (!endLocal || Number.isNaN(end)) return 'invalid';
     if (end <= start) return 'order';
     if (end > start + MAX_ENTRY_HOURS * 3600_000) return 'long';
-    if (end > latestEnd({ startedAt, maxEndedAt }, now) + 60_000) return 'future';
+    if (end > latestEnd({ startedAt }, now) + 60_000) return 'future';
     return null;
 }
 
@@ -258,6 +257,18 @@ export function toLocalValue(ms: number): string {
     const d = new Date(ms);
     const p = (n: number) => String(n).padStart(2, '0');
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+/** The wall-clock time occurs twice (clocks go back): the browser picks the first one (summer time). */
+export function isAmbiguousLocal(local: string): boolean {
+    const d = new Date(local).getTime();
+    return !Number.isNaN(d) && toLocalValue(d + 3600_000) === toLocalValue(d);
+}
+
+/** The entry changed under the form (ended, no longer stuck, overlap): reload the list instead of leaving a dead form open. */
+export function isStaleEndError(err: unknown): boolean {
+    const code = eventErrorCode(err);
+    return code === 'not_running' || code === 'not_overdue' || code === 'entry_overlap';
 }
 
 /** Text key for a failed "set the end" request (clock-out with `endedAt`, PATCH, close). */

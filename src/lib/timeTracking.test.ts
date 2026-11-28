@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it } from 'vitest';
 
 import { ApiError } from './api-client';
-import { MAX_REPORT_PEOPLE, toLocalValue, clockOutErrorKey, endTimeErrorKey, endTimeProblem, entryMarks, isOverdue, latestEnd, runningState, RATE_ROLES, groupRateCards, rateErrorKey, ratePatchBody, rateRangeProblem, rateRoleKey, defaultRange, manualProblem, rateBody, reportQuery, reportRows, splitMinutes, toggleId, totalHours } from './timeTracking';
+import { MAX_REPORT_PEOPLE, isAmbiguousLocal, isStaleEndError, toLocalValue, clockOutErrorKey, endTimeErrorKey, endTimeProblem, entryMarks, isOverdue, latestEnd, runningState, RATE_ROLES, groupRateCards, rateErrorKey, ratePatchBody, rateRangeProblem, rateRoleKey, defaultRange, manualProblem, rateBody, reportQuery, reportRows, splitMinutes, toggleId, totalHours } from './timeTracking';
 
 describe('time tracking helpers', () => {
     it('splits minutes', () => {
@@ -122,7 +122,6 @@ describe('setting the end afterwards', () => {
     it('bounds the end by start + 16 h and never beyond now', () => {
         expect(latestEnd({ startedAt: start }, now)).toBe(new Date('2026-05-11T00:00:00Z').getTime());
         expect(latestEnd({ startedAt: start }, new Date('2026-05-10T10:00:00Z').getTime())).toBe(new Date('2026-05-10T10:00:00Z').getTime());
-        expect(latestEnd({ startedAt: start, maxEndedAt: '2026-05-10T20:00:00Z' }, now)).toBe(new Date('2026-05-10T20:00:00Z').getTime());
     });
 
     it('mirrors the server checks', () => {
@@ -152,5 +151,31 @@ describe('setting the end afterwards', () => {
         expect(endTimeErrorKey(e('too_long'))).toBe('time.err.endTooLong');
         for (const code of ['needs_end_time', 'invalid_time', 'in_future', 'entry_overlap']) expect(endTimeErrorKey(e(code))).toBe(`events.err.${code}`);
         expect(clockOutErrorKey(e('needs_end_time', 409))).toBe('events.err.needs_end_time');
+    });
+});
+
+describe('daylight saving and stale errors', () => {
+    const old = process.env.TZ;
+    afterAll(() => {
+        if (old === undefined) delete process.env.TZ;
+        else process.env.TZ = old;
+    });
+
+    it('flags the doubled hour when the clocks go back', () => {
+        process.env.TZ = 'Europe/Berlin';
+        expect(isAmbiguousLocal('2026-10-25T02:30')).toBe(true);
+        expect(isAmbiguousLocal('2026-10-25T01:30')).toBe(false);
+        expect(isAmbiguousLocal('2026-10-25T03:30')).toBe(false);
+        expect(isAmbiguousLocal('2026-06-25T02:30')).toBe(false);
+        expect(isAmbiguousLocal('')).toBe(false);
+    });
+
+    it('treats not_running, not_overdue and entry_overlap as stale', () => {
+        const e = (code: string) => new ApiError(409, 'CONFLICT', 'x', { code });
+        expect(isStaleEndError(e('not_running'))).toBe(true);
+        expect(isStaleEndError(e('not_overdue'))).toBe(true);
+        expect(isStaleEndError(e('entry_overlap'))).toBe(true);
+        expect(isStaleEndError(e('in_future'))).toBe(false);
+        expect(isStaleEndError(new Error('x'))).toBe(false);
     });
 });

@@ -23,6 +23,8 @@ interface Props {
 
 interface Result {
     key: string;
+    /** Calendar the answer belongs to: another calendar means another pool, so the old answer must not stay visible. */
+    calendarId: string;
     data?: Hints;
     failure?: HintFailure;
 }
@@ -48,16 +50,19 @@ export default function AvailabilityHints({ clubId, calendarId, startsAt, endsAt
         const controller = new AbortController();
         const timer = setTimeout(() => {
             apiFetch<{ data: Hints }>(`/events/availability-hints?${query}`, { signal: controller.signal })
-                .then((res) => setResult({ key, data: res.data }))
+                .then((res) => {
+                    // A superseded answer (aborted, or arriving late) never replaces the current one.
+                    if (!controller.signal.aborted) setResult({ key, calendarId, data: res.data });
+                })
                 .catch((err) => {
-                    if (!controller.signal.aborted) setResult({ key, failure: hintFailure(err) });
+                    if (!controller.signal.aborted) setResult({ key, calendarId, failure: hintFailure(err) });
                 });
         }, DEBOUNCE_MS);
         return () => {
             clearTimeout(timer);
             controller.abort();
         };
-    }, [query, key]);
+    }, [query, key, calendarId]);
 
     // Without the right to see hints the section simply does not exist (the form works as before).
     if (result?.failure === 'forbidden') return null;
@@ -65,7 +70,7 @@ export default function AvailabilityHints({ clubId, calendarId, startsAt, endsAt
     const current = result && result.key === key ? result : null;
     const loading = key !== null && current === null;
     // While a new answer is on its way the last one stays visible (dimmed) instead of flickering away.
-    const data = (current ?? result)?.data;
+    const data = (current ?? (result?.calendarId === calendarId ? result : null))?.data;
     const failure = current?.failure;
 
     return (
@@ -75,28 +80,27 @@ export default function AvailabilityHints({ clubId, calendarId, startsAt, endsAt
                 {t('availability.title')}
             </h3>
 
-            <div aria-live="polite" aria-busy={loading} className="space-y-2">
-                {request.kind === 'skip' ? (
-                    <p className="text-muted-foreground">{t(request.reason === 'range' ? 'availability.range' : 'availability.incomplete')}</p>
-                ) : failure ? (
-                    <div className="flex flex-wrap items-center gap-2">
-                        <p role="alert" className="text-destructive">
-                            {t(failure === 'rate' ? 'availability.rate' : failure === 'range' ? 'availability.range' : 'availability.error')}
-                        </p>
-                        {failure !== 'range' && (
-                            <button type="button" onClick={() => setAttempt((n) => n + 1)} className={`${secondaryBtn} !px-3 !py-1 text-xs`}>
-                                {t('availability.retry')}
-                            </button>
-                        )}
-                    </div>
-                ) : !data ? (
-                    <p className="text-muted-foreground">{t('availability.loading')}</p>
-                ) : data.counts.total === 0 ? (
-                    <p className="text-muted-foreground">{t('availability.empty')}</p>
-                ) : (
-                    <Summary data={data} loading={loading} />
-                )}
-            </div>
+            {request.kind === 'skip' ? (
+                <p aria-live="polite" className="text-muted-foreground">{t(request.reason === 'range' ? 'availability.range' : 'availability.incomplete')}</p>
+            ) : failure ? (
+                // role="alert" announces itself: no extra live region around it.
+                <div className="flex flex-wrap items-center gap-2">
+                    <p role="alert" className="text-destructive">
+                        {t(failure === 'rate' ? 'availability.rate' : failure === 'range' ? 'availability.range' : 'availability.error')}
+                    </p>
+                    {failure !== 'range' && (
+                        <button type="button" onClick={() => setAttempt((n) => n + 1)} className={`${secondaryBtn} min-h-[44px] !px-4 text-sm`}>
+                            {t('availability.retry')}
+                        </button>
+                    )}
+                </div>
+            ) : !data ? (
+                <p aria-live="polite" className="text-muted-foreground">{t('availability.loading')}</p>
+            ) : data.counts.total === 0 ? (
+                <p aria-live="polite" className="text-muted-foreground">{t('availability.empty')}</p>
+            ) : (
+                <Summary data={data} loading={loading} />
+            )}
 
             <p className="text-xs text-muted-foreground">
                 {series ? `${t(series === 'first' ? 'availability.series.first' : 'availability.series.this')} ` : ''}
@@ -114,7 +118,8 @@ function Summary({ data, loading }: { data: Hints; loading: boolean }) {
 
     return (
         <div className={`space-y-2 transition-opacity ${loading ? 'opacity-60' : ''}`}>
-            <p className="text-base font-semibold text-foreground">
+            {/* Only the counter is announced; the name list stays outside the live region. */}
+            <p aria-live="polite" aria-busy={loading} className="text-base font-semibold text-foreground">
                 {t('availability.count', { free: counts.verfuegbar, total: counts.total })}
                 {loading && <span className="ml-2 text-xs font-normal text-muted-foreground">{t('availability.loading')}</span>}
             </p>

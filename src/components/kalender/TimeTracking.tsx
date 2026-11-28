@@ -108,6 +108,12 @@ export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, o
     const run = current ? runningState(current.startedAt, now) : null;
     const runningDuration = (r: NonNullable<typeof run>) => (r.days > 0 ? t('time.elapsed.days', { days: r.days, hours: r.hours }) : t('time.minutes', { hours: r.hours, minutes: r.rest }));
 
+    function onStale(errorKey: string) {
+        setEndingId(null);
+        setError(t(errorKey));
+        load();
+    }
+
     async function rejectEntry(e: TimeEntry) {
         if (await confirm({ title: t('time.reject'), body: t('time.reject.body', { name: e.displayName }), confirmLabel: t('time.reject'), danger: true })) await act(() => apiFetch(`/time-entries/${e.id}/reject?${q}`, { method: 'POST' }));
     }
@@ -151,7 +157,7 @@ export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, o
                             </p>
                         )}
                         {endingId === current.id ? (
-                            <TimeEndForm entry={current} endpoint={`/time-entries/clock-out?${q}`} submitLabel={t('time.end.submit')} onDone={() => { setEndingId(null); setError(null); load(); }} onCancel={() => setEndingId(null)} />
+                            <TimeEndForm entry={current} endpoint={`/time-entries/clock-out?${q}`} submitLabel={t('time.end.submit')} onDone={() => { setEndingId(null); setError(null); load(); }} onCancel={() => { setEndingId(null); setError(null); }} onStale={onStale} disabled={busy} onBusy={setBusy} />
                         ) : (
                             <div className="flex flex-wrap items-center gap-3">
                                 {run?.level !== 'stuck' && (
@@ -351,28 +357,28 @@ export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, o
                                                 )}
                                                 {canConfirm && stuck && !own && (
                                                     <>
-                                                        <button type="button" disabled={busy} aria-expanded={endingId === e.id} onClick={() => setEndingId(endingId === e.id ? null : e.id)} className={`${primaryBtn} !px-2.5 !py-1 text-xs`}>
+                                                        <button type="button" disabled={busy} aria-expanded={endingId === e.id} onClick={() => setEndingId(endingId === e.id ? null : e.id)} className={`${primaryBtn} min-h-[44px] !px-3 text-xs`}>
                                                             {t('time.close.open')}
                                                         </button>
-                                                        <button type="button" disabled={busy} onClick={() => void rejectEntry(e)} className={`${secondaryBtn} !px-2.5 !py-1 text-xs`}>
+                                                        <button type="button" disabled={busy} onClick={() => void rejectEntry(e)} className={`${secondaryBtn} min-h-[44px] !px-3 text-xs`}>
                                                             {t('time.reject')}
                                                         </button>
                                                     </>
                                                 )}
                                                 {own && e.running && (
-                                                    <button type="button" disabled={busy} onClick={() => { setEndingId(e.id); document.getElementById('time-running-card')?.scrollIntoView({ block: 'center' }); }} className={`${secondaryBtn} !px-2.5 !py-1 text-xs`}>
+                                                    <button type="button" disabled={busy} onClick={() => { setEndingId(e.id); document.getElementById('time-running-card')?.scrollIntoView({ block: 'center' }); }} className={`${secondaryBtn} min-h-[44px] !px-3 text-xs`}>
                                                         {t('time.end.open')}
                                                     </button>
                                                 )}
                                                 {own && e.status === 'offen' && (
-                                                    <button type="button" disabled={busy} onClick={() => void (e.running ? discard(e) : (async () => { if (await confirm({ title: t('time.delete'), body: t('time.delete.body'), confirmLabel: t('time.delete'), danger: true })) await act(() => apiFetch(`/time-entries/${e.id}?${q}`, { method: 'DELETE' })); })())} className={`${secondaryBtn} !px-2.5 !py-1 text-xs`}>
+                                                    <button type="button" disabled={busy} onClick={() => void (e.running ? discard(e) : (async () => { if (await confirm({ title: t('time.delete'), body: t('time.delete.body'), confirmLabel: t('time.delete'), danger: true })) await act(() => apiFetch(`/time-entries/${e.id}?${q}`, { method: 'DELETE' })); })())} className={`${secondaryBtn} ${e.running ? 'min-h-[44px] !px-3' : '!px-2.5 !py-1'} text-xs`}>
                                                         {e.running ? t('time.discard') : t('time.delete')}
                                                     </button>
                                                 )}
                                             </div>
                                             {canConfirm && stuck && !own && endingId === e.id && (
                                                 <div className="mt-2 min-w-64">
-                                                    <TimeEndForm entry={e} endpoint={`/time-entries/${e.id}/close?${q}`} submitLabel={t('time.close.submit')} onDone={() => { setEndingId(null); setError(null); load(); }} onCancel={() => setEndingId(null)} />
+                                                    <TimeEndForm entry={e} endpoint={`/time-entries/${e.id}/close?${q}`} submitLabel={t('time.close.submit')} onDone={() => { setEndingId(null); setError(null); load(); }} onCancel={() => { setEndingId(null); setError(null); }} onStale={onStale} disabled={busy} onBusy={setBusy} />
                                                 </div>
                                             )}
                                         </td>
