@@ -60,6 +60,11 @@ export const EVENT_ERROR_CODES = [
     'no_rate',
     'rate_overlap',
     'report_too_large',
+    'needs_end_time',
+    'not_running',
+    'not_overdue',
+    'closed_by_you',
+    'range_too_long',
 ] as const;
 
 export type EventErrorCode = (typeof EVENT_ERROR_CODES)[number];

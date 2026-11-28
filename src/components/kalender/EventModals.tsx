@@ -10,6 +10,7 @@ import { apiFetch } from '@/lib/api-client';
 import EventAbsenceOverlay from './EventAbsenceOverlay';
 import SeriesScopeModal from './SeriesScopeModal';
 import AttendancePanel from './AttendancePanel';
+import AvailabilityHints from './AvailabilityHints';
 import HelperPlanPanel from './HelperPlanPanel';
 import ParticipantsPanel from './ParticipantsPanel';
 import RidesPanel from './RidesPanel';
@@ -832,6 +833,9 @@ export function EventFormModal({ clubId, calendars, colorFor, event, scope, init
                     <p role="alert" className="text-xs text-destructive">
                         {t(problem)}
                     </p>
+                )}
+                {!endBeforeStart && startsAt && (
+                    <AvailabilityHints clubId={clubId} calendarId={calendarId} startsAt={startIso} endsAt={endIso} eventId={event?.id} series={seriesEdit ? 'this' : repeat && !event ? 'first' : undefined} />
                 )}
                 <div className="grid gap-4 sm:grid-cols-2">
                     <div>

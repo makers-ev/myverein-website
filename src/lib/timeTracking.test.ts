@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it } from 'vitest';
 
 import { ApiError } from './api-client';
-import { MAX_REPORT_PEOPLE, RATE_ROLES, groupRateCards, rateErrorKey, ratePatchBody, rateRangeProblem, rateRoleKey, defaultRange, manualProblem, rateBody, reportQuery, reportRows, splitMinutes, toggleId, totalHours } from './timeTracking';
+import { MAX_REPORT_PEOPLE, stuckFirst, isAmbiguousLocal, isStaleEndError, toLocalValue, clockOutErrorKey, endTimeErrorKey, endTimeProblem, entryMarks, isOverdue, latestEnd, runningState, RATE_ROLES, groupRateCards, rateErrorKey, ratePatchBody, rateRangeProblem, rateRoleKey, defaultRange, manualProblem, rateBody, reportQuery, reportRows, splitMinutes, toggleId, totalHours } from './timeTracking';
 
 describe('time tracking helpers', () => {
     it('splits minutes', () => {
@@ -89,5 +89,102 @@ describe('rate card helpers', () => {
 
     it('maps 409 to the overlap text', () => {
         expect(rateErrorKey(new ApiError(409, 'CONFLICT', 'x'))).toBe('events.err.rate_overlap');
+    });
+});
+
+describe('running entry (clock-out recovery)', () => {
+    const start = '2026-05-10T08:00:00Z';
+    const at = (h: number, m = 0) => new Date(start).getTime() + (h * 60 + m) * 60_000;
+
+    it('is quiet below 8 h, hints from 8 h and is stuck beyond 16 h', () => {
+        expect(runningState(start, at(7, 59)).level).toBe('ok');
+        expect(runningState(start, at(8)).level).toBe('hint');
+        expect(runningState(start, at(16)).level).toBe('hint');
+        expect(runningState(start, at(16, 1)).level).toBe('stuck');
+        expect(runningState(start, at(328)).level).toBe('stuck');
+    });
+
+    it('splits the elapsed time into days, hours and minutes', () => {
+        expect(runningState(start, at(328, 5))).toMatchObject({ days: 13, hours: 16, rest: 5, minutes: 328 * 60 + 5 });
+        expect(runningState(start, at(-1)).minutes).toBe(0);
+    });
+
+    it('explains too_long on clock-out instead of the generic 16 h text', () => {
+        expect(clockOutErrorKey(new ApiError(422, 'UNPROCESSABLE_ENTITY', 'x', { code: 'too_long' }))).toBe('time.err.clockOutTooLong');
+        expect(clockOutErrorKey(new ApiError(409, 'CONFLICT', 'x', { code: 'none_running' }))).toBe('events.err.none_running');
+    });
+});
+
+describe('setting the end afterwards', () => {
+    const start = '2026-05-10T08:00:00Z';
+    const now = new Date('2026-05-12T08:00:00Z').getTime();
+
+    it('bounds the end by start + 16 h and never beyond now', () => {
+        expect(latestEnd({ startedAt: start }, now)).toBe(new Date('2026-05-11T00:00:00Z').getTime());
+        expect(latestEnd({ startedAt: start }, new Date('2026-05-10T10:00:00Z').getTime())).toBe(new Date('2026-05-10T10:00:00Z').getTime());
+    });
+
+    it('mirrors the server checks', () => {
+        expect(endTimeProblem(start, '', now)).toBe('invalid');
+        expect(endTimeProblem(start, toLocalValue(new Date('2026-05-10T07:00:00Z').getTime()), now)).toBe('order');
+        expect(endTimeProblem(start, toLocalValue(new Date('2026-05-10T12:00:00Z').getTime()), now)).toBeNull();
+        expect(endTimeProblem(start, toLocalValue(new Date('2026-05-11T01:00:00Z').getTime()), now)).toBe('long');
+        expect(endTimeProblem(start, toLocalValue(new Date('2026-05-10T12:00:00Z').getTime()), new Date('2026-05-10T10:00:00Z').getTime())).toBe('future');
+    });
+
+    it('detects stuck entries from the flag or the age', () => {
+        expect(isOverdue({ running: true, overdue: true, startedAt: start }, now)).toBe(true);
+        expect(isOverdue({ running: true, startedAt: start }, now)).toBe(true);
+        expect(isOverdue({ running: true, overdue: false, startedAt: start }, now)).toBe(false);
+        expect(isOverdue({ running: false, startedAt: start }, now)).toBe(false);
+    });
+
+    it('marks how an end came about', () => {
+        expect(entryMarks({})).toEqual([]);
+        expect(entryMarks({ corrected: true })).toEqual(['corrected']);
+        expect(entryMarks({ corrected: true, autoClosed: true })).toEqual(['autoClosed']);
+        expect(entryMarks({ corrected: true, closedByOther: true })).toEqual(['closedByOther']);
+    });
+
+    it('maps end-time errors', () => {
+        const e = (code: string, status = 422) => new ApiError(status, 'X', 'x', { code });
+        expect(endTimeErrorKey(e('too_long'))).toBe('time.err.endTooLong');
+        for (const code of ['needs_end_time', 'invalid_time', 'in_future', 'entry_overlap']) expect(endTimeErrorKey(e(code))).toBe(`events.err.${code}`);
+        expect(clockOutErrorKey(e('needs_end_time', 409))).toBe('events.err.needs_end_time');
+    });
+});
+
+describe('daylight saving and stale errors', () => {
+    const old = process.env.TZ;
+    afterAll(() => {
+        if (old === undefined) delete process.env.TZ;
+        else process.env.TZ = old;
+    });
+
+    it('flags the doubled hour when the clocks go back', () => {
+        process.env.TZ = 'Europe/Berlin';
+        expect(isAmbiguousLocal('2026-10-25T02:30')).toBe(true);
+        expect(isAmbiguousLocal('2026-10-25T01:30')).toBe(false);
+        expect(isAmbiguousLocal('2026-10-25T03:30')).toBe(false);
+        expect(isAmbiguousLocal('2026-06-25T02:30')).toBe(false);
+        expect(isAmbiguousLocal('')).toBe(false);
+    });
+
+    it('treats not_running, not_overdue and entry_overlap as stale', () => {
+        const e = (code: string) => new ApiError(409, 'CONFLICT', 'x', { code });
+        expect(isStaleEndError(e('not_running'))).toBe(true);
+        expect(isStaleEndError(e('not_overdue'))).toBe(true);
+        expect(isStaleEndError(e('entry_overlap'))).toBe(true);
+        expect(isStaleEndError(e('in_future'))).toBe(false);
+        expect(isStaleEndError(new Error('x'))).toBe(false);
+    });
+});
+
+describe('stuckFirst', () => {
+    it('puts stuck running entries first and keeps the rest in order', () => {
+        const now = new Date('2026-05-20T08:00:00Z').getTime();
+        const e = (id: string, startedAt: string, running = false, overdue?: boolean) => ({ id, startedAt, running, overdue });
+        const list = [e('a', '2026-05-19T08:00:00Z'), e('b', '2026-05-01T08:00:00Z', true), e('c', '2026-05-18T08:00:00Z'), e('d', '2026-05-20T07:00:00Z', true), e('f', '2026-05-02T08:00:00Z', true, true)];
+        expect(stuckFirst(list, now).map((x) => x.id)).toEqual(['b', 'f', 'a', 'c', 'd']);
     });
 });
