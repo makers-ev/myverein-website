@@ -27,6 +27,8 @@ export interface TimeEntry {
     autoClosed?: boolean;
     /** Ended (or rejected while running) by the board instead of the person. */
     closedByOther?: boolean;
+    /** True only for the caller who ended this entry for someone else: another confirmer is needed (unless they are the only one). */
+    closedByYou?: boolean;
     /** Still running for more than 16 h. */
     overdue?: boolean;
     /** Running entries: latest allowed end (min of now and start + 16 h). */
@@ -257,6 +259,12 @@ export function toLocalValue(ms: number): string {
     const d = new Date(ms);
     const p = (n: number) => String(n).padStart(2, '0');
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+/** Stuck running entries first (the backend lists them first, this keeps it so for older answers); the order of the rest is kept. */
+export function stuckFirst<T extends Pick<TimeEntry, 'running' | 'overdue' | 'startedAt'>>(entries: readonly T[], now = Date.now()): T[] {
+    const stuck = entries.filter((e) => isOverdue(e, now));
+    return [...stuck, ...entries.filter((e) => !isOverdue(e, now))];
 }
 
 /** The wall-clock time occurs twice (clocks go back): the browser picks the first one (summer time). */

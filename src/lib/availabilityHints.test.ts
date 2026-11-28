@@ -39,9 +39,16 @@ describe('hintFailure', () => {
 });
 
 describe('sortedNames', () => {
-    const h = (people: AvailabilityHints['unavailablePeople']) => ({ unavailablePeople: people }) as AvailabilityHints;
+    const h = (people: AvailabilityHints['unavailablePeople']) => ({ includesNames: true, unavailablePeople: people }) as AvailabilityHints;
     it('sorts names and tolerates counters-only answers', () => {
         expect(sortedNames(h([{ clubMemberId: '2', displayName: 'Zoe' }, { clubMemberId: '1', displayName: 'Anna' }]))).toEqual(['Anna', 'Zoe']);
         expect(sortedNames(h(null))).toEqual([]);
+    });
+
+    it('returns names only for includesNames === true', () => {
+        const people = [{ clubMemberId: '1', displayName: 'Anna' }];
+        expect(sortedNames({ includesNames: false, unavailablePeople: people } as AvailabilityHints)).toEqual([]);
+        expect(sortedNames({ unavailablePeople: people } as AvailabilityHints)).toEqual([]);
+        expect(sortedNames({ includesNames: true, unavailablePeople: people } as AvailabilityHints)).toEqual(['Anna']);
     });
 });

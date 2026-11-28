@@ -1,7 +1,7 @@
 import { afterAll, describe, expect, it } from 'vitest';
 
 import { ApiError } from './api-client';
-import { MAX_REPORT_PEOPLE, isAmbiguousLocal, isStaleEndError, toLocalValue, clockOutErrorKey, endTimeErrorKey, endTimeProblem, entryMarks, isOverdue, latestEnd, runningState, RATE_ROLES, groupRateCards, rateErrorKey, ratePatchBody, rateRangeProblem, rateRoleKey, defaultRange, manualProblem, rateBody, reportQuery, reportRows, splitMinutes, toggleId, totalHours } from './timeTracking';
+import { MAX_REPORT_PEOPLE, stuckFirst, isAmbiguousLocal, isStaleEndError, toLocalValue, clockOutErrorKey, endTimeErrorKey, endTimeProblem, entryMarks, isOverdue, latestEnd, runningState, RATE_ROLES, groupRateCards, rateErrorKey, ratePatchBody, rateRangeProblem, rateRoleKey, defaultRange, manualProblem, rateBody, reportQuery, reportRows, splitMinutes, toggleId, totalHours } from './timeTracking';
 
 describe('time tracking helpers', () => {
     it('splits minutes', () => {
@@ -177,5 +177,14 @@ describe('daylight saving and stale errors', () => {
         expect(isStaleEndError(e('entry_overlap'))).toBe(true);
         expect(isStaleEndError(e('in_future'))).toBe(false);
         expect(isStaleEndError(new Error('x'))).toBe(false);
+    });
+});
+
+describe('stuckFirst', () => {
+    it('puts stuck running entries first and keeps the rest in order', () => {
+        const now = new Date('2026-05-20T08:00:00Z').getTime();
+        const e = (id: string, startedAt: string, running = false, overdue?: boolean) => ({ id, startedAt, running, overdue });
+        const list = [e('a', '2026-05-19T08:00:00Z'), e('b', '2026-05-01T08:00:00Z', true), e('c', '2026-05-18T08:00:00Z'), e('d', '2026-05-20T07:00:00Z', true), e('f', '2026-05-02T08:00:00Z', true, true)];
+        expect(stuckFirst(list, now).map((x) => x.id)).toEqual(['b', 'f', 'a', 'c', 'd']);
     });
 });

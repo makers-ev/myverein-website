@@ -79,6 +79,29 @@ describe('TimeTracking running entry', () => {
     });
 });
 
+describe('TimeTracking closed by you', () => {
+    it('explains up front but keeps "Bestätigen" for an entry the viewer ended', async () => {
+        const done = entry({ id: 't4', clubMemberId: 'm2', displayName: 'Jonas', running: false, endedAt: new Date().toISOString(), minutes: 960, closedByOther: true, closedByYou: true });
+        backend([done], null);
+        ui({ canConfirm: true });
+        expect(await screen.findByText('time.closedByYou.note')).not.toBeNull();
+        expect(screen.getByRole('button', { name: 'time.confirm' })).not.toBeNull();
+    });
+
+    it('shows no note for entries the viewer did not end, and the server error stays readable', async () => {
+        const done = entry({ id: 't5', clubMemberId: 'm2', displayName: 'Jonas', running: false, endedAt: new Date().toISOString(), minutes: 60, closedByOther: true });
+        backend([done], null);
+        ui({ canConfirm: true });
+        await screen.findByText('Jonas');
+        expect(screen.queryByText('time.closedByYou.note')).toBeNull();
+        fetchMock.mockImplementation(async () => {
+            throw err(403, 'closed_by_you');
+        });
+        fireEvent.click(screen.getByRole('button', { name: 'time.confirm' }));
+        expect((await screen.findByRole('alert')).textContent).toContain('events.err.closed_by_you');
+    });
+});
+
 describe('TimeTracking team view', () => {
     const others = entry({ id: 't2', clubMemberId: 'm2', displayName: 'Jonas', startedAt: new Date(Date.now() - 328 * HOUR).toISOString(), overdue: true });
 

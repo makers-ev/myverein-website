@@ -10,7 +10,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api-client';
 import { eventErrorCode, eventErrorKey } from '@/lib/eventErrors';
 import { parseEuroInput, formatCost } from '@/lib/eventRegistration';
-import { type RateCard, type TimeEntry, type TimeSuggestion, RATE_ROLES, clockOutErrorKey, defaultRange, entryMarks, isOverdue, groupRateCards, manualProblem, rateBody, rateErrorKey, ratePatchBody, rateRangeProblem, rateRoleKey, runningState, splitMinutes } from '@/lib/timeTracking';
+import { type RateCard, type TimeEntry, type TimeSuggestion, RATE_ROLES, clockOutErrorKey, defaultRange, entryMarks, isOverdue, stuckFirst, groupRateCards, manualProblem, rateBody, rateErrorKey, ratePatchBody, rateRangeProblem, rateRoleKey, runningState, splitMinutes } from '@/lib/timeTracking';
 
 import { type CalendarEvent, type Department, inputClass, labelClass, primaryBtn, secondaryBtn } from './calendarTypes';
 import MemberPicker from './MemberPicker';
@@ -77,7 +77,7 @@ export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, o
             apiFetch<{ data: TimeSuggestion[] }>(`/time-entries/suggestions?${q}&from=${range.from}&to=${range.to}`),
         ])
             .then(([list, cur, sug]) => {
-                setEntries(list.data);
+                setEntries(stuckFirst(list.data));
                 setCurrent(cur.data);
                 setSuggestions(sug.data);
                 setNow(Date.now());
@@ -376,6 +376,9 @@ export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, o
                                                     </button>
                                                 )}
                                             </div>
+                                            {canConfirm && e.closedByYou && e.status === 'offen' && !e.running && (
+                                                <p className="mt-1.5 max-w-64 text-xs text-muted-foreground">{t('time.closedByYou.note')}</p>
+                                            )}
                                             {canConfirm && stuck && !own && endingId === e.id && (
                                                 <div className="mt-2 min-w-64">
                                                     <TimeEndForm entry={e} endpoint={`/time-entries/${e.id}/close?${q}`} submitLabel={t('time.close.submit')} onDone={() => { setEndingId(null); setError(null); load(); }} onCancel={() => { setEndingId(null); setError(null); }} onStale={onStale} disabled={busy} onBusy={setBusy} />

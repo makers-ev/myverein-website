@@ -59,5 +59,7 @@ export function hintFailure(err: unknown): HintFailure {
 
 /** Names of the unavailable people, sorted for reading; empty when the backend sent none. */
 export function sortedNames(h: AvailabilityHints): string[] {
+    // Names only when the backend says so explicitly; never derived from the role or from a list that happens to be there.
+    if (h.includesNames !== true) return [];
     return (h.unavailablePeople ?? []).map((p) => p.displayName).sort((a, b) => a.localeCompare(b, 'de'));
 }
