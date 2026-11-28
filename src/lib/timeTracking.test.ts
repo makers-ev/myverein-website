@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { ApiError } from './api-client';
-import { MAX_REPORT_PEOPLE, RATE_ROLES, groupRateCards, rateErrorKey, ratePatchBody, rateRangeProblem, rateRoleKey, defaultRange, manualProblem, rateBody, reportQuery, reportRows, splitMinutes, toggleId, totalHours } from './timeTracking';
+import { MAX_REPORT_PEOPLE, clockOutErrorKey, runningState, RATE_ROLES, groupRateCards, rateErrorKey, ratePatchBody, rateRangeProblem, rateRoleKey, defaultRange, manualProblem, rateBody, reportQuery, reportRows, splitMinutes, toggleId, totalHours } from './timeTracking';
 
 describe('time tracking helpers', () => {
     it('splits minutes', () => {
@@ -89,5 +89,28 @@ describe('rate card helpers', () => {
 
     it('maps 409 to the overlap text', () => {
         expect(rateErrorKey(new ApiError(409, 'CONFLICT', 'x'))).toBe('events.err.rate_overlap');
+    });
+});
+
+describe('running entry (clock-out recovery)', () => {
+    const start = '2026-05-10T08:00:00Z';
+    const at = (h: number, m = 0) => new Date(start).getTime() + (h * 60 + m) * 60_000;
+
+    it('is quiet below 8 h, hints from 8 h and is stuck beyond 16 h', () => {
+        expect(runningState(start, at(7, 59)).level).toBe('ok');
+        expect(runningState(start, at(8)).level).toBe('hint');
+        expect(runningState(start, at(16)).level).toBe('hint');
+        expect(runningState(start, at(16, 1)).level).toBe('stuck');
+        expect(runningState(start, at(328)).level).toBe('stuck');
+    });
+
+    it('splits the elapsed time into days, hours and minutes', () => {
+        expect(runningState(start, at(328, 5))).toMatchObject({ days: 13, hours: 16, rest: 5, minutes: 328 * 60 + 5 });
+        expect(runningState(start, at(-1)).minutes).toBe(0);
+    });
+
+    it('explains too_long on clock-out instead of the generic 16 h text', () => {
+        expect(clockOutErrorKey(new ApiError(422, 'UNPROCESSABLE_ENTITY', 'x', { code: 'too_long' }))).toBe('time.err.clockOutTooLong');
+        expect(clockOutErrorKey(new ApiError(409, 'CONFLICT', 'x', { code: 'none_running' }))).toBe('events.err.none_running');
     });
 });

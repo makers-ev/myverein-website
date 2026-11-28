@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Play, Square } from 'lucide-react';
+import { Play, Square, Trash2, TriangleAlert } from 'lucide-react';
 
 import LoadError from '@/components/LoadError';
 import LoadingText from '@/components/LoadingText';
@@ -10,7 +10,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api-client';
 import { eventErrorKey } from '@/lib/eventErrors';
 import { parseEuroInput, formatCost } from '@/lib/eventRegistration';
-import { type RateCard, type TimeEntry, type TimeSuggestion, RATE_ROLES, defaultRange, groupRateCards, manualProblem, rateBody, rateErrorKey, ratePatchBody, rateRangeProblem, rateRoleKey, splitMinutes } from '@/lib/timeTracking';
+import { type RateCard, type TimeEntry, type TimeSuggestion, RATE_ROLES, clockOutErrorKey, defaultRange, groupRateCards, manualProblem, rateBody, rateErrorKey, ratePatchBody, rateRangeProblem, rateRoleKey, runningState, splitMinutes } from '@/lib/timeTracking';
 
 import { type CalendarEvent, type Department, inputClass, labelClass, primaryBtn, secondaryBtn } from './calendarTypes';
 import MemberPicker from './MemberPicker';
@@ -57,6 +57,8 @@ export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, o
     const [mEnd, setMEnd] = useState('');
     // Fixed when the tab opens: keeps render pure; the server re-checks "in the future" anyway.
     const [loadedAt] = useState(() => Date.now());
+    // Refreshed with every load so "running since" stays honest while the tab is open.
+    const [now, setNow] = useState(loadedAt);
 
     const load = useCallback(() => {
         if (!canTrack) {
@@ -75,6 +77,7 @@ export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, o
                 setEntries(list.data);
                 setCurrent(cur.data);
                 setSuggestions(sug.data);
+                setNow(Date.now());
             })
             .catch(() => setFailed(true));
     }, [clubId, q, range.from, range.to, scope, status, canTrack]);
@@ -84,17 +87,24 @@ export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, o
         load();
     }, [load]);
 
-    async function act(doIt: () => Promise<unknown>) {
+    async function act(doIt: () => Promise<unknown>, errorKey: (err: unknown) => string = eventErrorKey) {
         setBusy(true);
         setError(null);
         try {
             await doIt();
             load();
         } catch (err) {
-            setError(t(eventErrorKey(err)));
+            setError(t(errorKey(err)));
         } finally {
             setBusy(false);
         }
+    }
+
+    const run = current ? runningState(current.startedAt, now) : null;
+    const runningDuration = (r: NonNullable<typeof run>) => (r.days > 0 ? t('time.elapsed.days', { days: r.days, hours: r.hours }) : t('time.minutes', { hours: r.hours, minutes: r.rest }));
+
+    async function discard(entry: TimeEntry) {
+        if (await confirm({ title: t('time.discard'), body: t('time.discard.body'), confirmLabel: t('time.discard'), danger: true })) await act(() => apiFetch(`/time-entries/${entry.id}?${q}`, { method: 'DELETE' }));
     }
 
     const manualIssue = mStart && mEnd ? manualProblem(mStart, mEnd, loadedAt) : null;
@@ -117,15 +127,32 @@ export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, o
             <section className="space-y-3 rounded-xl shadow-card bg-card p-4">
                 <h3 className="font-semibold text-foreground">{t('time.clock.title')}</h3>
                 {current ? (
-                    <div className="flex flex-wrap items-center gap-3">
+                    <div className="space-y-3">
                         <p className="text-foreground">
                             {t('time.clock.running', { since: new Date(current.startedAt).toLocaleTimeString(language, { hour: '2-digit', minute: '2-digit' }) })}
                             {current.eventTitle ? ` · ${current.eventTitle}` : ''}
                         </p>
-                        <button type="button" disabled={busy} onClick={() => void act(() => apiFetch(`/time-entries/clock-out?${q}`, { method: 'POST' }))} className={`${primaryBtn} inline-flex items-center gap-1.5`}>
-                            <Square className="h-4 w-4" aria-hidden />
-                            {t('time.clock.out')}
-                        </button>
+                        {run && run.level !== 'ok' && (
+                            <p role="status" className={`flex items-start gap-2 rounded-lg px-3 py-2 ${run.level === 'stuck' ? 'bg-destructive-soft text-destructive' : 'bg-warning-soft text-warning'}`}>
+                                <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                                <span>
+                                    {t('time.running.forgot', { duration: runningDuration(run) })}
+                                    {run.level === 'stuck' && <span className="mt-1 block">{t('time.running.stuck')}</span>}
+                                </span>
+                            </p>
+                        )}
+                        <div className="flex flex-wrap items-center gap-3">
+                            {run?.level !== 'stuck' && (
+                                <button type="button" disabled={busy} onClick={() => void act(() => apiFetch(`/time-entries/clock-out?${q}`, { method: 'POST' }), clockOutErrorKey)} className={`${primaryBtn} inline-flex items-center gap-1.5`}>
+                                    <Square className="h-4 w-4" aria-hidden />
+                                    {t('time.clock.out')}
+                                </button>
+                            )}
+                            <button type="button" disabled={busy} onClick={() => void discard(current)} className={`${run?.level === 'stuck' ? primaryBtn : secondaryBtn} inline-flex items-center gap-1.5`}>
+                                <Trash2 className="h-4 w-4" aria-hidden />
+                                {t('time.discard')}
+                            </button>
+                        </div>
                     </div>
                 ) : (
                     <div className="flex flex-wrap items-end gap-3">
@@ -291,9 +318,9 @@ export default function TimeTracking({ clubId, canTrack, canConfirm, canRates, o
                                                         </button>
                                                     </>
                                                 )}
-                                                {e.clubMemberId === ownClubMemberId && e.status === 'offen' && !e.running && (
-                                                    <button type="button" disabled={busy} onClick={() => void (async () => { if (await confirm({ title: t('time.delete'), body: t('time.delete.body'), confirmLabel: t('time.delete'), danger: true })) await act(() => apiFetch(`/time-entries/${e.id}?${q}`, { method: 'DELETE' })); })()} className={`${secondaryBtn} !px-2.5 !py-1 text-xs`}>
-                                                        {t('time.delete')}
+                                                {e.clubMemberId === ownClubMemberId && e.status === 'offen' && (
+                                                    <button type="button" disabled={busy} onClick={() => void (e.running ? discard(e) : (async () => { if (await confirm({ title: t('time.delete'), body: t('time.delete.body'), confirmLabel: t('time.delete'), danger: true })) await act(() => apiFetch(`/time-entries/${e.id}?${q}`, { method: 'DELETE' })); })())} className={`${secondaryBtn} !px-2.5 !py-1 text-xs`}>
+                                                        {e.running ? t('time.discard') : t('time.delete')}
                                                     </button>
                                                 )}
                                             </div>

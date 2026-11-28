@@ -1,5 +1,5 @@
 import { ApiError } from './api-client';
-import { eventErrorKey } from './eventErrors';
+import { eventErrorCode, eventErrorKey } from './eventErrors';
 
 /**
  * Time tracking for trainers (Wave 12 W10, backend `/time-entries`, `/rate-cards`, `/time-report`). REPORT ONLY: hours and,
@@ -181,6 +181,33 @@ export function splitMinutes(minutes: number): { hours: number; minutes: number 
 
 /** Server limit of a single entry. */
 export const MAX_ENTRY_HOURS = 16;
+
+/** From this running time on the UI asks "did you forget to clock out?". */
+export const FORGOT_HINT_HOURS = 8;
+
+export type RunningLevel = 'ok' | 'hint' | 'stuck';
+
+export interface RunningState {
+    /** Whole minutes since the start (never negative). */
+    minutes: number;
+    days: number;
+    hours: number;
+    rest: number;
+    /** `hint` from 8 h, `stuck` beyond 16 h: the server refuses a plain clock-out then. */
+    level: RunningLevel;
+}
+
+/** How long an entry has been running and how loudly the UI should say so. */
+export function runningState(startedAt: string, now = Date.now()): RunningState {
+    const total = Math.max(0, Math.floor((now - new Date(startedAt).getTime()) / 60_000));
+    const level: RunningLevel = total > MAX_ENTRY_HOURS * 60 ? 'stuck' : total >= FORGOT_HINT_HOURS * 60 ? 'hint' : 'ok';
+    return { minutes: total, days: Math.floor(total / 1440), hours: Math.floor((total % 1440) / 60), rest: total % 60, level };
+}
+
+/** Text key for a failed clock-out: `too_long` explains the way out instead of the generic 16 h message. */
+export function clockOutErrorKey(err: unknown): string {
+    return eventErrorCode(err) === 'too_long' ? 'time.err.clockOutTooLong' : eventErrorKey(err);
+}
 
 export type ManualProblem = 'order' | 'future' | 'long';
 
